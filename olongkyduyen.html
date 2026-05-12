@@ -120,7 +120,7 @@
     </style>
 </head>
 <body>
-<!-- Bộ nút điều khiển nổi trên màn hình -->
+<!-- Bộ nút điều khiển nổi -->
 <div class="reader-controls">
     <button onclick="changeFontSize(1)" title="Phóng to">A+</button>
     <button onclick="changeFontSize(-1)" title="Thu nhỏ">A-</button>
@@ -128,32 +128,69 @@
 </div>
 
 <style>
+/* CSS cho bộ nút nổi */
 .reader-controls {
     position: fixed;
-    bottom: 20px;
-    right: 20px;
+    bottom: 30px;
+    right: 30px;
     display: flex;
     flex-direction: column;
-    gap: 10px;
-    z-index: 1000;
+    gap: 12px;
+    z-index: 10000;
 }
 .reader-controls button {
-    width: 45px;
-    height: 45px;
+    width: 48px;
+    height: 48px;
     border-radius: 50%;
-    border: 1px solid #8fae9f;
-    background: #ffffff;
+    border: 2px solid #8fae9f;
+    background: white;
     color: #4a6b5d;
+    font-size: 16px;
     font-weight: bold;
     cursor: pointer;
-    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
     transition: 0.3s;
 }
 .reader-controls button:hover {
     background: #4a6b5d;
     color: white;
+    transform: scale(1.1);
 }
 </style>
+
+<script>
+// 1. Hàm bật/tắt chế độ tối
+function toggleDarkMode() {
+    document.body.classList.toggle('dark-mode');
+    const isDark = document.body.classList.contains('dark-mode');
+    
+    // Lưu lựa chọn vào máy người dùng
+    localStorage.setItem('night-mode', isDark ? 'on' : 'off');
+    
+    // Đổi icon nút bấm
+    document.getElementById('dark-mode-btn').innerText = isDark ? '☀️' : '🌙';
+}
+
+// 2. Hàm đổi kích thước chữ
+function changeFontSize(delta) {
+    // Ưu tiên đổi chữ trong nội dung truyện, nếu không có thì đổi toàn trang
+    const content = document.querySelector('.story-content') || document.querySelector('main');
+    const currentSize = parseFloat(window.getComputedStyle(content).fontSize);
+    content.style.fontSize = (currentSize + delta) + 'px';
+}
+
+// 3. Tự động kiểm tra khi vừa mở web
+(function() {
+    if (localStorage.getItem('night-mode') === 'on') {
+        document.body.classList.add('dark-mode');
+        // Đợi nút load xong rồi đổi icon
+        setTimeout(() => {
+            if(document.getElementById('dark-mode-btn')) 
+                document.getElementById('dark-mode-btn').innerText = '☀️';
+        }, 100);
+    }
+})();
+</script>
 
     <!-- Thanh navbar dùng chung -->
     <header class="navbar">
