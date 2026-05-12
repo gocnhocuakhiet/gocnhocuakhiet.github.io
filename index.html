@@ -6,15 +6,95 @@
     <title>Góc nhỏ của Khiết</title>
     <link rel="stylesheet" href="style.css">
     <style>
+        /* ========================================================
+           1. THIẾT LẬP CON TRỎ CHUỘT HÌNH BÔNG HOA
+           ======================================================== */
+        html, body, a, button, input {
+            /* Thay images/flower-cursor.png bằng đường dẫn ảnh hoa của bạn.
+               Chữ 'auto' hoặc 'pointer' là phương án dự phòng nếu ảnh lỗi */
+            cursor: url('images/flower-cursor.png'), auto !important;
+        }
+        
+        a:hover, button:hover {
+            cursor: url('images/flower-cursor.png'), pointer !important;
+        }
+
         /* Bổ sung CSS giữ cho chữ phần cập nhật nằm thẳng hàng nhã nhặn */
         .updates-list { list-style: none; padding: 0; margin: 0; }
         .updates-list li { border-bottom: 1px dashed #e0e0e0; padding: 8px 0; }
         .updates-list li a { text-decoration: none; color: #2d3a34; display: flex; justify-content: space-between; width: 100%; }
         .updates-list li a:hover { color: #4a6b5d; }
         .update-date { color: #888; font-size: 0.85rem; }
+
+        /* ========================================================
+           2. CẤU TRÚC GIAO DIỆN TRANG CHÀO (SPLASH SCREEN)
+           ======================================================== */
+        #welcome-screen {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #f1f7f4; /* Màu nền xanh nhã nhặn đồng bộ */
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 9999; /* Luôn nằm trên cùng mọi nội dung khác */
+            transition: opacity 0.6s ease, visibility 0.6s ease;
+        }
+
+        /* Chữ chào mừng */
+        .welcome-title {
+            font-size: 2rem;
+            color: #4a6b5d;
+            font-weight: 600;
+            margin-bottom: 25px;
+            text-align: center;
+            font-family: 'Segoe UI', sans-serif;
+            letter-spacing: 1px;
+            animation: fadeIn 1s ease;
+        }
+
+        /* Nút Mở trang web */
+        .open-btn {
+            padding: 12px 35px;
+            font-size: 1.1rem;
+            background-color: #4a6b5d;
+            color: #ffffff;
+            border: none;
+            border-radius: 25px;
+            font-weight: bold;
+            box-shadow: 0 4px 15px rgba(74, 107, 93, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        /* Hiệu ứng khi rê chuột vào nút Mở */
+        .open-btn:hover {
+            background-color: #3d594d;
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(74, 107, 93, 0.3);
+        }
+
+        /* Hiệu ứng mờ dần khi ẩn trang chào */
+        .fade-out {
+            opacity: 0 !important;
+            visibility: hidden !important;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
     </style>
 </head>
 <body>
+
+    <!-- GIAO DIỆN TRANG CHÀO KHI VỪA VÀO WEB -->
+    <div id="welcome-screen">
+        <h1 class="welcome-title">🌿 Chào mừng đến với Góc nhỏ của Khiết 🌸</h1>
+        <button class="open-btn" onclick="closeWelcomeScreen()">MỞ</button>
+    </div>
 
     <!-- Thanh điều hướng (Header) -->
     <header class="navbar">
@@ -39,7 +119,6 @@
             <div class="card updates">
                 <h3>Mới Cập Nhật</h3>
                 <ul class="updates-list" id="auto-updates">
-                    <!-- Khu vực này sẽ được JavaScript tự động điền dữ liệu từ file config.js -->
                     <li><span style="color: #aaa;">Đang tải cập nhật...</span></li>
                 </ul>
             </div>
@@ -145,12 +224,18 @@
         <p>© 2026 Góc nhỏ của Khiết. Được lưu trữ miễn phí trên GitHub Pages.</p>
     </footer>
 
-    <!-- NHÚNG TỆP CẤU HÌNH DỮ LIỆU VÀO ĐÂY -->
+    <!-- NHÚNG TỆP CẤU HÌNH DỮ LIỆU TỰ ĐỘNG -->
     <script src="config.js"></script>
 
-    <!-- ĐOẠN XỬ LÝ CHỨC NĂNG TÌM KIẾM VÀ TỰ ĐỘNG HIỂN THỊ CẬP NHẬT -->
+    <!-- SCRIPT ĐIỀU HƯỚNG VÀ TÌM KIẾM TRANG WEB -->
     <script>
-    // 1. Hàm tìm kiếm truyện
+    // Hàm ẩn trang chào khi click nút "MỞ"
+    function closeWelcomeScreen() {
+        const welcomeScreen = document.getElementById('welcome-screen');
+        welcomeScreen.classList.add('fade-out');
+    }
+
+    // Hàm tìm kiếm truyện
     function searchNovel() {
         let input = document.getElementById('searchBar').value.toLowerCase();
         let cards = document.getElementsByClassName('novel-card');
@@ -164,15 +249,12 @@
         }
     }
 
-    // 2. Hàm tự động hiển thị 5 chương mới từ file config.js
+    // Hàm tự động hiển thị cập nhật từ file config.js
     document.addEventListener("DOMContentLoaded", function() {
         const updateContainer = document.getElementById('auto-updates');
         if (typeof LATEST_CHAPTERS_DATA !== 'undefined' && LATEST_CHAPTERS_DATA.length > 0) {
-            updateContainer.innerHTML = ''; // Xóa dòng chữ đang tải
-            
-            // Chỉ lấy tối đa 5 chương đầu tiên từ danh sách
+            updateContainer.innerHTML = '';
             const displayCount = Math.min(LATEST_CHAPTERS_DATA.length, 5);
-            
             for (let i = 0; i < displayCount; i++) {
                 let item = LATEST_CHAPTERS_DATA[i];
                 let li = document.createElement('li');
