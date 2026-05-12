@@ -306,6 +306,66 @@ function changeFontSize(delta) {
     }
 })();
 </script>
+<script>
+// 1. XỬ LÝ HIỆU ỨNG LẬT TRANG SÁCH KHI CHUYỂN CHƯƠNG
+document.addEventListener("DOMContentLoaded", function() {
+    // Thêm hiệu ứng xuất hiện trang mới khi vừa bấm vào đọc
+    const container = document.querySelector('.story-container');
+    if (container) {
+        container.classList.add('page-flip-enter');
+    }
+
+    // Bắt sự kiện bấm vào tất cả các nút điều hướng (Chương trước, Mục lục, Chương sau)
+    const navButtons = document.querySelectorAll('.nav-btn');
+    navButtons.forEach(button => {
+        button.addEventListener('click', function(e) {
+            // Nếu nút bị khóa (disabled) hoặc là nút mục lục thì không tạo hiệu ứng lật trang
+            if (this.classList.contains('disabled') || this.getAttribute('href') === '#') return;
+            
+            // Chặn chuyển trang ngay lập tức
+            e.preventDefault();
+            const targetUrl = this.getAttribute('href');
+
+            // Kích hoạt hiệu ứng lật đóng trang sách
+            if (container) {
+                container.classList.remove('page-flip-enter');
+                container.classList.add('page-flip-exit');
+            }
+
+            // Chờ hiệu ứng chạy xong 0.5 giây rồi mới chuyển sang trang mới
+            setTimeout(() => {
+                window.location.href = targetUrl;
+            }, 500);
+        });
+    });
+});
+
+// 2. CÁC HÀM ĐIỀU KHIỂN CŨ (GIỮ NGUYÊN)
+function toggleDarkMode() {
+    document.body.classList.toggle('dark-mode');
+    const isDark = document.body.classList.contains('dark-mode');
+    localStorage.setItem('night-mode', isDark ? 'on' : 'off');
+    document.getElementById('dark-mode-btn').innerText = isDark ? '☀️' : '🌙';
+}
+
+function changeFontSize(delta) {
+    const content = document.querySelector('.story-content');
+    if (content) {
+        const currentSize = parseFloat(window.getComputedStyle(content).fontSize);
+        content.style.fontSize = (currentSize + delta) + 'px';
+    }
+}
+
+(function() {
+    if (localStorage.getItem('night-mode') === 'on') {
+        document.body.classList.add('dark-mode');
+        setTimeout(() => {
+            if(document.getElementById('dark-mode-btn')) 
+                document.getElementById('dark-mode-btn').innerText = '☀️';
+        }, 100);
+    }
+})();
+</script>
 
 </body>
 </html>
