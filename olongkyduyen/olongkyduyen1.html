@@ -275,34 +275,36 @@ function changeFontSize(delta) {
 
     </main>
 <script>
-// Hàm đổi kích thước chữ
-function changeFontSize(delta) {
-    const content = document.querySelector('.story-content') || document.body;
-    const currentSize = parseFloat(window.getComputedStyle(content).fontSize);
-    const newSize = currentSize + delta;
-    content.style.fontSize = newSize + 'px';
-    localStorage.setItem('preferred-font-size', newSize);
-}
-
-// Hàm bật/tắt chế độ tối
+// 1. Hàm bật/tắt chế độ tối
 function toggleDarkMode() {
-    const isDark = document.body.classList.toggle('dark-mode');
-    localStorage.setItem('dark-mode', isDark ? 'enabled' : 'disabled');
+    document.body.classList.toggle('dark-mode');
+    const isDark = document.body.classList.contains('dark-mode');
+    
+    // Lưu lựa chọn vào trình duyệt của người đọc
+    localStorage.setItem('night-mode', isDark ? 'on' : 'off');
+    
+    // Thay đổi biểu tượng nút bấm
     document.getElementById('dark-mode-btn').innerText = isDark ? '☀️' : '🌙';
 }
 
-// Tự động áp dụng cài đặt cũ khi load trang
-window.onload = function() {
-    if (localStorage.getItem('dark-mode') === 'enabled') {
-        document.body.classList.add('dark-mode');
-        document.getElementById('dark-mode-btn').innerText = '☀️';
-    }
-    const savedFontSize = localStorage.getItem('preferred-font-size');
-    if (savedFontSize) {
-        const content = document.querySelector('.story-content') || document.body;
-        content.style.fontSize = savedFontSize + 'px';
-    }
+// 2. Hàm đổi kích thước chữ cho nội dung truyện
+function changeFontSize(delta) {
+    const content = document.querySelector('.story-content');
+    const currentSize = parseFloat(window.getComputedStyle(content).fontSize);
+    content.style.fontSize = (currentSize + delta) + 'px';
 }
+
+// 3. Tự động kiểm tra trạng thái sáng/tối khi độc giả vừa mở trang chương
+(function() {
+    if (localStorage.getItem('night-mode') === 'on') {
+        document.body.classList.add('dark-mode');
+        // Đợi giao diện hiển thị rồi đổi icon nút
+        setTimeout(() => {
+            if(document.getElementById('dark-mode-btn')) 
+                document.getElementById('dark-mode-btn').innerText = '☀️';
+        }, 100);
+    }
+})();
 </script>
 
 </body>
