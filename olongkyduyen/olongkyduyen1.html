@@ -308,47 +308,45 @@ function changeFontSize(delta) {
 </script>
 <script>
 document.addEventListener("DOMContentLoaded", function() {
-    const container = document.querySelector('.story-container');
+    // Nhắm mục tiêu trực tiếp vào thẻ body để dịch chuyển toàn diện trang web
+    const pageBody = document.body;
     
-    // 1. TỰ ĐỘNG LƯỚT KHUNG TRUYỆN VÀO TRANG KHI VỪA TẢI XONG
-    if (container) {
-        const lastAction = localStorage.getItem('slide-direction');
-        if (lastAction === 'next') {
-            container.classList.add('slide-next-enter');
-        } else if (lastAction === 'prev') {
-            container.classList.add('slide-prev-enter');
-        } else {
-            container.style.opacity = "1";
-        }
-        localStorage.removeItem('slide-direction');
+    // 1. TỰ ĐỘNG LƯỚT MƯỢT TRANG MỚI VÀO MÀN HÌNH KHI VỪA TẢI XONG
+    const lastAction = localStorage.getItem('smooth-slide-dir');
+    if (lastAction === 'next') {
+        pageBody.classList.add('slide-smooth-next-enter');
+    } else if (lastAction === 'prev') {
+        pageBody.classList.add('slide-smooth-prev-enter');
     }
+    // Xóa bộ nhớ tạm sau khi hiệu ứng trượt hoàn tất
+    localStorage.removeItem('smooth-slide-dir');
 
-    // 2. KÍCH HOẠT HƯỚNG DỊCH CHUYỂN KHI ĐỘC GIẢ BẤM NÚT
+    // 2. XỬ LÝ HƯỚNG TRƯỢT KHI ĐỘC GIẢ CLICK NÚT BẤM
     const navButtons = document.querySelectorAll('.nav-btn');
     navButtons.forEach(button => {
         button.addEventListener('click', function(e) {
+            // Khóa các nút bị disabled hoặc nút quay về mục lục không tạo hiệu ứng trượt
             if (this.classList.contains('disabled') || this.innerText.includes('Mục lục')) return;
             
             e.preventDefault();
             const targetUrl = this.getAttribute('href');
             let isNext = this.innerText.includes('Chương sau');
 
-            if (container) {
-                container.classList.remove('slide-next-enter', 'slide-prev-enter');
-                
-                if (isNext) {
-                    localStorage.setItem('slide-direction', 'next');
-                    container.classList.add('slide-next-exit'); // Đẩy trang cũ chạy biến mất sang trái
-                } else {
-                    localStorage.setItem('slide-direction', 'prev');
-                    container.classList.add('slide-prev-exit'); // Đẩy trang cũ chạy biến mất sang phải
-                }
+            // Xóa bỏ các hiệu ứng trượt cũ để không bị xung đột mã
+            pageBody.classList.remove('slide-smooth-next-enter', 'slide-smooth-prev-enter');
+            
+            if (isNext) {
+                localStorage.setItem('smooth-slide-dir', 'next');
+                pageBody.classList.add('slide-smooth-next-exit'); // Toàn trang lướt vèo sang trái
+            } else {
+                localStorage.setItem('smooth-slide-dir', 'prev');
+                pageBody.classList.add('slide-smooth-prev-exit'); // Toàn trang lướt vèo sang phải
             }
 
-            // Chờ khung truyện lướt đi được 0.35 giây là đổi trang ngay lập tức
+            // Đồng bộ thời gian chờ 0.42 giây khớp với tốc độ CSS rồi mới nhảy trang
             setTimeout(() => {
                 window.location.href = targetUrl;
-            }, 350);
+            }, 420);
         });
     });
 });
