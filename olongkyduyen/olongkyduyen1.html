@@ -310,7 +310,7 @@ function changeFontSize(delta) {
 document.addEventListener("DOMContentLoaded", function() {
     const container = document.querySelector('.story-container');
     
-    // 1. TỰ ĐỘNG HIỂN THỊ HIỆU ỨNG MỞ TRANG DỰA TRÊN HƯỚNG ĐÃ BẤM TRƯỚC ĐÓ
+    // 1. TỰ ĐỘNG LẬT MỞ TRANG MỚI THEO CHIỀU TƯƠNG ỨNG KHI VỪA VÀO TRANG
     if (container) {
         const lastAction = localStorage.getItem('flip-direction');
         if (lastAction === 'next') {
@@ -318,48 +318,46 @@ document.addEventListener("DOMContentLoaded", function() {
         } else if (lastAction === 'prev') {
             container.classList.add('flip-prev-enter');
         } else {
-            // Nếu vào trực tiếp từ mục lục, trang sẽ hiện bình thường không lật
             container.style.opacity = "1";
         }
-        // Xóa bộ nhớ tạm sau khi đã lật xong để tránh lặp lại khi load lại trang
+        // Xóa dấu vết bộ nhớ tạm sau khi lật xong
         localStorage.removeItem('flip-direction');
     }
 
-    // 2. BẮT SỰ KIỆN VÀ XỬ LÝ HƯỚNG LẬT KHI ĐỘC GIẢ BẤM NÚT
+    // 2. XỬ LÝ HƯỚNG XOAY GÁY SÁCH KHI ẤN CHUYỂN CHƯƠNG
     const navButtons = document.querySelectorAll('.nav-btn');
     navButtons.forEach(button => {
         button.addEventListener('click', function(e) {
-            // Nếu nút bị khóa hoặc là nút mục lục thì chuyển trang bình thường, không hiệu ứng
+            // Khóa các nút không bấm được hoặc nút quay lại mục lục
             if (this.classList.contains('disabled') || this.innerText.includes('Mục lục')) return;
             
             e.preventDefault();
             const targetUrl = this.getAttribute('href');
             
-            // Nhận diện độc giả bấm Tiến hay Lùi bằng cách quét chữ trên nút bấm
+            // Kiểm tra xem độc giả bấm Tiến (Chương sau) hay Lùi (Chương trước)
             let isNext = this.innerText.includes('Chương sau');
 
             if (container) {
-                // Xóa bỏ các hiệu ứng cũ nếu có
                 container.classList.remove('flip-next-enter', 'flip-prev-enter');
                 
                 if (isNext) {
                     localStorage.setItem('flip-direction', 'next');
-                    container.classList.add('flip-next-exit'); // Chạy hiệu ứng đóng trang sang trái
+                    container.classList.add('flip-next-exit'); // Khung truyện lật xoay sang bên trái
                 } else {
                     localStorage.setItem('flip-direction', 'prev');
-                    container.classList.add('flip-prev-exit'); // Chạy hiệu ứng đóng trang sang phải
+                    container.classList.add('flip-prev-exit'); // Khung truyện lật xoay sang bên phải
                 }
             }
 
-            // Chờ hiệu ứng đóng hoàn tất 0.45 giây rồi mới nhảy trang
+            // Chờ trang sách xoay một góc 90 độ khuất tầm mắt (0.55 giây) rồi mới đổi trang
             setTimeout(() => {
                 window.location.href = targetUrl;
-            }, 450);
+            }, 550);
         });
     });
 });
 
-// --- CÁC HÀM ĐIỀU KHIỂN NÚT NỔI (GIỮ NGUYÊN) ---
+// --- GIỮ NGUYÊN CÁC HÀM ĐỔI CỠ CHỮ VÀ DARK MODE KHÔNG THAY ĐỔI ---
 function toggleDarkMode() {
     document.body.classList.toggle('dark-mode');
     const isDark = document.body.classList.contains('dark-mode');
@@ -385,5 +383,6 @@ function changeFontSize(delta) {
     }
 })();
 </script>
+
 </body>
 </html>
