@@ -38,13 +38,9 @@
             
             <div class="card updates">
                 <h3>Mới Cập Nhật</h3>
-                <ul class="updates-list">
-                    <li>
-                        <a href="olongkyduyen/olongkyduyen1.html">
-                            <span>Ô Long Kỳ Duyên - Chương 1</span>
-                            <span class="update-date">12/05</span>
-                        </a>
-                    </li> 
+                <ul class="updates-list" id="auto-updates">
+                    <!-- Khu vực này sẽ được JavaScript tự động điền dữ liệu từ file config.js -->
+                    <li><span style="color: #aaa;">Đang tải cập nhật...</span></li>
                 </ul>
             </div>
         </aside>
@@ -149,12 +145,15 @@
         <p>© 2026 Góc nhỏ của Khiết. Được lưu trữ miễn phí trên GitHub Pages.</p>
     </footer>
 
-    <!-- Đoạn mã xử lý chức năng tìm kiếm -->
+    <!-- NHÚNG TỆP CẤU HÌNH DỮ LIỆU VÀO ĐÂY -->
+    <script src="config.js"></script>
+
+    <!-- ĐOẠN XỬ LÝ CHỨC NĂNG TÌM KIẾM VÀ TỰ ĐỘNG HIỂN THỊ CẬP NHẬT -->
     <script>
+    // 1. Hàm tìm kiếm truyện
     function searchNovel() {
         let input = document.getElementById('searchBar').value.toLowerCase();
         let cards = document.getElementsByClassName('novel-card');
-        
         for (let i = 0; i < cards.length; i++) {
             let title = cards[i].querySelector('.novel-title').innerText.toLowerCase();
             if (title.includes(input)) {
@@ -164,6 +163,31 @@
             }
         }
     }
+
+    // 2. Hàm tự động hiển thị 5 chương mới từ file config.js
+    document.addEventListener("DOMContentLoaded", function() {
+        const updateContainer = document.getElementById('auto-updates');
+        if (typeof LATEST_CHAPTERS_DATA !== 'undefined' && LATEST_CHAPTERS_DATA.length > 0) {
+            updateContainer.innerHTML = ''; // Xóa dòng chữ đang tải
+            
+            // Chỉ lấy tối đa 5 chương đầu tiên từ danh sách
+            const displayCount = Math.min(LATEST_CHAPTERS_DATA.length, 5);
+            
+            for (let i = 0; i < displayCount; i++) {
+                let item = LATEST_CHAPTERS_DATA[i];
+                let li = document.createElement('li');
+                li.innerHTML = `
+                    <a href="${item.link}">
+                        <span>${item.title}</span>
+                        <span class="update-date">${item.date}</span>
+                    </a>
+                `;
+                updateContainer.appendChild(li);
+            }
+        } else {
+            updateContainer.innerHTML = '<li><span>Chưa có cập nhật mới.</span></li>';
+        }
+    });
     </script>
 </body>
 </html>
