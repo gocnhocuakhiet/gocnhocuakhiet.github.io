@@ -381,8 +381,8 @@ function changeFontSize(delta) {
             <li><a href="olongkyduyen/olongkyduyen64.html">Chương 64</a></li>
             <li><a href="olongkyduyen/olongkyduyen65.html">Chương 65 (Hết)</a></li>
         </ul>
-                 <!-- ========================================================
-           KHUNG BÌNH LUẬN NỘI BỘ CHÂN TRANG MỤC LỤC (ĐÃ CHUẨN HÓA TĨNH 100%)
+                      <!-- ========================================================
+           VỊ TRÍ THAY THẾ: DÁN ĐÈ TOÀN BỘ ĐOẠN NÀY VÀO CUỐI FILE
            ======================================================== -->
         <div class="fb-main-comment-container">
             <div class="discussion-header">
@@ -390,29 +390,30 @@ function changeFontSize(delta) {
                 <h3>Đánh giá & Bình luận truyện</h3>
                 <span class="icon">🌸</span>
             </div>
-            
-            <!-- Ô nhập nội dung đánh giá truyện -->
-            <div class="local-comment-form">
-                <input type="text" id="catalog-comment-name" placeholder="Biệt danh của bạn...">
-                <textarea id="catalog-comment-text" placeholder="Chia sẻ cảm nhận, đánh giá của bạn về bộ truyện này..."></textarea>
-                <button onclick="submitCatalogComment()">Gửi bình luận</button>
-            </div>
-
-            <!-- Nơi hiển thị danh sách các bài đánh giá của độc giả -->
-            <div class="local-comment-list" id="catalog-comment-list">
-                <p style="color: #888; font-size: 0.9rem; text-align: center;">Chưa có đánh giá nào. Hãy là người đầu tiên để lại cảm nhận!</p>
+            <div class="comment-section">
+                <!-- Mã nhúng bình luận Gmail Utterances chính chủ của Góc Nhỏ Của Khiết -->
+                <script src="utteranc.es"
+                        repo="gocnhocuakhiet/gocnhocuakhiet.github.io"
+                        issue-term="pathname"
+                        label="💬_bình_luận_mục_lục"
+                        theme="github-light"
+                        crossorigin="anonymous"
+                        async>
+                </script>
             </div>
         </div>
 
-    </main> <!-- Giữ duy nhất 1 thẻ đóng main hợp lệ tại đây -->
+    </main> <!-- Thẻ đóng của khung nội dung chính -->
 
-    <!-- TẬP LỆNH XỬ LÝ LƯU TRỮ BÌNH LUẬN TĨNH TỰ ĐỘNG DÀNH RIÊNG CHO TRANG MỤC LỤC -->
+    <!-- Chân trang -->
+    <footer class="footer">
+        <p>© 2026 Góc nhỏ của Khiết. Được lưu trữ miễn phí trên GitHub Pages.</p>
+    </footer>
+
+    <!-- TẬP LỆNH XỬ LÝ ĐỒNG BỘ CHẾ ĐỘ SÁNG/TỐI (Đã tích hợp tự động đổi màu khung bình luận) -->
     <script>
     document.addEventListener("DOMContentLoaded", function() {
-        // Tự động tải danh sách bình luận đánh giá cũ ngay khi mở trang mục lục
-        loadCatalogComments();
-
-        // Tự động kiểm tra trạng thái ban đêm (night-mode) từ các trang khác truyền sang
+        // Tự động kiểm tra trạng thái ban đêm từ các trang khác truyền sang
         if (localStorage.getItem('night-mode') === 'on') {
             document.body.classList.add('dark-mode');
             setTimeout(() => {
@@ -429,70 +430,7 @@ function changeFontSize(delta) {
         }
     });
 
-    // Hàm xử lý khi độc giả nhấn nút Gửi bình luận ở trang mục lục
-    function submitCatalogComment() {
-        const nameInput = document.getElementById('catalog-comment-name');
-        const textInput = document.getElementById('catalog-comment-text');
-        
-        const name = nameInput.value.trim() || "Độc giả ẩn danh";
-        const text = textInput.value.trim();
-
-        if (!text) {
-            alert("Vui lòng gõ nội dung đánh giá trước khi gửi!");
-            return;
-        }
-
-        // Tạo chuỗi hiển thị thời gian chuẩn xác
-        const now = new Date();
-        const timeStr = `${now.getDate()}/${now.getMonth() + 1} ${now.getHours()}:${now.getMinutes().toString().padStart(2, '0')}`;
-
-        const newComment = { name: name, text: text, time: timeStr };
-
-        // Định danh khóa lưu trữ riêng cho trang mục lục của bộ truyện này
-        const pageName = window.location.pathname.split("/").pop().replace(".html", "");
-        const storageKey = `local-cmt-catalog-${pageName}`;
-
-        let currentComments = JSON.parse(localStorage.getItem(storageKey)) || [];
-        currentComments.push(newComment);
-        localStorage.setItem(storageKey, JSON.stringify(currentComments));
-
-        // Dọn sạch ô nhập văn bản sau khi gửi thành công
-        textInput.value = '';
-        
-        // Tải lại danh sách để hiển thị bài đánh giá mới lên màn hình
-        loadCatalogComments();
-    }
-
-    // Hàm lấy dữ liệu bình luận từ trình duyệt đổ ra màn hình mục lục
-    function loadCatalogComments() {
-        const container = document.getElementById('catalog-comment-list');
-        const pageName = window.location.pathname.split("/").pop().replace(".html", "");
-        const storageKey = `local-cmt-catalog-${pageName}`;
-        
-        let currentComments = JSON.parse(localStorage.getItem(storageKey)) || [];
-
-        if (currentComments.length === 0) {
-            container.innerHTML = '<p style="color: #888; font-size: 0.9rem; text-align: center;">Chưa có đánh giá nào. Hãy là người đầu tiên để lại cảm nhận!</p>';
-            return;
-        }
-
-        container.innerHTML = '';
-        // Đảo ngược danh sách để các đánh giá mới nhất luôn nhảy lên vị trí đầu tiên
-        currentComments.reverse().forEach(cmt => {
-            let item = document.createElement('div');
-            item.className = 'comment-item-node';
-            item.innerHTML = `
-                <div class="comment-item-header">
-                    <strong class="comment-item-author">🌿 ${cmt.name}</strong>
-                    <small class="comment-item-time">${cmt.time}</small>
-                </div>
-                <div class="comment-item-body">${cmt.text}</div>
-            `;
-            container.appendChild(item);
-        });
-    }
-
-    // Hàm đổi kích thước chữ (Giữ nguyên tính năng cũ của bạn)
+    // Hàm đổi kích thước chữ
     function changeFontSize(delta) {
         const content = document.querySelector('.story-content') || document.body;
         const currentSize = parseFloat(window.getComputedStyle(content).fontSize);
@@ -501,22 +439,28 @@ function changeFontSize(delta) {
         localStorage.setItem('preferred-font-size', newSize);
     }
 
-    // Hàm bật/tắt chế độ tối (Giữ nguyên tính năng cũ của bạn)
+    // Hàm bật/tắt chế độ tối (Tự động cập nhật màu tối sang khung bình luận Gmail)
     function toggleDarkMode() {
         document.body.classList.toggle('dark-mode');
         const isDark = document.body.classList.contains('dark-mode');
         localStorage.setItem('night-mode', isDark ? 'on' : 'off');
+        
         const darkModeBtn = document.getElementById('dark-mode-btn');
         if (darkModeBtn) {
             darkModeBtn.innerText = isDark ? '☀️' : '🌙';
+        }
+
+        // Lệnh ép khung bình luận đổi màu nền tối theo một cách mượt mà
+        const utterancesIframe = document.querySelector('.utterances-frame');
+        if (utterancesIframe) {
+            const theme = isDark ? 'github-dark' : 'github-light';
+            utterancesIframe.contentWindow.postMessage({ type: 'set-theme', theme: theme }, 'https://utteranc.es');
         }
     }
     </script>
 
     <style>
-    /* ========================================================
-       CSS THIẾT KẾ KHUNG BÌNH LUẬN NỘI BỘ TRANG MỤC LỤC NHÃ NHẶN
-       ======================================================== */
+    /* CSS TRANG TRÍ KHUNG BÌNH LUẬN VÀ ĐỒNG BỘ GIAO DIỆN NHÃ NHẶN */
     .fb-main-comment-container {
         max-width: 100%;
         margin: 50px auto 10px auto;
@@ -547,182 +491,19 @@ function changeFontSize(delta) {
     }
     
     .discussion-header .icon { font-size: 1.2rem; }
+    .comment-section { width: 100%; margin-top: 10px; min-height: 150px; }
 
-    /* Định dạng hộp gõ chữ bình luận đánh giá */
-    .local-comment-form {
-        display: flex;
-        flex-direction: column;
-        gap: 12px;
-        margin-bottom: 30px;
-    }
-    .local-comment-form input {
-        padding: 10px 14px;
-        border: 1px solid #dae5e0;
-        border-radius: 6px;
-        outline: none;
-        font-size: 0.9rem;
-        width: 100%;
-        max-width: 300px; /* Giới hạn độ rộng ô nhập tên cho gọn */
-    }
-    .local-comment-form textarea {
-        padding: 12px;
-        border: 1px solid #dae5e0;
-        border-radius: 6px;
-        outline: none;
-        font-size: 0.95rem;
-        height: 100px;
-        resize: none;
-        width: 100%;
-    }
-    .local-comment-form button {
-        align-self: flex-end;
-        padding: 9px 24px;
-        background-color: #4a6b5d;
-        color: white;
-        border: none;
-        border-radius: 20px;
-        cursor: pointer;
-        font-size: 0.9rem;
-        font-weight: 500;
-        transition: background-color 0.2s;
-    }
-    .local-comment-form button:hover { background-color: #3d594d; }
-
-    /* Danh sách hiển thị các bài viết đánh giá ở dưới */
-    .local-comment-list {
-        display: flex;
-        flex-direction: column;
-        gap: 15px;
-        max-height: 500px;
-        overflow-y: auto;
-        padding-right: 5px;
-    }
-    .comment-item-node {
-        background: #fafafa;
-        padding: 15px;
-        border-radius: 8px;
-        border-left: 4px solid #8fae9f;
-        box-shadow: 0 1px 3px rgba(0,0,0,0.01);
-    }
-    .comment-item-header {
-        display: flex;
-        justify-content: space-between;
-        margin-bottom: 8px;
-        font-size: 0.85rem;
-    }
-    .comment-item-author { color: #4a6b5d; font-size: 0.95rem; }
-    .comment-item-time { color: #aaa; }
-    .comment-item-body { font-size: 0.95rem; color: #333; line-height: 1.5; text-align: justify; }
-
-    /* ĐỒNG BỘ TOÀN DIỆN CHẾ ĐỘ BAN ĐÊM (DARK MODE) CHO TRANG MỤC LỤC */
-    body.dark-mode .fb-main-comment-container,
-    body.dark-mode .local-comment-form input,
-    body.dark-mode .local-comment-form textarea {
+    /* ĐỒNG BỘ CHẾ ĐỘ BAN ĐÊM (DARK MODE) ĐỂ ĐỘC GIẢ KHÔNG BỊ MỎI MẮT */
+    body.dark-mode .fb-main-comment-container {
         background-color: #1b2420 !important; 
         border-color: #2e3d36 !important;
-        color: #dae5e0 !important;
+        border-top-color: #8fae9f !important;
     }
     
     body.dark-mode .discussion-header { border-bottom-color: #2e3d36 !important; }
-    body.dark-mode .discussion-header h3, body.dark-mode .comment-item-author { color: #8fae9f !important; }
-    body.dark-mode .comment-item-node { background-color: #232e29 !important; border-left-color: #4a6b5d !important; }
-    body.dark-mode .comment-item-body { color: #dae5e0 !important; }
-    body.dark-mode .comment-item-time { color: #5a7366; }
+    body.dark-mode .discussion-header h3 { color: #8fae9f !important; }
     </style>
-</body>
-</html>
 
-
-    <!-- Chân trang -->
-    <footer class="footer">
-        <p>© 2026 Góc nhỏ của Khiết. Được lưu trữ miễn phí trên GitHub Pages.</p>
-    </footer>
-
-    <!-- TẬP LỆNH XỬ LÝ ĐỒNG BỘ SÁNG/TỐI VÀ CỠ CHỮ (ĐÃ LỌC BỎ MÃ FACEBOOK LỖI) -->
-    <script>
-    // 1. Hàm đổi kích thước chữ
-    function changeFontSize(delta) {
-        const content = document.querySelector('.story-content') || document.body;
-        const currentSize = parseFloat(window.getComputedStyle(content).fontSize);
-        const newSize = currentSize + delta;
-        content.style.fontSize = newSize + 'px';
-        localStorage.setItem('preferred-font-size', newSize);
-    }
-
-    // 2. Hàm bật/tắt chế độ tối (Đã đồng bộ nhãn 'night-mode')
-    function toggleDarkMode() {
-        document.body.classList.toggle('dark-mode');
-        const isDark = document.body.classList.contains('dark-mode');
-        
-        // Lưu lựa chọn vào máy người dùng để các trang khác tự nhận diện
-        localStorage.setItem('night-mode', isDark ? 'on' : 'off');
-        
-        // Đổi biểu tượng hiển thị trên nút bấm
-        const darkModeBtn = document.getElementById('dark-mode-btn');
-        if (darkModeBtn) {
-            darkModeBtn.innerText = isDark ? '☀️' : '🌙';
-        }
-    }
-
-    // 3. Khởi chạy thiết lập khi vừa tải trang xong
-    document.addEventListener("DOMContentLoaded", function() {
-        // Tự động kiểm tra trạng thái ban đêm (night-mode) từ các trang khác truyền sang
-        if (localStorage.getItem('night-mode') === 'on') {
-            document.body.classList.add('dark-mode');
-            setTimeout(() => {
-                if (document.getElementById('dark-mode-btn')) 
-                    document.getElementById('dark-mode-btn').innerText = '☀️';
-            }, 100);
-        }
-
-        // Tự động áp dụng cài đặt kích thước chữ độc giả đã chỉnh trước đó
-        const savedFontSize = localStorage.getItem('preferred-font-size');
-        if (savedFontSize) {
-            const content = document.querySelector('.story-content') || document.body;
-            content.style.fontSize = savedFontSize + 'px';
-        }
-    });
-    </script>
-
-    <style>
-    /* CSS THIẾT KẾ KHUNG BÌNH LUẬN CHÂN TRANG NHÃ NHẶN */
-    .fb-main-comment-container {
-        max-width: 100%;
-        margin: 50px auto 10px auto;
-        padding: 25px;
-        background-color: #ffffff;
-        border: 1px solid #dae5e0;
-        border-top: 4px solid #4a6b5d; /* Viền nhấn màu xanh rêu ở đỉnh khung */
-        border-radius: 12px;
-    }
-    
-    .discussion-header {
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        gap: 10px;
-        margin-bottom: 25px;
-        border-bottom: 1px dashed #dae5e0;
-        padding-bottom: 15px;
-    }
-    
-    .discussion-header h3 {
-        color: #4a6b5d;
-        font-size: 1.25rem;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-        margin: 0;
-    }
-    
-    .discussion-header .icon {
-        font-size: 1.2rem;
-    }
-
-    .comment-section {
-        width: 100%;
-        margin-top: 10px;
-    }
 </body>
 </html>
 
