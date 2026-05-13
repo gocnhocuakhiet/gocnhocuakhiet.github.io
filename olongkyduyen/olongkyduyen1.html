@@ -262,233 +262,155 @@ function changeFontSize(delta) {
 <p>“A ……!” nàng lập tức hoảng sợ hét toáng lên.</p>
         </article>
 
-        <!-- Thanh nút điều hướng cuối trang chuẩn xác -->
-<div class="reading-nav">
-   <!-- Chương 1 là chương đầu nên nút quay lại bị khóa (disabled) -->
+         <!-- KHUNG HIỂN THỊ HỘP BÌNH LUẬN FACEBOOK TỔNG CHO CHƯƠNG -->
+        <div class="fb-comment-section">
+            <h3>💬 Thảo luận về chương này</h3>
+            <div class="fb-comments" data-width="100%" data-numposts="5"></div>
+        </div>
+
+        <!-- Thanh nút điều hướng cuối trang -->
+        <div class="reading-nav">
+            <!-- Chương 1 là chương đầu nên nút quay lại bị khóa (disabled) -->
             <a href="#" class="nav-btn disabled">⬅️ Chương trước</a>
-    
-    <!-- Nút quay lại trang mục lục (Đi ra ngoài thư mục truyện, rồi đi vào thư mục mucluc) -->
-    <a href="../mucluc/olongkyduyen.html" class="nav-btn">📋 Mục lục</a>
-    
-    <!-- Nút sang chương 2 (Vì chương 2 nằm chung phòng/thư mục với chương 1, gọi trực tiếp tên file, bỏ hẳn dấu ../) -->
-    <a href="olongkyduyen2.html" class="nav-btn">Chương sau ➡️</a>
-</div>
-<!-- KHUNG SIDEBAR CHỨA HỘP BÌNH LUẬN FACEBOOK (GIỮ NGUYÊN) -->
-<div id="comment-sidebar" class="comment-sidebar">
-    <div class="sidebar-header">
-        <h4>Bình luận đoạn văn</h4>
-        <button class="close-sidebar-btn" onclick="closeInlineComment()">✕</button>
-    </div>
-    <div id="fb-comment-box-container"></div>
-</div>
-<div id="sidebar-overlay" class="sidebar-overlay" onclick="closeInlineComment()"></div>
+            
+            <!-- Link lùi cấp để tìm thư mục mucluc ở ngoài -->
+            <a href="../mucluc/olongkyduyen.html" class="nav-btn">📋 Mục lục</a>
+            
+            <!-- Link dẫn sang chương tiếp theo nằm cùng thư mục -->
+            <a href="olongkyduyen2.html" class="nav-btn">Chương sau ➡️</a>
+        </div>
+
     </main>
-<script>
-// 1. Hàm bật/tắt chế độ tối
-function toggleDarkMode() {
-    document.body.classList.toggle('dark-mode');
-    const isDark = document.body.classList.contains('dark-mode');
-    
-    // Lưu lựa chọn vào trình duyệt của người đọc
-    localStorage.setItem('night-mode', isDark ? 'on' : 'off');
-    
-    // Thay đổi biểu tượng nút bấm
-    document.getElementById('dark-mode-btn').innerText = isDark ? '☀️' : '🌙';
-}
 
-// 2. Hàm đổi kích thước chữ cho nội dung truyện
-function changeFontSize(delta) {
-    const content = document.querySelector('.story-content');
-    const currentSize = parseFloat(window.getComputedStyle(content).fontSize);
-    content.style.fontSize = (currentSize + delta) + 'px';
-}
-
-// 3. Tự động kiểm tra trạng thái sáng/tối khi độc giả vừa mở trang chương
-(function() {
-    if (localStorage.getItem('night-mode') === 'on') {
-        document.body.classList.add('dark-mode');
-        // Đợi giao diện hiển thị rồi đổi icon nút
-        setTimeout(() => {
-            if(document.getElementById('dark-mode-btn')) 
-                document.getElementById('dark-mode-btn').innerText = '☀️';
-        }, 100);
-    }
-})();
-</script>
-<script>
-document.addEventListener("DOMContentLoaded", function() {
-    // Nhắm mục tiêu trực tiếp vào thẻ body để dịch chuyển toàn diện trang web
-    const pageBody = document.body;
-    
-    // 1. TỰ ĐỘNG LƯỚT MƯỢT TRANG MỚI VÀO MÀN HÌNH KHI VỪA TẢI XONG
-    const lastAction = localStorage.getItem('smooth-slide-dir');
-    if (lastAction === 'next') {
-        pageBody.classList.add('slide-smooth-next-enter');
-    } else if (lastAction === 'prev') {
-        pageBody.classList.add('slide-smooth-prev-enter');
-    }
-    // Xóa bộ nhớ tạm sau khi hiệu ứng trượt hoàn tất
-    localStorage.removeItem('smooth-slide-dir');
-
-    // 2. XỬ LÝ HƯỚNG TRƯỢT KHI ĐỘC GIẢ CLICK NÚT BẤM
-    const navButtons = document.querySelectorAll('.nav-btn');
-    navButtons.forEach(button => {
-        button.addEventListener('click', function(e) {
-            // Khóa các nút bị disabled hoặc nút quay về mục lục không tạo hiệu ứng trượt
-            if (this.classList.contains('disabled') || this.innerText.includes('Mục lục')) return;
-            
-            e.preventDefault();
-            const targetUrl = this.getAttribute('href');
-            let isNext = this.innerText.includes('Chương sau');
-
-            // Xóa bỏ các hiệu ứng trượt cũ để không bị xung đột mã
-            pageBody.classList.remove('slide-smooth-next-enter', 'slide-smooth-prev-enter');
-            
-            if (isNext) {
-                localStorage.setItem('smooth-slide-dir', 'next');
-                pageBody.classList.add('slide-smooth-next-exit'); // Toàn trang lướt vèo sang trái
-            } else {
-                localStorage.setItem('smooth-slide-dir', 'prev');
-                pageBody.classList.add('slide-smooth-prev-exit'); // Toàn trang lướt vèo sang phải
-            }
-
-            // Đồng bộ thời gian chờ 0.42 giây khớp với tốc độ CSS rồi mới nhảy trang
-            setTimeout(() => {
-                window.location.href = targetUrl;
-            }, 420);
-        });
-    });
-});
-
-// --- GIỮ NGUYÊN CÁC HÀM ĐỔI CỠ CHỮ VÀ DARK MODE KHÔNG THAY ĐỔI ---
-function toggleDarkMode() {
-    document.body.classList.toggle('dark-mode');
-    const isDark = document.body.classList.contains('dark-mode');
-    localStorage.setItem('night-mode', isDark ? 'on' : 'off');
-    document.getElementById('dark-mode-btn').innerText = isDark ? '☀️' : '🌙';
-}
-
-function changeFontSize(delta) {
-    const content = document.querySelector('.story-content');
-    if (content) {
-        const currentSize = parseFloat(window.getComputedStyle(content).fontSize);
-        content.style.fontSize = (currentSize + delta) + 'px';
-    }
-}
-
-(function() {
-    if (localStorage.getItem('night-mode') === 'on') {
-        document.body.classList.add('dark-mode');
-        setTimeout(() => {
-            if(document.getElementById('dark-mode-btn')) 
-                document.getElementById('dark-mode-btn').innerText = '☀️';
-        }, 100);
-    }
-})();
-</script>
-<script>
-document.addEventListener("DOMContentLoaded", function() {
-    // 1. TỰ ĐỘNG TẠO BONG BÓNG SỐ BÌNH LUẬN CHO TỪNG ĐOẠN VĂN
-    const paragraphs = document.querySelectorAll('.story-content p');
-    
-    // Lấy tên file hiện tại làm tiền tố (Ví dụ: olongkyduyen1) để không bị trùng lặp dữ liệu bình luận
-    const pageName = window.location.pathname.split("/").pop().replace(".html", "");
-
-    paragraphs.forEach((p, index) => {
-        const paragraphId = `${pageName}-d${index + 1}`; // Tự sinh mã ID: olongkyduyen1-d1, olongkyduyen1-d2...
-        
-        // Tạo cấu trúc khung chứa bao quanh đoạn văn
-        const row = document.createElement('div');
-        row.className = 'comment-row';
-        p.parentNode.insertBefore(row, p);
-        row.appendChild(p);
-
-        // Tự động tạo bong bóng hiển thị số lượng bình luận ảo (Bạn có thể sửa số ngẫu nhiên tại đây)
-        const badge = document.createElement('span');
-        badge.className = 'comment-badge';
-        badge.setAttribute('data-paragraph-id', paragraphId);
-        
-        // Tạo số bình luận ngẫu nhiên cho sinh động, hoặc bạn thiết lập số cố định
-        badge.innerText = Math.floor(Math.random() * 15) + 1; 
-        
-        // Gắn sự kiện click mở hộp bình luận Facebook cho đoạn văn
-        badge.onclick = function() {
-            openInlineComment(paragraphId);
-        };
-        
-        row.appendChild(badge);
-    });
-
-    // 2. HIỆU ỨNG TRƯỢT NGANG KHI TẢI TRANG (SMOOTH SLIDE)
-    const pageBody = document.body;
-    const lastAction = localStorage.getItem('smooth-slide-dir');
-    if (lastAction === 'next') pageBody.classList.add('slide-smooth-next-enter');
-    else if (lastAction === 'prev') pageBody.classList.add('slide-smooth-prev-enter');
-    localStorage.removeItem('smooth-slide-dir');
-
-    // Kích hoạt hướng vuốt lướt cho các nút bấm điều hướng
-    const navButtons = document.querySelectorAll('.nav-btn');
-    navButtons.forEach(button => {
-        button.addEventListener('click', function(e) {
-            if (this.classList.contains('disabled') || this.innerText.includes('Mục lục')) return;
-            e.preventDefault();
-            const targetUrl = this.getAttribute('href');
-            let isNext = this.innerText.includes('Chương sau');
-            pageBody.classList.remove('slide-smooth-next-enter', 'slide-smooth-prev-enter');
-            
-            if (isNext) {
-                localStorage.setItem('smooth-slide-dir', 'next');
-                pageBody.classList.add('slide-smooth-next-exit');
-            } else {
-                localStorage.setItem('smooth-slide-dir', 'prev');
-                pageBody.classList.add('slide-smooth-prev-exit');
-            }
-            setTimeout(() => { window.location.href = targetUrl; }, 420);
-        });
-    });
-});
-
-<!-- KHUNG HIỂN THỊ HỘP BÌNH LUẬN FACEBOOK TỔNG CHO CHƯƠNG -->
-<div class="fb-comment-section">
-    <h3>💬 Thảo luận về chương này</h3>
-    <!-- Thẻ div tự động cấu hình theo địa chỉ link của chương đó -->
-    <div class="fb-comments" 
-         data-href="" 
-         data-width="100%" 
-         data-numposts="5" 
-         data-colorscheme="light">
+    <!-- CẤU TRÚC HỘP THOẠI BÌNH LUẬN THEO TỪNG ĐOẠN VĂN (POPUP SIDEBAR) -->
+    <div id="comment-sidebar" class="comment-sidebar">
+        <div class="sidebar-header">
+            <h4>Bình luận đoạn văn</h4>
+            <button class="close-sidebar-btn" onclick="closeInlineComment()">✕</button>
+        </div>
+        <div id="fb-comment-box-container"></div>
     </div>
-</div>
+    <div id="sidebar-overlay" class="sidebar-overlay" onclick="closeInlineComment()"></div>
 
-<style>
-/* CSS trang trí khu vực bình luận nhã nhặn */
-.fb-comment-section {
-    max-width: 700px;
-    margin: 30px auto;
-    padding: 20px;
-    background: #ffffff;
-    border-radius: 8px;
-    border-top: 2px solid #8fae9f;
-}
-.fb-comment-section h3 {
-    color: #4a6b5d;
-    font-size: 1.2rem;
-    margin-bottom: 15px;
-}
-/* Tự động đổi màu nền hộp bình luận khi bật chế độ tối */
-body.dark-mode .fb-comment-section {
-    background: #1b2420 !important;
-}
-</style>
-// Dán đoạn này vào bên trong hàm document.addEventListener("DOMContentLoaded", function() { ... })
-const fbCommentBox = document.querySelector('.fb-comment-section .fb-comments');
-if (fbCommentBox) {
-    // Tự động gán link thật của chương truyện hiện tại vào hộp bình luận
-    fbCommentBox.setAttribute('data-href', window.location.href.split('?')[0]);
+    <!-- TẬP LỆNH BỔ SUNG: TỰ ĐỘNG CHÈN BONG BÓNG BÌNH LUẬN ĐOẠN VÀ KHỞI CHẠY LƯỚT MƯỢT MÀ -->
+    <script>
+    document.addEventListener("DOMContentLoaded", function() {
+        // 1. Tự động liên kết đường dẫn thật cho Hộp bình luận tổng của chương
+        const fbCommentBox = document.querySelector('.fb-comment-section .fb-comments');
+        if (fbCommentBox) {
+            fbCommentBox.setAttribute('data-href', window.location.href.split('?')[0]);
+            fbCommentBox.setAttribute('data-colorscheme', document.body.classList.contains('dark-mode') ? 'dark' : 'light');
+        }
+
+        // 2. Tự động rải nút bong bóng bình luận vào từng đoạn văn
+        const paragraphs = document.querySelectorAll('.story-content p');
+        const pageName = window.location.pathname.split("/").pop().replace(".html", "");
+
+        paragraphs.forEach((p, index) => {
+            const paragraphId = `${pageName}-d${index + 1}`;
+            
+            const row = document.createElement('div');
+            row.className = 'comment-row';
+            p.parentNode.insertBefore(row, p);
+            row.appendChild(p);
+
+            const badge = document.createElement('span');
+            badge.className = 'comment-badge';
+            badge.setAttribute('data-paragraph-id', paragraphId);
+            badge.innerText = Math.floor(Math.random() * 10) + 1; // Tạo số bình luận ngẫu nhiên cho sinh động
+            
+            badge.onclick = function() {
+                openInlineComment(paragraphId);
+            };
+            row.appendChild(badge);
+        });
+
+        // 3. Xử lý hiệu ứng lướt ngang mượt mà khi load trang
+        const pageBody = document.body;
+        const lastAction = localStorage.getItem('smooth-slide-dir');
+        if (lastAction === 'next') pageBody.classList.add('slide-smooth-next-enter');
+        else if (lastAction === 'prev') pageBody.classList.add('slide-smooth-prev-enter');
+        localStorage.removeItem('smooth-slide-dir');
+
+        // Bắt sự kiện lướt cho các nút bấm điều hướng tiến lùi
+        const navButtons = document.querySelectorAll('.nav-btn');
+        navButtons.forEach(button => {
+            button.addEventListener('click', function(e) {
+                if (this.classList.contains('disabled') || this.innerText.includes('Mục lục')) return;
+                e.preventDefault();
+                const targetUrl = this.getAttribute('href');
+                let isNext = this.innerText.includes('Chương sau');
+                pageBody.classList.remove('slide-smooth-next-enter', 'slide-smooth-prev-enter');
+                
+                if (isNext) {
+                    localStorage.setItem('smooth-slide-dir', 'next');
+                    pageBody.classList.add('slide-smooth-next-exit');
+                } else {
+                    localStorage.setItem('smooth-slide-dir', 'prev');
+                    pageBody.classList.add('slide-smooth-prev-exit');
+                }
+                setTimeout(() => { window.location.href = targetUrl; }, 420);
+            });
+        });
+    });
+
+    // 4. Các hàm đóng/mở hộp bình luận Facebook động từng đoạn văn
+    function openInlineComment(paragraphId) {
+        const sidebar = document.getElementById('comment-sidebar');
+        const overlay = document.getElementById('sidebar-overlay');
+        const container = document.getElementById('fb-comment-box-container');
+        
+        const cleanUrl = window.location.href.split('?')[0];
+        const uniqueParagraphUrl = `${cleanUrl}?pid=${paragraphId}`;
+
+        container.innerHTML = `
+            <div class="fb-comments" 
+                 data-href="${uniqueParagraphUrl}" 
+                 data-width="100%" 
+                 data-numposts="5" 
+                 data-colorscheme="${document.body.classList.contains('dark-mode') ? 'dark' : 'light'}">
+            </div>
+        `;
+
+        if (typeof FB !== 'undefined') {
+            FB.XFBML.parse(container);
+        }
+        sidebar.classList.add('open');
+        overlay.classList.add('open');
+    }
+
+    function closeInlineComment() {
+        document.getElementById('comment-sidebar').classList.remove('open');
+        document.getElementById('sidebar-overlay').classList.remove('open');
+    }
+    </script>
     
-    // Tự động cấu hình giao diện Sáng/Tối dựa theo trạng thái hệ thống
-    const isDark = document.body.classList.contains('dark-mode');
-    fbCommentBox.setAttribute('data-colorscheme', isDark ? 'dark' : 'light');
+    <style>
+    /* Bổ sung phong cách hiển thị khung bình luận tổng */
+    .fb-comment-section { max-width: 100%; margin: 40px auto 20px auto; padding: 20px 0; border-top: 1px dashed #8fae9f; }
+    .fb-comment-section h3 { color: #4a6b5d; font-size: 1.2rem; margin-bottom: 15px; }
+    
+    /* Giao diện CSS cấu trúc dòng tương tác của Inline Comment */
+    .comment-row { position: relative; display: flex; justify-content: space-between; align-items: center; margin-bottom: 22px; width: 100%; }
+    .comment-row p { margin-bottom: 0 !important; flex: 1; }
+    .comment-badge { background-color: #e6e6e6; color: #555555; font-size: 0.8rem; font-weight: bold; padding: 4px 8px; border-radius: 6px; margin-left: 15px; cursor: pointer; user-select: none; transition: all 0.2s ease; position: relative; display: inline-flex; align-items: center; }
+    .comment-badge::after { content: ''; position: absolute; bottom: -4px; right: 8px; border-width: 4px 4px 0 0; border-style: solid; border-color: #e6e6e6 transparent; }
+    .comment-badge:hover { background-color: #4a6b5d; color: #ffffff; }
+    .comment-badge:hover::after { border-color: #4a6b5d transparent; }
 
+    /* Thanh trượt Popup Sidebar chứa khung Facebook Comment */
+    .comment-sidebar { position: fixed; top: 0; right: -450px; width: 420px; height: 100%; background-color: #ffffff; box-shadow: -5px 0 15px rgba(0,0,0,0.1); z-index: 20000; transition: right 0.4s cubic-bezier(0.25, 1, 0.5, 1); padding: 20px; display: flex; flex-direction: column; }
+    .comment-sidebar.open { right: 0; }
+    .sidebar-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #dae5e0; padding-bottom: 15px; margin-bottom: 15px; }
+    .close-sidebar-btn { background: none; border: none; font-size: 1.2rem; color: #888; cursor: pointer; }
+    .sidebar-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.3); z-index: 19999; display: none; }
+    .sidebar-overlay.open { display: block; }
+
+    /* Điều chỉnh giao diện tối cho hộp thoại bình luận */
+    body.dark-mode .comment-sidebar { background-color: #1b2420 !important; color: #dae5e0 !important; border-color: #2e3d36 !important; }
+    body.dark-mode .comment-badge { background-color: #2e3d36; color: #dae5e0; }
+    body.dark-mode .comment-badge::after { border-color: #2e3d36 transparent; }
+    @media (max-width: 480px) { .comment-sidebar { width: 100%; right: -100%; } }
+    </style>
 </body>
 </html>
