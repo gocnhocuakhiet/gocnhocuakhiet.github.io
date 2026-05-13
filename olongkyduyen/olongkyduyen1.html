@@ -185,6 +185,14 @@
 function toggleDarkMode() {
     document.body.classList.toggle('dark-mode');
     const isDark = document.body.classList.contains('dark-mode');
+    localStorage.setItem('night-mode', isDark ? 'on' : 'off');
+    document.getElementById('dark-mode-btn').innerText = isDark ? '☀️' : '🌙';
+    
+    // THÊM DÒNG NÀY VÀO ĐỂ ÉP FACEBOOK ĐỔI MÀU THEO
+    updateFacebookTheme(isDark);
+}
+    document.body.classList.toggle('dark-mode');
+    const isDark = document.body.classList.contains('dark-mode');
     
     // Lưu lựa chọn vào máy người dùng
     localStorage.setItem('night-mode', isDark ? 'on' : 'off');
@@ -274,8 +282,8 @@ function changeFontSize(delta) {
 </div>
 
 </main>
-  <!-- ========================================================
-   1. KHUNG THẢO LUẬN TOÀN CHƯƠNG (BÌNH LUẬN TỔNG Ở DƯỚI CÙNG)
+ <!-- ========================================================
+   1. KHUNG THẢO LUẬN TOÀN CHƯƠNG (BÌNH LUẬN TỔNG CỦA FACEBOOK)
    ======================================================== -->
 <div class="chapter-discussion-box" id="main-discussion-box">
     <div class="discussion-header">
@@ -283,8 +291,10 @@ function changeFontSize(delta) {
         <h3>Thảo luận về chương này</h3>
         <span class="icon">🌸</span>
     </div>
-    <!-- THẺ GỐC DUY NHẤT: Bắt buộc phải đặt tên id chuẩn là disqus_thread -->
-    <div id="disqus_thread"></div>
+    <!-- KHUNG CHỨA GỐC ĐỂ FACEBOOK ĐỔ DỮ LIỆU VÀO -->
+    <div id="fb-comment-root-box">
+        <div class="fb-comments" id="fb-main-thread" data-width="100%" data-numposts="5" data-colorscheme="light"></div>
+    </div>
 </div>
 
 <!-- ========================================================
@@ -295,41 +305,36 @@ function changeFontSize(delta) {
         <h4 id="sidebar-paragraph-title">Bình luận đoạn văn</h4>
         <button class="close-sidebar-btn" onclick="closeInlineComment()">✕</button>
     </div>
-    <!-- VÙNG CHỨA TẠM THỜI: Khi click bong bóng, khung disqus_thread gốc ở dưới sẽ được bốc dỡ thả vào đây -->
-    <div id="disqus_inline_container"></div>
+    <!-- VÙNG CHỨA TẠM THỜI TRONG SIDEBAR -->
+    <div id="fb_inline_container"></div>
 </div>
 <div id="sidebar-overlay" class="sidebar-overlay" onclick="closeInlineComment()"></div>
 
+<!-- THƯ VIỆN KẾT NỐI FACEBOOK CHÍNH CHỦ (BẮT BUỘC PHẢI CÓ) -->
+<div id="fb-root"></div>
+<script async defer crossorigin="anonymous" src="facebook.net"></script>
+
 <!-- ========================================================
-   TẬP LỆNH ĐIỀU KHIỂN LUỒNG BÌNH LUẬN GMAIL CHUẨN XÁC 100%
+   3. TẬP LỆNH ĐIỀU KHIỂN ĐỔI LUỒNG BÌNH LUẬN FACEBOOK MƯỢT MÀ
    ======================================================== -->
 <script>
-const DISQUS_SHORTNAME = 'gocnhocuakhiet';
-// ĐÃ SỬA LỖI: Điền đầy đủ link web thật có chứa giao thức bảo mật https://
+// ĐIỀN ĐƯỜNG DẪN WEB THẬT CỦA BẠN ĐỂ FACEBOOK ĐỊNH DANH
 const SITE_URL = 'github.io'; 
 
-// A. Tải luồng bình luận TỔNG của chân trang khi vừa mở web
-var disqus_config = function () {
-    this.page.url = SITE_URL + window.location.pathname;  
-    this.page.identifier = window.location.pathname; 
-};
-
-(function() { 
-    var d = document, s = d.createElement('script');
-    // ĐÃ SỬA LỖI: Điền chuẩn xác đường dẫn gọi file nhúng embed.js của Disqus
-    s.src = 'https://' + DISQUS_SHORTNAME + '://';
-    s.setAttribute('data-timestamp', +new Date());
-    (d.head || d.body).appendChild(s);
-})();
-
-// B. Tạo nút bấm bong bóng hội thoại 💬 bên cạnh từng đoạn văn (<p>)
+// A. Tự động gắn link thật cho khung tổng khi vừa mở trang web
 document.addEventListener("DOMContentLoaded", function() {
+    const mainThread = document.getElementById('fb-main-thread');
+    if (mainThread) {
+        mainThread.setAttribute('data-href', SITE_URL + window.location.pathname);
+        mainThread.setAttribute('data-colorscheme', document.body.classList.contains('dark-mode') ? 'dark' : 'light');
+    }
+    
+    // Tạo nút bấm bong bóng hội thoại 💬 bên cạnh từng đoạn văn (<p>)
     const paragraphs = document.querySelectorAll('.story-content p');
     const pageName = window.location.pathname.split("/").pop().replace(".html", "");
 
     paragraphs.forEach((p, index) => {
         const paragraphId = `${pageName}-d${index + 1}`;
-
         const row = document.createElement('div');
         row.className = 'comment-row';
         p.parentNode.insertBefore(row, p);
@@ -338,8 +343,6 @@ document.addEventListener("DOMContentLoaded", function() {
         const badge = document.createElement('span');
         badge.className = 'comment-badge';
         badge.innerHTML = '💬'; 
-        badge.setAttribute('data-paragraph-id', paragraphId);
-        
         badge.onclick = function() {
             openInlineComment(paragraphId, index + 1);
         };
@@ -347,61 +350,68 @@ document.addEventListener("DOMContentLoaded", function() {
     });
 });
 
-// C. Hàm mở bảng bình luận đoạn văn: Bốc khung gốc ở dưới chân trang nạp vào Sidebar
+// B. Hàm mở bảng bình luận đoạn văn: Nhổ khung Facebook từ chân trang bỏ vào Sidebar
 function openInlineComment(paragraphId, paragraphNumber) {
     document.getElementById('sidebar-paragraph-title').innerText = `Bình luận đoạn văn số ${paragraphNumber}`;
     document.getElementById('comment-sidebar').classList.add('active');
     document.getElementById('sidebar-overlay').classList.add('active');
 
     const cleanUrl = SITE_URL + window.location.pathname + `?pid=${paragraphId}`;
-    const inlineContainer = document.getElementById('disqus_inline_container');
-    const disqusThreadBlock = document.getElementById('disqus_thread');
+    const inlineContainer = document.getElementById('fb_inline_container');
+    const mainThread = document.getElementById('fb-main-thread');
 
-    if (disqusThreadBlock && inlineContainer) {
-        // Di chuyển khung chứa Disqus vào bên trong bản phụ Sidebar
-        inlineContainer.appendChild(disqusThreadBlock);
-
-        // Phát lệnh cưỡng ép Disqus xóa dữ liệu chương, nạp dữ liệu riêng biệt của đoạn văn này
-        if (typeof DISQUS !== 'undefined') {
-            DISQUS.reset({
-                reload: true,
-                config: function () {  
-                    this.page.identifier = paragraphId;  
-                    this.page.url = cleanUrl;
-                }
-            });
+    if (mainThread && inlineContainer) {
+        // Bốc khung Facebook nạp vào trong Sidebar
+        inlineContainer.appendChild(mainThread);
+        
+        // Đổi địa chỉ nhận diện sang liên kết của riêng đoạn văn này
+        mainThread.setAttribute('data-href', cleanUrl);
+        mainThread.setAttribute('data-colorscheme', document.body.classList.contains('dark-mode') ? 'dark' : 'light');
+        
+        // Ép Facebook quét lại cấu trúc để hiện đúng bình luận của đoạn văn
+        if (typeof FB !== 'undefined') {
+            FB.XFBML.parse(inlineContainer);
         }
     }
 }
 
-// D. Hàm đóng bảng bình luận: Trả khung Disqus về vị trí gốc dưới chân trang
+// C. Hàm đóng bảng bình luận: Trả khung Facebook về lại vị trí cũ dưới chân trang
 function closeInlineComment() {
     document.getElementById('comment-sidebar').classList.remove('active');
     document.getElementById('sidebar-overlay').classList.remove('active');
     
-    const mainDiscussionBox = document.getElementById('main-discussion-box');
-    const disqusThreadBlock = document.getElementById('disqus_thread');
+    const rootBox = document.getElementById('fb-comment-root-box');
+    const mainThread = document.getElementById('fb-main-thread');
     
-    if (mainDiscussionBox && disqusThreadBlock) {
-        // Bốc khung Disqus từ trong Sidebar trả ngược về chân trang
-        mainDiscussionBox.appendChild(disqusThreadBlock);
+    if (rootBox && mainThread) {
+        // Trả khung Facebook về lại chân trang
+        rootBox.appendChild(mainThread);
+        
+        // Khôi phục lại link nhận diện của toàn bộ chương truyện
+        mainThread.setAttribute('data-href', SITE_URL + window.location.pathname);
+        mainThread.setAttribute('data-colorscheme', document.body.classList.contains('dark-mode') ? 'dark' : 'light');
+        
+        // Ép Facebook quét lại để hiện lại bình luận tổng của chương
+        if (typeof FB !== 'undefined') {
+            FB.XFBML.parse(rootBox);
+        }
     }
+}
 
-    // Reset dữ liệu Disqus quay về trạng thái bình luận tổng của toàn bộ chương
-    if (typeof DISQUS !== 'undefined') {
-        DISQUS.reset({
-            reload: true,
-            config: function () {  
-                this.page.identifier = window.location.pathname;  
-                this.page.url = SITE_URL + window.location.pathname;
-            }
-        });
+// D. Đồng bộ lệnh đổi màu sáng/tối cho Facebook khi bấm nút đổi giao diện 🌙
+function updateFacebookTheme(isDark) {
+    const mainThread = document.getElementById('fb-main-thread');
+    if (mainThread) {
+        mainThread.setAttribute('data-colorscheme', isDark ? 'dark' : 'light');
+        if (typeof FB !== 'undefined') {
+            FB.XFBML.parse(mainThread.parentElement);
+        }
     }
 }
 </script>
 
 <!-- ========================================================
-   4. CSS ĐỊNH VỊ BỒ CỤC TOÀN TRANG GỌN GÀNG (GIỮ NGUYÊN)
+   4. CSS ĐỊNH VỊ BỒ CỤC TOÀN TRANG GỌN GÀNG (MÀU SẮC NHÃ NHẶN)
    ======================================================== -->
 <style>
 .chapter-discussion-box {
@@ -537,6 +547,7 @@ body.dark-mode .comment-badge {
     color: #8fae9f;
 }
 </style>
+
 
 
 
