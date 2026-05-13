@@ -383,69 +383,130 @@ function changeFontSize(delta) {
             <li><a href="olongkyduyen/olongkyduyen64.html">Chương 64</a></li>
             <li><a href="olongkyduyen/olongkyduyen65.html">Chương 65 (Hết)</a></li>
         </ul>
-          <!-- KHUNG BÌNH LUẬN FACEBOOK CHÂN TRANG MỤC LỤC -->
+                <!-- KHUNG BÌNH LUẬN FACEBOOK CHÂN TRANG MỤC LỤC ĐÃ ĐƯỢC THIẾT KẾ LẠI -->
         <div class="fb-main-comment-container">
-            <h3>💬 Đánh giá & Bình luận truyện</h3>
+            <div class="discussion-header">
+                <span class="icon">🌿</span>
+                <h3>Đánh giá & Bình luận truyện</h3>
+                <span class="icon">🌸</span>
+            </div>
+            <!-- Nơi hiển thị hộp bình luận tổng của Facebook -->
             <div class="fb-comments" id="fb-nav-comments" data-width="100%" data-numposts="10"></div>
         </div>
-    </main>
+
+    </main> <!-- Chỉ giữ lại duy nhất 1 thẻ đóng main hợp lệ ở đây -->
 
     <!-- Chân trang -->
     <footer class="footer">
         <p>© 2026 Góc nhỏ của Khiết. Được lưu trữ miễn phí trên GitHub Pages.</p>
     </footer>
 
-    <!-- SCRIPT TỰ ĐỘNG ĐỒNG BỘ ĐƯỜNG DẪN BÌNH LUẬN FACEBOOK -->
+    <!-- TẬP LỆNH XỬ LÝ ĐỒNG BỘ: GỘP CHUNG ĐỂ TRÁNH XUNG ĐỘT MÃ -->
     <script>
-    document.addEventListener("DOMContentLoaded", function() {
+    // 1. Hàm đổi kích thước chữ
+    function changeFontSize(delta) {
+        const content = document.querySelector('.story-content') || document.body;
+        const currentSize = parseFloat(window.getComputedStyle(content).fontSize);
+        const newSize = currentSize + delta;
+        content.style.fontSize = newSize + 'px';
+        localStorage.setItem('preferred-font-size', newSize);
+    }
+
+    // 2. Hàm bật/tắt chế độ tối (Đã đồng bộ nhãn lưu trữ 'night-mode' với trang chương)
+    function toggleDarkMode() {
+        document.body.classList.toggle('dark-mode');
+        const isDark = document.body.classList.contains('dark-mode');
+        
+        // Lưu lựa chọn vào máy người dùng
+        localStorage.setItem('night-mode', isDark ? 'on' : 'off');
+        
+        // Đổi icon nút bấm
+        document.getElementById('dark-mode-btn').innerText = isDark ? '☀️' : '🌙';
+
+        // Cập nhật giao diện sáng/tối cho khung bình luận Facebook ngay lập tức
         const mainFbBox = document.getElementById('fb-nav-comments');
         if (mainFbBox) {
-            mainFbBox.setAttribute('data-href', window.location.href.split('?'));
+            mainFbBox.setAttribute('data-colorscheme', isDark ? 'dark' : 'light');
+            if (typeof FB !== 'undefined') FB.XFBML.parse(mainFbBox.parentElement);
+        }
+    }
+
+    // 3. Khởi chạy khi trang vừa tải xong
+    document.addEventListener("DOMContentLoaded", function() {
+        // Tự động gán link gốc thật của trang mục lục cho Facebook nhận diện dữ liệu
+        const mainFbBox = document.getElementById('fb-nav-comments');
+        if (mainFbBox) {
+            mainFbBox.setAttribute('data-href', window.location.href.split('?')[0]);
             mainFbBox.setAttribute('data-colorscheme', document.body.classList.contains('dark-mode') ? 'dark' : 'light');
+        }
+
+        // Tự động kiểm tra trạng thái ban đêm (night-mode) từ trang chương truyền sang
+        if (localStorage.getItem('night-mode') === 'on') {
+            document.body.classList.add('dark-mode');
+            setTimeout(() => {
+                if (document.getElementById('dark-mode-btn')) 
+                    document.getElementById('dark-mode-btn').innerText = '☀️';
+            }, 100);
+        }
+
+        // Tự động áp dụng cài đặt kích thước chữ cũ
+        const savedFontSize = localStorage.getItem('preferred-font-size');
+        if (savedFontSize) {
+            const content = document.querySelector('.story-content') || document.body;
+            content.style.fontSize = savedFontSize + 'px';
         }
     });
     </script>
-<script>
-// Tự động gán link gốc của trang mục lục cho Facebook nhận diện dữ liệu
-document.addEventListener("DOMContentLoaded", function() {
-    const mainFbBox = document.getElementById('fb-nav-comments');
-    if (mainFbBox) {
-        mainFbBox.setAttribute('data-href', window.location.href.split('?')[0]);
+
+    <style>
+    /* CSS THIẾT KẾ KHUNG BÌNH LUẬN CHÂN TRANG MỤC LỤC NHÃ NHẶN */
+    .fb-main-comment-container {
+        max-width: 100%;
+        margin: 50px auto 10px auto;
+        padding: 25px;
+        background-color: #ffffff;
+        border: 1px solid #dae5e0;
+        border-top: 4px solid #4a6b5d; /* Viền nhấn màu xanh rêu ở đỉnh khung */
+        border-radius: 12px;
     }
-});
-</script>
-
-    </main>
-    <script>
-// Hàm đổi kích thước chữ
-function changeFontSize(delta) {
-    const content = document.querySelector('.story-content') || document.body;
-    const currentSize = parseFloat(window.getComputedStyle(content).fontSize);
-    const newSize = currentSize + delta;
-    content.style.fontSize = newSize + 'px';
-    localStorage.setItem('preferred-font-size', newSize);
-}
-
-// Hàm bật/tắt chế độ tối
-function toggleDarkMode() {
-    const isDark = document.body.classList.toggle('dark-mode');
-    localStorage.setItem('dark-mode', isDark ? 'enabled' : 'disabled');
-    document.getElementById('dark-mode-btn').innerText = isDark ? '☀️' : '🌙';
-}
-
-// Tự động áp dụng cài đặt cũ khi load trang
-window.onload = function() {
-    if (localStorage.getItem('dark-mode') === 'enabled') {
-        document.body.classList.add('dark-mode');
-        document.getElementById('dark-mode-btn').innerText = '☀️';
+    
+    .discussion-header {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 10px;
+        margin-bottom: 25px;
+        border-bottom: 1px dashed #dae5e0;
+        padding-bottom: 15px;
     }
-    const savedFontSize = localStorage.getItem('preferred-font-size');
-    if (savedFontSize) {
-        const content = document.querySelector('.story-content') || document.body;
-        content.style.fontSize = savedFontSize + 'px';
+    
+    .discussion-header h3 {
+        color: #4a6b5d;
+        font-size: 1.25rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin: 0;
     }
-}
-</script>
+    
+    .discussion-header .icon {
+        font-size: 1.2rem;
+    }
 
+    /* ĐỒNG BỘ CHẾ ĐỘ BAN ĐÊM (DARK MODE) CHO KHUNG MỤC LỤC */
+    body.dark-mode .fb-main-comment-container {
+        background-color: #1b2420 !important; /* Đổi sang màu nền xám rêu tối */
+        border-color: #2e3d36 !important;
+        border-top-color: #8fae9f !important;
+    }
+    
+    body.dark-mode .discussion-header {
+        border-bottom-color: #2e3d36 !important;
+    }
+    
+    body.dark-mode .discussion-header h3 {
+        color: #8fae9f !important; /* Chữ tiêu đề sáng lên chống mỏi mắt */
+    }
+    </style>
 </body>
 </html>
