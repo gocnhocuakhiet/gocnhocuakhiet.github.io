@@ -262,16 +262,32 @@ function changeFontSize(delta) {
 <p>“A ……!” nàng lập tức hoảng sợ hét toáng lên.</p>
        </article>
 
-<!-- KHUNG THẢO LUẬN TOÀN CHƯƠNG ĐƯỢC THIẾT KẾ RIÊNG -->
+<!-- ========================================================
+   1. KHUNG THẢO LUẬN TOÀN CHƯƠNG ĐƯỢC THIẾT KẾ RIÊNG (DISQUS GMAIL)
+   ======================================================== -->
 <div class="chapter-discussion-box">
     <div class="discussion-header">
         <span class="icon">🌿</span>
         <h3>Thảo luận về chương này</h3>
         <span class="icon">🌸</span>
     </div>
-    <!-- Nơi hiển thị hộp bình luận tổng của Facebook -->
-    <div class="fb-comments" data-width="100%" data-numposts="5"></div>
+    <!-- Hộp bình luận tổng của cả chương truyện -->
+    <div id="disqus_thread"></div>
 </div>
+
+<!-- ========================================================
+   2. CẤU TRÚC HỘP THOẠI BÌNH LUẬN THEO TỪNG ĐOẠN VĂN (POPUP SIDEBAR)
+   ======================================================== -->
+<div id="comment-sidebar" class="comment-sidebar">
+    <div class="sidebar-header">
+        <h4 id="sidebar-paragraph-title">Bình luận đoạn văn</h4>
+        <button class="close-sidebar-btn" onclick="closeInlineComment()">✕</button>
+    </div>
+    <!-- Nơi Disqus sẽ tải luồng bình luận riêng của đoạn văn đó -->
+    <div id="disqus_inline_thread"></div>
+</div>
+<div id="sidebar-overlay" class="sidebar-overlay" onclick="closeInlineComment()"></div>
+
 
 <!-- Thanh nút điều hướng cuối trang -->
 <div class="reading-nav">
@@ -287,165 +303,262 @@ function changeFontSize(delta) {
 
 </main>
 
-<!-- CẤU TRÚC HỘP THOẠI BÌNH LUẬN THEO TỪNG ĐOẠN VĂN (POPUP SIDEBAR) -->
+<!-- ========================================================
+   1. KHUNG THẢO LUẬN TOÀN CHƯƠNG ĐƯỢC THIẾT KẾ RIÊNG (DISQUS GMAIL)
+   ======================================================== -->
+<div class="chapter-discussion-box">
+    <div class="discussion-header">
+        <span class="icon">🌿</span>
+        <h3>Thảo luận về chương này</h3>
+        <span class="icon">🌸</span>
+    </div>
+    <!-- Hộp bình luận tổng của cả chương truyện -->
+    <div id="disqus_thread"></div>
+</div>
+
+<!-- ========================================================
+   2. CẤU TRÚC HỘP THOẠI BÌNH LUẬN THEO TỪNG ĐOẠN VĂN (POPUP SIDEBAR)
+   ======================================================== -->
 <div id="comment-sidebar" class="comment-sidebar">
     <div class="sidebar-header">
-        <h4>Bình luận đoạn văn</h4>
+        <h4 id="sidebar-paragraph-title">Bình luận đoạn văn</h4>
         <button class="close-sidebar-btn" onclick="closeInlineComment()">✕</button>
     </div>
-    <div id="fb-comment-box-container"></div>
+    <!-- Nơi Disqus sẽ tải luồng bình luận riêng của đoạn văn đó -->
+    <div id="disqus_inline_thread"></div>
 </div>
 <div id="sidebar-overlay" class="sidebar-overlay" onclick="closeInlineComment()"></div>
 
+<!-- ========================================================
+   3. TẬP LỆNH XỬ LÝ CHUYỂN ĐỔI BÌNH LUẬN GMAIL SẠCH LỖI
+   ======================================================== -->
 <script>
-document.addEventListener("DOMContentLoaded", function() {
-    // 1. ĐÃ SỬA LỖI ĐỊNH VỊ: Liên kết đường dẫn chính xác cho Khung thảo luận mới
-    const fbCommentBox = document.querySelector('.chapter-discussion-box .fb-comments');
-    if (fbCommentBox) {
-        fbCommentBox.setAttribute('data-href', window.location.href.split('?')[0]);
-        fbCommentBox.setAttribute('data-colorscheme', document.body.classList.contains('dark-mode') ? 'dark' : 'light');
-    }
+// Khai báo tên tài khoản Disqus chính chủ của bạn
+const DISQUS_SHORTNAME = 'gocnhocuakhiet';
 
-    // 2. TỰ ĐỘNG PHÂN TÁCH ĐOẠN VÀ KIỂM TRA BÌNH LUẬN THỰC TẾ TỪ FACEBOOK
+// A. Tải luồng bình luận TỔNG của toàn bộ chương truyện khi vừa mở trang
+var disqus_config = function () {
+    this.page.url = window.location.href.split('?')[0];  
+    this.page.identifier = window.location.pathname; 
+};
+
+(function() { 
+    var d = document, s = d.createElement('script');
+    s.src = 'https://' + DISQUS_SHORTNAME + '://';
+    s.setAttribute('data-timestamp', +new Date());
+    (d.head || d.body).appendChild(s);
+})();
+
+// B. Xử lý tạo nút bấm hội thoại bên cạnh từng đoạn văn (<p>)
+document.addEventListener("DOMContentLoaded", function() {
     const paragraphs = document.querySelectorAll('.story-content p');
     const pageName = window.location.pathname.split("/").pop().replace(".html", "");
-    const cleanUrl = window.location.href.split('?')[0];
 
     paragraphs.forEach((p, index) => {
         const paragraphId = `${pageName}-d${index + 1}`;
-        const uniqueParagraphUrl = `${cleanUrl}?pid=${paragraphId}`;
 
-        // Tạo cấu trúc hàng bao quanh đoạn văn để đẩy nút số sang bên phải
+        // Tạo cấu trúc hàng bao quanh đoạn văn để đẩy nút bong bóng sang bên phải
         const row = document.createElement('div');
         row.className = 'comment-row';
         p.parentNode.insertBefore(row, p);
         row.appendChild(p);
 
-        // Tạo sẵn thẻ chứa số bình luận nhưng mặc định ẩn đi (display: none)
+        // Tạo nút bấm bong bóng hội thoại nhỏ xinh màu xanh rêu bên cạnh đoạn văn
         const badge = document.createElement('span');
         badge.className = 'comment-badge';
-        badge.style.display = 'none'; 
+        badge.innerHTML = '💬'; // Biểu tượng bong bóng chat nhã nhặn
         badge.setAttribute('data-paragraph-id', paragraphId);
         
+        // Khi độc giả bấm vào bong bóng, mở bảng bình luận bằng Gmail của riêng đoạn đó
         badge.onclick = function() {
-            openInlineComment(paragraphId);
+            openInlineComment(paragraphId, index + 1);
         };
         row.appendChild(badge);
-
-        // SỬ DỤNG FACEBOOK API ĐỂ LẤY SỐ LƯỢNG BÌNH LUẬN THỰC TẾ
-        fetch(`facebook.com{comments.limit(0).summary(true)}&id=${encodeURIComponent(uniqueParagraphUrl)}`)
-        .then(response => response.json())
-        .then(data => {
-            if (data && data.og_object && data.og_object.comments) {
-                const commentCount = data.og_object.comments.summary.total_count;
-                
-                // CHỈ KHI SỐ BÌNH LUẬN LỚN HƠN 0 MỚI CHO HIỆN SỐ
-                if (commentCount > 0) {
-                    badge.innerText = commentCount;
-                    badge.style.display = 'inline-flex'; 
-                }
-            }
-        })
-        .catch(err => {
-            console.log("Chưa thể quét dữ liệu đoạn văn hoặc trang đang chạy trên máy local offline.");
-        });
-    });
-
-    // 3. HIỆU ỨNG LƯỚT CHUYỂN CHƯƠNG MƯỢT MÀ (SLIDE)
-    const pageBody = document.body;
-    const lastAction = localStorage.getItem('smooth-slide-dir');
-    if (lastAction === 'next') pageBody.classList.add('slide-smooth-next-enter');
-    else if (lastAction === 'prev') pageBody.classList.add('slide-smooth-prev-enter');
-    localStorage.removeItem('smooth-slide-dir');
-
-    const navButtons = document.querySelectorAll('.nav-btn');
-    navButtons.forEach(button => {
-        button.addEventListener('click', function(e) {
-            if (this.classList.contains('disabled') || this.innerText.includes('Mục lục')) return;
-            e.preventDefault();
-            const targetUrl = this.getAttribute('href');
-            let isNext = this.innerText.includes('Chương sau');
-            pageBody.classList.remove('slide-smooth-next-enter', 'slide-smooth-prev-enter');
-            
-            if (isNext) {
-                localStorage.setItem('smooth-slide-dir', 'next');
-                pageBody.classList.add('slide-smooth-next-exit');
-            } else {
-                localStorage.setItem('smooth-slide-dir', 'prev');
-                pageBody.classList.add('slide-smooth-prev-exit');
-            }
-            setTimeout(() => { window.location.href = targetUrl; }, 420);
-        });
     });
 });
 
-// 4. HÀM MỞ HỘP THOẠI BÌNH LUẬN KHI CLICK VÀO SỐ
-function openInlineComment(paragraphId) {
-    const sidebar = document.getElementById('comment-sidebar');
-    const overlay = document.getElementById('sidebar-overlay');
-    const container = document.getElementById('fb-comment-box-container');
-    
-    const cleanUrl = window.location.href.split('?')[0];
-    const uniqueParagraphUrl = `${cleanUrl}?pid=${paragraphId}`;
+// C. Hàm mở bảng bình luận đoạn văn (Popup Sidebar) bằng Gmail
+function openInlineComment(paragraphId, paragraphNumber) {
+    document.getElementById('sidebar-paragraph-title').innerText = `Bình luận đoạn văn số ${paragraphNumber}`;
+    document.getElementById('comment-sidebar').classList.add('active');
+    document.getElementById('sidebar-overlay').classList.add('active');
 
-    container.innerHTML = `
-        <div class="fb-comments" 
-             data-href="${uniqueParagraphUrl}" 
-             data-width="100%" 
-             data-numposts="5" 
-             data-colorscheme="${document.body.classList.contains('dark-mode') ? 'dark' : 'light'}">
-        </div>
-    `;
+    const cleanUrl = window.location.href.split('?')[0] + `?pid=${paragraphId}`;
 
-    if (typeof FB !== 'undefined') {
-        FB.XFBML.parse(container);
+    // Khởi tạo luồng Disqus độc lập dành riêng cho đoạn văn này
+    if (typeof DISQUS !== 'undefined') {
+        DISQUS.reset({
+            reload: true,
+            config: function () {  
+                this.page.identifier = paragraphId;  
+                this.page.url = cleanUrl;
+            }
+        });
+        // Di chuyển khung chứa Disqus vào bên trong bản phụ Sidebar
+        document.getElementById('disqus_inline_thread').appendChild(document.getElementById('disqus_thread'));
     }
-    sidebar.classList.add('open');
-    overlay.classList.add('open');
 }
 
+// D. Hàm đóng bảng bình luận đoạn văn, trả Disqus về lại khung tổng cuối trang
 function closeInlineComment() {
-    document.getElementById('comment-sidebar').classList.remove('open');
-    document.getElementById('sidebar-overlay').classList.remove('open');
+    document.getElementById('comment-sidebar').classList.remove('active');
+    document.getElementById('sidebar-overlay').classList.remove('active');
+    
+    // Trả khung Disqus về vị trí thảo luận toàn chương ở chân trang
+    const mainDiscussionBox = document.querySelector('.chapter-discussion-box');
+    if (mainDiscussionBox) {
+        mainDiscussionBox.appendChild(document.getElementById('disqus_thread'));
+    }
+
+    // Reset lại Disqus về chế độ thảo luận toàn chương gốc
+    if (typeof DISQUS !== 'undefined') {
+        DISQUS.reset({
+            reload: true,
+            config: function () {  
+                this.page.identifier = window.location.pathname;  
+                this.page.url = window.location.href.split('?')[0];
+            }
+        });
+    }
 }
 </script>
 
+<!-- ========================================================
+   4. CSS GIAO DIỆN KHUNG BÌNH LUẬN ĐOẠN VĂN NHÃ NHẶN
+   ======================================================== -->
 <style>
-/* CSS TRANG TRÍ KHUNG THẢO LUẬN & INLINE COMMENT ĐỒNG BỘ */
 .chapter-discussion-box {
-    max-width: 100%;
-    margin: 50px auto 30px auto;
+    margin-top: 50px;
     padding: 25px;
     background-color: #ffffff;
-    border: 1px solid #dae5e0;
-    border-top: 4px solid #4a6b5d;
-    border-radius: 12px;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.02);
 }
-.discussion-header { display: flex; justify-content: center; align-items: center; gap: 10px; margin-bottom: 20px; border-bottom: 1px dashed #dae5e0; padding-bottom: 15px; }
-.discussion-header h3 { color: #4a6b5d; font-size: 1.2rem; font-weight: 600; text-transform: uppercase; margin: 0; }
-body.dark-mode .chapter-discussion-box { background-color: #1b2420 !important; border-color: #2e3d36 !important; }
-body.dark-mode .discussion-header { border-bottom-color: #2e3d36 !important; }
-body.dark-mode .discussion-header h3 { color: #8fae9f !important; }
 
-/* Cấu trúc dòng tương tác của Inline Comment */
-.comment-row { position: relative; display: flex; justify-content: space-between; align-items: center; margin-bottom: 22px; width: 100%; }
-.comment-row p { margin-bottom: 0 !important; flex: 1; }
-.comment-badge { background-color: #e6e6e6; color: #555555; font-size: 0.8rem; font-weight: bold; padding: 4px 8px; border-radius: 6px; margin-left: 15px; cursor: pointer; user-select: none; transition: all 0.2s ease; position: relative; display: inline-flex; align-items: center; }
-.comment-badge::after { content: ''; position: absolute; bottom: -4px; right: 8px; border-width: 4px 4px 0 0; border-style: solid; border-color: #e6e6e6 transparent; }
-.comment-badge:hover { background-color: #4a6b5d; color: #ffffff; }
-.comment-badge:hover::after { border-color: #4a6b5d transparent; }
+.discussion-header {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 25px;
+    border-bottom: 1px dashed #dae5e0;
+    padding-bottom: 15px;
+}
 
-/* Thanh trượt Popup Sidebar chứa khung Facebook Comment */
-.comment-sidebar { position: fixed; top: 0; right: -450px; width: 420px; height: 100%; background-color: #ffffff; box-shadow: -5px 0 15px rgba(0,0,0,0.1); z-index: 20000; transition: right 0.4s cubic-bezier(0.25, 1, 0.5, 1); padding: 20px; display: flex; flex-direction: column; }
-.comment-sidebar.open { right: 0; }
-.sidebar-header { display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #dae5e0; padding-bottom: 15px; margin-bottom: 15px; }
-.close-sidebar-btn { background: none; border: none; font-size: 1.2rem; color: #888; cursor: pointer; }
-.sidebar-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.3); z-index: 19999; display: none; }
-.sidebar-overlay.open { display: block; }
+.discussion-header h3 {
+    color: #4a6b5d;
+    font-size: 1.2rem;
+    margin: 0;
+}
 
-body.dark-mode .comment-sidebar { background-color: #1b2420 !important; color: #dae5e0 !important; border-color: #2e3d36 !important; }
-body.dark-mode .comment-badge { background-color: #2e3d36; color: #dae5e0; }
-body.dark-mode .comment-badge::after { border-color: #2e3d36 transparent; }
-@media (max-width: 480px) { .comment-sidebar { width: 100%; right: -100%; } }
+/* Cấu trúc hàng đẩy nút bình luận sang phải */
+.comment-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 15px;
+    margin-bottom: 10px;
+}
+
+.comment-row p {
+    flex: 1;
+    margin-bottom: 0 !important;
+}
+
+/* Nút bong bóng chat nhỏ cạnh mỗi đoạn văn */
+.comment-badge {
+    cursor: pointer;
+    font-size: 0.9rem;
+    padding: 3px 6px;
+    background: #eaf2ee;
+    border-radius: 10px;
+    color: #4a6b5d;
+    transition: 0.2s;
+    user-select: none;
+}
+
+.comment-badge:hover {
+    background: #4a6b5d;
+    color: white;
+}
+
+/* Giao diện thanh trượt Popup Sidebar bên phải chứa bình luận Gmail */
+.comment-sidebar {
+    position: fixed;
+    top: 0;
+    right: -400px; /* Mặc định ẩn giấu bên phải màn hình */
+    width: 380px;
+    height: 100%;
+    background: #ffffff;
+    box-shadow: -5px 0 15px rgba(0,0,0,0.05);
+    z-index: 100000;
+    transition: right 0.4s ease;
+    padding: 20px;
+    overflow-y: auto;
+}
+
+.comment-sidebar.active {
+    right: 0; /* Trượt êm ái ra màn hình khi kích hoạt */
+}
+
+.sidebar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #dae5e0;
+    padding-bottom: 12px;
+    margin-bottom: 20px;
+}
+
+.sidebar-header h4 {
+    color: #4a6b5d;
+    margin: 0;
+}
+
+.close-sidebar-btn {
+    background: none;
+    border: none;
+    font-size: 1.2rem;
+    color: #999;
+    cursor: pointer;
+}
+
+/* Lớp nền mờ che phía sau khi mở Popup */
+.sidebar-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.2);
+    z-index: 99999;
+    display: none;
+}
+
+.sidebar-overlay.active {
+    display: block;
+}
+
+/* ĐỒNG BỘ CHẾ ĐỘ BAN ĐÊM (DARK MODE) GIÚP CHỮ SÁNG LÊN */
+body.dark-mode .chapter-discussion-box,
+body.dark-mode .comment-sidebar {
+    background-color: #1b2420 !important;
+    border-color: #2e3d36 !important;
+    color: #dae5e0 !important;
+}
+
+body.dark-mode .discussion-header,
+body.dark-mode .sidebar-header {
+    border-bottom-color: #2e3d36 !important;
+}
+
+body.dark-mode .sidebar-header h4,
+body.dark-mode .discussion-header h3 {
+    color: #8fae9f !important;
+}
+
+body.dark-mode .comment-badge {
+    background: #25332c;
+    color: #8fae9f;
+}
 </style>
-
