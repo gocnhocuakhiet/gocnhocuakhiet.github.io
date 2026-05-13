@@ -186,7 +186,12 @@ function toggleDarkMode() {
     document.body.classList.toggle('dark-mode');
     const isDark = document.body.classList.contains('dark-mode');
     localStorage.setItem('night-mode', isDark ? 'on' : 'off');
-    document.getElementById('dark-mode-btn').innerText = isDark ? '☀️' : '🌙';
+
+    const darkModeBtn = document.getElementById('dark-mode-btn');
+    if (darkModeBtn) darkModeBtn.innerText = isDark ? '☀️' : '🌙';
+
+    syncUtterancesTheme(isDark); // ← thêm dòng này
+}
     
     // THÊM DÒNG NÀY VÀO ĐỂ ÉP FACEBOOK ĐỔI MÀU THEO
     updateFacebookTheme(isDark);
@@ -282,8 +287,8 @@ function changeFontSize(delta) {
 </div>
 
 </main>
- <!-- ========================================================
-   1. KHUNG THẢO LUẬN TOÀN CHƯƠNG (BÌNH LUẬN NỘI BỘ Ở DƯỚI CÙNG)
+<!-- ========================================================
+   1. KHUNG THẢO LUẬN TOÀN CHƯƠNG (UTTERANCES)
    ======================================================== -->
 <div class="chapter-discussion-box">
     <div class="discussion-header">
@@ -291,17 +296,16 @@ function changeFontSize(delta) {
         <h3>Thảo luận về chương này</h3>
         <span class="icon">🌸</span>
     </div>
-    
-    <!-- Ô nhập bình luận tổng -->
-    <div class="local-comment-form">
-        <input type="text" id="main-comment-name" placeholder="Biệt danh của bạn...">
-        <textarea id="main-comment-text" placeholder="Viết bình luận của bạn tại đây..."></textarea>
-        <button onclick="submitLocalComment('main')">Gửi bình luận</button>
-    </div>
 
-    <!-- Nơi hiển thị danh sách bình luận tổng -->
-    <div class="local-comment-list" id="main-comment-list">
-        <p class="no-comment-text" style="color: #888; font-size: 0.9rem; text-align: center;">Chưa có bình luận nào. Hãy là người đầu tiên chia sẻ cảm xúc!</p>
+    <div class="comment-section">
+        <script src="https://utteranc.es/client.js"
+                repo="gocnhocuakhiet/gocnhocuakhiet.github.io"
+                issue-term="pathname"
+                label="comment"
+                theme="github-light"
+                crossorigin="anonymous"
+                async>
+        </script>
     </div>
 </div>
 
@@ -313,30 +317,24 @@ function changeFontSize(delta) {
         <h4 id="sidebar-paragraph-title">Bình luận đoạn văn</h4>
         <button class="close-sidebar-btn" onclick="closeInlineComment()">✕</button>
     </div>
-    
-    <!-- Ô nhập bình luận cho riêng đoạn văn -->
-    <div class="local-comment-form">
-        <input type="text" id="inline-comment-name" placeholder="Biệt danh của bạn...">
-        <textarea id="inline-comment-text" placeholder="Viết ý kiến về đoạn này..."></textarea>
-        <button id="inline-submit-btn">Gửi bình luận</button>
-    </div>
 
-    <!-- Nơi hiển thị danh sách bình luận của riêng đoạn văn đó -->
-    <div class="local-comment-list" id="inline-comment-list"></div>
+    <div class="quoted-paragraph-box" id="quoted-paragraph-box"></div>
+
+    <p class="sidebar-hint">Bình luận bên dưới áp dụng cho toàn chương. Đoạn văn bạn chọn đã được trích dẫn ở trên để tiện tham chiếu.</p>
+
+    <!-- Nhúng Utterances thứ hai dùng riêng cho sidebar (cùng issue) -->
+    <div id="sidebar-utterances-mount"></div>
 </div>
 <div id="sidebar-overlay" class="sidebar-overlay" onclick="closeInlineComment()"></div>
 
 <!-- ========================================================
-   3. TẬP LỆNH XỬ LÝ LƯU TRỮ BÌNH LUẬN TỰ ĐỘNG (LƯU VÀO MÁY NGƯỜI ĐỌC)
+   3. TẬP LỆNH XỬ LÝ
    ======================================================== -->
 <script>
-// Tự động quét và tạo nút bấm bong bóng chat 💬 bên cạnh từng đoạn văn (<p>)
-document.addEventListener("DOMContentLoaded", function() {
+document.addEventListener("DOMContentLoaded", function () {
     const paragraphs = document.querySelectorAll('.story-content p');
-    const pageName = window.location.pathname.split("/").pop().replace(".html", "");
 
     paragraphs.forEach((p, index) => {
-        const paragraphId = `${pageName}-d${index + 1}`;
         const row = document.createElement('div');
         row.className = 'comment-row';
         p.parentNode.insertBefore(row, p);
@@ -344,31 +342,34 @@ document.addEventListener("DOMContentLoaded", function() {
 
         const badge = document.createElement('span');
         badge.className = 'comment-badge';
-        badge.innerHTML = '💬'; 
-        badge.onclick = function() {
-            openInlineComment(paragraphId, index + 1);
+        badge.innerHTML = '💬';
+        badge.title = 'Bình luận về đoạn này';
+        badge.onclick = function () {
+            openInlineComment(p.innerText.trim().substring(0, 120), index + 1);
         };
         row.appendChild(badge);
     });
-
-    // Tải lại các bình luận tổng đã lưu từ trước
-    loadLocalComments('main', 'main-comment-list');
 });
 
-// Hàm mở bảng bình luận đoạn văn (Popup Sidebar)
-function openInlineComment(paragraphId, paragraphNumber) {
-    document.getElementById('sidebar-paragraph-title').innerText = `Bình luận đoạn văn số ${paragraphNumber}`;
+function openInlineComment(previewText, paragraphNumber) {
+    document.getElementById('sidebar-paragraph-title').innerText = `Đoạn văn số ${paragraphNumber}`;
+    document.getElementById('quoted-paragraph-box').innerText = `"${previewText}${previewText.length >= 120 ? '…' : ''}"`;
     document.getElementById('comment-sidebar').classList.add('active');
     document.getElementById('sidebar-overlay').classList.add('active');
 
-    // Cấu hình lại nút gửi của riêng đoạn văn này
-    const submitBtn = document.getElementById('inline-submit-btn');
-    submitBtn.onclick = function() {
-        submitLocalComment(paragraphId, 'inline-comment-name', 'inline-comment-text', 'inline-comment-list');
-    };
-
-    // Tải các bình luận cũ của riêng đoạn văn này lên thanh trượt
-    loadLocalComments(paragraphId, 'inline-comment-list');
+    // Chỉ nhúng Utterances vào sidebar một lần duy nhất để tránh load lại nhiều lần
+    const mount = document.getElementById('sidebar-utterances-mount');
+    if (!mount.hasChildNodes()) {
+        const script = document.createElement('script');
+        script.src = 'https://utteranc.es/client.js';
+        script.setAttribute('repo', 'gocnhocuakhiet/gocnhocuakhiet.github.io');
+        script.setAttribute('issue-term', 'pathname');
+        script.setAttribute('label', 'comment');
+        script.setAttribute('theme', getCurrentUtterancesTheme());
+        script.setAttribute('crossorigin', 'anonymous');
+        script.async = true;
+        mount.appendChild(script);
+    }
 }
 
 function closeInlineComment() {
@@ -376,72 +377,21 @@ function closeInlineComment() {
     document.getElementById('sidebar-overlay').classList.remove('active');
 }
 
-// HÀM XỬ LÝ LƯU BÌNH LUẬN XUỐNG BỘ NHỚ TRÌNH DUYỆT
-function submitLocalComment(storageId, nameId = 'main-comment-name', textId = 'main-comment-text', listId = 'main-comment-list') {
-    const nameInput = document.getElementById(nameId);
-    const textInput = document.getElementById(textId);
-    
-    const name = nameInput.value.trim() || "Độc giả ẩn danh";
-    const text = textInput.value.trim();
-
-    if (!text) {
-        alert("Vui lòng nhập nội dung bình luận!");
-        return;
-    }
-
-    // Định dạng thời gian hiện tại
-    const now = new Date();
-    const timeStr = `${now.getDate()}/${now.getMonth() + 1} ${now.getHours()}:${now.getMinutes().toString().padStart(2, '0')}`;
-
-    const newComment = { name: name, text: text, time: timeStr };
-
-    // Lấy danh sách cũ ra, thêm cmt mới vào và lưu lại
-    let commentStorageKey = `local-cmt-${storageId}`;
-    let currentComments = JSON.parse(localStorage.getItem(commentStorageKey)) || [];
-    currentComments.push(newComment);
-    localStorage.setItem(commentStorageKey, JSON.stringify(currentComments));
-
-    // Xóa chữ trong ô nhập để người dùng gõ tiếp
-    textInput.value = '';
-    
-    // Tải lại danh sách để hiện thị bình luận mới tinh vừa gõ
-    loadLocalComments(storageId, listId);
+function getCurrentUtterancesTheme() {
+    return document.body.classList.contains('dark-mode') ? 'github-dark' : 'github-light';
 }
 
-// HÀM TẢI DỮ LIỆU BÌNH LUẬN RA MÀN HÌNH
-function loadLocalComments(storageId, listContainerId) {
-    const container = document.getElementById(listContainerId);
-    let commentStorageKey = `local-cmt-${storageId}`;
-    let currentComments = JSON.parse(localStorage.getItem(commentStorageKey)) || [];
-
-    if (currentComments.length === 0) {
-        if (listContainerId === 'main-comment-list') {
-            container.innerHTML = '<p style="color: #888; font-size: 0.9rem; text-align: center;">Chưa có bình luận nào. Hãy là người đầu tiên chia sẻ cảm xúc!</p>';
-        } else {
-            container.innerHTML = '<p style="color: #888; font-size: 0.9rem; text-align: center;">Đoạn văn này chưa có bình luận.</p>';
-        }
-        return;
-    }
-
-    container.innerHTML = '';
-    // Đảo ngược mảng để bình luận mới nhất xếp lên đầu dòng
-    currentComments.reverse().forEach(cmt => {
-        let item = document.createElement('div');
-        item.className = 'comment-item-node';
-        item.innerHTML = `
-            <div class="comment-item-header">
-                <strong class="comment-item-author">🌿 ${cmt.name}</strong>
-                <small class="comment-item-time">${cmt.time}</small>
-            </div>
-            <div class="comment-item-body">${cmt.text}</div>
-        `;
-        container.appendChild(item);
+// Đồng bộ theme Utterances khi toggleDarkMode (gọi thêm vào hàm toggleDarkMode gốc nếu có)
+function syncUtterancesTheme(isDark) {
+    const theme = isDark ? 'github-dark' : 'github-light';
+    document.querySelectorAll('.utterances-frame').forEach(iframe => {
+        iframe.contentWindow.postMessage({ type: 'set-theme', theme }, 'https://utteranc.es');
     });
 }
 </script>
 
 <!-- ========================================================
-   4. CSS ĐỊNH VỊ GIAO DIỆN KHUNG BÌNH LUẬN NỘI BỘ NHÃ NHẶN
+   4. CSS
    ======================================================== -->
 <style>
 .chapter-discussion-box {
@@ -461,70 +411,10 @@ function loadLocalComments(storageId, listContainerId) {
     border-bottom: 1px dashed #dae5e0;
     padding-bottom: 15px;
 }
-
 .discussion-header h3 { color: #4a6b5d; font-size: 1.2rem; margin: 0; }
+.comment-section { width: 100%; min-height: 150px; }
 
-/* Form nhập chữ bình luận */
-.local-comment-form {
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
-    margin-bottom: 25px;
-}
-.local-comment-form input {
-    padding: 8px 12px;
-    border: 1px solid #dae5e0;
-    border-radius: 6px;
-    outline: none;
-    font-size: 0.9rem;
-}
-.local-comment-form textarea {
-    padding: 10px 12px;
-    border: 1px solid #dae5e0;
-    border-radius: 6px;
-    outline: none;
-    font-size: 0.95rem;
-    height: 80px;
-    resize: none;
-}
-.local-comment-form button {
-    align-self: flex-end;
-    padding: 8px 20px;
-    background-color: #4a6b5d;
-    color: white;
-    border: none;
-    border-radius: 20px;
-    cursor: pointer;
-    font-size: 0.9rem;
-    transition: 0.2s;
-}
-.local-comment-form button:hover { background-color: #3d594d; }
-
-/* Danh sách hiển thị bình luận bên dưới */
-.local-comment-list {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    max-height: 400px;
-    overflow-y: auto;
-}
-.comment-item-node {
-    background: #fafafa;
-    padding: 12px;
-    border-radius: 6px;
-    border-left: 3px solid #8fae9f;
-}
-.comment-item-header {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 5px;
-    font-size: 0.85rem;
-}
-.comment-item-author { color: #4a6b5d; }
-.comment-item-time { color: #aaa; }
-.comment-item-body { font-size: 0.95rem; color: #333; line-height: 1.4; }
-
-/* Đẩy bong bóng chat sang bên phải dọc tăm tắp */
+/* Bong bóng chat bên cạnh đoạn văn */
 .comment-row {
     display: flex;
     justify-content: space-between;
@@ -545,10 +435,11 @@ function loadLocalComments(storageId, listContainerId) {
     transition: all 0.2s ease;
     user-select: none;
     margin-top: 3px;
+    flex-shrink: 0;
 }
 .comment-badge:hover { background-color: #4a6b5d; color: #ffffff; transform: scale(1.1); }
 
-/* Thanh trượt Popup Sidebar chứa bình luận */
+/* Popup Sidebar */
 .comment-sidebar {
     position: fixed;
     top: 0;
@@ -561,6 +452,7 @@ function loadLocalComments(storageId, listContainerId) {
     transition: right 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
     padding: 24px;
     overflow-y: auto;
+    box-sizing: border-box;
 }
 .comment-sidebar.active { right: 0; }
 
@@ -570,34 +462,59 @@ function loadLocalComments(storageId, listContainerId) {
     align-items: center;
     border-bottom: 1px solid #dae5e0;
     padding-bottom: 12px;
-    margin-bottom: 20px;
+    margin-bottom: 16px;
 }
 .sidebar-header h4 { color: #4a6b5d; margin: 0; }
 .close-sidebar-btn { background: none; border: none; font-size: 1.2rem; color: #999; cursor: pointer; }
 
+/* Ô trích dẫn đoạn văn được chọn */
+.quoted-paragraph-box {
+    background: #f0f7f4;
+    border-left: 3px solid #8fae9f;
+    border-radius: 4px;
+    padding: 10px 14px;
+    font-size: 0.88rem;
+    color: #4a6b5d;
+    font-style: italic;
+    line-height: 1.5;
+    margin-bottom: 12px;
+}
+
+.sidebar-hint {
+    font-size: 0.82rem;
+    color: #aaa;
+    text-align: center;
+    margin-bottom: 16px;
+}
+
 .sidebar-overlay {
     position: fixed;
     top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0,0,0,0.2); z-index: 99999; display: none;
+    background: rgba(0,0,0,0.2);
+    z-index: 99999;
+    display: none;
 }
 .sidebar-overlay.active { display: block; }
 
-/* ĐỒNG BỘ CHẾ ĐỘ BAN ĐÊM (DARK MODE) GIÚP CHỮ SÁNG LÊN */
+/* Dark mode */
 body.dark-mode .chapter-discussion-box,
-body.dark-mode .comment-sidebar,
-body.dark-mode .local-comment-form input,
-body.dark-mode .local-comment-form textarea {
+body.dark-mode .comment-sidebar {
     background-color: #1b2420 !important;
     border-color: #2e3d36 !important;
     color: #dae5e0 !important;
 }
-body.dark-mode .comment-item-node { background: #232e29; border-left-color: #4a6b5d; }
-body.dark-mode .discussion-header, body.dark-mode .sidebar-header { border-bottom-color: #2e3d36 !important; }
-body.dark-mode .sidebar-header h4, body.dark-mode .discussion-header h3, body.dark-mode .comment-item-author { color: #8fae9f !important; }
-body.dark-mode .comment-item-body { color: #dae5e0 !important; }
+body.dark-mode .discussion-header,
+body.dark-mode .sidebar-header { border-bottom-color: #2e3d36 !important; }
+body.dark-mode .discussion-header h3,
+body.dark-mode .sidebar-header h4 { color: #8fae9f !important; }
+body.dark-mode .quoted-paragraph-box {
+    background: #232e29;
+    border-left-color: #4a6b5d;
+    color: #8fae9f;
+}
 body.dark-mode .comment-badge { background: #25332c; color: #8fae9f; }
+body.dark-mode .sidebar-hint { color: #666; }
 </style>
-
 
 
 
