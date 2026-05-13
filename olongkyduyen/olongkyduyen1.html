@@ -272,7 +272,15 @@ function changeFontSize(delta) {
     <!-- Nút sang chương 2 (Vì chương 2 nằm chung phòng/thư mục với chương 1, gọi trực tiếp tên file, bỏ hẳn dấu ../) -->
     <a href="olongkyduyen2.html" class="nav-btn">Chương sau ➡️</a>
 </div>
-
+<!-- KHUNG SIDEBAR CHỨA HỘP BÌNH LUẬN FACEBOOK (GIỮ NGUYÊN) -->
+<div id="comment-sidebar" class="comment-sidebar">
+    <div class="sidebar-header">
+        <h4>Bình luận đoạn văn</h4>
+        <button class="close-sidebar-btn" onclick="closeInlineComment()">✕</button>
+    </div>
+    <div id="fb-comment-box-container"></div>
+</div>
+<div id="sidebar-overlay" class="sidebar-overlay" onclick="closeInlineComment()"></div>
     </main>
 <script>
 // 1. Hàm bật/tắt chế độ tối
@@ -377,6 +385,129 @@ function changeFontSize(delta) {
     }
 })();
 </script>
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    // 1. TỰ ĐỘNG TẠO BONG BÓNG SỐ BÌNH LUẬN CHO TỪNG ĐOẠN VĂN
+    const paragraphs = document.querySelectorAll('.story-content p');
+    
+    // Lấy tên file hiện tại làm tiền tố (Ví dụ: olongkyduyen1) để không bị trùng lặp dữ liệu bình luận
+    const pageName = window.location.pathname.split("/").pop().replace(".html", "");
+
+    paragraphs.forEach((p, index) => {
+        const paragraphId = `${pageName}-d${index + 1}`; // Tự sinh mã ID: olongkyduyen1-d1, olongkyduyen1-d2...
+        
+        // Tạo cấu trúc khung chứa bao quanh đoạn văn
+        const row = document.createElement('div');
+        row.className = 'comment-row';
+        p.parentNode.insertBefore(row, p);
+        row.appendChild(p);
+
+        // Tự động tạo bong bóng hiển thị số lượng bình luận ảo (Bạn có thể sửa số ngẫu nhiên tại đây)
+        const badge = document.createElement('span');
+        badge.className = 'comment-badge';
+        badge.setAttribute('data-paragraph-id', paragraphId);
+        
+        // Tạo số bình luận ngẫu nhiên cho sinh động, hoặc bạn thiết lập số cố định
+        badge.innerText = Math.floor(Math.random() * 15) + 1; 
+        
+        // Gắn sự kiện click mở hộp bình luận Facebook cho đoạn văn
+        badge.onclick = function() {
+            openInlineComment(paragraphId);
+        };
+        
+        row.appendChild(badge);
+    });
+
+    // 2. HIỆU ỨNG TRƯỢT NGANG KHI TẢI TRANG (SMOOTH SLIDE)
+    const pageBody = document.body;
+    const lastAction = localStorage.getItem('smooth-slide-dir');
+    if (lastAction === 'next') pageBody.classList.add('slide-smooth-next-enter');
+    else if (lastAction === 'prev') pageBody.classList.add('slide-smooth-prev-enter');
+    localStorage.removeItem('smooth-slide-dir');
+
+    // Kích hoạt hướng vuốt lướt cho các nút bấm điều hướng
+    const navButtons = document.querySelectorAll('.nav-btn');
+    navButtons.forEach(button => {
+        button.addEventListener('click', function(e) {
+            if (this.classList.contains('disabled') || this.innerText.includes('Mục lục')) return;
+            e.preventDefault();
+            const targetUrl = this.getAttribute('href');
+            let isNext = this.innerText.includes('Chương sau');
+            pageBody.classList.remove('slide-smooth-next-enter', 'slide-smooth-prev-enter');
+            
+            if (isNext) {
+                localStorage.setItem('smooth-slide-dir', 'next');
+                pageBody.classList.add('slide-smooth-next-exit');
+            } else {
+                localStorage.setItem('smooth-slide-dir', 'prev');
+                pageBody.classList.add('slide-smooth-prev-exit');
+            }
+            setTimeout(() => { window.location.href = targetUrl; }, 420);
+        });
+    });
+});
+
+// 3. HÀM ĐIỀU KHIỂN HỘP THOẠI BÌNH LUẬN FACEBOOK DỰA TRÊN ID TỰ SINH
+function openInlineComment(paragraphId) {
+    const sidebar = document.getElementById('comment-sidebar');
+    const overlay = document.getElementById('sidebar-overlay');
+    const container = document.getElementById('fb-comment-box-container');
+    
+    const currentUrl = window.location.href.split('?')[0].split('#')[0];
+    const uniqueParagraphUrl = `${currentUrl}?pid=${paragraphId}`;
+
+    container.innerHTML = `
+        <div class="fb-comments" 
+             data-href="${uniqueParagraphUrl}" 
+             data-width="100%" 
+             data-numposts="5" 
+             data-colorscheme="${document.body.classList.contains('dark-mode') ? 'dark' : 'light'}">
+        </div>
+    `;
+
+    if (typeof FB !== 'undefined') {
+        FB.XFBML.parse(container);
+    }
+
+    sidebar.classList.add('open');
+    overlay.classList.add('open');
+}
+
+function closeInlineComment() {
+    document.getElementById('comment-sidebar').classList.remove('open');
+    document.getElementById('sidebar-overlay').classList.remove('open');
+}
+
+// 4. CÁC HÀM TĂNG GIẢM CỠ CHỮ VÀ DARK MODE
+function toggleDarkMode() {
+    document.body.classList.toggle('dark-mode');
+    const isDark = document.body.classList.contains('dark-mode');
+    localStorage.setItem('night-mode', isDark ? 'on' : 'off');
+    document.getElementById('dark-mode-btn').innerText = isDark ? '☀️' : '🌙';
+}
+
+function changeFontSize(delta) {
+    const content = document.querySelector('.story-content');
+    if (content) {
+        const currentSize = parseFloat(window.getComputedStyle(content).fontSize);
+        content.style.fontSize = (currentSize + delta) + 'px';
+    }
+}
+
+(function() {
+    if (localStorage.getItem('night-mode') === 'on') {
+        document.body.classList.add('dark-mode');
+        setTimeout(() => {
+            if(document.getElementById('dark-mode-btn')) 
+                document.getElementById('dark-mode-btn').innerText = '☀️';
+        }, 100);
+    }
+})();
+</script>
+
+<!-- KHỞI TẠO FACEBOOK SDK GỐC (ĐỂ TRƯỚC THẺ NÀY) -->
+<div id="fb-root"></div>
+<script async defer crossorigin="anonymous" src="facebook.net"></script>
 
 </body>
 </html>
