@@ -89,7 +89,164 @@
     </style>
 </head>
 <body>
+<!-- ========================================================
+   TẬP LỆNH QUÉT API DISQUS TỰ ĐỘNG (DÁN TRƯỚC THẺ </BODY>)
+   ======================================================== -->
+<script>
+const DISQUS_API_KEY = 'dnKRF3Jv3SOW8xZyDi3WQuDdK9pN595wPEAJOloHkcMDMlld1DqHsU8p6FQJ4L3N'; // Hướng dẫn lấy mã này ở Bước 2 dưới đây
+const DISQUS_FORUM = 'gocnhocuakhiet';
+let lastCommentId = null;
 
+function checkNewComments() {
+    // Gọi API của Disqus lấy danh sách bình luận mới nhất trên toàn bộ trang web
+    fetch(`disqus.com{DISQUS_API_KEY}&forum=${DISQUS_FORUM}&limit=5&related=thread`)
+    .then(response => response.json())
+    .then(res => {
+        if (res.code === 0 && res.response.length > 0) {
+            const comments = res.response;
+            
+            // 1. Cập nhật danh sách hiển thị ở khối dưới mục Mới cập nhật
+            const feedContainer = document.getElementById('live-comment-feed');
+            feedContainer.innerHTML = '';
+            
+            comments.forEach(cmt => {
+                let li = document.createElement('li');
+                // Tự động cắt ngắn nội dung bình luận nếu quá dài
+                let shortMsg = cmt.raw_message.length > 40 ? cmt.raw_message.substr(0, 40) + '...' : cmt.raw_message;
+                
+                li.innerHTML = `
+                    <div class="feed-item">
+                        <strong>${cmt.author.name}:</strong> 
+                        <span>"${shortMsg}"</span>
+                    </div>
+                `;
+                feedContainer.appendChild(li);
+            });
+
+            // 2. Xử lý bắn thông báo đẩy (Toast Notification) khi có bình luận mới tinh
+            const newestCmt = comments[0];
+            if (lastCommentId !== null && newestCmt.id !== lastCommentId) {
+                showCommentToast(newestCmt.author.name, newestCmt.raw_message);
+            }
+            // Lưu lại ID của bình luận mới nhất để so sánh cho lần quét sau
+            lastCommentId = newestCmt.id;
+        }
+    })
+    .catch(err => console.log("Không thể kết nối API Disqus. Vui lòng kiểm tra lại mã API Key."));
+}
+
+// Hàm kích hoạt hiện hộp thông báo nổi bồng bềnh
+function showCommentToast(author, message) {
+    document.getElementById('toast-author').innerText = author;
+    document.getElementById('toast-message').innerText = message.length > 60 ? message.substr(0, 60) + '...' : message;
+    
+    const toast = document.getElementById('comment-toast');
+    toast.classList.add('show');
+    
+    // Tự động ẩn thông báo sau 6 giây để không gây phiền độc giả
+    setTimeout(closeToast, 6000);
+}
+
+function closeToast() {
+    document.getElementById('comment-toast').classList.remove('show');
+}
+
+// Tự động kích hoạt quét dữ liệu sau khi mở trang web và lặp lại sau mỗi 30 giây
+document.addEventListener("DOMContentLoaded", function() {
+    checkNewComments();
+    setInterval(checkNewComments, 30000); // 30000ms = 30 giây
+});
+</script>
+
+<!-- ========================================================
+   CSS TRANG TRÍ KHUNG THÔNG BÁO ĐẨY NHÃ NHẶN CHỐNG MỎI MẮT
+   ======================================================== -->
+<style>
+.comment-announcement-box {
+    margin-top: 20px;
+}
+.comment-announcement-box ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+.comment-announcement-box li {
+    font-size: 0.85rem;
+    border-bottom: 1px dashed #dae5e0;
+    padding: 8px 0;
+    color: #444;
+}
+.feed-item strong {
+    color: #4a6b5d;
+}
+
+/* GIAO DIỆN HỘP THÔNG BÁO NỔI TOAST */
+.comment-toast {
+    position: fixed;
+    bottom: -100px; /* Mặc định nằm ẩn dưới đáy màn hình */
+    left: 30px; /* Xuất hiện ở góc dưới bên trái màn hình */
+    width: 320px;
+    background-color: #ffffff;
+    border: 1px solid #8fae9f;
+    border-left: 5px solid #4a6b5d; /* Vạch nhấn màu xanh rêu */
+    border-radius: 8px;
+    box-shadow: 0 4px 15px rgba(74, 107, 93, 0.15);
+    z-index: 999999;
+    padding: 15px;
+    transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); /* Hiệu ứng nảy bồng bềnh nhẹ */
+}
+.comment-toast.show {
+    bottom: 30px; /* Trượt vọt lên bồng bềnh khi có bình luận mới */
+}
+.toast-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.9rem;
+    border-bottom: 1px solid #eaf2ee;
+    padding-bottom: 6px;
+    margin-bottom: 8px;
+}
+.toast-header strong {
+    color: #4a6b5d;
+    flex: 1;
+}
+.toast-header small {
+    color: #888;
+}
+.toast-header button {
+    background: none;
+    border: none;
+    color: #bbb;
+    cursor: pointer;
+    font-size: 0.9rem;
+}
+.toast-body {
+    font-size: 0.85rem;
+    color: #555;
+    line-height: 1.4;
+}
+
+/* ĐỒNG BỘ CHẾ ĐỘ BAN ĐÊM (DARK MODE) */
+body.dark-mode .comment-toast {
+    background-color: #1b2420 !important;
+    border-color: #2e3d36 !important;
+    box-shadow: none !important;
+}
+body.dark-mode .toast-header {
+    border-bottom-color: #2e3d36 !important;
+}
+body.dark-mode .toast-header strong {
+    color: #8fae9f !important;
+}
+body.dark-mode .toast-body {
+    color: #dae5e0 !important;
+}
+body.dark-mode .comment-announcement-box li {
+    border-bottom-color: #2e3d36 !important;
+    color: #dae5e0 !important;
+}
+</style>
     <!-- GIAO DIỆN TRANG CHÀO KHI VỪA VÀO WEB -->
     <div id="welcome-screen">
         <h1 class="welcome-title">🌿 Chào mừng đến với Góc nhỏ của Khiết 🌸</h1>
@@ -195,7 +352,28 @@ function changeFontSize(delta) {
                 </ul>
             </div>
         </aside>
+<!-- ========================================================
+   KHỐI THÔNG BÁO ĐẨY BÌNH LUẬN MỚI (ĐẶT DƯỚI MỚI CẬP NHẬT)
+   ======================================================== -->
+<div class="card comment-announcement-box">
+    <h3>💬 Hoạt Động Gần Đây</h3>
+    <ul id="live-comment-feed">
+        <li><span style="color: #aaa;">Đang kết nối luồng bình luận...</span></li>
+    </ul>
+</div>
 
+<!-- KHUNG THÔNG BÁO NỔI TOAST (HIỆN Ở GÓC MÀN HÌNH KHI CÓ ĐỘC GIẢ CMT) -->
+<div id="comment-toast" class="comment-toast">
+    <div class="toast-header">
+        <span class="toast-icon">✨</span>
+        <strong id="toast-author">Độc giả ẩn danh</strong>
+        <small>Vừa bình luận</small>
+        <button onclick="closeToast()">✕</button>
+    </div>
+    <div class="toast-body" id="toast-message">
+        Nội dung bình luận...
+    </div>
+</div>
         <!-- Khối ở giữa: Danh sách truyện phân loại -->
         <section class="main-content">
             <!-- THANH TÌM KIẾM TRUYỆN -->
