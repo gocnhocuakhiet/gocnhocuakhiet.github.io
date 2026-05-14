@@ -6,254 +6,122 @@
     <title>Góc nhỏ của Khiết</title>
     <link rel="stylesheet" href="style.css">
     <style>
-        /* ========================================================
-           1. THIẾT LẬP CON TRỎ CHUỘT HÌNH BÔNG HOA
-           ======================================================== */
         html, body, a, button, input {
-            /* Thay images/flower-cursor.png bằng đường dẫn ảnh hoa của bạn.
-               Chữ 'auto' hoặc 'pointer' là phương án dự phòng nếu ảnh lỗi */
             cursor: url('images/hoa.png'), auto !important;
         }
-        
         a:hover, button:hover {
             cursor: url('images/hoa.png'), pointer !important;
         }
 
-        /* Bổ sung CSS giữ cho chữ phần cập nhật nằm thẳng hàng nhã nhặn */
         .updates-list { list-style: none; padding: 0; margin: 0; }
         .updates-list li { border-bottom: 1px dashed #e0e0e0; padding: 8px 0; }
-        .updates-list li a { text-decoration: none; color: #2d3a34; display: flex; justify-content: space-between; width: 100%; }
+        .updates-list li a { text-decoration: none; color: #2d3a34; display: flex; justify-content: space-between; width: 100%; gap: 8px; }
         .updates-list li a:hover { color: #4a6b5d; }
-        .update-date { color: #888; font-size: 0.85rem; }
+        .update-date { color: #888; font-size: 0.85rem; white-space: nowrap; }
 
-        /* ========================================================
-           2. CẤU TRÚC GIAO DIỆN TRANG CHÀO (SPLASH SCREEN)
-           ======================================================== */
+        /* ── Trang chào ── */
         #welcome-screen {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: #f1f7f4; /* Màu nền xanh nhã nhặn đồng bộ */
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            z-index: 9999; /* Luôn nằm trên cùng mọi nội dung khác */
+            position: fixed; top: 0; left: 0;
+            width: 100%; height: 100%;
+            background-color: #f1f7f4;
+            display: flex; flex-direction: column;
+            justify-content: center; align-items: center;
+            z-index: 9999;
             transition: opacity 0.6s ease, visibility 0.6s ease;
         }
-
-        /* Chữ chào mừng */
         .welcome-title {
-            font-size: 2rem;
-            color: #4a6b5d;
-            font-weight: 600;
-            margin-bottom: 25px;
-            text-align: center;
-            font-family: 'Segoe UI', sans-serif;
-            letter-spacing: 1px;
+            font-size: 2rem; color: #4a6b5d; font-weight: 600;
+            margin-bottom: 25px; text-align: center;
+            font-family: 'Segoe UI', sans-serif; letter-spacing: 1px;
             animation: fadeIn 1s ease;
         }
-
-        /* Nút Mở trang web */
         .open-btn {
-            padding: 12px 35px;
-            font-size: 1.1rem;
-            background-color: #4a6b5d;
-            color: #ffffff;
-            border: none;
-            border-radius: 25px;
-            font-weight: bold;
-            box-shadow: 0 4px 15px rgba(74, 107, 93, 0.2);
+            padding: 12px 35px; font-size: 1.1rem;
+            background-color: #4a6b5d; color: #ffffff;
+            border: none; border-radius: 25px; font-weight: bold;
+            box-shadow: 0 4px 15px rgba(74,107,93,0.2);
             transition: all 0.3s ease;
         }
-
-        /* Hiệu ứng khi rê chuột vào nút Mở */
         .open-btn:hover {
-            background-color: #3d594d;
-            transform: translateY(-3px);
-            box-shadow: 0 6px 20px rgba(74, 107, 93, 0.3);
+            background-color: #3d594d; transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(74,107,93,0.3);
         }
-
-        /* Hiệu ứng mờ dần khi ẩn trang chào */
-        .fade-out {
-            opacity: 0 !important;
-            visibility: hidden !important;
-        }
-
+        .fade-out { opacity: 0 !important; visibility: hidden !important; }
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(-10px); }
-            to { opacity: 1; transform: translateY(0); }
+            to   { opacity: 1; transform: translateY(0); }
         }
+
+        /* ── Nút nổi ── */
+        .reader-controls {
+            position: fixed; bottom: 30px; right: 30px;
+            display: flex; flex-direction: column; gap: 12px; z-index: 10000;
+        }
+        .reader-controls button {
+            width: 48px; height: 48px; border-radius: 50%;
+            border: 2px solid #8fae9f; background: white; color: #4a6b5d;
+            font-size: 16px; font-weight: bold; cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15); transition: 0.3s;
+        }
+        .reader-controls button:hover { background: #4a6b5d; color: white; transform: scale(1.1); }
+        body.dark-mode .reader-controls button { background: #1b2420; color: #8fae9f; border-color: #4a6b5d; }
+        body.dark-mode .reader-controls button:hover { background: #4a6b5d; color: white; }
+
+        /* ── Trạng thái loading / lỗi ── */
+        .loading-text { color: #aaa; font-size: 0.85rem; font-style: italic; }
+        .error-text   { color: #c0766a; font-size: 0.82rem; }
+
+        /* ── Khung Hoạt Động Gần Đây ── */
+        .feed-item { font-size: 0.85rem; line-height: 1.4; }
+        .feed-item .feed-meta { display: flex; justify-content: space-between; margin-bottom: 2px; }
+        .feed-item .feed-author { color: #4a6b5d; font-weight: 600; }
+        .feed-item .feed-time   { color: #aaa; font-size: 0.8rem; }
+        .feed-item .feed-chapter { color: #888; font-size: 0.8rem; margin-bottom: 3px; }
+        .feed-item .feed-msg    { color: #444; }
+        .feed-item a { text-decoration: none; color: inherit; }
+        .feed-item a:hover .feed-author { text-decoration: underline; }
+
+        body.dark-mode .updates-list li { border-bottom-color: #2e3d36; }
+        body.dark-mode .updates-list li a { color: #dae5e0; }
+        body.dark-mode .updates-list li a:hover { color: #8fae9f; }
+        body.dark-mode .feed-item .feed-author { color: #8fae9f; }
+        body.dark-mode .feed-item .feed-msg    { color: #dae5e0; }
+
+        /* ── Toast thông báo ── */
+        .comment-toast {
+            position: fixed; bottom: -120px; left: 30px; width: 320px;
+            background: #fff; border: 1px solid #8fae9f;
+            border-left: 5px solid #4a6b5d; border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(74,107,93,0.15);
+            z-index: 999999; padding: 15px;
+            transition: bottom 0.5s cubic-bezier(0.175,0.885,0.32,1.275);
+        }
+        .comment-toast.show { bottom: 30px; }
+        .toast-header {
+            display: flex; align-items: center; gap: 8px;
+            font-size: 0.9rem; border-bottom: 1px solid #eaf2ee;
+            padding-bottom: 6px; margin-bottom: 8px;
+        }
+        .toast-header strong { color: #4a6b5d; flex: 1; }
+        .toast-header small  { color: #888; }
+        .toast-header button { background: none; border: none; color: #bbb; cursor: pointer; font-size: 0.9rem; }
+        .toast-body { font-size: 0.85rem; color: #555; line-height: 1.4; }
+
+        body.dark-mode .comment-toast { background: #1b2420 !important; border-color: #2e3d36 !important; }
+        body.dark-mode .toast-header  { border-bottom-color: #2e3d36 !important; }
+        body.dark-mode .toast-header strong { color: #8fae9f !important; }
+        body.dark-mode .toast-body    { color: #dae5e0 !important; }
     </style>
 </head>
 <body>
-<!-- ========================================================
-   TẬP LỆNH QUÉT API DISQUS TỰ ĐỘNG (DÁN TRƯỚC THẺ </BODY>)
-   ======================================================== -->
-<script>
-const DISQUS_API_KEY = 'dnKRF3Jv3SOW8xZyDi3WQuDdK9pN595wPEAJOloHkcMDMlld1DqHsU8p6FQJ4L3N'; // Hướng dẫn lấy mã này ở Bước 2 dưới đây
-const DISQUS_FORUM = 'gocnhocuakhiet';
-let lastCommentId = null;
 
-function checkNewComments() {
-    // Gọi API của Disqus lấy danh sách bình luận mới nhất trên toàn bộ trang web
-    fetch(`disqus.com{DISQUS_API_KEY}&forum=${DISQUS_FORUM}&limit=5&related=thread`)
-    .then(response => response.json())
-    .then(res => {
-        if (res.code === 0 && res.response.length > 0) {
-            const comments = res.response;
-            
-            // 1. Cập nhật danh sách hiển thị ở khối dưới mục Mới cập nhật
-            const feedContainer = document.getElementById('live-comment-feed');
-            feedContainer.innerHTML = '';
-            
-            comments.forEach(cmt => {
-                let li = document.createElement('li');
-                // Tự động cắt ngắn nội dung bình luận nếu quá dài
-                let shortMsg = cmt.raw_message.length > 40 ? cmt.raw_message.substr(0, 40) + '...' : cmt.raw_message;
-                
-                li.innerHTML = `
-                    <div class="feed-item">
-                        <strong>${cmt.author.name}:</strong> 
-                        <span>"${shortMsg}"</span>
-                    </div>
-                `;
-                feedContainer.appendChild(li);
-            });
-
-            // 2. Xử lý bắn thông báo đẩy (Toast Notification) khi có bình luận mới tinh
-            const newestCmt = comments[0];
-            if (lastCommentId !== null && newestCmt.id !== lastCommentId) {
-                showCommentToast(newestCmt.author.name, newestCmt.raw_message);
-            }
-            // Lưu lại ID của bình luận mới nhất để so sánh cho lần quét sau
-            lastCommentId = newestCmt.id;
-        }
-    })
-    .catch(err => console.log("Không thể kết nối API Disqus. Vui lòng kiểm tra lại mã API Key."));
-}
-
-// Hàm kích hoạt hiện hộp thông báo nổi bồng bềnh
-function showCommentToast(author, message) {
-    document.getElementById('toast-author').innerText = author;
-    document.getElementById('toast-message').innerText = message.length > 60 ? message.substr(0, 60) + '...' : message;
-    
-    const toast = document.getElementById('comment-toast');
-    toast.classList.add('show');
-    
-    // Tự động ẩn thông báo sau 6 giây để không gây phiền độc giả
-    setTimeout(closeToast, 6000);
-}
-
-function closeToast() {
-    document.getElementById('comment-toast').classList.remove('show');
-}
-
-// Tự động kích hoạt quét dữ liệu sau khi mở trang web và lặp lại sau mỗi 30 giây
-document.addEventListener("DOMContentLoaded", function() {
-    checkNewComments();
-    setInterval(checkNewComments, 30000); // 30000ms = 30 giây
-});
-</script>
-
-<!-- ========================================================
-   CSS TRANG TRÍ KHUNG THÔNG BÁO ĐẨY NHÃ NHẶN CHỐNG MỎI MẮT
-   ======================================================== -->
-<style>
-.comment-announcement-box {
-    margin-top: 20px;
-}
-.comment-announcement-box ul {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-}
-.comment-announcement-box li {
-    font-size: 0.85rem;
-    border-bottom: 1px dashed #dae5e0;
-    padding: 8px 0;
-    color: #444;
-}
-.feed-item strong {
-    color: #4a6b5d;
-}
-
-/* GIAO DIỆN HỘP THÔNG BÁO NỔI TOAST */
-.comment-toast {
-    position: fixed;
-    bottom: -100px; /* Mặc định nằm ẩn dưới đáy màn hình */
-    left: 30px; /* Xuất hiện ở góc dưới bên trái màn hình */
-    width: 320px;
-    background-color: #ffffff;
-    border: 1px solid #8fae9f;
-    border-left: 5px solid #4a6b5d; /* Vạch nhấn màu xanh rêu */
-    border-radius: 8px;
-    box-shadow: 0 4px 15px rgba(74, 107, 93, 0.15);
-    z-index: 999999;
-    padding: 15px;
-    transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275); /* Hiệu ứng nảy bồng bềnh nhẹ */
-}
-.comment-toast.show {
-    bottom: 30px; /* Trượt vọt lên bồng bềnh khi có bình luận mới */
-}
-.toast-header {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 0.9rem;
-    border-bottom: 1px solid #eaf2ee;
-    padding-bottom: 6px;
-    margin-bottom: 8px;
-}
-.toast-header strong {
-    color: #4a6b5d;
-    flex: 1;
-}
-.toast-header small {
-    color: #888;
-}
-.toast-header button {
-    background: none;
-    border: none;
-    color: #bbb;
-    cursor: pointer;
-    font-size: 0.9rem;
-}
-.toast-body {
-    font-size: 0.85rem;
-    color: #555;
-    line-height: 1.4;
-}
-
-/* ĐỒNG BỘ CHẾ ĐỘ BAN ĐÊM (DARK MODE) */
-body.dark-mode .comment-toast {
-    background-color: #1b2420 !important;
-    border-color: #2e3d36 !important;
-    box-shadow: none !important;
-}
-body.dark-mode .toast-header {
-    border-bottom-color: #2e3d36 !important;
-}
-body.dark-mode .toast-header strong {
-    color: #8fae9f !important;
-}
-body.dark-mode .toast-body {
-    color: #dae5e0 !important;
-}
-body.dark-mode .comment-announcement-box li {
-    border-bottom-color: #2e3d36 !important;
-    color: #dae5e0 !important;
-}
-</style>
-    <!-- GIAO DIỆN TRANG CHÀO KHI VỪA VÀO WEB -->
+    <!-- Trang chào -->
     <div id="welcome-screen">
         <h1 class="welcome-title">🌿 Chào mừng đến với Góc nhỏ của Khiết 🌸</h1>
         <button class="open-btn" onclick="closeWelcomeScreen()">MỞ</button>
     </div>
 
-    <!-- Thanh điều hướng (Header) -->
+    <!-- Thanh điều hướng -->
     <header class="navbar">
         <div class="logo">🌿 Góc nhỏ của Khiết</div>
         <nav class="nav-links">
@@ -264,132 +132,74 @@ body.dark-mode .comment-announcement-box li {
             <a href="#">Liên Hệ</a>
         </nav>
     </header>
-<!-- Bộ nút điều khiển nổi -->
-<div class="reader-controls">
-    <button onclick="changeFontSize(1)" title="Phóng to">A+</button>
-    <button onclick="changeFontSize(-1)" title="Thu nhỏ">A-</button>
-    <button onclick="toggleDarkMode()" id="dark-mode-btn" title="Đổi màu nền">🌙</button>
-</div>
 
-<style>
-/* CSS cho bộ nút nổi */
-.reader-controls {
-    position: fixed;
-    bottom: 30px;
-    right: 30px;
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    z-index: 10000;
-}
-.reader-controls button {
-    width: 48px;
-    height: 48px;
-    border-radius: 50%;
-    border: 2px solid #8fae9f;
-    background: white;
-    color: #4a6b5d;
-    font-size: 16px;
-    font-weight: bold;
-    cursor: pointer;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-    transition: 0.3s;
-}
-.reader-controls button:hover {
-    background: #4a6b5d;
-    color: white;
-    transform: scale(1.1);
-}
-</style>
-
-<script>
-// 1. Hàm bật/tắt chế độ tối
-function toggleDarkMode() {
-    document.body.classList.toggle('dark-mode');
-    const isDark = document.body.classList.contains('dark-mode');
-    
-    // Lưu lựa chọn vào máy người dùng
-    localStorage.setItem('night-mode', isDark ? 'on' : 'off');
-    
-    // Đổi icon nút bấm
-    document.getElementById('dark-mode-btn').innerText = isDark ? '☀️' : '🌙';
-}
-
-// 2. Hàm đổi kích thước chữ
-function changeFontSize(delta) {
-    // Ưu tiên đổi chữ trong nội dung truyện, nếu không có thì đổi toàn trang
-    const content = document.querySelector('.story-content') || document.querySelector('main');
-    const currentSize = parseFloat(window.getComputedStyle(content).fontSize);
-    content.style.fontSize = (currentSize + delta) + 'px';
-}
-
-// 3. Tự động kiểm tra khi vừa mở web
-(function() {
-    if (localStorage.getItem('night-mode') === 'on') {
-        document.body.classList.add('dark-mode');
-        // Đợi nút load xong rồi đổi icon
-        setTimeout(() => {
-            if(document.getElementById('dark-mode-btn')) 
-                document.getElementById('dark-mode-btn').innerText = '☀️';
-        }, 100);
-    }
-})();
-</script>
-
+    <!-- Bộ nút nổi -->
+    <div class="reader-controls">
+        <button onclick="changeFontSize(1)"  title="Phóng to">A+</button>
+        <button onclick="changeFontSize(-1)" title="Thu nhỏ">A-</button>
+        <button onclick="toggleDarkMode()" id="dark-mode-btn" title="Đổi màu nền">🌙</button>
+    </div>
 
     <!-- Bố cục chính -->
     <main class="container">
-        <!-- Khối bên trái: Giới thiệu & Cập nhật -->
+
+        <!-- ── SIDEBAR TRÁI ── -->
         <aside class="sidebar">
+
             <div class="card profile">
                 <h3>Đôi lời</h3>
                 <p>Một ngôi nhà nhỏ đăng những truyện dịch theo sở thích, ngôn tình lẫn đam mỹ, nếu truyện không hợp gu thì xin lướt qua đừng buông lời cay đắng.</p>
             </div>
-            
-              <!-- Khung 1: Mới cập nhật -->
+
+            <!-- ══════════════════════════════════════════
+                 KHUNG 1: MỚI CẬP NHẬT
+                 Tự động quét GitHub repo, lấy file chương
+                 mới commit gần nhất, không cần sửa tay
+                 ══════════════════════════════════════════ -->
             <div class="card updates">
                 <h3>Mới Cập Nhật</h3>
                 <ul class="updates-list" id="auto-updates">
-                    <li><span style="color: #aaa;">Đang tải cập nhật...</span></li>
+                    <li><span class="loading-text">Đang tải cập nhật…</span></li>
                 </ul>
             </div>
 
-            <!-- ========================================================
-               KHƠI THÔNG BÁO ĐẨY BÌNH LUẬN MỚI (ĐÃ ĐƯA VÀO TRONG ASIDE)
-               ======================================================== -->
+            <!-- ══════════════════════════════════════════
+                 KHUNG 2: HOẠT ĐỘNG GẦN ĐÂY
+                 Đọc comment mới nhất từ GitHub Issues
+                 (Utterances lưu bình luận ở đó)
+                 ══════════════════════════════════════════ -->
             <div class="card comment-announcement-box">
                 <h3>💬 Hoạt Động Gần Đây</h3>
-                <ul id="live-comment-feed" class="updates-list">
-                    <!-- Dùng chung class updates-list để cỡ chữ và khoảng cách bằng khít với khung trên -->
-                    <li><span style="color: #aaa;">Đang kết nối luồng bình luận...</span></li>
+                <ul class="updates-list" id="live-comment-feed">
+                    <li><span class="loading-text">Đang kết nối…</span></li>
                 </ul>
             </div>
-        </aside> <!-- Thẻ đóng này sẽ bao bọc tất cả các khung nhỏ xếp dọc tăm tắp bên trái -->
 
-        <!-- KHUNG THÔNG BÁO NỔI TOAST (ĐỂ LÀM HIỆU ỨNG NỔI, GIỮ NGUYÊN) -->
+        </aside>
+
+        <!-- Toast thông báo bình luận mới -->
         <div id="comment-toast" class="comment-toast">
             <div class="toast-header">
-                <span class="toast-icon">✨</span>
-                <strong id="toast-author">Độc giả ẩn danh</strong>
+                <span>✨</span>
+                <strong id="toast-author">Độc giả</strong>
                 <small>Vừa bình luận</small>
                 <button onclick="closeToast()">✕</button>
             </div>
-            <div class="toast-body" id="toast-message">
-                Nội dung bình luận...
-            </div>
+            <div class="toast-body" id="toast-message">Nội dung bình luận…</div>
         </div>
-        <!-- Khối ở giữa: Danh sách truyện phân loại -->
+
+        <!-- ── NỘI DUNG CHÍNH ── -->
         <section class="main-content">
-            <!-- THANH TÌM KIẾM TRUYỆN -->
             <div class="search-container">
-                <input type="text" id="searchBar" placeholder="🔍 Nhập tên truyện bạn muốn tìm..." onkeyup="searchNovel()">
+                <input type="text" id="searchBar"
+                       placeholder="🔍 Nhập tên truyện bạn muốn tìm…"
+                       onkeyup="searchNovel()">
             </div>
-            
-            <!-- PHẦN 1: TRUYỆN NGÔN TÌNH -->
+
+            <!-- Ngôn Tình -->
             <div class="novel-category-block">
                 <h2 class="section-title">🌸 Ngôn Tình</h2>
                 <div class="novel-grid">
-                    
                     <a href="gio-thoi-mua-he.html" class="novel-card">
                         <img class="novel-cover" src="images/dehoangthu.jpg" alt="Đế Hoàng Thư">
                         <span class="badge">Full</span>
@@ -398,7 +208,6 @@ function changeFontSize(delta) {
                             <p>Thể loại: Ngôn tình, Cổ đại, Cung đình hầu tước</p>
                         </div>
                     </a>
-
                     <a href="nang-am-ban-mai.html" class="novel-card">
                         <img class="novel-cover" src="images/toimuondinguocgio.png" alt="Tôi Muốn Đi Ngược Gió">
                         <span class="badge">Full</span>
@@ -407,7 +216,6 @@ function changeFontSize(delta) {
                             <p>Thể loại: Ngôn tình, Hiện đại, Đô thị</p>
                         </div>
                     </a>
-
                     <a href="nang-am-ban-mai.html" class="novel-card">
                         <img class="novel-cover" src="images/quyphi.png" alt="Quý Phi">
                         <span class="badge">Full</span>
@@ -416,7 +224,6 @@ function changeFontSize(delta) {
                             <p>Thể loại: Ngôn tình, Cổ đại, Cung đình hầu tước</p>
                         </div>
                     </a>
-
                     <a href="nang-am-ban-mai.html" class="novel-card">
                         <img class="novel-cover" src="images/camyhanh.png" alt="Cẩm Y Hành">
                         <span class="badge">Full</span>
@@ -428,11 +235,10 @@ function changeFontSize(delta) {
                 </div>
             </div>
 
-            <!-- PHẦN 2: TRUYỆN ĐAM MỸ -->
-            <div class="novel-category-block" style="margin-top: 40px;">
+            <!-- Đam Mỹ -->
+            <div class="novel-category-block" style="margin-top:40px;">
                 <h2 class="section-title">✨ Đam Mỹ</h2>
                 <div class="novel-grid">
-                    
                     <a href="duoi-bong-ngo-dong.html" class="novel-card">
                         <img class="novel-cover" src="images/tatrothanhanhtrai.png" alt="Ta Trở Thành Anh Trai">
                         <span class="badge">Full</span>
@@ -441,7 +247,6 @@ function changeFontSize(delta) {
                             <p>Thể loại: Đam mỹ, Cổ đại, Cung đình</p>
                         </div>
                     </a>
-
                     <a href="duoi-bong-ngo-dong.html" class="novel-card">
                         <img class="novel-cover" src="images/nghenoithuatuong.png" alt="Nghe Nói Thừa Tướng">
                         <span class="badge">Full</span>
@@ -450,7 +255,6 @@ function changeFontSize(delta) {
                             <p>Thể loại: Đam mỹ, Cổ đại, Cung đình</p>
                         </div>
                     </a>
-
                     <a href="../mucluc/olongkyduyen.html" class="novel-card">
                         <img class="novel-cover" src="../images/olongkyduyen.png" alt="Ô Long Kỳ Duyên">
                         <span class="badge">Full</span>
@@ -459,7 +263,6 @@ function changeFontSize(delta) {
                             <p>Thể loại: Đam mỹ, Cổ đại, Sinh Tử Văn</p>
                         </div>
                     </a>
-
                     <a href="duoi-bong-ngo-dong.html" class="novel-card">
                         <img class="novel-cover" src="images/chiataythoima.png" alt="Chia Tay Thôi Mà">
                         <span class="badge">Full</span>
@@ -473,57 +276,254 @@ function changeFontSize(delta) {
         </section>
     </main>
 
-    <!-- Chân trang -->
     <footer class="footer">
         <p>© 2026 Góc nhỏ của Khiết. Được lưu trữ miễn phí trên GitHub Pages.</p>
     </footer>
 
-    <!-- NHÚNG TỆP CẤU HÌNH DỮ LIỆU TỰ ĐỘNG -->
-    <script src="config.js"></script>
+<!-- ════════════════════════════════════════════════════════════
+     CẤU HÌNH — CHỈ CẦN SỬA Ở ĐÂY NẾU ĐỔI TÊN REPO / THƯ MỤC
+     ════════════════════════════════════════════════════════════ -->
+<script>
+// ── Thông tin repo GitHub của bạn ──────────────────────────
+const GH_OWNER = 'gocnhocuakhiet';           // Tên tài khoản GitHub
+const GH_REPO  = 'gocnhocuakhiet.github.io'; // Tên repo
 
-    <!-- SCRIPT ĐIỀU HƯỚNG VÀ TÌM KIẾM TRANG WEB -->
-    <script>
-    // Hàm ẩn trang chào khi click nút "MỞ"
-    function closeWelcomeScreen() {
-        const welcomeScreen = document.getElementById('welcome-screen');
-        welcomeScreen.classList.add('fade-out');
+// ── Danh sách thư mục chứa file chương HTML ────────────────
+// Thêm vào đây nếu bạn tạo thêm thư mục truyện mới
+const CHAPTER_FOLDERS = [
+    'chuong',           // thư mục chung nếu có
+    'olongkyduyen',     // thư mục riêng từng bộ nếu bạn tổ chức vậy
+];
+
+// ── Ánh xạ tên file → tên truyện hiển thị đẹp ─────────────
+// Thêm vào đây khi có truyện mới, khớp với tiền tố tên file
+const NOVEL_NAME_MAP = {
+    'olongkyduyen': 'Ô Long Kỳ Duyên',
+    'dehoangthu':   'Đế Hoàng Thư',
+    'camyhanh':     'Cẩm Y Hành',
+    'quyphi':       'Quý Phi Mỗi Ngày Chỉ Muốn Làm Cá Muối',
+    'toimuon':      'Tôi Muốn Đi Ngược Gió',
+    'tatrothanh':   'Ta Trở Thành Anh Trai Của Nữ Chính Ngược Văn',
+    'nghenoi':      'Nghe Nói Thừa Tướng Quyền Thế Muốn Hoàn Lương',
+    'chiatay':      'Chia Tay Thôi Mà',
+};
+</script>
+
+<!-- ════════════════════════════════════════════════════════════
+     LOGIC TỰ ĐỘNG — KHÔNG CẦN SỬA
+     ════════════════════════════════════════════════════════════ -->
+<script>
+const GH_API = `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}`;
+
+// ── Tiện ích ──────────────────────────────────────────────────
+
+function formatDate(isoString) {
+    const d = new Date(isoString);
+    return `${d.getDate()}/${d.getMonth() + 1}/${d.getFullYear()}`;
+}
+
+function formatTimeAgo(isoString) {
+    const diff = Date.now() - new Date(isoString).getTime();
+    const m = Math.floor(diff / 60000);
+    if (m < 1)  return 'Vừa xong';
+    if (m < 60) return `${m} phút trước`;
+    const h = Math.floor(m / 60);
+    if (h < 24) return `${h} giờ trước`;
+    const day = Math.floor(h / 24);
+    return `${day} ngày trước`;
+}
+
+// Đoán tên truyện từ tên file (vd: olongkyduyen3.html → Ô Long Kỳ Duyên)
+function guessNovelName(filename) {
+    const base = filename.replace('.html', '').toLowerCase();
+    for (const [key, name] of Object.entries(NOVEL_NAME_MAP)) {
+        if (base.startsWith(key)) return name;
     }
+    return filename.replace('.html', '');
+}
 
-    // Hàm tìm kiếm truyện
-    function searchNovel() {
-        let input = document.getElementById('searchBar').value.toLowerCase();
-        let cards = document.getElementsByClassName('novel-card');
-        for (let i = 0; i < cards.length; i++) {
-            let title = cards[i].querySelector('.novel-title').innerText.toLowerCase();
-            if (title.includes(input)) {
-                cards[i].style.display = ""; 
-            } else {
-                cards[i].style.display = "none"; 
-            }
+// Trích số chương từ tên file (vd: olongkyduyen3 → Chương 3)
+function guessChapterNum(filename) {
+    const match = filename.match(/(\d+)\.html$/);
+    return match ? `Chương ${match[1]}` : '';
+}
+
+// ── KHUNG 1: MỚI CẬP NHẬT ────────────────────────────────────
+// Quét từng thư mục trong CHAPTER_FOLDERS, lấy danh sách file .html,
+// rồi gọi Commits API để biết lần commit cuối của mỗi file.
+// Sắp xếp theo ngày mới nhất, hiển thị top 6.
+
+async function loadLatestChapters() {
+    const container = document.getElementById('auto-updates');
+    try {
+        let allFiles = [];
+
+        // Lấy danh sách file trong tất cả thư mục đã khai báo
+        for (const folder of CHAPTER_FOLDERS) {
+            try {
+                const res = await fetch(`${GH_API}/contents/${folder}`);
+                if (!res.ok) continue;
+                const files = await res.json();
+                const htmlFiles = files.filter(f => f.name.endsWith('.html'));
+                allFiles.push(...htmlFiles.map(f => ({ ...f, folder })));
+            } catch (_) { /* bỏ qua thư mục không tồn tại */ }
         }
+
+        if (allFiles.length === 0) {
+            container.innerHTML = '<li><span class="error-text">Không tìm thấy file chương nào.</span></li>';
+            return;
+        }
+
+        // Lấy ngày commit cuối của mỗi file (song song để nhanh)
+        const withDates = await Promise.all(allFiles.map(async (file) => {
+            try {
+                const cRes = await fetch(`${GH_API}/commits?path=${file.folder}/${file.name}&per_page=1`);
+                const commits = await cRes.json();
+                const date = commits.length ? commits[0].commit.committer.date : '1970-01-01';
+                return { ...file, date };
+            } catch (_) {
+                return { ...file, date: '1970-01-01' };
+            }
+        }));
+
+        // Sắp xếp mới nhất lên đầu, lấy top 6
+        withDates.sort((a, b) => new Date(b.date) - new Date(a.date));
+        const top = withDates.slice(0, 6);
+
+        container.innerHTML = '';
+        top.forEach(file => {
+            const novelName  = guessNovelName(file.name);
+            const chapterNum = guessChapterNum(file.name);
+            const label = chapterNum ? `${novelName} – ${chapterNum}` : novelName;
+            const li = document.createElement('li');
+            li.innerHTML = `
+                <a href="${file.folder}/${file.name}">
+                    <span>${label}</span>
+                    <span class="update-date">${formatDate(file.date)}</span>
+                </a>`;
+            container.appendChild(li);
+        });
+
+    } catch (err) {
+        container.innerHTML = `<li><span class="error-text">Lỗi kết nối GitHub API.</span></li>`;
+        console.error('[Mới Cập Nhật]', err);
     }
+}
 
-    // Hàm tự động hiển thị cập nhật từ file config.js
-    document.addEventListener("DOMContentLoaded", function() {
-        const updateContainer = document.getElementById('auto-updates');
-        if (typeof LATEST_CHAPTERS_DATA !== 'undefined' && LATEST_CHAPTERS_DATA.length > 0) {
-            updateContainer.innerHTML = '';
-            const displayCount = Math.min(LATEST_CHAPTERS_DATA.length, 5);
-            for (let i = 0; i < displayCount; i++) {
-                let item = LATEST_CHAPTERS_DATA[i];
-                let li = document.createElement('li');
-                li.innerHTML = `
-                    <a href="${item.link}">
-                        <span>${item.title}</span>
-                        <span class="update-date">${item.date}</span>
-                    </a>
-                `;
-                updateContainer.appendChild(li);
-            }
-        } else {
-            updateContainer.innerHTML = '<li><span>Chưa có cập nhật mới.</span></li>';
+// ── KHUNG 2: HOẠT ĐỘNG GẦN ĐÂY ──────────────────────────────
+// Utterances tạo 1 GitHub Issue cho mỗi trang, bình luận nằm trong Issue đó.
+// API /issues/comments trả về tất cả comment trên toàn repo, sắp xếp theo mới nhất.
+
+let lastCommentId = null;
+
+async function loadRecentComments() {
+    const container = document.getElementById('live-comment-feed');
+    try {
+        // Lấy 8 comment mới nhất trên toàn repo (Issues = bình luận Utterances)
+        const res = await fetch(
+            `${GH_API}/issues/comments?sort=created&direction=desc&per_page=8`,
+            { headers: { 'Accept': 'application/vnd.github+json' } }
+        );
+        if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        const comments = await res.json();
+
+        if (!comments.length) {
+            container.innerHTML = '<li><span class="loading-text">Chưa có bình luận nào.</span></li>';
+            return;
         }
-    });
-    </script>
+
+        // Toast: thông báo nếu có bình luận mới hơn lần quét trước
+        if (lastCommentId !== null && comments[0].id !== lastCommentId) {
+            const c = comments[0];
+            showToast(c.user.login, c.body);
+        }
+        lastCommentId = comments[0].id;
+
+        container.innerHTML = '';
+        comments.forEach(cmt => {
+            // Tên issue = tiêu đề trang (Utterances đặt issue-term="pathname")
+            const issuePath = cmt.issue_url.split('/').pop(); // số issue
+            const shortMsg  = cmt.body.length > 50 ? cmt.body.substring(0, 50) + '…' : cmt.body;
+            // Link thẳng đến comment trên trang web (dùng html_url của issue)
+            const pageLink  = cmt.html_url.replace('github.com', 'github.com').split('#')[0]
+                                           .replace(`https://github.com/${GH_OWNER}/${GH_REPO}/issues/`, '');
+
+            const li = document.createElement('li');
+            li.innerHTML = `
+                <div class="feed-item">
+                    <div class="feed-meta">
+                        <span class="feed-author">🌿 ${cmt.user.login}</span>
+                        <span class="feed-time">${formatTimeAgo(cmt.created_at)}</span>
+                    </div>
+                    <div class="feed-msg">"${shortMsg}"</div>
+                </div>`;
+            container.appendChild(li);
+        });
+
+    } catch (err) {
+        container.innerHTML = `<li><span class="error-text">Không thể tải bình luận.</span></li>`;
+        console.error('[Hoạt Động Gần Đây]', err);
+    }
+}
+
+function showToast(author, message) {
+    document.getElementById('toast-author').innerText = author;
+    document.getElementById('toast-message').innerText =
+        message.length > 60 ? message.substring(0, 60) + '…' : message;
+    document.getElementById('comment-toast').classList.add('show');
+    setTimeout(closeToast, 6000);
+}
+
+function closeToast() {
+    document.getElementById('comment-toast').classList.remove('show');
+}
+
+// ── Khởi chạy khi trang load xong ────────────────────────────
+document.addEventListener('DOMContentLoaded', function () {
+    loadLatestChapters();
+    loadRecentComments();
+    // Tự làm mới bình luận mỗi 60 giây
+    setInterval(loadRecentComments, 60000);
+});
+
+// ── Dark mode & font size ─────────────────────────────────────
+function toggleDarkMode() {
+    document.body.classList.toggle('dark-mode');
+    const isDark = document.body.classList.contains('dark-mode');
+    localStorage.setItem('night-mode', isDark ? 'on' : 'off');
+    document.getElementById('dark-mode-btn').innerText = isDark ? '☀️' : '🌙';
+}
+
+function changeFontSize(delta) {
+    const content = document.querySelector('.story-content') || document.querySelector('main');
+    const currentSize = parseFloat(window.getComputedStyle(content).fontSize);
+    content.style.fontSize = (currentSize + delta) + 'px';
+}
+
+(function () {
+    if (localStorage.getItem('night-mode') === 'on') {
+        document.body.classList.add('dark-mode');
+        setTimeout(function () {
+            var btn = document.getElementById('dark-mode-btn');
+            if (btn) btn.innerText = '☀️';
+        }, 100);
+    }
+})();
+
+// ── Trang chào & tìm kiếm ────────────────────────────────────
+function closeWelcomeScreen() {
+    document.getElementById('welcome-screen').classList.add('fade-out');
+}
+
+function searchNovel() {
+    var input = document.getElementById('searchBar').value.toLowerCase();
+    var cards  = document.getElementsByClassName('novel-card');
+    for (var i = 0; i < cards.length; i++) {
+        var title = cards[i].querySelector('.novel-title').innerText.toLowerCase();
+        cards[i].style.display = title.includes(input) ? '' : 'none';
+    }
+}
+</script>
+
 </body>
 </html>
