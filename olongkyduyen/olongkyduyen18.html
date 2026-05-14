@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <link rel="stylesheet" href="../style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ô Long Kỳ Duyên - Chương 18</title>
+    
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f1f7f4;
+            color: #2d3a34;
+            line-height: 1.8;
+        }
+
+        .navbar {
+            background-color: #ffffff;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 10%;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+
+        .navbar .logo {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #4a6b5d;
+            text-decoration: none;
+        }
+
+        .nav-links a {
+            color: #555;
+            text-decoration: none;
+            font-size: 0.95rem;
+            transition: color 0.3s;
+        }
+
+        .nav-links a:hover {
+            color: #4a6b5d;
+        }
+
+        .story-container {
+            max-width: 700px;
+            margin: 40px auto;
+            padding: 30px;
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.02);
+        }
+
+        .story-header {
+            text-align: center;
+            margin-bottom: 35px;
+            border-bottom: 1px dashed #8fae9f;
+            padding-bottom: 20px;
+        }
+
+        .story-header .novel-name {
+            font-size: 0.95rem;
+            color: #777;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 5px;
+        }
+
+        .story-header .chapter-title {
+            color: #4a6b5d;
+            font-size: 1.6rem;
+            font-weight: 600;
+        }
+
+        .story-content {
+            font-size: 1.15rem;
+            color: #333333;
+            text-align: justify;
+        }
+
+        .story-content p {
+            margin-bottom: 22px;
+            text-indent: 25px;
+        }
+
+        .reading-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 50px;
+            padding-top: 25px;
+            border-top: 1px dashed #8fae9f;
+        }
+
+        .nav-btn {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #ffffff;
+            color: #4a6b5d;
+            text-decoration: none;
+            border: 1px solid #8fae9f;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .nav-btn:hover {
+            background-color: #4a6b5d;
+            color: #ffffff;
+            border-color: #4a6b5d;
+            box-shadow: 0 4px 8px rgba(74, 107, 93, 0.2);
+        }
+
+        .nav-btn.disabled {
+            color: #bbb;
+            border-color: #e0e0e0;
+            background-color: #fafafa;
+            pointer-events: none;
+            box-shadow: none;
+        }
+
+        @media (max-width: 480px) {
+            .story-container { padding: 15px; margin: 20px auto; }
+            .nav-btn { padding: 8px 14px; font-size: 0.8rem; }
+        }
+
+        /* Dark mode toàn trang */
+        body.dark-mode {
+            background-color: #131a17;
+            color: #dae5e0;
+        }
+        body.dark-mode .navbar {
+            background-color: #1b2420;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+        }
+        body.dark-mode .navbar .logo { color: #8fae9f; }
+        body.dark-mode .nav-links a { color: #aaa; }
+        body.dark-mode .story-container {
+            background-color: #1b2420;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+        body.dark-mode .story-header .novel-name { color: #8fae9f; }
+        body.dark-mode .story-header .chapter-title { color: #8fae9f; }
+        body.dark-mode .story-content { color: #dae5e0; }
+        body.dark-mode .nav-btn {
+            background-color: #1b2420;
+            color: #8fae9f;
+            border-color: #4a6b5d;
+        }
+        body.dark-mode .nav-btn:hover {
+            background-color: #4a6b5d;
+            color: #ffffff;
+        }
+        body.dark-mode .nav-btn.disabled {
+            color: #444;
+            border-color: #2e3d36;
+            background-color: #161e1b;
+        }
+    </style>
+</head>
+<body>
+
+<!-- ========================================================
+   BỘ NÚT ĐIỀU KHIỂN NỔI
+   ======================================================== -->
+<div class="reader-controls">
+    <button onclick="changeFontSize(1)" title="Phóng to">A+</button>
+    <button onclick="changeFontSize(-1)" title="Thu nhỏ">A-</button>
+    <button onclick="toggleDarkMode()" id="dark-mode-btn" title="Đổi màu nền">🌙</button>
+</div>
+
+<style>
+.reader-controls {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    z-index: 10000;
+}
+.reader-controls button {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    border: 2px solid #8fae9f;
+    background: white;
+    color: #4a6b5d;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    transition: 0.3s;
+}
+.reader-controls button:hover {
+    background: #4a6b5d;
+    color: white;
+    transform: scale(1.1);
+}
+body.dark-mode .reader-controls button {
+    background: #1b2420;
+    color: #8fae9f;
+    border-color: #4a6b5d;
+}
+body.dark-mode .reader-controls button:hover {
+    background: #4a6b5d;
+    color: white;
+}
+</style>
+
+<!-- ========================================================
+   TẬP LỆNH ĐIỀU KHIỂN CHÍNH (ĐÃ SỬA LỖI)
+   ======================================================== -->
+<script>
+// 1. Hàm bật/tắt chế độ tối
+function toggleDarkMode() {
+    document.body.classList.toggle('dark-mode');
+    const isDark = document.body.classList.contains('dark-mode');
+    localStorage.setItem('night-mode', isDark ? 'on' : 'off');
+    document.getElementById('dark-mode-btn').innerText = isDark ? '☀️' : '🌙';
+    syncUtterancesTheme(isDark);
+}
+
+// 2. Hàm đổi kích thước chữ
+function changeFontSize(delta) {
+    const content = document.querySelector('.story-content') || document.querySelector('main');
+    const currentSize = parseFloat(window.getComputedStyle(content).fontSize);
+    content.style.fontSize = (currentSize + delta) + 'px';
+}
+
+// 3. Tự động áp dụng chế độ đã lưu khi mở trang
+(function () {
+    if (localStorage.getItem('night-mode') === 'on') {
+        document.body.classList.add('dark-mode');
+        setTimeout(function () {
+            var btn = document.getElementById('dark-mode-btn');
+            if (btn) btn.innerText = '☀️';
+        }, 100);
+    }
+})();
+</script>
+
+<!-- Thanh đầu trang -->
+<header class="navbar">
+    <a href="../index.html" class="logo">🌿Góc nhỏ của Khiết</a>
+    <nav class="nav-links">
+        <a href="../index.html">Trang Chủ</a>
+    </nav>
+</header>
+
+<!-- Khung đọc truyện -->
+<main class="story-container">
+
+    <div class="story-header">
+        <p class="novel-name">Ô Long Kỳ Duyên</p>
+        <h1 class="chapter-title">Chương 18</h1>
+    </div>
+
+    <article class="story-content">
+<p>&ldquo;Ta&hellip; l&uacute;c đ&oacute; ta&hellip;&rdquo; L&ocirc;i Hạo Minh lắp bắp n&oacute;i: &ldquo;Đ&uacute;ng rồi, l&uacute;c đ&oacute; ta t&igrave;nh cờ đang đi ngang qua lầu Cảnh Dược, định&hellip;&rdquo;</p>
+<p>&ldquo;Đủ rồi!&rdquo; đột nhi&ecirc;n, L&ocirc;i l&atilde;o phu nh&acirc;n từ n&atilde;y giờ vẫn im lặng kh&ocirc;ng thể nhịn được nữa m&agrave; lớn tiếng cắt ngang lời g&atilde;. B&agrave; nghi&ecirc;m nghị bước đến trước mặt Hạo Minh, giơ tay l&ecirc;n t&aacute;t nảy lửa in r&otilde; tr&ecirc;n gương mặt g&atilde;.</p>
+<p>Cả đại sảnh lập tức y&ecirc;n tĩnh đến mức c&oacute; thể nghe được tiếng ruồi bay.</p>
+<p>&ldquo;Mẹ!&rdquo; L&ocirc;i Hạo Minh ngỡ ng&agrave;ng nh&igrave;n người mẹ vốn lu&ocirc;n y&ecirc;u thương m&igrave;nh từ nhỏ đến lớn.</p>
+<p>&ldquo;C&aacute;c ngươi tưởng c&ograve;n c&oacute; thể chối c&atilde;i sao? Ch&iacute;nh v&igrave; ta đ&atilde; nu&ocirc;i c&aacute;c ngươi từ nhỏ, n&ecirc;n ta nh&igrave;n ra được, c&aacute;c ngươi đang n&oacute;i dối!&rdquo;</p>
+<p>L&ocirc;i l&atilde;o phu nh&acirc;n đau đớn tr&aacute;ch m&oacute;c: &ldquo;C&aacute;c ngươi biết điều g&igrave; l&agrave; điều một người mẹ sợ nhất kh&ocirc;ng? Ch&iacute;nh l&agrave; tận mắt thấy con c&aacute;i m&igrave;nh ch&eacute;m giết lẫn nhau! Từ nhỏ, ba đứa c&aacute;c ngươi c&ugrave;ng nhau lớn l&ecirc;n, ta thật kh&ocirc;ng ngờ c&aacute;c ngươi lại bắt tay nhau hại chết Hạo Nhi&ecirc;n, một lần chưa đủ, lại c&ograve;n mưu hại th&ecirc;m lần nữa!&rdquo;</p>
+<p>&ldquo;D&igrave;&hellip;&rdquo; Tống T&igrave;nh rơi nước mắt hối hận.</p>
+<p>&ldquo;C&aacute;c ngươi nhớ lại đi, từ nhỏ đến lớn, thứ g&igrave; c&aacute;c ngươi th&iacute;ch, muốn g&igrave;, Hạo Nhi&ecirc;n đều nhường cho c&aacute;c ngươi, hoặc gi&uacute;p c&aacute;c ngươi c&oacute; được. Vậy m&agrave; c&aacute;c ngươi lại b&aacute;o đ&aacute;p n&oacute; thế n&agrave;y. &Agrave;i&hellip;&rdquo; L&ocirc;i l&atilde;o phu nh&acirc;n thở d&agrave;i một hơi n&atilde;o nề.</p>
+<p>&ldquo;Suy cho c&ugrave;ng, lỗi l&agrave; ở ta, người l&agrave;m mẹ n&agrave;y qu&aacute; hồ đồ, kh&ocirc;ng nh&igrave;n ra t&igrave;nh cảm thực sự giữa hai đứa, tự &yacute; đ&iacute;nh ước&nbsp;Hạo Nhi&ecirc;n v&agrave; T&igrave;nh Nhi với nhau, mới khiến sự việc ra n&ocirc;ng nỗi n&agrave;y.&rdquo;</p>
+<p>&ldquo;Kh&ocirc;ng phải vậy!&rdquo; l&uacute;c n&agrave;y, L&ocirc;i Hạo Minh bỗng lớn tiếng phủ nhận, &ldquo;Ta kh&ocirc;ng hại đại ca chỉ v&igrave; T&igrave;nh Nhi! Muội ấy chỉ l&agrave; một qu&acirc;n cờ trong kế hoạch của ta m&agrave; th&ocirc;i!&rdquo;</p>
+<p>&ldquo;Nhị biểu ca!&rdquo; Tống T&igrave;nh tr&ograve;n mắt, hai tay &ocirc;m miệng, kh&ocirc;ng thể tin v&agrave;o tai m&igrave;nh khi nghe lời đ&oacute; từ ch&iacute;nh người từng hết mực dịu d&agrave;ng, th&acirc;m t&igrave;nh v&agrave; l&atilde;ng mạn với m&igrave;nh.</p>
+<p>&ldquo;Ha ha ha&hellip;&rdquo; L&ocirc;i Hạo Minh bỗng bật cười như h&oacute;a đi&ecirc;n, &ldquo;Con th&iacute;ch g&igrave;, muốn g&igrave; đại ca đều cho con ư?! Vậy nếu con muốn Phục Long Bảo, huynh ấy c&oacute; chịu cho kh&ocirc;ng? Từ nhỏ đến lớn, trong l&ograve;ng mẹ v&agrave; cha chỉ c&oacute; đại ca l&agrave; người kế thừa xứng đ&aacute;ng của Phục Long Bảo, bất kể con cố gắng thế n&agrave;o, c&aacute;c ngươi chỉ khen ngợi huynh ấy, m&agrave; chưa từng nghĩ đến việc con cũng c&oacute; thể kế thừa! Người ngo&agrave;i cũng vậy, trong mắt họ, con chỉ l&agrave; em trai của L&ocirc;i Hạo Nhi&ecirc;n, bảo chủ Phục Long Bảo. Bề ngo&agrave;i th&igrave; t&ocirc;n k&iacute;nhcona, nhưng người họ thật sự k&iacute;nh trọng l&agrave; đại ca L&ocirc;i Hạo Nhi&ecirc;n! Con kh&ocirc;ng muốn như vậy nữa! Chỉ cần con thay thế được đại ca l&agrave;m bảo chủ, mọi người sẽ k&iacute;nh trọng con!&rdquo;</p>
+<p>Nghe được những lời thật t&igrave;nh n&agrave;y, L&ocirc;i Hạo Nhi&ecirc;n&nbsp;tr&ecirc;n m&aacute;i nh&agrave; chỉ biết lặng lẽ ngước mắt nh&igrave;n trời, kh&ocirc;ng n&oacute;i th&agrave;nh lời. Kh&ocirc;ng ngờ đệ đệ ruột của m&igrave;nh lại v&igrave; những hư danh như vậy m&agrave; sinh l&ograve;ng đố kỵ, đến mức muốn giết huynh trưởng. Phải chăng ch&iacute;nh m&igrave;nh đ&atilde; sai ở đ&acirc;u? C&oacute; những điều tưởng chừng như v&igrave; tốt cho đệ ấy, h&oacute;a ra lại ho&agrave;n to&agrave;n kh&ocirc;ng phải. Từ trước đến nay, hắn chỉ muốn l&agrave;m một người huynh trưởng tốt, ai ngờ lại biến th&agrave;nh tr&ograve; cười bi thương thế n&agrave;y.</p>
+<p>L&ocirc;i l&atilde;o phu nh&acirc;n rơi lệ đầy đau đớn, tr&aacute;ch bản th&acirc;n kh&ocirc;ng th&ocirc;i: &ldquo;Từ nhỏ, ta v&agrave; cha con muốn cho ngươi một tuổi thơ hạnh ph&uacute;c, kh&ocirc;ng muốn con giống đại ca từ b&eacute; đ&atilde; phải g&aacute;nh v&aacute;c trọng tr&aacute;ch của Phục Long Bảo, n&ecirc;n lu&ocirc;n nu&ocirc;ng chiều con, muốn g&igrave; được nấy. Giờ th&igrave; thấy rồi đ&oacute;, tất cả l&agrave; do ta tự cho m&igrave;nh l&agrave; đ&uacute;ng, sinh con m&agrave; chẳng hiểu l&ograve;ng con. Tất cả đều l&agrave; lỗi của người mẹ n&agrave;y!&rdquo;</p>
+<p>Vừa n&oacute;i, b&agrave; vừa đấm v&agrave;o ngực m&igrave;nh, đau đớn v&ocirc; c&ugrave;ng.</p>
+<p>&ldquo;L&atilde;o phu nh&acirc;n, xin đừng tự tr&aacute;ch nữa, phải giữ g&igrave;n sức khỏe mới được.&rdquo; Mai Nương nắm lấy tay b&agrave; ngăn lại. B&agrave; l&agrave; nha ho&agrave;n hồi m&ocirc;n của L&ocirc;i l&atilde;o phu nh&acirc;n, đ&atilde; hầu hạ b&agrave; suốt hơn bốn mươi năm trời.</p>
+<p>&ldquo;Văn Sinh, ta biết người Hạo Nhi&ecirc;n tin tưởng nhất ch&iacute;nh l&agrave; ngươi, chuyện n&agrave;y giao cho ngươi xử l&yacute;, ta mệt rồi.&rdquo; L&ocirc;i l&atilde;o phu nh&acirc;n để Mai Nương d&igrave;u đi khỏi đại sảnh.</p>
+<p>&ldquo;Nhị bảo chủ, ch&uacute;ng ta đều biết tr&ecirc;n giang hồ c&oacute; một quy tắc, đ&oacute; l&agrave; kẻ b&aacute;n thuốc độc nhất định sẽ đưa cả thuốc giải c&ugrave;ng liều lượng. Ta tin kẻ b&aacute;n thuốc cho người cũng kh&ocirc;ng ngoại lệ, chắc chắn người đang giữ thuốc giải. Ta sẽ giam người v&agrave;o đại lao, đợi Hạo Nhi&ecirc;n tỉnh lại rồi mới xử l&yacute;. D&ugrave; người kh&ocirc;ng giao thuốc giải, kh&ocirc;ng l&acirc;u nữa, khi nh&oacute;m người Trần Ninh t&igrave;m ra nguy&ecirc;n liệu, Hạo Nhi&ecirc;n cũng sẽ tỉnh lại. Nhưng người n&ecirc;n biết, nếu b&acirc;y giờ người đưa thuốc giải ra, c&oacute; thể Hạo Nhi&ecirc;n chẳng những tha thứ cho người, m&agrave; c&ograve;n cho người một con đường sống tốt. C&ograve;n nếu người ngoan cố kh&ocirc;ng đưa, hậu quả ra sao&hellip; tự người nghĩ đi.&rdquo;</p>
+<p>Biết r&otilde; m&igrave;nh đ&atilde; thất thế, L&ocirc;i Hạo Minh đ&agrave;nh giao thuốc giải ra, hy vọng được một kết cục tốt hơn. Sau khi nhận được thuốc giải, V&acirc;n Văn Sinh c&ugrave;ng mọi người lập tức chạy về lầu Cảnh Dược&hellip;</p>
+<p>C&ograve;n L&ocirc;i Hạo Nhi&ecirc;n&nbsp;n&atilde;y giờ vẫn nghe l&eacute;n tr&ecirc;n m&aacute;i nh&agrave;, cũng nhanh ch&oacute;ng theo sau. Tiểu Thi&ecirc;n, ta sắp được gặp lại ngươi bằng th&acirc;n phận thật rồi, được đường đường ch&iacute;nh ch&iacute;nh ở b&ecirc;n ngươi!</p>
+
+</article>
+
+    <!-- Thanh nút điều hướng cuối trang -->
+    <div class="reading-nav">
+        <a href="olongkyduyen17.html" class="nav-btn">⬅️ Chương trước</a>
+        <a href="../mucluc/olongkyduyen.html" class="nav-btn">📋 Mục lục</a>
+        <a href="olongkyduyen19.html" class="nav-btn">Chương sau ➡️</a>
+    </div>
+
+</main>
+
+<!-- ========================================================
+   KHUNG THẢO LUẬN TOÀN CHƯƠNG (UTTERANCES)
+   ======================================================== -->
+<div class="chapter-discussion-box">
+    <div class="discussion-header">
+        <span class="icon">🌿</span>
+        <h3>Thảo luận về chương này</h3>
+        <span class="icon">🌸</span>
+    </div>
+    <div class="comment-section">
+        <script src="https://utteranc.es/client.js"
+                repo="gocnhocuakhiet/gocnhocuakhiet.github.io"
+                issue-term="pathname"
+                label="comment"
+                theme="github-light"
+                crossorigin="anonymous"
+                async>
+        </script>
+    </div>
+</div>
+
+<!-- ========================================================
+   POPUP SIDEBAR BÌNH LUẬN THEO TỪNG ĐOẠN VĂN
+   ======================================================== -->
+<div id="comment-sidebar" class="comment-sidebar">
+    <div class="sidebar-header">
+        <h4 id="sidebar-paragraph-title">Bình luận đoạn văn</h4>
+        <button class="close-sidebar-btn" onclick="closeInlineComment()">✕</button>
+    </div>
+    <div class="quoted-paragraph-box" id="quoted-paragraph-box"></div>
+    <p class="sidebar-hint">Bình luận bên dưới áp dụng cho toàn chương. Đoạn văn bạn chọn đã được trích dẫn ở trên để tiện tham chiếu.</p>
+    <div id="sidebar-utterances-mount"></div>
+</div>
+<div id="sidebar-overlay" class="sidebar-overlay" onclick="closeInlineComment()"></div>
+
+<!-- ========================================================
+   TẬP LỆNH XỬ LÝ BÌNH LUẬN & UTTERANCES
+   ======================================================== -->
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const paragraphs = document.querySelectorAll('.story-content p');
+
+    paragraphs.forEach(function (p, index) {
+        const row = document.createElement('div');
+        row.className = 'comment-row';
+        p.parentNode.insertBefore(row, p);
+        row.appendChild(p);
+
+        const badge = document.createElement('span');
+        badge.className = 'comment-badge';
+        badge.innerHTML = '💬';
+        badge.title = 'Bình luận về đoạn này';
+        badge.onclick = function () {
+            openInlineComment(p.innerText.trim().substring(0, 120), index + 1);
+        };
+        row.appendChild(badge);
+    });
+});
+
+function openInlineComment(previewText, paragraphNumber) {
+    document.getElementById('sidebar-paragraph-title').innerText = 'Đoạn văn số ' + paragraphNumber;
+    document.getElementById('quoted-paragraph-box').innerText = '"' + previewText + (previewText.length >= 120 ? '…' : '') + '"';
+    document.getElementById('comment-sidebar').classList.add('active');
+    document.getElementById('sidebar-overlay').classList.add('active');
+
+    const mount = document.getElementById('sidebar-utterances-mount');
+    if (!mount.hasChildNodes()) {
+        const script = document.createElement('script');
+        script.src = 'https://utteranc.es/client.js';
+        script.setAttribute('repo', 'gocnhocuakhiet/gocnhocuakhiet.github.io');
+        script.setAttribute('issue-term', 'pathname');
+        script.setAttribute('label', 'comment');
+        script.setAttribute('theme', getCurrentUtterancesTheme());
+        script.setAttribute('crossorigin', 'anonymous');
+        script.async = true;
+        mount.appendChild(script);
+    }
+}
+
+function closeInlineComment() {
+    document.getElementById('comment-sidebar').classList.remove('active');
+    document.getElementById('sidebar-overlay').classList.remove('active');
+}
+
+function getCurrentUtterancesTheme() {
+    return document.body.classList.contains('dark-mode') ? 'github-dark' : 'github-light';
+}
+
+function syncUtterancesTheme(isDark) {
+    const theme = isDark ? 'github-dark' : 'github-light';
+    document.querySelectorAll('.utterances-frame').forEach(function (iframe) {
+        iframe.contentWindow.postMessage({ type: 'set-theme', theme: theme }, 'https://utteranc.es');
+    });
+}
+</script>
+
+<!-- ========================================================
+   CSS KHUNG BÌNH LUẬN & SIDEBAR
+   ======================================================== -->
+<style>
+.chapter-discussion-box {
+    max-width: 700px;
+    margin: 30px auto 50px auto;
+    padding: 25px;
+    background-color: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.02);
+}
+
+.discussion-header {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 25px;
+    border-bottom: 1px dashed #dae5e0;
+    padding-bottom: 15px;
+}
+.discussion-header h3 { color: #4a6b5d; font-size: 1.2rem; margin: 0; }
+.comment-section { width: 100%; min-height: 150px; }
+
+.comment-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 15px;
+    margin-bottom: 22px;
+    width: 100%;
+}
+.comment-row p { flex: 1; margin-bottom: 0 !important; }
+
+.comment-badge {
+    cursor: pointer;
+    font-size: 0.9rem;
+    padding: 4px 6px;
+    background-color: #eaf2ee;
+    border-radius: 10px;
+    color: #4a6b5d;
+    transition: all 0.2s ease;
+    user-select: none;
+    margin-top: 3px;
+    flex-shrink: 0;
+}
+.comment-badge:hover { background-color: #4a6b5d; color: #ffffff; transform: scale(1.1); }
+
+.comment-sidebar {
+    position: fixed;
+    top: 0;
+    right: -420px;
+    width: 400px;
+    height: 100%;
+    background: #ffffff;
+    box-shadow: -5px 0 15px rgba(0,0,0,0.05);
+    z-index: 100000;
+    transition: right 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+    padding: 24px;
+    overflow-y: auto;
+    box-sizing: border-box;
+}
+.comment-sidebar.active { right: 0; }
+
+.sidebar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #dae5e0;
+    padding-bottom: 12px;
+    margin-bottom: 16px;
+}
+.sidebar-header h4 { color: #4a6b5d; margin: 0; }
+.close-sidebar-btn { background: none; border: none; font-size: 1.2rem; color: #999; cursor: pointer; }
+
+.quoted-paragraph-box {
+    background: #f0f7f4;
+    border-left: 3px solid #8fae9f;
+    border-radius: 4px;
+    padding: 10px 14px;
+    font-size: 0.88rem;
+    color: #4a6b5d;
+    font-style: italic;
+    line-height: 1.5;
+    margin-bottom: 12px;
+}
+
+.sidebar-hint {
+    font-size: 0.82rem;
+    color: #aaa;
+    text-align: center;
+    margin-bottom: 16px;
+}
+
+.sidebar-overlay {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.2);
+    z-index: 99999;
+    display: none;
+}
+.sidebar-overlay.active { display: block; }
+
+/* Dark mode - khung bình luận */
+body.dark-mode .chapter-discussion-box,
+body.dark-mode .comment-sidebar {
+    background-color: #1b2420 !important;
+    border-color: #2e3d36 !important;
+    color: #dae5e0 !important;
+}
+body.dark-mode .discussion-header,
+body.dark-mode .sidebar-header { border-bottom-color: #2e3d36 !important; }
+body.dark-mode .discussion-header h3,
+body.dark-mode .sidebar-header h4 { color: #8fae9f !important; }
+body.dark-mode .quoted-paragraph-box {
+    background: #232e29;
+    border-left-color: #4a6b5d;
+    color: #8fae9f;
+}
+body.dark-mode .comment-badge { background: #25332c; color: #8fae9f; }
+body.dark-mode .sidebar-hint { color: #666; }
+</style>
+
+</body>
+</html>
