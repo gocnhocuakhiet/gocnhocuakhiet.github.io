@@ -1,0 +1,809 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <link rel="stylesheet" href="../style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tôi Muốn Đi Ngược Gió - Chương 1</title>
+    
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f1f7f4;
+            color: #2d3a34;
+            line-height: 1.8;
+        }
+
+        .navbar {
+            background-color: #ffffff;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 10%;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+
+        .navbar .logo {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #4a6b5d;
+            text-decoration: none;
+        }
+
+        .nav-links a {
+            color: #555;
+            text-decoration: none;
+            font-size: 0.95rem;
+            transition: color 0.3s;
+        }
+
+        .nav-links a:hover {
+            color: #4a6b5d;
+        }
+
+        .story-container {
+            max-width: 700px;
+            margin: 40px auto;
+            padding: 30px;
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.02);
+        }
+
+        .story-header {
+            text-align: center;
+            margin-bottom: 35px;
+            border-bottom: 1px dashed #8fae9f;
+            padding-bottom: 20px;
+        }
+
+        .story-header .novel-name {
+            font-size: 0.95rem;
+            color: #777;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 5px;
+        }
+
+        .story-header .chapter-title {
+            color: #4a6b5d;
+            font-size: 1.6rem;
+            font-weight: 600;
+        }
+
+        .story-content {
+            font-size: 1.15rem;
+            color: #333333;
+            text-align: justify;
+        }
+
+        .story-content p {
+            margin-bottom: 22px;
+            text-indent: 25px;
+        }
+
+        .reading-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 50px;
+            padding-top: 25px;
+            border-top: 1px dashed #8fae9f;
+        }
+
+        .nav-btn {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #ffffff;
+            color: #4a6b5d;
+            text-decoration: none;
+            border: 1px solid #8fae9f;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        .nav-btn:hover {
+            background-color: #4a6b5d;
+            color: #ffffff;
+            border-color: #4a6b5d;
+            box-shadow: 0 4px 8px rgba(74, 107, 93, 0.2);
+        }
+
+        .nav-btn.disabled {
+            color: #bbb;
+            border-color: #e0e0e0;
+            background-color: #fafafa;
+            pointer-events: none;
+            box-shadow: none;
+        }
+
+        @media (max-width: 480px) {
+            .story-container { padding: 15px; margin: 20px auto; }
+            .nav-btn { padding: 8px 14px; font-size: 0.8rem; }
+        }
+
+        /* Dark mode toàn trang */
+        body.dark-mode {
+            background-color: #131a17;
+            color: #dae5e0;
+        }
+        body.dark-mode .navbar {
+            background-color: #1b2420;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+        }
+        body.dark-mode .navbar .logo { color: #8fae9f; }
+        body.dark-mode .nav-links a { color: #aaa; }
+        body.dark-mode .story-container {
+            background-color: #1b2420;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+        }
+        body.dark-mode .story-header .novel-name { color: #8fae9f; }
+        body.dark-mode .story-header .chapter-title { color: #8fae9f; }
+        body.dark-mode .story-content { color: #dae5e0; }
+        body.dark-mode .nav-btn {
+            background-color: #1b2420;
+            color: #8fae9f;
+            border-color: #4a6b5d;
+        }
+        body.dark-mode .nav-btn:hover {
+            background-color: #4a6b5d;
+            color: #ffffff;
+        }
+        body.dark-mode .nav-btn.disabled {
+            color: #444;
+            border-color: #2e3d36;
+            background-color: #161e1b;
+        }
+    </style>
+</head>
+<body>
+
+<!-- ========================================================
+   BỘ NÚT ĐIỀU KHIỂN NỔI
+   ======================================================== -->
+<div class="reader-controls">
+    <button onclick="changeFontSize(1)" title="Phóng to">A+</button>
+    <button onclick="changeFontSize(-1)" title="Thu nhỏ">A-</button>
+    <button onclick="toggleDarkMode()" id="dark-mode-btn" title="Đổi màu nền">🌙</button>
+</div>
+
+<style>
+.reader-controls {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    z-index: 10000;
+}
+.reader-controls button {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    border: 2px solid #8fae9f;
+    background: white;
+    color: #4a6b5d;
+    font-size: 16px;
+    font-weight: bold;
+    cursor: pointer;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    transition: 0.3s;
+}
+.reader-controls button:hover {
+    background: #4a6b5d;
+    color: white;
+    transform: scale(1.1);
+}
+body.dark-mode .reader-controls button {
+    background: #1b2420;
+    color: #8fae9f;
+    border-color: #4a6b5d;
+}
+body.dark-mode .reader-controls button:hover {
+    background: #4a6b5d;
+    color: white;
+}
+</style>
+
+<!-- ========================================================
+   TẬP LỆNH ĐIỀU KHIỂN CHÍNH (ĐÃ SỬA LỖI)
+   ======================================================== -->
+<script>
+// 1. Hàm bật/tắt chế độ tối
+function toggleDarkMode() {
+    document.body.classList.toggle('dark-mode');
+    const isDark = document.body.classList.contains('dark-mode');
+    localStorage.setItem('night-mode', isDark ? 'on' : 'off');
+    document.getElementById('dark-mode-btn').innerText = isDark ? '☀️' : '🌙';
+    syncUtterancesTheme(isDark);
+}
+
+// 2. Hàm đổi kích thước chữ
+function changeFontSize(delta) {
+    const content = document.querySelector('.story-content') || document.querySelector('main');
+    const currentSize = parseFloat(window.getComputedStyle(content).fontSize);
+    content.style.fontSize = (currentSize + delta) + 'px';
+}
+
+// 3. Tự động áp dụng chế độ đã lưu khi mở trang
+(function () {
+    if (localStorage.getItem('night-mode') === 'on') {
+        document.body.classList.add('dark-mode');
+        setTimeout(function () {
+            var btn = document.getElementById('dark-mode-btn');
+            if (btn) btn.innerText = '☀️';
+        }, 100);
+    }
+})();
+</script>
+
+<!-- Thanh đầu trang -->
+<header class="navbar">
+    <a href="../index.html" class="logo">🌿Góc nhỏ của Khiết</a>
+    <nav class="nav-links">
+        <a href="../index.html">Trang Chủ</a>
+    </nav>
+</header>
+
+<!-- Khung đọc truyện -->
+<main class="story-container">
+
+    <div class="story-header">
+        <p class="novel-name">Tôi Muốn Đi Ngược Gió</p>
+        <h1 class="chapter-title">Chương 1</h1>
+    </div>
+
+    <article class="story-content">
+       <p>Đ&ecirc;m khuya r&eacute;t lạnh, khi người đ&agrave;n &ocirc;ng mồ h&ocirc;i nhễ nhại r&uacute;t ra khỏi người, Giang Hồ mới thật sự cảm nhận được c&aacute;i gi&aacute; lạnh của ban đ&ecirc;m. C&ocirc; ợ một hơi rượu, mơ mơ hồ hồ, nửa tỉnh nửa m&ecirc;. Chỉ l&agrave; trong gi&acirc;y ph&uacute;t mất đi hơi ấm kề b&ecirc;n, nhịp tim c&oacute; hơi nhanh v&agrave; loạn nhịp, ngược lại l&agrave;m đầu &oacute;c tỉnh t&aacute;o đ&ocirc;i phần.</p>
+<p>Người đ&agrave;n &ocirc;ng &ocirc;m chặt eo rồi h&ocirc;n s&acirc;u l&ecirc;n cổ c&ocirc;. Th&acirc;n thể người đ&agrave;n &ocirc;ng cũng c&oacute; m&ugrave;i rượu, nụ h&ocirc;n của anh c&ograve;n mang theo hơi men, lưu luyến r&atilde;nh giữa tr&ecirc;n người c&ocirc;, muốn tiếp tục chuốc say c&ocirc;.</p>
+<p>Chỉ mong m&atilde;i ch&igrave;m trong cơn say, kh&ocirc;ng cần tỉnh lại, l&uacute;c n&agrave;y Giang Hồ nghĩ như vậy.</p>
+<p>Người đ&agrave;n &ocirc;ng cuối c&ugrave;ng thấm mệt, bu&ocirc;ng c&ocirc; ra rồi ngủ thiếp đi. Giang Hồ dần dần tỉnh t&aacute;o, l&agrave;m thế n&agrave;o cũng kh&ocirc;ng ngủ được. C&ocirc; trở m&igrave;nh quay lưng về ph&iacute;a người đ&agrave;n &ocirc;ng, h&iacute;t một hơi thật s&acirc;u. Kh&ocirc;ng kh&iacute; trong ph&ograve;ng cũng lạnh buốt. Vừa rồi bọn họ kh&ocirc;ng bật m&aacute;y sưởi. Sau khi trải qua sự ấm &aacute;p hư ảo, vẫn cần đối mặt với hiện thực lạnh lẽo.</p>
+<p>Giang Hồ nhớ lại, đ&acirc;y l&agrave; một kh&aacute;ch sạn tư nh&acirc;n tr&ecirc;n n&uacute;i, d&ugrave; vẻ ngo&agrave;i c&oacute; xa hoa, nhưng đứng một m&igrave;nh tr&ecirc;n n&uacute;i, vẫn thật lạnh lẽo. Nghĩ đến đ&acirc;y, gi&aacute; lạnh trong l&ograve;ng c&ocirc; kết th&agrave;nh băng d&acirc;ng l&ecirc;n từ s&acirc;u thẳm, khi lạnh lẽo đến c&ugrave;ng cực, liền h&oacute;a th&agrave;nh những giọt nước mắt lạnh gi&aacute;, su&yacute;t ch&uacute;t đ&atilde; tu&ocirc;n rơi.</p>
+<p>Giang Hồ kh&ocirc;ng biết l&agrave; hối hận hay đau khổ, cũng kh&ocirc;ng c&oacute; thời gian để x&aacute;c nhận kỹ c&agrave;ng. C&ocirc; d&ugrave;ng sức xoa xoa phần eo v&agrave; hai ch&acirc;n nhức mỏi. Người đ&agrave;n &ocirc;ng b&ecirc;n cạnh chậm r&atilde;i ph&aacute;t ra tiếng thở đều đặn, c&oacute; lẽ đ&atilde; ngủ say rồi.</p>
+<p>Căn ph&ograve;ng im lặng trở lại.</p>
+<p>Giang Hồ hơi ngẩng đầu, đối diện giường l&agrave; khung cửa sổ, r&egrave;m cửa trắng khiến b&oacute;ng n&uacute;i mờ ảo ngo&agrave;i cửa sổ c&agrave;ng giống y&ecirc;u ma quỷ qu&aacute;i trong đ&ecirc;m đen, c&oacute; một sức hấp dẫn kh&ocirc;ng thể giải th&iacute;ch được. C&ocirc; chống người ngồi dậy, lạnh lẽo trong l&ograve;ng lần nữa hội tụ, th&ocirc;i th&uacute;c c&ocirc; đứng l&ecirc;n. Đối diện với cửa sổ, c&ocirc; đứng dậy đi về ph&iacute;a trước, nhẹ nh&agrave;ng v&eacute;n r&egrave;m, ấn nhẹ chốt, d&ugrave;ng ch&uacute;t sức đẩy ra. Cửa sổ mở toang, gi&oacute; tr&ecirc;n n&uacute;i cuốn tấm r&egrave;m trắng, phất phơ kh&ocirc;ng ngừng, như một b&oacute;ng trắng c&ocirc; đơn.</p>
+<p>Từ khe hở giữa những tấm r&egrave;m, b&ecirc;n ngo&agrave;i kh&ocirc;ng c&oacute; y&ecirc;u ma quỷ qu&aacute;i n&agrave;o, chỉ c&oacute; trăng s&aacute;ng vời vợi tr&ecirc;n bầu trời đ&ecirc;m. Những v&igrave; sao lấp l&aacute;nh như thể rơi hết xuống ngọn n&uacute;i cao tối om ph&iacute;a xa, để vầng trăng đơn c&ocirc;i gắng gượng chống đỡ.</p>
+<p>C&oacute; lẽ trăng kia cũng sẽ thấy lạnh. Giang Hồ kh&ocirc;ng khỏi v&ograve;ng tay &ocirc;m lấy ch&iacute;nh m&igrave;nh, ngẩn ngơ nh&igrave;n trăng kia một hồi, rồi lại chợt bu&ocirc;ng hai tay, chậm r&atilde;i đặt l&ecirc;n khung cửa sổ.</p>
+<p>M&ugrave;a xu&acirc;n đến rất sớm ở Izu, tuyết đọng ng&agrave;y đ&ocirc;ng c&ograve;n chưa tan, hoa nơi đ&acirc;y đ&atilde; nở rộ, c&ograve;n c&oacute; khu rừng tuyết t&ugrave;ng nối d&agrave;i giữa thung lũng s&acirc;u thẳm. B&acirc;y giờ trời tối đến mức kh&ocirc;ng thể nh&igrave;n thấy những đ&oacute;a hoa y&ecirc;u kiều nở rộ đầu xu&acirc;n, hay thung lũng tuyết t&ugrave;ng dưới cửa sổ.</p>
+<p>Nhưng Giang Hồ biết dưới cửa sổ n&agrave;y l&agrave; một thung lũng, dưới đ&oacute; c&oacute; một con suối. Nếu l&agrave; ban ng&agrave;y, c&oacute; thể thấy được khung cảnh đẹp đẽ tr&aacute;ng lệ khu rừng tuyết t&ugrave;ng nối d&agrave;i dưới thung lũng. Giang Hồ sờ nhẹ khung cửa sổ, k&iacute;ch thước rất ph&ugrave; hợp, người Nhật Bản rất ch&uacute; trọng đến chuyện lấy con người l&agrave;m gốc, rộng cao của cửa sổ n&agrave;y c&oacute; thể l&agrave;m người sống ở đ&acirc;y c&oacute; tầm nh&igrave;n đẹp hướng về n&uacute;i Amagi.</p>
+<p>K&iacute;ch thước n&agrave;y cũng đủ để c&ocirc; l&agrave;m một c&uacute; nhảy vọt.</p>
+<p>C&oacute; một vị tiền bối m&agrave; c&ocirc; gọi l&agrave; &lsquo;d&igrave; Hồng&rsquo;, đ&atilde; n&oacute;i thế n&agrave;y trong tiệc rượu &ldquo;Rất nhiều người Nhật Bản chọn tự tử ở đ&acirc;y. Được ch&ocirc;n cất trong thung lũng xinh đẹp, linh hồn c&oacute; thể bay l&ecirc;n n&uacute;i Amagi. C&oacute; lẽ n&uacute;i Amagi kh&ocirc;ng c&oacute; nữ thần n&uacute;i tuyết như n&uacute;i Fuji, nhưng vẫn l&agrave; nơi gần với thi&ecirc;n đường hơn.&rdquo;</p>
+<p>Giang Hồ nghe vậy, lại kh&ocirc;ng tự chủ được m&agrave; ghi nhớ c&acirc;u n&agrave;y.</p>
+<p>Tr&ecirc;n n&uacute;i Amagi c&oacute; suối nước n&oacute;ng Yushima, kh&oacute;i sương lượn lờ, rất giống chốn thần ti&ecirc;n, ai cũng muốn đến. Một v&agrave;i kh&aacute;ch sạn suối nước n&oacute;ng được x&acirc;y dựng tr&ecirc;n những v&aacute;ch n&uacute;i phồn hoa tươi đẹp, kh&aacute;ch sạn Yumoto nổi tiếng nhất cũng ở đ&acirc;y. &lt;Vũ nữ Izu&gt; đ&atilde; được Kawabata Yasunari viết ở đ&oacute;, nhưng trong c&acirc;u chuyện đẹp kia kh&ocirc;ng kể đến g&oacute;c nhảy khỏi v&aacute;ch n&uacute;i nguy hiểm n&agrave;y. Kh&aacute;ch sạn tư nh&acirc;n n&agrave;y được x&acirc;y tr&ecirc;n v&aacute;ch n&uacute;i hiểm trở c&oacute; tầm nh&igrave;n to&agrave;n cảnh n&uacute;i Amagi.</p>
+<p>Từ đ&acirc;y nhảy xuống, chắc chắn tan xương n&aacute;t thịt, kết th&uacute;c cuộc đời, sau đ&oacute; h&ograve;a m&igrave;nh v&agrave;o d&ograve;ng chảy, thả hồn đến tr&ecirc;n n&uacute;i Amagi.</p>
+<p>Giang Hồ nắm chặt m&eacute;p cửa sổ, hạ thấp eo, nhắm mắt lại, cắn chặt răng, sắp kh&ocirc;ng c&ograve;n vướng bận g&igrave; nữa. Chỉ trong nh&aacute;y mắt th&ocirc;i, c&ocirc; nhủ thầm trong l&ograve;ng.</p>
+<p>Gi&oacute; mạnh đập v&agrave;o mặt c&ocirc; c&oacute; ch&uacute;t đau, nhưng c&ocirc; chẳng quan t&acirc;m, kiễng ch&acirc;n g&aacute;c đầu gối l&ecirc;n khung cửa sổ.</p>
+<p>Đột nhi&ecirc;n, eo c&ocirc; bị một c&aacute;nh tay cường tr&aacute;ng &ocirc;m lấy, ch&acirc;n đang g&aacute;c tr&ecirc;n khung cửa cũng bị k&eacute;o xuống. Cả người giống như bị người kh&aacute;c k&eacute;o bao bố m&agrave; l&ocirc;i xuống giường.</p>
+<p>C&ocirc; gần như qu&ecirc;n mất trong ph&ograve;ng n&agrave;y c&ograve;n c&oacute; một người đ&agrave;n &ocirc;ng, hiện giờ người đ&agrave;n &ocirc;ng n&agrave;y đang &ocirc;m chặt c&ocirc;, khiến c&ocirc; gần như kh&ocirc;ng thở được</p>
+<p>Giang Hồ h&eacute;t l&ecirc;n: &ldquo;Từ Tư, anh bu&ocirc;ng t&ocirc;i ra!&rdquo;</p>
+<p>Tay ch&acirc;n Từ Tư rất khỏe, giữ chặt c&ocirc; l&agrave;m c&ocirc; kh&ocirc;ng thể động đậy. Anh lạnh giọng: &ldquo;Nếu c&ocirc; nhảy xuống, t&ocirc;i sẽ l&agrave; người đầu ti&ecirc;n bị t&igrave;nh nghi!&rdquo;</p>
+<p>Giang Hồ cố gắng gi&atilde;y dụa, hất t&oacute;c như kẻ đi&ecirc;n, qu&aacute;t mắng: &ldquo;Khốn kiếp, mau bu&ocirc;ng ra!&rdquo;</p>
+<p>Tất nhi&ecirc;n Từ Tư kh&ocirc;ng bu&ocirc;ng, ngược lại d&ugrave;ng sức kh&oacute;a tay c&ocirc;, giữ chặt ch&acirc;n c&ocirc;, qu&aacute;t: &ldquo;Mẹ kiếp, c&ocirc; biết điều một ch&uacute;t cho t&ocirc;i. C&ocirc; v&ocirc; duy&ecirc;n v&ocirc; cớ l&ecirc;n giường với t&ocirc;i, c&ograve;n muốn t&ocirc;i chẳng biết g&igrave; m&agrave; ngồi t&ugrave; sao?&rdquo;</p>
+<p>Giang Hồ gi&atilde;y giụa cơ thể, Từ Tư d&ugrave;ng sức rất mạnh, kh&ocirc;ng chỉ l&agrave;m c&ocirc; đau, m&agrave; c&oacute; gi&atilde;y thế n&agrave;o cũng kh&ocirc;ng tho&aacute;t khỏi khống chế của anh. C&ocirc; h&eacute;t l&ecirc;n: &ldquo;Anh c&uacute;t đi! Chuyện của t&ocirc;i kh&ocirc;ng cần anh lo!&rdquo;</p>
+<p>Từ Tư cười lạnh một tiếng: &ldquo;T&ocirc;i kh&ocirc;ng muốn ngồi t&ugrave; ở Nhật Bản! C&ocirc; muốn chết cũng được, về nh&agrave; m&agrave; nhảy s&ocirc;ng Ho&agrave;ng Phố!&rdquo;</p>
+<p>Giang Hồ ngừng gi&atilde;y giụa, cũng cười lạnh trả lời: &ldquo;T&ocirc;i su&yacute;t qu&ecirc;n mất, anh l&agrave; con một, c&ograve;n chưa c&oacute; con trai, chết th&igrave; oan uổng biết mấy?&rdquo;</p>
+<p>Lời n&agrave;y lập tức l&agrave;m Từ Tư tức giận, anh thả tay ra, b&oacute;p chặt cằm c&ocirc;, l&agrave;m c&ocirc; rất đau: &ldquo;N&oacute;i nhảm g&igrave; vậy? C&ocirc; muốn chết cũng đừng k&eacute;o người kh&aacute;c chịu tội thay!&rdquo;</p>
+<p>Giang Hồ chợt g&agrave;o kh&oacute;c, nước mắt ch&ocirc;n chặt trong l&ograve;ng cuối c&ugrave;ng kh&ocirc;ng k&igrave;m được. Nước mắt khiến khu&ocirc;n mặt c&ocirc; m&eacute;o m&oacute; xấu x&iacute;, l&agrave;m cổ họng c&ocirc; kiệt sức khản giọng.</p>
+<p>Từ Tư bị nước mắt của c&ocirc; l&agrave;m ngẩn người, trong b&oacute;ng tối chỉ nh&igrave;n thấy khu&ocirc;n mặt c&ocirc; nhăn nh&oacute; đau khổ, &aacute;nh trăng mờ ảo chiếu soi, m&aacute;i t&oacute;c ngắn kh&ocirc;ng che được vẻ xấu x&iacute; n&ecirc;n c&agrave;ng th&ecirc;m kinh ngạc. Anh lu&ocirc;n gh&eacute;t phụ nữ kh&oacute;c, trước giờ cho rằng &iacute;t c&oacute; phụ nữ khi kh&oacute;c vẫn đẹp. Hiện giờ anh c&agrave;ng tin điều đ&oacute;, Giang Hồ trước mắt kh&oacute;c l&oacute;c thảm thiết, thật kh&ocirc;ng muốn nh&igrave;n. Trong l&ograve;ng anh thật sự c&oacute; ch&uacute;t ch&aacute;n gh&eacute;t, nhưng kh&ocirc;ng thể bu&ocirc;ng tay.</p>
+<p>Cửa sổ vẫn mở, gi&oacute; n&uacute;i thổi v&agrave;o, cảm gi&aacute;c l&agrave;nh lạnh, cũng may c&oacute; thể d&ugrave;ng ch&uacute;t gi&aacute; lạnh n&agrave;y để giữ cho m&igrave;nh tỉnh t&aacute;o. Từ Tư quyết định kh&ocirc;ng thể bu&ocirc;ng tay l&uacute;c n&agrave;y, đồng thời phải đề ph&ograve;ng khả năng sau n&agrave;y c&oacute; thể bị li&ecirc;n lụy.</p>
+<p>Thật ra, Từ Tư kh&ocirc;ng phải kh&ocirc;ng hối hận.</p>
+<p>Nếu kh&ocirc;ng phải th&acirc;n thể k&iacute;ch động, t&acirc;m th&aacute;i thả lỏng, vốn nghĩ gặp được người bạn cũ nơi đất kh&aacute;ch, trong l&ograve;ng thầm đắc &yacute;, th&igrave; l&agrave;m sao xảy ra rắc rối trước mắt? Hoặc l&agrave; n&oacute;i Giang Hồ che giấu qu&aacute; tốt khiến anh mất cảnh gi&aacute;c.</p>
+<p>Chuyện n&agrave;y xảy ra như thế n&agrave;o? Từ Tư nhớ lại, mới v&agrave;i tiếng trước, mọi thứ vẫn b&igrave;nh thường ...</p>
+<p>L&uacute;c b&ecirc;n ph&iacute;a ban tổ chức cho xe đến đ&oacute;n Từ Tư v&agrave; th&iacute;m Hồng Điệp tham dự cuộc họp thường ni&ecirc;n của Hiệp hội Doanh nh&acirc;n Trung - Nhật s&aacute;ng nay, đ&oacute; l&agrave; lần thứ nhất anh gặp Giang Hồ.</p>
+<p>Trong ấn tượng đầu ti&ecirc;n của anh th&igrave; vị n&agrave;y l&agrave; vi&ecirc;n ngọc qu&yacute; của chủ tịch Giang Kỳ Thắng của tập đo&agrave;n Hồng Kỳ, &ocirc;ng tr&ugrave;m ng&agrave;nh may mặc trong nước, sao lại tiều tụy như thế n&agrave;y?</p>
+<p>C&ocirc; kh&ocirc;ng chỉ gầy đi m&agrave; m&aacute;i t&oacute;c cũng được cắt ngắn, tr&ecirc;n người mặc &aacute;o sơ mi trắng cổ lật, kho&aacute;c b&ecirc;n ngo&agrave;i &aacute;o cổ thuyền m&agrave;u đen, b&ecirc;n dưới mặc quần len đen c&ugrave;ng t&ocirc;ng. Kh&ocirc;ng c&oacute; ch&uacute;t sắc xu&acirc;n n&agrave;o cả.</p>
+<p>Giang Hồ hiện giờ ho&agrave;n to&agrave;n kh&aacute;c với trong tr&iacute; nhớ của Từ Tư.</p>
+<p>Trong ấn tượng của anh, Giang Hồ l&agrave; một c&ocirc; g&aacute;i hồn nhi&ecirc;n, c&oacute; vẻ ngo&agrave;i như một đứa trẻ, m&aacute;i t&oacute;c d&agrave;i mượt gợn s&oacute;ng, mặt tr&aacute;i xoan, đ&ocirc;i mắt to như b&uacute;p b&ecirc; Barbie. C&ocirc; th&iacute;ch phụng phịu l&agrave;m nũng với bố m&igrave;nh.</p>
+<p>Anh vẫn nhớ lần đầu ti&ecirc;n gặp Giang Hồ, l&agrave; ba năm trước.</p>
+<p>Lần đ&oacute;, anh đến trụ sở ch&iacute;nh của tập đo&agrave;n Hồng Kỳ t&igrave;m Giang Kỳ Thắng đ&agrave;m ph&aacute;n c&ocirc;ng việc, Giang Kỳ Thắng đang tham dự một cuộc họp sắp kết th&uacute;c, n&ecirc;n mời anh đợi một l&uacute;c ở khu vực chờ b&ecirc;n ngo&agrave;i văn ph&ograve;ng.</p>
+<p>Giang Hồ đột nhi&ecirc;n bước ra khỏi văn ph&ograve;ng của Giang Kỳ Thắng, thấy Từ Tư liền hỏi: &ldquo;Anh họ Từ?&rdquo;</p>
+<p>Anh gật đầu. Ấn tượng đầu ti&ecirc;n l&agrave; c&ocirc; g&aacute;i trước mắt ăn mặc rất đẹp, tr&ecirc;n người mặc &aacute;o lụa m&agrave;u lam của h&atilde;ng Shanghai Tang c&oacute; kiểu d&aacute;ng &ocirc;m eo, trước ngắn sau d&agrave;i, phối c&ugrave;ng quần lụa đen &ocirc;m đ&ocirc;i ch&acirc;n d&agrave;i, sau lưng c&ograve;n c&oacute; nếp gấp rất đẹp, to&aacute;t l&ecirc;n vẻ thanh lịch. C&oacute; thắt m&aacute;i t&oacute;c d&agrave;i th&agrave;nh b&iacute;m lớn, đung đưa trước ngực. &Aacute;nh mắt của Từ Tư từ b&iacute;m t&oacute;c lớn nh&igrave;n l&ecirc;n, th&igrave; thấy đ&ocirc;i mắt to đắc &yacute; của c&ocirc;, h&agrave;ng mi d&agrave;i cong, kẻ mắt tỉ mỉ, c&aacute;ch trang điểm tinh tế, như b&uacute;p b&ecirc; Barbie sống đầy phong c&aacute;ch phương Đ&ocirc;ng.</p>
+<p>Kiểu con g&aacute;i n&agrave;y đi ngo&agrave;i đường, nhất định sẽ thu h&uacute;t nhiều &aacute;nh mắt. Thế n&ecirc;n Từ Tư đ&atilde; chăm chăm nh&igrave;n c&ocirc; kh&ocirc;ng chớp mắt.</p>
+<p>Barbie sống chớp mắt với anh, d&ugrave;ng giọng điệu th&acirc;n thiết lại c&oacute; ch&uacute;t l&ecirc;n mặt sai khiến, căn dặn n&oacute;i: &ldquo;Đến McDonald's đối diện mua cho t&ocirc;i một suất ăn sẵn, ph&ograve;ng t&agrave;i vụ sẽ thanh to&aacute;n chi ph&iacute;. Nhanh l&ecirc;n đi, t&ocirc;i chưa ăn trưa, sắp đ&oacute;i chết rồi.&rdquo; n&oacute;i xong như cơn gi&oacute; trở lại văn ph&ograve;ng của Giang Kỳ Thắng.</p>
+<p>Từ Tư thật sự ngẩn người.</p>
+<p>Từ nhỏ đến giờ, anh chưa từng bị ai sai khiến như vậy, đương nhi&ecirc;n anh sẽ kh&ocirc;ng đến McDonald's.</p>
+<p>Từ Tư đợi đến khi Giang Kỳ Thắng kết th&uacute;c cuộc họp, c&ugrave;ng bước v&agrave;o văn ph&ograve;ng.</p>
+<p>Giang Hồ bước ra từ ph&ograve;ng nhỏ trong văn ph&ograve;ng, bĩu m&ocirc;i với Giang Kỳ Thắng: &ldquo;Bố, con mệt lắm rồi, bố đừng bắt con l&agrave;m c&aacute;i kế hoạch kh&oacute; khằn n&agrave;y nữa, phiền chết được, l&aacute;t con c&ograve;n phải đi l&agrave;m nữa!&rdquo;</p>
+<p>Từ Tư đang nghĩ, đại tiểu thư c&ograve;n phải đi l&agrave;m? Đ&uacute;ng l&agrave; chuyện cười. Nhưng sau đ&oacute; nghe n&oacute;i Giang Hồ thật sự c&oacute; nghề nghiệp kh&aacute;c, l&agrave;m quảng b&aacute; trong một c&ocirc;ng ty quan hệ c&ocirc;ng ch&uacute;ng.</p>
+<p>L&uacute;c đ&oacute;, Giang Hồ như s&uacute;ng li&ecirc;n thanh n&oacute;i xong, mới nh&igrave;n thấy Từ Tư đứng sau lưng bố m&igrave;nh nh&igrave;n c&ocirc; cười, c&ocirc; nghi ngờ liếc nh&igrave;n anh, Từ Tư nghĩ, c&ocirc; nhất định l&agrave; nuốt c&acirc;u &lsquo;suất ăn sẵn McDonald's của t&ocirc;i đ&acirc;u&rsquo; đi rồi.</p>
+<p>Giang Kỳ Thắng lu&ocirc;n y&ecirc;u thương con g&aacute;i, c&ocirc; l&agrave;m nũng trong ph&ograve;ng l&agrave;m việc như vậy cũng kh&ocirc;ng quở tr&aacute;ch, Từ Tư c&oacute; thể thấy người bố nh&acirc;n hậu n&agrave;y y&ecirc;u thương con g&aacute;i m&igrave;nh đến nhường n&agrave;o.</p>
+<p>Sau đ&oacute;, Giang Kỳ Thắng giới thiệu Từ Tư với Giang Hồ, Giang Hồ thầm l&egrave; lưỡi, lẩm bẩm một c&acirc;u: &ldquo;Con c&ograve;n tưởng l&agrave; trợ l&yacute; họ Từ kia.&rdquo;</p>
+<p>Giang Hồ trước mặt hiện giờ kh&aacute;c một trời một vực với l&uacute;c ấy.</p>
+<p>Nhưng Từ Tư nghĩ, chỉ với c&aacute;i n&oacute;n Chanel, &aacute;o sơ mi MIUMIU, &aacute;o ngo&agrave;i cổ thuyển David Rodriguez, quần Versace, một loạt c&aacute;c nh&atilde;n hiệu nổi tiếng được phối ho&agrave;n hảo tr&ecirc;n người Giang Hồ, c&ocirc; vẫn c&ograve;n đ&oacute; kh&iacute; chất của vi&ecirc;n ngọc qu&yacute; trong tay &ocirc;ng tr&ugrave;m ng&agrave;nh may mặc.</p>
+<p>Chỉ l&agrave; sắc mặt c&ocirc; kh&ocirc;ng được tốt, thậm ch&iacute; c&oacute; mấy phần đờ đẫn, vẫn lu&ocirc;n ngơ ngẩn nh&igrave;n ra ngo&agrave;i cửa sổ.</p>
+<p>C&oacute; người n&oacute;i với Giang Hồ: &ldquo;Giang Hồ, c&ocirc; h&atilde;y bớt đau buồn, để bố c&ocirc; tr&ecirc;n trời c&oacute; linh thi&ecirc;ng c&ograve;n an t&acirc;m.&rdquo;</p>
+<p>Giang Hồ thẫn thờ gật đầu, n&oacute;i lời cảm ơn, cả qu&aacute; tr&igrave;nh cũng kh&ocirc;ng n&oacute;i g&igrave; th&ecirc;m.</p>
+<p>Mọi người c&oacute; mặt đều im lặng.</p>
+<p>C&aacute;i chết đột ngột của Giang Kỳ Thắng tr&ecirc;n b&agrave;n l&agrave;m việc một năm trước l&agrave; một tin tức chấn động trong giới kinh doanh. Mọi người ở đ&acirc;y đều từng &iacute;t nhiều c&oacute; giao thiệp với Giang Kỳ Thắng, c&ugrave;ng thăng trầm trong giới kinh doanh bấy l&acirc;u, giờ nh&igrave;n c&ocirc; con g&aacute;i mồ c&ocirc;i yếu đuối của &ocirc;ng đều kh&ocirc;ng khỏi thương cảm.</p>
+<p>Vẫn l&agrave; Hồng Điệp chuyển chủ đề trước: &ldquo;Hoạt động lần n&agrave;y, c&ocirc;ng ty mọi người l&agrave;m rất tốt.&rdquo;</p>
+<p>L&uacute;c n&agrave;y Từ Tư mới nhận ra Giang Hồ kh&ocirc;ng phải l&agrave; kh&aacute;ch mời, m&agrave; l&agrave; nh&acirc;n vi&ecirc;n c&ocirc;ng ty của ban tổ chức.</p>
+<p>Giang Hồ nghe thấy lời của Hồng Điệp, cũng nhận ra vị trưởng bối n&agrave;y, c&ocirc; tỉnh t&aacute;o lại, gượng cười n&oacute;i: &ldquo;Hi vọng mọi người c&oacute; thể h&agrave;i l&ograve;ng.&rdquo;</p>
+<p>Trong mắt Từ Tư, c&ocirc; đ&atilde; l&agrave;m rất tốt, sau c&aacute;i chết đột ngột của bố c&ocirc; v&agrave; những biến cố trong gia đ&igrave;nh, c&ocirc; vẫn c&oacute; thể giữ vững phong th&aacute;i tốt như vậy.</p>
+<p>Anh dời &aacute;nh mắt khỏi người Giang Hồ, c&ograve;n mang theo v&agrave;i phần l&uacute;ng t&uacute;ng. V&igrave; những ng&agrave;y gần đ&acirc;y, kh&ocirc;ng may l&agrave; trong l&ograve;ng anh lu&ocirc;n nghĩ đến gia sản nh&agrave; c&ocirc;.</p>
+<p>Đ&acirc;y l&agrave; một cuộc l&agrave;m ăn rất quan trọng, đ&atilde; được l&ecirc;n kế hoạch từ v&agrave;i th&aacute;ng trước.</p>
+<p>Chuyện l&agrave; thế n&agrave;y.</p>
+<p>Sau khi bố Giang Hồ qua đời, ch&iacute;nh quyền th&agrave;nh phố Tứ Thủy nắm giữ cổ phần của Hồng Kỳ kiểm so&aacute;t nh&agrave; m&aacute;y dệt số một đ&atilde; tuy&ecirc;n bố b&aacute;n cổ phần của tập đo&agrave;n Hồng Kỳ. Một đế quốc may mặc tức th&igrave; sụp đổ.</p>
+<p>Ngay từ đầu Từ Tư đ&atilde; rất quan t&acirc;m đến chuyện n&agrave;y.</p>
+<p>Tuy tập đo&agrave;n Từ Phong nh&agrave; m&igrave;nh c&ocirc;ng ty dẫn đầu ng&agrave;nh nước giải kh&aacute;t trong nước, nhưng anh lu&ocirc;n phụ tr&aacute;ch mảng đầu tư của doanh nghiệp gia tộc. Do t&igrave;nh h&igrave;nh t&agrave;i ch&iacute;nh hỗn loạn, khoản đầu tư ở nước ngo&agrave;i phải tạm dừng, v&igrave; vậy Từ Tư chuyển mục ti&ecirc;u v&agrave;o chuyện thu mua trong nước. Hoạt động đầu tư trong nước của tập đo&agrave;n Từ Phong gồm thu mua c&aacute;c c&ocirc;ng ty nhỏ hoặc đ&atilde; ph&aacute; sản c&oacute; tiềm năng được đ&aacute;nh gi&aacute; cao, điều chỉnh cho ph&ugrave; hợp, sau đ&oacute; t&igrave;m c&ocirc;ng ty đầu tư ph&ugrave; hợp ở nước ngo&agrave;i để kiếm lời ch&ecirc;nh lệch gi&aacute;.</p>
+<p>Việc kinh doanh n&agrave;y thật sự đ&ograve;i hỏi rất nhiều nỗ lực v&agrave; tầm nh&igrave;n để t&igrave;m ra một dự &aacute;n ph&ugrave; hợp để bắt đầu. Cũng vẫn cứ may mắn như vậy, cơ hội n&oacute;i tới l&agrave; tới, ch&iacute;nh l&uacute;c n&agrave;y, Hồng Kỳ sụp đổ. C&agrave;ng tr&ugrave;ng hợp l&agrave; cậu của Từ Tư, Phương Mặc Kiếm từng l&agrave; ph&oacute; thị trưởng điều h&agrave;nh phụ tr&aacute;ch kinh tế ở th&agrave;nh phố Tứ Thủy, c&oacute; mối quan hệ th&acirc;n thiết với Giang Kỳ Thắng. Lần n&agrave;y, cậu được cử đi giải quyết vụ mua b&aacute;n cổ phần bị chia nhỏ của Hồng Kỳ, đ&acirc;y chắc chắn l&agrave; một khoản lợi bất ngờ.</p>
+<p>Nguy&ecirc;n tắc kinh doanh của Từ Tư lu&ocirc;n hướng đến lợi nhuận, kh&ocirc;ng thể bỏ lỡ th&igrave; sẽ kh&ocirc;ng bao giờ bỏ lỡ.</p>
+<p>Mẹ anh l&agrave; Phương Mặc B&igrave;nh lu&ocirc;n muốn anh quay về với c&ocirc;ng việc kinh doanh ch&iacute;nh của tập đo&agrave;n, đương nhi&ecirc;n l&uacute;c đầu kh&ocirc;ng đồng &yacute; kế hoạch của anh.</p>
+<p>Th&iacute;m Hồng Điệp thường sẽ gi&uacute;p anh n&oacute;i đ&ocirc;i c&acirc;u tốt đẹp: &ldquo;Từ Tư c&oacute; dự định ri&ecirc;ng, l&uacute;c trước em đầu tư v&agrave;o dự &aacute;n bất động sản của Thẩm Qu&yacute;, n&oacute; nhận thấy tập đo&agrave;n x&acirc;y dựng m&agrave; Thẩm Qu&yacute; t&igrave;m về kh&ocirc;ng đ&aacute;ng tin, mới kịp thời gi&uacute;p em r&uacute;t vốn đầu tư. Nếu kh&ocirc;ng ch&uacute;ng ta đ&atilde; kh&ocirc;ng thể tho&aacute;t khỏi sự cố t&ograve;a nh&agrave; bị sập ở ph&iacute;a Nam rồi. Chi bằng cứ để Từ Tư thử đi.&rdquo;</p>
+<p>Th&iacute;m cũng ở g&oacute;a nhiều năm như mẹ, v&igrave; kh&ocirc;ng c&oacute; con c&aacute;i n&ecirc;n xem Từ Tư như con ruột của m&igrave;nh. B&agrave; cũng l&agrave; trợ thủ đắc lực của mẹ trong tập đo&agrave;n Từ Phong, mẹ lu&ocirc;n nghe lời khuy&ecirc;n của b&agrave;.</p>
+<p>Th&iacute;m n&oacute;i như vậy, mẹ cũng suy nghĩ một hồi, Từ Tư liền nh&acirc;n cơ hội n&oacute;i: &ldquo;Con c&oacute; quen với tổng gi&aacute;m marketing Nhậm Băng của tập đo&agrave;n Hồng Kỳ, con đ&atilde; xem x&eacute;t thị trường, cao điểm sinh trẻ nhỏ đang đến như dự kiến, thị trường quần &aacute;o trẻ em đang ph&aacute;t triển rất tốt. C&aacute;c nh&agrave; đầu tư mạo hiểm nước ngo&agrave;i cũng nhắm v&agrave;o thị trường n&agrave;y, nay c&oacute; cơ hội như vậy, thương hiệu quần &aacute;o trẻ em &lsquo;Little Red Horse&rsquo; của Hồng Kỳ c&oacute; tiềm năng rất lớn. Ch&uacute;ng ta vừa l&uacute;c mua v&agrave;o gi&aacute; thấp, chỉnh đốn n&oacute; lại rồi b&aacute;n ra ngo&agrave;i, cậu cũng c&oacute; thể gi&uacute;p con.&rdquo;</p>
+<p>Khi anh n&oacute;i xong, anh tin rằng mẹ anh sẽ đồng &yacute;. Kh&ocirc;ng v&igrave; g&igrave; kh&aacute;c, tất cả đều tại nh&agrave; họ Từ chỉ c&oacute; m&igrave;nh anh l&agrave; người thừa kế. Từ Tư từ nhỏ bản t&iacute;nh b&igrave;nh tĩnh l&yacute; tr&iacute;, v&igrave; thế l&agrave;m người l&agrave;m việc c&agrave;ng th&ecirc;m quyết đo&aacute;n, c&agrave;ng th&ecirc;m tự tin.</p>
+<p>Quả nhi&ecirc;n, cuối c&ugrave;ng mẹ cũng gật đầu, n&oacute;i cho c&ugrave;ng bản năng của b&agrave; cũng l&agrave; ủng hộ cho đứa con trai duy nhất n&agrave;y.</p>
+<p>Từ Tư thở ph&agrave;o nhẹ nh&otilde;m. Anh l&agrave; người đặt hiệu quả l&ecirc;n h&agrave;ng đầu, khi c&oacute; &yacute; tưởng sẽ nhanh ch&oacute;ng thực hiện, được trưởng bối chấp nhận liền muốn thực hiện c&agrave;ng sớm c&agrave;ng tốt. Đ&uacute;ng l&uacute;c n&agrave;y, ph&iacute;a Nhật Bản mời c&aacute;c doanh nh&acirc;n Trung Quốc sang Nhật Bản để tổ chức một buổi họp mặt hữu nghị thường ni&ecirc;n, mẹ anh trước nay kh&ocirc;ng th&iacute;ch xuất đầu lộ diện, n&ecirc;n để anh v&agrave; th&iacute;m đại diện cho tập đo&agrave;n Từ Phong tham dự. Việc thu mua cũng phải tạm g&aacute;c lại.</p>
+<p>Chỉ l&agrave; Từ Tư kh&ocirc;ng ngờ trong chuyến đi Nhật Bản lần n&agrave;y, anh lại gặp được thi&ecirc;n kim đại tiểu thư Giang Hồ của tập đo&agrave;n Hồng Kỳ m&agrave; anh đang th&egrave;m muốn.</p>
+<p>Thế n&ecirc;n, anh chỉ nh&igrave;n Giang Hồ đ&atilde; trở th&agrave;nh c&ocirc; g&aacute;i mồ c&ocirc;i trước mặt một lần.</p>
+<p>C&ocirc; rất thu h&uacute;t anh. Anh kh&ocirc;ng r&otilde; m&igrave;nh cảm thấy &aacute;y n&aacute;y hay thương hại, cứ kh&ocirc;ng thể n&agrave;o b&igrave;nh tĩnh đối diện với &aacute;nh mắt của c&ocirc;, n&ecirc;n đ&atilde; kh&ocirc;ng ch&agrave;o hỏi g&igrave;, dời tầm mắt ra hướng ngo&agrave;i. Con đường quanh co của n&uacute;i Amagi vẫn bằng phẳng, phong cảnh dọc đường cũng kh&aacute; đẹp d&ugrave; c&ograve;n vương ch&uacute;t kh&iacute; sắc trời đ&ocirc;ng. Điều n&agrave;y l&agrave;m Từ Tư nhẹ nh&otilde;m trở lại.</p>
+<p>Điểm đến l&agrave; một kh&aacute;ch sạn tr&ecirc;n sườn n&uacute;i Amagi, lối v&agrave;o trải thảm đỏ c&oacute; r&agrave;o chắn kiểu ch&acirc;u &Acirc;u, khung cảnh thật long trọng. Giang Hồ dẫn kh&aacute;ch mời của chiếc xe n&agrave;y bước tr&ecirc;n thảm đỏ v&agrave;o sảnh kh&aacute;ch sạn.</p>
+<p>Kh&aacute;ch sạn n&agrave;y l&agrave; một t&ograve;a nh&agrave; theo phong c&aacute;ch kiến tr&uacute;c Baroque c&oacute; từ thời Minh Trị, đứng sừng sững tr&ecirc;n n&uacute;i, kh&iacute; thế h&agrave;o h&ugrave;ng, quả l&agrave; một nơi vừa phồn hoa lại rất an tĩnh.</p>
+<p>Giang Hồ dẫn họ v&agrave;o cửa ch&iacute;nh, được người g&aacute;c cửa ăn mặc chỉnh tề tiếp đ&oacute;n, kh&ocirc;ng ngạc nhi&ecirc;n khi thấy cảnh tượng đo&agrave;n người ăn mặc tươm tất, tiệc t&ugrave;ng linh đ&igrave;nh trong đại sảnh. Từ Tư nhận thẻ ph&ograve;ng, x&aacute;c nhận ph&ograve;ng rồi đi ra vườn sau.</p>
+<p>Thật kh&ocirc;ng đ&uacute;ng l&uacute;c, anh nh&igrave;n thấy Giang Hồ n&oacute;i chuyện với một người đ&agrave;n &ocirc;ng trong ph&iacute;a s&acirc;u vườn hoa. Tr&ugrave;ng hợp l&agrave; bộ &acirc;u phục tr&ecirc;n người anh ta lại c&ugrave;ng m&agrave;u c&ugrave;ng kiểu với anh h&ocirc;m nay.</p>
+<p>Từ Tư đứng xa, kh&ocirc;ng bước tới, v&igrave; anh thấy Giang Hồ vung tay l&ecirc;n, l&agrave; động t&aacute;c muốn đ&aacute;nh người. Người đ&agrave;n &ocirc;ng đẩy tay c&ocirc; ra, c&ocirc; ng&atilde; nh&agrave;o xuống đất.</p>
+<p>Kh&ocirc;ng biết đ&acirc;y l&agrave; m&agrave;n kịch g&igrave;, nhưng Từ Tư biết m&igrave;nh kh&ocirc;ng n&ecirc;n xem tiếp. Anh xoay người quay lại.</p>
+<p>Sảnh tiệc rất s&ocirc;i nổi, c&aacute;c kh&aacute;ch mời lần lượt k&yacute; t&ecirc;n l&ecirc;n bảng, chụp ảnh lưu niệm, c&aacute;c ph&oacute;ng vi&ecirc;n b&aacute;o đ&agrave;i Trung Quốc v&agrave; Nhật Bản tranh nhau t&aacute;c nghiệp. C&ocirc;ng ch&uacute;a nhỏ của d&ograve;ng phim truyền h&igrave;nh đang rất được y&ecirc;u th&iacute;ch tại Trung Quốc cũng tham dự l&agrave;m tăng th&ecirc;m phần rực rỡ.</p>
+<p>Từ Tư t&igrave;m thấy th&iacute;m của m&igrave;nh trong đ&aacute;m đ&ocirc;ng n&aacute;o nhiệt, th&iacute;m n&oacute;i: &ldquo;L&aacute;t nữa cậu của ch&aacute;u thay mặt bộ Thương mại tham dự, ch&aacute;u chuẩn bị b&agrave;i ph&aacute;t biểu thế n&agrave;o rồi?&rdquo;</p>
+<p>L&uacute;c n&agrave;y Từ Tư mới hiểu, ph&iacute;a ban tổ chức mời m&igrave;nh ph&aacute;t biểu, c&ograve;n để m&igrave;nh ở trong căn ph&ograve;ng sang trọng c&oacute; cửa sổ tr&ecirc;n tầng cao nhất của kh&aacute;ch sạn c&oacute; thể ngắm to&agrave;n cảnh b&igrave;nh minh rực rỡ tr&ecirc;n n&uacute;i Amagi l&agrave; nhờ chiếm h&agrave;o quang của ai. Anh cười: &ldquo;&Aacute;nh s&aacute;ng n&agrave;y c&oacute; hơi ch&oacute;i.&rdquo;</p>
+<p>Th&iacute;m lườm anh, anh cong tay l&ecirc;n để th&iacute;m kho&aacute;c tay m&igrave;nh rồi c&ugrave;ng bước v&agrave;o sảnh tiệc rực rỡ &aacute;nh đ&egrave;n.</p>
+<p>B&ecirc;n trong đ&atilde; sớm đầy người, d&ugrave; c&aacute;c qu&yacute; c&ocirc; đang tranh đua vẻ đẹp, nhưng c&aacute;nh đ&agrave;n &ocirc;ng cũng kh&ocirc;ng k&eacute;m cạnh, &acirc;u phục phẳng phiu, thủ c&ocirc;ng tinh tế.</p>
+<p>Tuy nhi&ecirc;n, những người tinh tế kh&ocirc;ng c&oacute; nghĩa l&agrave; họ sẽ thảo luận về những chủ đề hoa mỹ.</p>
+<p>Từ Tư kh&ocirc;ng ngạc nhi&ecirc;n khi nghe được một lời b&agrave;n t&aacute;n thế n&agrave;y: &ldquo;L&atilde;o Giang kh&ocirc;ng thể giữ được kh&iacute; tiết tuổi gi&agrave;, biển thủ c&ocirc;ng quỹ để đầu cơ t&agrave;i ch&iacute;nh ở Hồng K&ocirc;ng, cuối c&ugrave;ng kh&ocirc;ng chiếm được lợi &iacute;ch, c&ograve;n bị nhồi m&aacute;u cơ tim qua đời. Tất cả đều trở về kh&ocirc;ng, giang sơn m&agrave; &ocirc;ng ấy d&agrave;y c&ocirc;ng x&acirc;y dựng hai mươi năm bị chia nhỏ, thậm ch&iacute; kh&ocirc;ng để lại g&igrave; cho con ch&aacute;u. Đ&acirc;y l&agrave; hậu quả của việc nắm cổ phần kh&ocirc;ng r&otilde; r&agrave;ng trong thời kỳ nước l&ugrave;i d&acirc;n tiến, nếu t&ocirc;i l&agrave; l&atilde;o Giang, nhất định &hellip;&rdquo;</p>
+<p>Lời n&agrave;y chưa n&oacute;i xong, đ&egrave;n tr&ecirc;n s&acirc;n khấu đ&atilde; bật s&aacute;ng. Lịch sử huy ho&agrave;ng trong qu&aacute; khứ lu&ocirc;n bị lu mờ bởi sự rực rỡ của những người trẻ đang l&ecirc;n ng&agrave;y nay, tất cả chủ đề đều dừng lại.</p>
+<p>Từ Tư đứng dậy, c&uacute;i ch&agrave;o th&iacute;m, gật đầu ch&agrave;o hỏi cậu, mỉm cười bước l&ecirc;n s&acirc;n khấu.</p>
+<p>Tr&agrave;ng ph&aacute;o tay nồng nhiệt của kh&aacute;n giả vang l&ecirc;n dưới kh&aacute;n đ&agrave;i.</p>
+<p>H&ocirc;m nay khởi đầu cho lịch sử mới v&agrave; chủ đề mới, đặc biệt l&agrave; tập đo&agrave;n Từ Phong đ&atilde; đ&aacute;nh bại c&aacute;c c&ocirc;ng ty c&ugrave;ng ng&agrave;nh với lợi nhuận năm tỷ v&agrave;o năm ngo&aacute;i, l&agrave;m tr&ecirc;n người vị thiếu gia trẻ tuổi n&agrave;y được mạ vầng s&aacute;ng ch&oacute;i lọi kh&ocirc;ng thể chối c&atilde;i, thay thế c&aacute;c bậc tiền bối huy ho&agrave;ng năm xưa.</p>
+<p>Nhưng Từ Tư kh&ocirc;ng bao giờ tỏ th&aacute;i độ ki&ecirc;u ngạo, anh cười khi&ecirc;m tốn gật đầu, lập tức chiếm được ưu &aacute;i của c&aacute;c tiền bối c&oacute; mặt.</p>
+<p>Anh d&ugrave;ng tiếng Anh ph&aacute;t biểu trước: &ldquo;H&ocirc;m nay được mời ph&aacute;t biểu, t&ocirc;i thật xấu hổ. Kinh nghiệm v&agrave; đ&oacute;ng g&oacute;p của c&aacute;c tiền bối ở hai nước Trung Nhật hơn hẳn hậu bối t&ocirc;i đ&acirc;y, t&ocirc;i chỉ c&oacute; thể trịnh trọng thay mặt cho lớp trẻ ch&uacute;ng t&ocirc;i, xin nghe theo lời dạy của tiền bối, nhất định ho&agrave;n th&agrave;nh c&aacute;c tr&aacute;ch nhiệm x&atilde; hội m&agrave; c&aacute;c doanh nh&acirc;n tiền bối Trung Nhật giao cho, duy tr&igrave; v&agrave; kế thừa h&igrave;nh ảnh x&atilde; hội đ&aacute;ng k&iacute;nh do c&aacute;c bậc tiền bối tạo dựng, nghi&ecirc;m khắc với bản th&acirc;n, gi&uacute;p đỡ lẫn nhau, d&ugrave;ng ch&uacute;t sức lực &iacute;t ỏi của m&igrave;nh để t&igrave;m kiếm sự tăng trưởng kinh tế ở khu vực Đ&ocirc;ng &Aacute;.&rdquo;</p>
+<p>Từ Tư n&oacute;i xong, lần lượt lặp lại bằng tiếng Trung v&agrave; tiếng Nhật, tiếng vỗ tay vang l&ecirc;n như sấm.</p>
+<p>Chỉ l&agrave; anh v&ocirc; t&igrave;nh nh&igrave;n tho&aacute;ng qua b&ecirc;n cạnh s&acirc;n khấu c&oacute; một c&ocirc; g&aacute;i nhếch m&ocirc;i, hẳn l&agrave; c&oacute; &yacute; giễu cợt.</p>
+<p>Đ&acirc;y l&agrave; lần thứ ba anh nh&igrave;n thấy Giang Hồ, c&ocirc; đứng ở r&igrave;a s&acirc;n khấu, cởi bỏ n&oacute;n, mặc quần &aacute;o đen trắng, c&ocirc; gần như bị nhấn ch&igrave;m bởi những bộ c&aacute;nh khoe đua sắc m&agrave;u của c&aacute;c vị kh&aacute;ch trong sảnh tiệc.</p>
+<p>Khi Từ Tư bước xuống s&acirc;n khấu, c&oacute; &yacute; định muốn ch&agrave;o hỏi Giang Hồ, chỉ l&agrave; vừa l&uacute;c bị người bạn th&acirc;n từ nhỏ Mạc Bắc cũng l&agrave; đại diện cho Hiệp hội Luật sư Trung Quốc gọi lại.</p>
+<p>Mạc Bắc đến c&ugrave;ng người vợ đang mang thai Mạc Hướng V&atilde;n, rất vui khi gặp lại người bạn th&acirc;n ở nước ngo&agrave;i, liền bước tới n&oacute;i đ&ugrave;a: &ldquo;Khả năng nịnh h&oacute;t tr&ocirc;i chảy nhỉ!&rdquo;</p>
+<p>Từ Tư nh&igrave;n người vợ b&ecirc;n cạnh Mạc Bắc: &ldquo;Chịu lu&ocirc;n đấy,&nbsp;em dưỡng thai thế n&agrave;y &agrave;?&rdquo;</p>
+<p>Ai đ&oacute; gạt đ&aacute;m đ&ocirc;ng sang một b&ecirc;n để ch&agrave;o hỏi Mạc Hướng V&atilde;n, ch&iacute;nh l&agrave; c&ocirc;ng ch&uacute;a nhỏ của c&aacute;c bộ phim truyền h&igrave;nh kho&aacute;c tr&ecirc;n người chiếc &aacute;o l&ocirc;ng chồn. Cả hai dường như quen biết từ trước, c&ocirc;ng ch&uacute;a nhỏ người ngoan miệng ngọt, ch&uacute;c mừng kh&ocirc;ng &iacute;t lời với Mạc phu nh&acirc;n.</p>
+<p>Từ Tư nh&igrave;n sang từ g&oacute;c độ đối diện, c&ocirc;ng ch&uacute;a nhỏ c&oacute; th&acirc;n h&igrave;nh chuẩn người mẫu, l&agrave;n da trắng n&otilde;n, đặc biệt l&agrave; đ&ocirc;i ch&acirc;n thon d&agrave;i thẳng tắp, diện v&aacute;y ngắn c&agrave;ng tăng th&ecirc;m ưu điểm.</p>
+<p>Mạc Hướng V&atilde;n giới thiệu sơ qua, th&igrave; ra c&ocirc;ng ty văn h&oacute;a c&ocirc; từng l&agrave;m việc l&agrave; c&ocirc;ng ty quản l&yacute; của vị c&ocirc;ng ch&uacute;a nhỏ n&agrave;y. C&ocirc;ng ch&uacute;a nhỏ xoay người, đối diện với Từ Tư.</p>
+<p>Từ Tư mỉm cười.</p>
+<p>C&ocirc;ng ch&uacute;a nhỏ c&oacute; bầu ngực săn chắc đầy đặn, với n&eacute;t mặt rạng rỡ, c&agrave;ng th&ecirc;m sức sống lạ thường. Đ&acirc;y l&agrave; kĩ năng của người trong giới giải tr&iacute;, c&oacute; thể nhanh ch&oacute;ng truyền năng lượng n&agrave;y cho người kh&aacute;c.</p>
+<p>Kh&ocirc;ng biết v&igrave; sao Từ Tư lại liếc mắt nh&igrave;n về ph&iacute;a b&ecirc;n kia s&acirc;n khấu. Người đằng kia với th&aacute;i độ dửng dưng, chỉ huy ban nhạc jazz biểu diễn tr&ecirc;n s&acirc;n khấu. Thỉnh thoảng nghỉ ngơi một ch&uacute;t, ngẩng đầu nh&igrave;n hiện trường ồn &agrave;o n&aacute;o nhiệt. Giữa h&agrave;ng m&agrave;y hiện l&ecirc;n n&eacute;t u sầu.</p>
+<p>Từ Tư bật cười, c&ocirc;ng ch&uacute;a nhỏ c&ograve;n tưởng anh đang cười với m&igrave;nh. C&ocirc; n&oacute;i: &ldquo;Xin ch&agrave;o anh Từ, t&ocirc;i l&agrave; Tề Tư Điềm, đ&atilde; từng quảng c&aacute;o cho sữa tr&aacute;i c&acirc;y của Từ Phong.&rdquo;</p>
+<p>Từ Tư lu&ocirc;n c&oacute; tr&iacute; nhớ rất tốt, n&oacute;i: &ldquo;Đ&acirc;y l&agrave; sản phẩm mười năm trước của ch&uacute;ng t&ocirc;i.&rdquo;</p>
+<p>&ldquo;Cho n&ecirc;n t&ocirc;i đ&atilde; kiếm được hũ v&agrave;ng đầu ti&ecirc;n trong đời, t&ocirc;i rất cảm ơn.&rdquo;</p>
+<p>C&ocirc;ng ch&uacute;a nhỏ c&oacute; ch&uacute;t phấn kh&iacute;ch, Từ Tư cũng theo &yacute; c&ocirc;, họ chớp lấy cơ hội, gạt người giới thiệu vừa rồi v&agrave; bạn b&egrave; sang một b&ecirc;n, cầm lấy rượu whisky, đi đến một g&oacute;c. Từ Tư c&oacute; thể tr&aacute;nh khỏi tầm mắt của cậu m&igrave;nh, kh&ocirc;ng bị bắt v&agrave; &aacute;p giải đi giao thiệp với c&aacute;c qu&yacute; &ocirc;ng bằng ba thứ tiếng Trung, Nhật v&agrave; Anh, thuận tiện kiểm tra bản lĩnh kinh doanh của m&igrave;nh, điều n&agrave;y thật l&agrave; tốt. Thế n&ecirc;n anh kh&ocirc;ng ngại n&oacute;i v&agrave;i c&acirc;u b&ocirc;ng đ&ugrave;a, chọc cười người đẹp từng đ&oacute;ng g&oacute;p cho tập đo&agrave;n Từ Phong khi c&ograve;n l&agrave; sao nh&iacute;.</p>
+<p>Chỉ l&agrave; anh kh&ocirc;ng ngờ ở trong một g&oacute;c như vậy sẽ nh&igrave;n thấy Giang Hồ lần thứ tư. Giang Hồ tao nh&atilde; cầm lấy một ly s&acirc;m panh v&agrave;ng tr&ecirc;n khay do người phục vụ bưng ra, trốn v&agrave;o g&oacute;c kh&ocirc;ng xa chỗ anh uống cạn.</p>
+<p>Từ Tư đột nhi&ecirc;n nhớ tới hai ba c&acirc;u b&agrave;n t&aacute;n về c&ocirc; m&agrave; vừa rồi anh đ&atilde; nghe. B&agrave;n t&aacute;n th&igrave; b&agrave;n t&aacute;n, m&agrave; thực tế l&agrave; thực tế. Thực tế ch&iacute;nh l&agrave; kh&ocirc;ng ai chủ động ch&agrave;o hỏi Giang Hồ. Chuyện đời đổi thay, đơn giản vậy th&ocirc;i. D&ugrave; c&ocirc; c&oacute; b&agrave;y ra phong th&aacute;i thi&ecirc;n kim của Giang Kỳ Thắng, cũng sẽ kh&ocirc;ng nhận được nhiều sự quan t&acirc;m, chỉ đ&agrave;nh đứng một g&oacute;c l&agrave;m cảnh, chợt nh&igrave;n sang kh&ocirc;ng khỏi cảm thấy b&oacute;ng h&igrave;nh c&oacute; ch&uacute;t th&ecirc; lương.</p>
+<p>Từ Tư cho l&agrave; m&igrave;nh đ&atilde; nghĩ qu&aacute; nhiều. Nhưng vẫn kh&ocirc;ng khỏi nh&igrave;n c&ocirc; th&ecirc;m một lần.</p>
+<p>Thi&ecirc;n kim yếu ớt th&igrave; vẫn c&oacute; d&aacute;ng vẻ thi&ecirc;n kim, tự nhi&ecirc;n thoải m&aacute;i đi lại b&ecirc;n g&oacute;c tường, tư thế rất tao nh&atilde;. Chắc v&igrave; đang lơ đ&atilde;ng, n&ecirc;n su&yacute;t đụng phải một người đ&agrave;n &ocirc;ng.</p>
+<p>Giang Hồ ngẩng đầu, gần như lập tức nhướng đ&ocirc;i m&agrave;y l&aacute; liễu.</p>
+<p>Ở g&oacute;c n&agrave;y của Từ Tư, c&oacute; thể nghe thấy người đ&agrave;n &ocirc;ng hỏi Giang Hồ với giọng điệu thong dong: &ldquo;Nghe n&oacute;i v&agrave;i thương hiệu lớn thuộc Hồng Kỳ đang được rao b&aacute;n, c&ocirc; Giang l&agrave; chuy&ecirc;n gia trong ng&agrave;nh, nếu t&ocirc;i mua được một thương hiệu, liệu c&oacute; thể mời vị c&ocirc;ng ch&uacute;a tiền triều c&ocirc; đ&acirc;y trấn giữ kh&ocirc;ng?&rdquo;</p>
+<p>Từ Tư nghe giọng, liền nhận ra người đ&agrave;n &ocirc;ng n&agrave;y kh&ocirc;ng phải người xa lạ, trước đ&acirc;y đ&atilde; từng quen biết.</p>
+<p>G&atilde; t&ecirc;n Trương Văn Thiện, c&ograve;n được gọi l&agrave; Trương hoa thiếu. Gia đ&igrave;nh kinh doanh thực phẩm phụ, sản nghiệp rất lớn, đủ vốn liếng gi&uacute;p g&atilde; ph&aacute;t triển trong lĩnh vực x&atilde; hội, thỉnh thoảng tạo tai tiếng chiếm lĩnh c&aacute;c trang tin giải tr&iacute;. Ngược lại, Từ Tư thỉnh thoảng cũng l&ecirc;n trang tin nổi bật, nhưng anh vẫn lu&ocirc;n thận trọng trước chuyện lợi dụng tai tiếng. Cho n&ecirc;n trước mặt hay sau lưng, họ Trương kia đều th&iacute;ch tranh đua với anh. Nhưng Từ Tư xưa nay kh&ocirc;ng th&iacute;ch kết th&ugrave; với người kh&aacute;c, lu&ocirc;n c&oacute; thể dễ d&agrave;ng n&eacute; tr&aacute;nh loại gượng gạo n&agrave;y. Nhưng anh vẫn c&ograve;n một m&oacute;n nợ với t&ecirc;n Trương Văn Thiện n&agrave;y.</p>
+<p>L&uacute;c thấy Giang Hồ bị Trương Văn Thiện chặn lại, c&oacute; thể nhận thấy Trương Văn Thiện kh&ocirc;ng c&oacute; &yacute; tốt. G&atilde; hỏi Giang Hồ chuyện như vậy, r&otilde; r&agrave;ng l&agrave; x&aacute;t muối v&agrave;o vết thương người kh&aacute;c. Nhưng Từ Tư kh&ocirc;ng động đậy, thậm ch&iacute; anh c&ograve;n kể cho Tề Tư Điềm nghe một c&acirc;u chuyện cười. Thật ra anh đang đợi c&acirc;u trả lời của Giang Hồ.</p>
+<p>Giang Hồ đ&atilde; trả lời thế n&agrave;y: &ldquo;Đ&uacute;ng vậy, anh Trương. T&igrave;m chủ mới cho phần sản nghiệp n&agrave;y, kh&ocirc;ng phải chuyện dễ g&igrave;. Tuy hiện giờ việc kinh doanh kh&ocirc;ng dễ l&agrave;m, c&oacute; v&agrave;i thứ rớt gi&aacute; rồi vẫn phải t&ugrave;y thuộc v&agrave;o ho&agrave;n cảnh cụ thể. Giống như đợt dịch tả lợn n&agrave;y, d&ugrave; lợn c&oacute; rớt gi&aacute;, nhưng doanh nghiệp nước ngo&agrave;i cũng kh&ocirc;ng kiếm được mấy con, m&agrave; người trong ng&agrave;nh như anh Trương th&igrave; kh&aacute;c, kh&ocirc;ng ai cướp được lợn của anh. Những doanh nghiệp tr&aacute;i ng&agrave;nh lấn s&acirc;n kia quả thật kh&ocirc;ng thể ph&aacute;t triển sự nghiệp trong chuồng lợn. Giống như ch&uacute;ng t&ocirc;i l&agrave;m ng&agrave;nh may mặc, rất hoan ngh&ecirc;nh c&aacute;c đối t&aacute;c mới tham gia, d&ugrave; sao vẫn kh&aacute;c biệt với chuồng lợn.&rdquo;</p>
+<p>Những lời n&agrave;y được Giang Hồ n&oacute;i với giọng du dương trầm bổng, tốc độ v&ocirc; c&ugrave;ng chậm, lại lưu lo&aacute;t r&otilde; r&agrave;ng. C&ocirc; n&oacute;i xong, d&ugrave;ng ly rượu trong tay chạm v&agrave;o ly rượu của Trương Văn Thiện, nhẹ nh&agrave;ng rời đi.</p>
+<p>Khu&ocirc;n mặt của Trương Văn Thiện lọt v&agrave;o mắt Từ Tư, thật l&agrave; v&ocirc; c&ugrave;ng đặc sắc, mắt m&agrave;y mũi nhăn lại như d&aacute;n chặt v&agrave;o nhau.</p>
+<p>Tiếng cười h&igrave; h&igrave; của Tề Tư Điềm k&eacute;o suy nghĩ của Từ Tư trở về, nh&igrave;n &aacute;nh mắt tinh nghịch của người đẹp trước mắt, thầm nghĩ, th&igrave; ra c&ocirc; cũng nghe thấy rồi.</p>
+<p>Tề Tư Điềm cười n&oacute;i: &ldquo;T&ocirc;i nhớ lại một chuyện b&ecirc;n lề.&rdquo;</p>
+<p>Từ Tư muốn được nghe hết.</p>
+<p>&ldquo;Năm đ&oacute;, anh Trương muốn theo đuổi c&ocirc; Giang, tốn kh&ocirc;ng &iacute;t c&ocirc;ng sức trước mặt chủ tịch Giang, sau đ&oacute; chủ tịch Giang kể lại với c&ocirc; Giang, c&ocirc; Giang tức giận n&oacute;i, sao con phải để &yacute; đến t&ecirc;n nu&ocirc;i lợn đ&oacute;.&rdquo;</p>
+<p>Từ Tư bật cười: &ldquo;C&ocirc; biết kh&ocirc;ng &iacute;t chuyện b&ecirc;n lề nhỉ.&rdquo;</p>
+<p>Tề Tư Điềm bĩu m&ocirc;i, đ&acirc;y l&agrave; một h&agrave;nh động m&agrave; Giang Hồ th&iacute;ch l&agrave;m, l&uacute;c Tề Tư Điềm l&agrave;m cũng y&ecirc;u kiều kh&ocirc;ng k&eacute;m.</p>
+<p>C&ocirc; n&oacute;i: &ldquo;T&ocirc;i v&agrave; c&ocirc; Giang l&agrave; bạn học cũ, c&ocirc; ấy cũng từng l&agrave; b&agrave; chủ của t&ocirc;i, t&ocirc;i từng quay một phim cho nh&atilde;n hiệu quần &aacute;o thường ng&agrave;y thuộc tập đo&agrave;n Hồng Kỳ. H&ocirc;m đ&oacute;, c&ocirc; Giang tức giận đến nh&agrave; kho lớn nơi đang quay phim.&rdquo;</p>
+<p>Từ Tư nghĩ, bộc ph&aacute;t t&iacute;nh kh&iacute; tiểu khu trước bạn học v&agrave; cấp dưới của m&igrave;nh, qu&aacute; t&ugrave;y hứng rồi.</p>
+<p>Tề Tư Điềm kh&ocirc;ng nghĩ như vậy, tr&ecirc;n gương mặt xinh đẹp của c&ocirc; lộ ra sự ngưỡng mộ n&oacute;i: &ldquo;C&ocirc; Giang đương nhi&ecirc;n c&oacute; th&acirc;n phận v&agrave; tư c&aacute;ch để n&oacute;i những lời như vậy.&rdquo;</p>
+<p>Từ Tư thừa nhận anh rất ấn tượng về c&ocirc; c&ocirc;ng ch&uacute;a nhỏ phim truyền h&igrave;nh trước mặt. Sau khi c&ocirc; n&oacute;i xong, c&ograve;n cười ngọt ng&agrave;o đ&aacute;ng y&ecirc;u, quả l&agrave; c&ocirc;ng ch&uacute;a nhỏ cao qu&yacute;. Anh gật đầu mỉm cười với Tề Tư Điềm. Vừa hay nhạc khi&ecirc;u vũ bắt đầu, anh đưa tay mời Tề Tư Điềm c&ugrave;ng khi&ecirc;u vũ.</p>
+<p>Anh nhẹ nh&agrave;ng kh&eacute;o l&eacute;o xoay người, sau đ&oacute; nh&igrave;n về ph&iacute;a kia, Giang Hồ đ&atilde; đi mất rồi.</p>
+<p>&Aacute;nh đ&egrave;n mờ ảo, cuộc vui đ&ecirc;m nay ch&iacute;nh thức bắt đầu, trong sảnh tiệc lộng lẫy rực rỡ, kh&ocirc;ng ai nh&igrave;n thấy ai.</p>
+<p>Cuối buổi khi&ecirc;u vũ, một số đại diện của c&aacute;c c&ocirc;ng ty Nhật Bản dự định đầu tư v&agrave;o Trung Quốc đ&atilde; c&oacute; b&agrave;i ph&aacute;t biểu ngắn gọn. Trong đ&oacute;, đại diện của một cửa h&agrave;ng b&aacute;ch h&oacute;a l&agrave; một người Trung Quốc t&ecirc;n Cao Ngật, cũng l&agrave; một người đ&agrave;n &ocirc;ng phong độ đẹp trai.</p>
+<p>Từ Tư nh&igrave;n người đ&agrave;n &ocirc;ng n&agrave;y, thầm nghĩ, anh ta c&oacute; phải l&agrave; người đ&atilde; n&oacute;i chuyện với Giang Hồ ở vườn hoa vừa n&atilde;y kh&ocirc;ng?</p>
+<p>Cao Ngật n&agrave;y thay mặt đại l&yacute; đến th&ocirc;ng b&aacute;o kế hoạch mở cửa h&agrave;ng tại Trung Quốc trong năm nay, thu h&uacute;t rất nhiều người v&acirc;y quanh để hỏi thăm chi tiết dự &aacute;n.</p>
+<p>Từ Tư kh&ocirc;ng tham gia cuộc vui, tiếp tục tr&ograve; chuyện với Tề Tư Điềm. Chỉ l&agrave; mọi chuyện kh&ocirc;ng như &yacute; muốn, mới n&oacute;i được đ&ocirc;i c&acirc;u, anh đ&atilde; bị cậu bắt gặp.</p>
+<p>Phương Mặc Kiếm trước giờ kh&ocirc;ng th&iacute;ch con ch&aacute;u trong nh&agrave; th&acirc;n thiết với người trong giới giải tr&iacute;, vừa đến gần th&igrave; nghi&ecirc;m mặt. Tề Tư Điềm quen nh&igrave;n sắc mặt người kh&aacute;c nhanh ch&oacute;ng rời đi, để lại Từ Tư nh&uacute;n vai bất lực.</p>
+<p>Trong hai tiếng kế, Từ Tư đi theo sau cậu phụ họa k&iacute;nh rượu, sau khi uống nhiều rượu ngoại, rượu Mao Đ&agrave;i, đầu &oacute;c bắt đầu cho&aacute;ng. Anh l&eacute;n nh&igrave;n cậu v&agrave; th&iacute;m đang tụm lại n&oacute;i chuyện. H&ocirc;m nay, th&iacute;m Hồng Điệp mặc chiếc v&aacute;y dạ hội nhung dệt k&eacute;p m&agrave;u xanh biển, cổ chữ V s&acirc;u của GUCCI m&ugrave;a trước, l&agrave;m nổi bật l&agrave;n da trắng ngần của Hồng Điệp.</p>
+<p>Từ Tư từng ca ngợi vẻ đẹp của phụ nữ trước mặt bạn b&egrave; rằng: &ldquo;L&agrave;n da trắng như trứng g&agrave; lột vỏ, mới gọi l&agrave; cực phẩm.&rdquo;</p>
+<p>Tr&ecirc;n thực tế, trong số những người phụ nữ xung quanh, chỉ c&oacute; th&iacute;m l&agrave; c&oacute; thể giải th&iacute;ch ho&agrave;n hảo cho sự tuyệt vời n&agrave;y.</p>
+<p>Vẻ đẹp của th&iacute;m đ&atilde; vượt qua ranh giới tuổi t&aacute;c, phong t&igrave;nh trong những cử chỉ của th&iacute;m kh&ocirc;ng thể diễn tả bằng lời. Bất cứ người đ&agrave;n &ocirc;ng n&agrave;o đứng trước mặt th&iacute;m, cũng kh&ocirc;ng thể cưỡng lại bị th&iacute;m thu h&uacute;t mang theo &yacute; thức tự gi&aacute;c của đ&agrave;n &ocirc;ng.</p>
+<p>Th&iacute;m lại rất biết c&aacute;ch ăn mặc, chiếc v&aacute;y th&iacute;m chọn kh&ocirc;ng chỉ hợp với l&agrave;n da, m&agrave; c&ograve;n hợp với m&aacute;i t&oacute;c ngắn gọn g&agrave;ng v&agrave; thanh lịch của m&igrave;nh, n&oacute; c&ograve;n t&ocirc;n l&ecirc;n chiếc cổ duy&ecirc;n d&aacute;ng v&agrave; c&aacute;nh tay trắng n&otilde;n, vốn kh&ocirc;ng cần đeo th&ecirc;m trang sức, đi đến đ&acirc;u cũng mang theo &aacute;nh s&aacute;ng nhẹ nh&agrave;ng. Ngay cả trong hiện trường n&agrave;y, cũng c&oacute; thể l&agrave;m cho những người lớp trẻ như Giang Hồ trở th&agrave;nh cảnh nền.</p>
+<p>Từ Tư cảm thấy m&igrave;nh qu&aacute; nhiều, kh&ocirc;ng c&ograve;n l&agrave;m chủ được &yacute; nghĩ, b&egrave;n nh&acirc;n cơ hội rời khỏi sảnh tiệc.</p>
+<p>Từ Tư ngồi một l&uacute;c ở sảnh tầng một, đợi tỉnh rượu một ch&uacute;t rồi l&ecirc;n lầu.</p>
+<p>Tầng năm l&agrave; tầng cao nhất của kh&aacute;ch sạn, sau khi cửa thang m&aacute;y mở ra, thảm mềm trải khắp lối, bước đi tr&ecirc;n đ&oacute; kh&ocirc;ng hề c&oacute; tiếng động.</p>
+<p>L&uacute;c Từ Tư bước đến cửa ph&ograve;ng, nh&eacute;t thẻ ch&igrave;a kh&oacute;a v&agrave;o khe, anh ph&aacute;t hiện c&oacute; người đang đi theo m&igrave;nh.</p>
+<p>Anh quay lại, Giang Hồ lảo đảo đi tới, bước ch&acirc;n r&otilde; r&agrave;ng kh&ocirc;ng vững. Từ Tư sợ c&ocirc; ng&atilde; n&ecirc;n đưa tay ra đỡ.</p>
+<p>Vị thi&ecirc;n kim n&agrave;y hẳn l&agrave; uống rất nhiều rượu, Từ Tư bị hơi rượu của c&ocirc; phả v&agrave;o người, l&agrave;m m&igrave;nh c&oacute; ch&uacute;t m&ecirc; man.</p>
+<p>Cả người Giang Hồ mềm nhũn trong v&ograve;ng tay anh, hai tay v&ocirc; thức b&aacute;m v&agrave;o eo anh, vuốt ve v&ugrave;ng dưới rốn của anh hai ph&acirc;n.</p>
+<p>Đ&uacute;ng l&agrave; đ&ograve;i mạng m&agrave;, Từ Tư bắt lấy tay c&ocirc;, nhưng kh&ocirc;ng cử động. Anh kh&ocirc;ng biết m&igrave;nh muốn c&ocirc; dừng lại, hay l&agrave; muốn c&ocirc; tiếp tục.</p>
+<p>Giang Hồ ngả nghi&ecirc;ng tựa v&agrave;o vai anh, hai m&aacute; ửng hồng, mắt ngập &yacute; say.</p>
+<p>Chỉ mới qua hai tiếng, m&agrave; c&ocirc; say th&agrave;nh thế n&agrave;y, kh&ocirc;ng biết đ&atilde; uống bao nhi&ecirc;u rượu.</p>
+<p>Từ Tư vỗ vỗ mặt Giang Hồ, gương mặt c&ocirc; như quả t&aacute;o vừa l&uacute;c ch&iacute;n muồi, đưa tay l&agrave; c&oacute; thể h&aacute;i. Anh kh&ocirc;ng k&igrave;m được m&agrave; liếm m&ocirc;i, vừa n&atilde;y kh&ocirc;ng ngừng n&oacute;i chuyện, kh&ocirc;ng ngừng uống rượu, m&ocirc;i anh sớm đ&atilde; kh&ocirc; cạn nứt nẻ.</p>
+<p>Giang Hồ hơi mở mắt, kh&ocirc;ng biết c&oacute; nh&igrave;n r&otilde; người trước mặt kh&ocirc;ng, kh&ocirc;ng biết c&oacute; &yacute; thức được m&igrave;nh đang l&agrave;m g&igrave; kh&ocirc;ng. C&ocirc; ngẩng đầu lại gần trước mặt Từ Tư, &aacute;p m&ocirc;i c&ocirc; l&ecirc;n m&ocirc;i anh.</p>
+<p>Giang Hồ c&oacute; đ&ocirc;i m&ocirc;i đẹp đầy đặn, Từ Tư h&ocirc;n l&ecirc;n đ&oacute;, mới nhận ra kh&ocirc;ng cần miệng lưỡi quấn qu&yacute;t, răng m&ocirc;i giao h&ograve;a cũng c&oacute; thể triền mi&ecirc;n. Nhưng c&ocirc; lại cố t&igrave;nh để lộ một ch&uacute;t đầu lưỡi, kh&eacute;o l&eacute;o đẩy đưa, lại như v&ocirc; t&igrave;nh, m&agrave; loại c&aacute;m dỗ n&agrave;y quả thật rất mạnh mẽ.</p>
+<p>Lưỡi người phụ nữ linh hoạt, như thanh s&ocirc; c&ocirc; la thơm nhẵn, mượt m&agrave; như tơ. Ngo&agrave;i trừ ch&uacute;t hơi rượu kia.</p>
+<p>Một luồng kh&iacute; từ v&ugrave;ng giữa dưới rốn Từ Tư d&acirc;ng l&ecirc;n, c&oacute; đ&ocirc;i ch&uacute;t gợi t&igrave;nh, cũng thừa nhận m&igrave;nh lợi dụng l&uacute;c người ta gặp kh&oacute; khăn. Anh nắm cằm, n&acirc;ng m&ocirc;i c&ocirc; l&ecirc;n, tay c&ograve;n lại v&ograve;ng lấy h&ocirc;ng c&ocirc;.</p>
+<p>Anh cứ thế dựa v&agrave;o cửa ph&ograve;ng m&igrave;nh, đ&oacute;n nhận h&agrave;nh động &ocirc;m ấp n&agrave;y. Đẩy c&aacute;nh cửa vướng v&iacute;u, cả hai ng&atilde; mạnh xuống tấm thảm b&ecirc;n trong c&aacute;nh cửa.</p>
+<p>Giang Hồ trước ti&ecirc;n mơ m&agrave;ng b&ograve; dậy, lảo đảo dựa v&agrave;o cửa, rồi đ&oacute;ng cửa lại.</p>
+<p>B&ecirc;n trong c&aacute;nh cửa l&agrave; một thế giới tối tăm, kh&ocirc;ng thể nh&igrave;n thấy mọi thứ xung quanh.</p>
+<p>Từ Tư b&ograve; dậy theo, người phụ nữ đối diện bắt lấy tay anh. C&ocirc; m&ograve; mẫm bốn ph&iacute;a, kh&ocirc;ng thể đứng vững, kh&oacute; lắm mới nắm được tay anh, liền nắm chặt kh&ocirc;ng bu&ocirc;ng.</p>
+<p>Dục vọng c&oacute; thể tr&agrave;o d&acirc;ng trong b&oacute;ng tối, Từ Tư cảm nhận r&otilde; r&agrave;ng phản ứng ch&acirc;n thật của cơ thể, dưới x&uacute;c t&aacute;c của rượu, anh dần mất đi l&yacute; tr&iacute;.</p>
+<p>Nếu người phụ nữ đối diện l&yacute; tr&iacute; hơn, th&igrave; n&ecirc;n nhanh ch&oacute;ng rời đi. Nhưng Giang Hồ cứ d&iacute;nh chặt, n&iacute;u lấy vạt &aacute;o &acirc;u phục của anh, như thể muốn nh&igrave;n r&otilde; hơn trong b&oacute;ng tối.</p>
+<p>Từ Tư nắm lấy tay c&ocirc;, chịu sức nặng của c&ocirc;, buộc c&ocirc; l&ugrave;i lại v&agrave;i bước, gi&acirc;y ph&uacute;t trước khi chuẩn bị ng&atilde; xuống giường, anh hỏi: &ldquo;C&ocirc; Giang, c&ocirc; biết t&ocirc;i l&agrave; ai kh&ocirc;ng?&rdquo;</p>
+<p>Giang Hồ lẩm bẩm, n&oacute;i kh&ocirc;ng r&otilde; r&agrave;ng: &ldquo;Từ &hellip;&rdquo;</p>
+<p>Th&igrave; ra c&ocirc; biết.</p>
+<p>Từ Tư lại hỏi: &ldquo;C&ocirc; biết c&ocirc; đang l&agrave;m g&igrave; kh&ocirc;ng?&rdquo;</p>
+<p>Lần n&agrave;y Giang Hồ n&oacute;i rất r&otilde;: &ldquo;Anh cảm thấy t&ocirc;i đẹp kh&ocirc;ng?&rdquo; c&ocirc; hỏi xong, lại ngẩng đầu h&ocirc;n l&ecirc;n cổ anh.</p>
+<p>X&uacute;c cảm bị khơi gợi trong ph&uacute;t chốc như lửa ch&aacute;y lan tr&ecirc;n thảo nguy&ecirc;n, m&agrave; trong b&oacute;ng tối, c&agrave;ng th&uacute;c đẩy d&acirc;ng tr&agrave;o, c&oacute; thể liều lĩnh b&ugrave;ng ch&aacute;y chẳng cần l&yacute; do. Từ Tư dần dần để bản năng l&agrave;m chủ &yacute; thức, anh đ&egrave; c&ocirc; l&ecirc;n giường, h&ocirc;n l&ecirc;n bụng v&agrave; ngực c&ocirc;, k&iacute;ch th&iacute;ch c&ocirc;, hi vọng c&ocirc; cũng c&oacute; thể khơi dậy dục vọng của anh.</p>
+<p>Nhưng lồng ngực của Giang Hồ vẫn lạnh băng, c&ocirc; mơ m&agrave;ng hỏi: &ldquo;Đ&acirc;y l&agrave; tầng năm sao? Cửa sổ ở đ&acirc;y c&oacute; thể nh&igrave;n thấy mặt trời mọc tr&ecirc;n v&aacute;ch n&uacute;i chứ?&rdquo;</p>
+<p>Anh hời hợt trả lời, ứng ph&oacute; theo bản năng. Bản năng n&oacute;i với anh, Giang Hồ cũng c&oacute; l&agrave;n da mịn như tơ, l&agrave; đ&oacute;a sen mới nở được cưng chiều nu&ocirc;i nấng, nơi cần đầy đặn đều trổ m&atilde; căng mọng. Hương rượu v&agrave; hương cơ thể ph&aacute;i nữ h&ograve;a quyện như gi&oacute; b&atilde;o ho&agrave;n mỹ tr&ecirc;n biển Nhật Bản, từng đợt cuốn đến k&iacute;ch th&iacute;ch gi&aacute;c quan của anh.</p>
+<p>Từ Tư chưa bao giờ nghĩ m&igrave;nh l&agrave; người đoan ch&iacute;nh đ&agrave;ng ho&agrave;ng, anh thậm ch&iacute; c&ograve;n nghĩ c&ocirc; g&aacute;i mất đi người bố th&acirc;n y&ecirc;u n&agrave;y đang cần được an ủi, n&ecirc;n đ&atilde; chọn c&aacute;ch v&ocirc; c&ugrave;ng ph&oacute;ng t&uacute;ng n&agrave;y để tr&uacute;t bầu t&acirc;m sự. Anh suy nghĩ lung tung, l&agrave;m tay anh c&agrave;ng th&ecirc;m c&agrave;n rỡ, anh cởi quần của Giang Hồ, đặt tay l&ecirc;n chỗ nhạy cảm kia, ngọn nguồn dục vọng của c&ocirc; th&agrave;nh thật n&oacute;i r&otilde; c&ocirc; cũng c&oacute; ham muốn n&agrave;y.</p>
+<p>Từ Tư hơi chống người l&ecirc;n, kh&ocirc;ng l&agrave;m th&ecirc;m g&igrave; nữa, cho Giang Hồ th&ecirc;m một ch&uacute;t thời gian c&acirc;n nhắc. D&ugrave; c&ocirc; c&oacute; say đến đ&acirc;u, c&ocirc; vẫn c&oacute; quyền chủ động muốn tiếp tục hay kh&ocirc;ng. Nhưng Giang Hồ kh&ocirc;ng động đậy, c&ocirc; v&ugrave;i mặt trong gối, l&agrave;m Từ Tư kh&ocirc;ng thể nh&igrave;n r&otilde; vẻ mặt của c&ocirc; l&uacute;c đ&oacute;.</p>
+<p>Thật ra ngay l&uacute;c Từ Tư đặt tay v&agrave;o nơi ấy, Giang Hồ gần như cảm nhận được luồng cảm x&uacute;c như chớp giật truyền đến, ph&uacute;t chốc đ&aacute;nh tan &yacute; thức c&oacute; ch&uacute;t &nbsp;tỉnh t&aacute;o của c&ocirc;, cả người ch&igrave;m trong m&ecirc; man, c&ocirc; kh&ocirc;ng thể ph&acirc;n biệt, kh&ocirc;ng thể suy x&eacute;t, c&agrave;ng kh&ocirc;ng thể phản kh&aacute;ng, những cảm x&uacute;c phức tạp trong l&ograve;ng bị bản năng của gi&aacute;c quan xua tan đi.</p>
+<p>Khi Từ Tư tiến v&agrave;o, tay &ocirc;m lấy ngực c&ocirc;, cảm nhận nhịp tim của c&ocirc;, cũng đập nhanh như anh. &Iacute;t nhất cơ thể của cả hai rất th&agrave;nh thật, nhịp điệu v&agrave; hơi thở đều dồn dập. C&ocirc; tỉnh t&aacute;o, tự nguyện, ph&oacute;ng đ&atilde;ng c&ugrave;ng anh xảy ra quan hệ như vậy. Vậy được, trước ti&ecirc;n cứ hưởng thụ thật sảng kho&aacute;i, Từ Tư nghĩ.</p>
+<p>Trong suốt qu&aacute; tr&igrave;nh, Từ Tư thấm ướt mồ h&ocirc;i, m&agrave; Giang Hồ cũng kh&ocirc;ng k&eacute;m g&igrave;, khu&ocirc;n mặt đẫm nước, như quả t&aacute;o d&iacute;nh mưa.</p>
+<p>Đến nửa đ&ecirc;m, c&ocirc; su&yacute;t biến anh th&agrave;nh kẻ t&igrave;nh nghi giết người. C&ocirc; gạt bỏ sự im lặng v&agrave; mơ hồ trước đ&oacute;, miệng mồm trở n&ecirc;n lanh lợi, c&ograve;n nắm được thế chủ động trong lời n&oacute;i.</p>
+<p>Từ Tư giữ chặt Giang Hồ, nh&igrave;n lồng ngực đang thở dốc của c&ocirc; dần b&igrave;nh tĩnh lại, kh&ocirc;ng n&oacute;i g&igrave; nữa.</p>
+<p>Cửa sổ vẫn mở, anh quay đầu nh&igrave;n ra ngo&agrave;i, rồi lại nh&igrave;n người phụ nữ tr&ecirc;n giường, buồn bực kh&oacute; chịu. Anh d&ugrave;ng một tay giữ chặt c&ocirc;, tay kia k&eacute;o chăn quấn chặt c&ocirc;, Giang Hồ chỉ l&agrave; một bao tải r&aacute;ch n&aacute;t, cứ t&ugrave;y anh. Nhưng anh cũng kh&ocirc;ng d&aacute;m xem nhẹ, cầm lấy thắt lưng tiện tay vứt tr&ecirc;n đất trước đ&oacute;, tr&oacute;i chặt tay v&agrave; người Giang Hồ lại.</p>
+<p>Đợi anh l&agrave;m xong, lần nữa ngẩng đầu nh&igrave;n c&ocirc;, nương theo &aacute;nh trăng nh&igrave;n c&ocirc; nhắm mắt, hai m&aacute; ửng hồng, giống như quả t&aacute;o ch&iacute;n, hệt như tiếng r&ecirc;n rỉ &ecirc;m tai dưới người anh vừa rồi. Nghĩ đến đ&acirc;y, Từ Tư bực m&igrave;nh tức giận, ngồi dậy mặc quần &aacute;o v&agrave;o.</p>
+<p>Đ&uacute;ng l&uacute;c n&agrave;y, ngo&agrave;i cửa c&oacute; tiếng lạch cạch, chợt bị mở ra. B&ecirc;n ngo&agrave;i c&oacute; người thấp giọng hỏi: &ldquo;Từ Tư, ch&aacute;u c&oacute; ở trong kh&ocirc;ng? Sao lại cắm thẻ ph&ograve;ng ở b&ecirc;n ngo&agrave;i?&rdquo; vị kh&aacute;ch kh&ocirc;ng mời m&agrave; đến l&uacute;c nửa đ&ecirc;m l&agrave; th&iacute;m Hồng Điệp, b&agrave; bật đ&egrave;n bước v&agrave;o với chiếc thẻ ph&ograve;ng tr&ecirc;n tay.</p>
+<p>L&uacute;c n&agrave;y Từ Tư vừa đứng dậy, bị tiếng động v&agrave; &aacute;nh s&aacute;ng đột ngột l&agrave;m anh kh&ocirc;ng kịp chuẩn bị, d&ugrave;ng tay hơi che mắt lại.</p>
+<p>Hồng Điệp sửng sốt.</p>
+<p>Tr&ecirc;n tấm thảm trước mặt rải r&aacute;c &aacute;o kho&aacute;c v&agrave; đồ l&oacute;t phụ nữ, c&ograve;n cả người phụ nữ đang nằm tr&ecirc;n giường của Từ Tư. Đối mặt với hỗn loạn trước mắt, b&agrave; liền biết chuyện g&igrave; đang xảy ra.</p>
+<p>Hồng Điệp đến rất đ&uacute;ng l&uacute;c, m&agrave; cũng kh&ocirc;ng đ&uacute;ng l&uacute;c. B&agrave; vừa giận vừa bực, k&eacute;o Từ Tư ra ngo&agrave;i, rồi đ&oacute;ng cửa lại, d&ugrave;ng &aacute;nh mắt nghi&ecirc;m t&uacute;c nh&igrave;n anh.</p>
+<p>Từ Tư đưa tay chặn &aacute;nh mắt sắc b&eacute;n của trưởng bối, giải th&iacute;ch: &ldquo;Vừa n&atilde;y c&ocirc; ấy muốn nhảy lầu.&rdquo;</p>
+<p>Hồng Điệp vẫn nghi&ecirc;m t&uacute;c nh&igrave;n anh.</p>
+<p>Từ Tư bất lực bỏ tay xuống: &ldquo;Ch&aacute;u kh&ocirc;ng c&oacute; &eacute;p buộc c&ocirc; ấy, th&iacute;m đừng nh&igrave;n ch&aacute;u như vậy.&rdquo;</p>
+<p>Hồng Điệp hận r&egrave;n sắt kh&ocirc;ng th&agrave;nh th&eacute;p, lắc đầu đẩy anh ra n&oacute;i: &ldquo;Ch&aacute;u đến ph&ograve;ng của th&iacute;m, thu dọn quần &aacute;o của ch&aacute;u, cả gi&agrave;y của ch&aacute;u nữa.&rdquo;</p>
+<p>Từ Tư c&oacute; trăm miệng cũng kh&ocirc;ng giải th&iacute;ch được, cũng kh&ocirc;ng c&oacute; g&igrave; để giải th&iacute;ch, v&ocirc; c&ugrave;ng xấu hổ trước mặt trưởng bối. Quả thật l&agrave; m&igrave;nh mụ mị đầu &oacute;c, dại g&aacute;i, phạm phải tội chết. Anh trở về ph&ograve;ng nhanh ch&oacute;ng thu dọn đồ đạc, sau đ&oacute; liếc nh&igrave;n Giang Hồ tr&ecirc;n giường. D&ugrave; bị tr&oacute;i nhưng dường như c&ocirc; đ&atilde; ngủ say, cuộn m&igrave;nh như một con tằm trắng.</p>
+<p>Như thế n&agrave;y sẽ kh&ocirc;ng nhảy lầu nữa, tr&aacute;i tim Từ Tư treo lơ lửng cũng thả lỏng. Anh su&yacute;t ch&uacute;t đ&atilde; được trải nghiệm thủ tục h&igrave;nh sự v&agrave; nơi tạm giam ở Nhật Bản, sau khi nghĩ xong, anh bị th&iacute;m đẩy ra ngo&agrave;i, c&aacute;nh cửa trước mặt đ&oacute;ng sầm lại.</p>
+<p>Lần đầu ti&ecirc;n trong đời anh thảm hại thế n&agrave;y.</p>
+<p>Nửa giờ sau Giang Hồ tỉnh lại, c&ocirc; nằm tr&ecirc;n chiếc giường &ecirc;m &aacute;i, vừa mở mắt đ&atilde; nh&igrave;n thấy trăng s&aacute;ng treo cao tr&ecirc;n trời.</p>
+<p>Dưới &aacute;nh trăng c&oacute; lẽ l&agrave; n&agrave;ng ti&ecirc;n, quanh th&acirc;n tỏa s&aacute;ng h&agrave;o quang. N&agrave;ng ti&ecirc;n đ&oacute; thật sự rất đẹp, bước tới từ trong s&acirc;u thẳm vầng s&aacute;ng, gương mặt s&aacute;ng ngời như trăng. Tr&aacute;i tim c&ocirc; v&ocirc; cớ ấm &aacute;p, khi &yacute; thức trở n&ecirc;n r&otilde; r&agrave;ng, cuối c&ugrave;ng c&ocirc; cũng nhận ra n&agrave;ng ti&ecirc;n trước mắt l&agrave; ph&oacute; chủ tịch Hồng Điệp của tập đo&agrave;n Từ Phong.</p>
+<p>Bố từng giới thiệu vị trưởng bối n&agrave;y với c&ocirc;, bảo c&ocirc; gọi l&agrave; &lsquo;d&igrave; Hồng&rsquo;. Giang Hồ mở miệng nhưng kh&ocirc;ng thể ph&aacute;t ra hai tiếng &lsquo;d&igrave; Hồng&rsquo;.</p>
+<p>Hồng Điệp c&uacute;i người, d&ugrave;ng tay vỗ vỗ mặt c&ocirc;, như một người mẹ y&ecirc;u thương vuốt ve c&ocirc; con g&aacute;i nhỏ, b&agrave; th&uacute;c giục Giang Hồ n&oacute;i: &ldquo;Mau dậy tắm nước n&oacute;ng đi, ng&agrave;y mai về nước sẽ kh&ocirc;ng c&ograve;n cơ hội nữa đ&acirc;u. Đứa ngốc n&agrave;y, đừng ham ngủ nữa.&rdquo;</p>
+<p>Giọng của Hồng Điệp rất dễ nghe, kh&ocirc;ng phải kiểu lanh lợi lảnh l&oacute;t, m&agrave; trầm thấp &ecirc;m dịu, nghe v&agrave;o tai c&oacute; thể biết được ch&acirc;n th&agrave;nh của b&agrave;.</p>
+<p>Giang Hồ được quan t&acirc;m, cũng c&oacute; th&ecirc;m sức lực, trở m&igrave;nh ngồi dậy mới ph&aacute;t hiện thắt lưng m&agrave; Từ Tư tr&oacute;i đ&atilde; được cởi bỏ. Hồng Điệp đưa một bộ yukata, Giang Hồ mặc xong mới theo theo Hồng Điệp đến suối nước n&oacute;ng ở lầu một.</p>
+<p>Suối nước n&oacute;ng ở đ&acirc;y chảy xuống từ c&aacute;c con suối tr&ecirc;n n&uacute;i. Kh&aacute;ch sạn x&acirc;y một hồ nước mộc mạc đơn sơ như thi&ecirc;n nhi&ecirc;n tạo dựng để đ&oacute;n nguồn suối nước n&oacute;ng n&agrave;y. Hồ được x&acirc;y dựng tr&ecirc;n sườn n&uacute;i, b&ecirc;n v&aacute;ch n&uacute;i kh&ocirc;ng c&oacute; lan can, chỉ c&oacute; những vi&ecirc;n đ&aacute; tr&ograve;n nh&acirc;n tạo mang theo tro n&uacute;i lửa xếp chồng v&acirc;y quanh.</p>
+<p>Hồng Điệp tựa v&agrave;o những vi&ecirc;n đ&aacute;, h&iacute;t s&acirc;u một hơi, n&oacute;i: &ldquo;C&oacute; phải ph&aacute;t hiện từ đ&acirc;y nhảy xuống dễ hơn nhảy trong ph&ograve;ng Từ Tư kh&ocirc;ng?&rdquo;</p>
+<p>Giang Hồ đứng trong suối nước n&oacute;ng, kh&ocirc;ng ngồi xuống, chỉ ngơ ng&aacute;c nh&igrave;n mặt biển ph&iacute;a xa. Những đ&egrave;n ch&agrave;i lay lắt giữa trời biển, giống như tr&aacute;i tim lại bắt đầu lay động của c&ocirc; l&uacute;c n&agrave;y, nh&igrave;n g&igrave; cũng kh&ocirc;ng thấy ch&acirc;n thật. Giang Hồ đứng ng&acirc;y người, c&oacute; lẽ đang cố nh&igrave;n r&otilde; ph&iacute;a xa, c&oacute; lẽ chỉ muốn đứng thế th&ocirc;i. C&ocirc; kh&ocirc;ng biết m&igrave;nh muốn l&agrave;m g&igrave;.</p>
+<p>Hồng Điệp k&eacute;o tay c&ocirc; một c&aacute;i, d&igrave;u c&ocirc; thả m&igrave;nh v&agrave;o suối nước n&oacute;ng.</p>
+<p>Rất n&oacute;ng. Giang Hồ giật bắn m&igrave;nh, sau một l&aacute;t cũng dần th&iacute;ch ứng.</p>
+<p>Hiện giờ đ&atilde; l&agrave; nửa đ&ecirc;m, suối nước n&oacute;ng ở đ&acirc;y chỉ mở đến mười giờ tối, c&ocirc; biết được trong qu&aacute; tr&igrave;nh trao đổi c&ocirc;ng việc. Hơn nữa, đ&acirc;y l&agrave; suối nước n&oacute;ng tư nh&acirc;n, c&oacute; thể sau một thời gian sẽ kh&ocirc;ng mở cửa sử dụng cho mục đ&iacute;ch ri&ecirc;ng nữa. Nhưng vừa rồi Hồng Điệp nhỏ giọng n&oacute;i tiếng Anh với người trực đ&ecirc;m, rồi thuận lợi dẫn c&ocirc; v&agrave;o.</p>
+<p>Vị trưởng bối n&agrave;y thật tốt bụng. Giang Hồ co đầu gối lại.</p>
+<p>Hồng Điệp xoay người, dựa v&agrave;o nơi c&oacute; nhiệt độ n&oacute;ng nhất n&oacute;i: &ldquo;Cột sống của d&igrave; kh&ocirc;ng được tốt, lu&ocirc;n đau nhức, bọt nước suối n&oacute;ng c&oacute; hiệu quả thật.&rdquo;</p>
+<p>Giang Hồ vẫn kh&ocirc;ng n&oacute;i g&igrave;.</p>
+<p>Hồng Điệp cười n&oacute;i: &ldquo;Lần đầu ti&ecirc;n gặp c&ocirc; g&aacute;i nhỏ ch&aacute;u đ&acirc;y, d&igrave; đ&atilde; biết ch&aacute;u t&iacute;nh t&igrave;nh bướng bỉnh, thật đ&uacute;ng l&agrave; bướng bỉnh. &lsquo;Đừng qu&aacute; đau buồn&rsquo; l&agrave; một c&acirc;u kh&ocirc;ng hay ho g&igrave;, d&igrave; sẽ kh&ocirc;ng n&oacute;i với ch&aacute;u, nhưng ch&aacute;u cũng đừng d&ugrave;ng c&acirc;u &lsquo;đừng qu&aacute; đau buồn&rsquo; n&agrave;y để ch&agrave; đạp bản th&acirc;n.&rdquo;</p>
+<p>Giang Hồ bu&ocirc;ng hai tay &ocirc;m đầu gối, duỗi thẳng hai ch&acirc;n trong suối nước n&oacute;ng, thả lỏng to&agrave;n th&acirc;n, cứng rắn mạnh mẽ. C&ocirc; ng&acirc;y người nh&igrave;n Hồng Điệp, nh&igrave;n b&agrave; một hồi l&acirc;u, mới hỏi: &ldquo;D&igrave; Hồng, d&igrave; bao nhi&ecirc;u tuổi rồi?&rdquo;</p>
+<p>Hồng Điệp bật cười, tr&ecirc;n mặt c&ograve;n c&oacute; l&uacute;m đồng tiền, l&uacute;c cười l&ecirc;n kh&ocirc;ng biết đ&atilde; mang theo bao nhi&ecirc;u sự dịu d&agrave;ng.</p>
+<p>&ldquo;C&oacute; phải cảm thấy d&igrave; c&ograve;n trẻ kh&ocirc;ng?&rdquo;</p>
+<p>Giang Hồ gật đầu đồng &yacute;.</p>
+<p>B&agrave; n&oacute;i: &ldquo;Khi d&igrave; bằng tuổi ch&aacute;u, d&igrave; kh&ocirc;ng hề sa s&uacute;t ch&aacute;n nản, ngay cả khi d&igrave; chỉ c&oacute; một m&igrave;nh.&rdquo;</p>
+<p>Giang Hồ nh&igrave;n b&agrave;.</p>
+<p>Người phụ nữ trước mặt c&oacute; l&agrave;n da đẹp đến bất ngờ, mịn m&agrave;ng sạch sẽ, l&agrave;m người kh&aacute;c kh&ocirc;ng thể đo&aacute;n được tuổi thật của b&agrave;, vừa n&atilde;y c&ograve;n l&agrave;m Giang Hồ tưởng b&agrave; l&agrave; n&agrave;ng ti&ecirc;n bước ra từ &aacute;nh trăng.</p>
+<p>B&acirc;y giờ b&agrave; n&oacute;i những lời n&agrave;y, nhưng n&eacute;t mặt điềm tĩnh, ho&agrave;n to&agrave;n kh&ocirc;ng c&oacute; mừng vui buồn giận. C&ocirc; chỉ ghi nhớ từng lời b&agrave; n&oacute;i v&agrave;o tr&aacute;i tim m&igrave;nh.</p>
+<p>Giang Hồ hỏi b&agrave;: &ldquo;L&uacute;c d&igrave; bằng tuổi ch&aacute;u, d&igrave; đang l&agrave;m g&igrave;?&rdquo;</p>
+<p>Hồng Điệp nghi&ecirc;ng đầu, như thể đang nghi&ecirc;m t&uacute;c suy nghĩ c&acirc;u hỏi của Giang Hồ.</p>
+<p>B&agrave; n&oacute;i: &ldquo;L&uacute;c d&igrave; bằng tuổi ch&aacute;u, cũng chỉ c&oacute; một m&igrave;nh.&rdquo;</p>
+<p>Giang Hồ v&ugrave;i m&igrave;nh trong suối nước n&oacute;ng, quay người lại, nh&igrave;n những đ&egrave;n ch&agrave;i ph&iacute;a xa.</p>
+<p>Hồng Điệp n&oacute;i: &ldquo;G&oacute;c độ n&agrave;y tốt, nh&igrave;n kh&ocirc;ng thấy v&aacute;ch n&uacute;i.&rdquo; b&agrave; dừng lại một ch&uacute;t, lại n&oacute;i th&ecirc;m: &ldquo;Bố ch&aacute;u sẽ y&ecirc;n t&acirc;m.&rdquo;</p>
+<p>Giang Hồ lại v&ugrave;i cả khu&ocirc;n mặt m&igrave;nh v&agrave;o suối nước n&oacute;ng.</p>
+<p>Hồng Điệp n&oacute;i: &ldquo;Nếu ch&aacute;u l&agrave;m vậy, Từ Tư sẽ đi t&ugrave;.&rdquo;</p>
+<p>Giang Hồ nhắm mắt lại. B&agrave; l&agrave; người nh&agrave; của Từ Tư, đương nhi&ecirc;n quan t&acirc;m đến Từ Tư.</p>
+<p>C&ocirc; nghe Hồng Điệp n&oacute;i tiếp: &ldquo;Tuy n&oacute; l&agrave; người duy nhất c&oacute; ph&ograve;ng mở được cửa sổ b&ecirc;n v&aacute;ch n&uacute;i, ch&aacute;u cũng kh&ocirc;ng thể hồ đồ m&agrave; l&ecirc;n giường với n&oacute;, ch&aacute;u g&aacute;i nghe lời, d&ugrave; muốn chết cũng phải giữ một tr&aacute;i tim ho&agrave;n to&agrave;n trong s&aacute;ng, nếu kh&ocirc;ng ch&aacute;u chỉ l&agrave; một kẻ ngốc.&rdquo;</p>
+<p>Giang Hồ mở mắt trong suối nước n&oacute;ng, nhất thời chịu kh&ocirc;ng nổi m&agrave; ngẩng đầu l&ecirc;n, c&ocirc; th&igrave; th&agrave;o như trẻ con: &ldquo;Ch&aacute;u chỉ muốn &ocirc;m lưng anh ấy.&rdquo;</p>
+<p>&ldquo;Nhưng ch&aacute;u kh&ocirc;ng th&iacute;ch Từ Tư!&rdquo;</p>
+<p>Giang Hồ lắc đầu: &ldquo;Ch&aacute;u kh&ocirc;ng biết ch&aacute;u đ&atilde; l&agrave;m g&igrave;.&rdquo;</p>
+<p>Hồng Điệp đến gần c&ocirc;: &ldquo;Ch&aacute;u &agrave;, ch&aacute;u cần ngủ một giấc thật ngon. Hơn nữa, ch&aacute;u tới đ&acirc;y, trước mặt nhiều người như vậy, ch&iacute;nh l&agrave; tới thay bố ch&aacute;u, kh&ocirc;ng được l&agrave;m mất mặt bố ch&aacute;u.&rdquo;</p>
+<p>Giang Hồ nổi l&ecirc;n mặt nước, ngồi tr&ecirc;n đất đ&aacute; cuội, lấy tay che mặt kh&oacute;c th&agrave;nh tiếng. Nước mắt từ kẽ tay c&ocirc; chảy ra, c&ocirc; cảm thấy nước mắt của m&igrave;nh n&oacute;ng như suối nước n&oacute;ng, lần nữa như thi&ecirc;u đốt tr&aacute;i tim c&ocirc;.</p>
+<p>Trong tiếng nức nở, c&ocirc; nghe Hồng Điệp n&oacute;i: &ldquo;Khi bố d&igrave; mất, d&igrave; cũng kh&oacute;c như ch&aacute;u. Nhưng khi &ocirc;ng ấy c&ograve;n sống, d&igrave; kh&ocirc;ng c&oacute; g&igrave; cả, khi &ocirc;ng ấy ra đi, d&igrave; vẫn kh&ocirc;ng c&oacute; g&igrave;.&rdquo;</p>
+<p>Giang Hồ chậm r&atilde;i bỏ tay xuống, Hồng Điệp dịu d&agrave;ng nh&igrave;n c&ocirc; nhưng kh&ocirc;ng hề c&oacute; thương hại. C&ocirc; nghẹn ng&agrave;o, giọng n&oacute;i đứt qu&atilde;ng thổ lộ, c&ocirc; n&oacute;i: &ldquo;Bố ch&aacute;u bị ch&aacute;u hại chết.&rdquo;</p>
+<p>Nhưng c&ocirc; kh&ocirc;ng ngờ, Hồng Điệp d&ugrave;ng chất giọng trầm thấp của b&agrave;, chậm r&atilde;i n&oacute;i: &ldquo;Bố d&igrave; cũng bị d&igrave; hại chết.&rdquo;</p>
+<p>Giang Hồ kinh ngạc ngẩng đầu, lấy tay lau nước mắt, mờ mịt nh&igrave;n Hồng Điệp.</p>
+<p>Hồng Điệp ngẩng đầu nh&igrave;n &aacute;nh trăng, thời gian c&ograve;n sớm, chưa đến b&igrave;nh minh, đủ để kể một c&acirc;u chuyện d&agrave;i. B&agrave; hỏi Giang Hồ: &ldquo;Ch&aacute;u c&oacute; muốn nghe một c&acirc;u chuyện kh&ocirc;ng?&rdquo;</p>
+<p>Giang Hồ im lặng, thể hiện đồng &yacute;.</p>
+<p>Gi&oacute; tr&ecirc;n n&uacute;i mạnh th&ecirc;m đ&ocirc;i ch&uacute;t, hai người đều cảm thấy lạnh, cho n&ecirc;n lại ng&acirc;m m&igrave;nh v&agrave;o trong suối nước n&oacute;ng.</p>
+<p>C&acirc;u chuyện của Hồng Điệp phải n&oacute;i từ rất l&acirc;u trước kia. Giang Hồ cẩn thận lắng nghe, nghe giọng n&oacute;i của b&agrave; với &acirc;m điệu r&oacute;c r&aacute;ch của suối nước n&oacute;ng đang chảy.</p>
+<p>Mở đầu c&acirc;u chuyện xảy ra v&agrave;o m&ugrave;a đ&ocirc;ng ở trấn Hắc H&agrave;, tỉnh Hắc Long Giang, ng&agrave;n dặm băng gi&aacute;, tuyết bay vạn dặm, cảnh quang phong ph&uacute; rực rỡ.</p>
+<p>Tuy nhi&ecirc;n, với những ch&agrave;ng trai c&oacute; học thức vượt ng&agrave;n dặm đến tận nơi n&agrave;y, m&ocirc;i trường khắc nghiệt, tương lai v&ocirc; vọng, năm th&aacute;ng x&oacute;a nh&ograve;a đi tuổi trẻ, biến phong cảnh đẹp đẽ n&agrave;y trong mắt bọn họ, chỉ c&ograve;n lại tuyệt vọng.</p>
+<p>Tất nhi&ecirc;n, cũng c&oacute; người kh&ocirc;ng bi quan như vậy.</p>
+<p>Ch&agrave;ng trai c&oacute; học thức Tiểu Vinh vui vẻ tạm biệt cuộc sống lao động ở n&ocirc;ng trại Nộn Giang, đến b&ecirc;n d&ograve;ng s&ocirc;ng Hắc H&agrave; tr&aacute;ng lệ, gia nhập binh đo&agrave;n. Đ&acirc;y l&agrave; một bước tiến lớn của anh. Trước hết, kh&ocirc;ng cần phải l&agrave;m c&ocirc;ng việc đồng &aacute;ng bẩn thỉu, đi tuần tra dễ d&agrave;ng hơn nhiều so với đốn củi canh t&aacute;c. Thứ hai, ở lại đ&acirc;y c&oacute; nghĩa l&agrave; sẽ nhiều cơ hội được chuyển về th&agrave;nh phố, cũng như cơ hội bố tr&iacute; phương hướng.</p>
+<p>Cơ hội kh&oacute; m&agrave; gi&agrave;nh được. Tất cả chỉ v&igrave; một vụ tai nạn xe.</p>
+<p>Vốn dĩ anh đ&atilde; rất nỗ lực để c&oacute; cơ hội thi đại học, nhưng kh&ocirc;ng ngờ tr&ecirc;n đường v&agrave;o th&agrave;nh phố, một chiếc xe tải đ&atilde; va chạm với xe của qu&acirc;n đội, xe lật giữa sườn n&uacute;i. L&uacute;c anh đang kh&oacute; khăn t&igrave;m c&aacute;ch tho&aacute;t th&acirc;n th&igrave; một ch&agrave;ng trai kh&aacute;c cũng b&ograve; ra khỏi xe.</p>
+<p>T&agrave;i xế v&agrave; h&agrave;nh kh&aacute;ch tr&ecirc;n hai chiếc xe chỉ c&oacute; hai người họ sống s&oacute;t, nhưng đối phương bị thương kh&aacute; nặng. Tiểu Vinh c&otilde;ng ch&agrave;ng trai kia đi bộ một ng&agrave;y một đ&ecirc;m, cuối c&ugrave;ng cũng tới trấn nhỏ dưới ch&acirc;n n&uacute;i.</p>
+<p>Hai người nằm trong đội y tế dưới ch&acirc;n n&uacute;i một th&aacute;ng, nhưng Tiểu Vinh đ&atilde; mất đi cơ hội duy nhất để thi v&agrave;o đại học.</p>
+<p>Ch&agrave;ng trai kia t&ecirc;n Tiểu Hổ, c&oacute; bố l&agrave; một quan chức rất lớn. Anh ta coi Tiểu Vinh l&agrave; &acirc;n nh&acirc;n cứu mạng, nhờ quan hệ chuyển anh đến binh đo&agrave;n gần Hắc H&agrave;.</p>
+<p>Tiểu Vinh nhờ họa được ph&uacute;c, anh tự an ủi bản th&acirc;n n&ecirc;n biết h&agrave;i l&ograve;ng.</p>
+<p>Nhưng cuộc sống vẫn c&ograve;n nhiều kh&oacute; khăn, đặc biệt l&agrave; miếng ăn, m&oacute;n canh cải trắng kh&ocirc;ng gia vị v&agrave; cơm nhừ như ch&aacute;o mỗi ng&agrave;y khiến ch&agrave;ng trai Thượng Hải Tiểu Vinh kh&ocirc;ng thể th&iacute;ch nghi được. Ngh&egrave;o kh&oacute; dẫn đến thay đổi, anh biết trong rừng n&uacute;i thường c&oacute; mấy con th&uacute; nhỏ, sau khi nướng ch&iacute;n ăn rất ngon. Tiểu Vinh c&oacute; ch&uacute;t t&agrave;i ăn n&oacute;i, thuyết phục đội trưởng của m&igrave;nh v&agrave; đo&agrave;n trưởng binh đo&agrave;n, bọn họ thường v&agrave;o n&uacute;i l&uacute;c về đ&ecirc;m để săn bắt.</p>
+<p>Ngo&agrave;i n&uacute;i l&agrave; d&ograve;ng s&ocirc;ng bị đ&oacute;ng băng, b&ecirc;n kia s&ocirc;ng l&agrave; l&atilde;nh địa của kẻ th&ugrave; được xem l&agrave; lớn nhất l&uacute;c bấy giờ - &lsquo;Li&ecirc;n X&ocirc;&rsquo;. Cho n&ecirc;n bọn họ phải hết sức cẩn thận, kh&ocirc;ng được d&ugrave;ng s&uacute;ng săn mồi.</p>
+<p>May l&agrave; h&agrave;nh động lần n&agrave;y diễn ra su&ocirc;n sẻ, chỉ xảy ra một tai nạn bất ngờ. Khi bọn họ đuổi theo một con hươu tr&ecirc;n mặt băng, băng đột nhi&ecirc;n rạn nứt, cả ba người đều rơi xuống hố băng.</p>
+<p>Khi Tiểu Vinh ch&igrave;m xuống nước đ&atilde; nghĩ: &ldquo;Tất cả đ&atilde; kết th&uacute;c.&rdquo;</p>
+<p>Một c&ocirc; g&aacute;i Hắc Long Giang mười s&aacute;u tuổi c&ugrave;ng bố đi ngang tr&ecirc;n bờ, nh&igrave;n thấy bọn l&iacute;nh T&acirc;y k&eacute;o ba người khỏi hố băng, cả ba người đều c&oacute; m&aacute;i t&oacute;c đen.</p>
+<p>Bố c&ocirc; g&aacute;i thuộc đội y tế của binh đo&agrave;n, gọi l&agrave; l&atilde;o Hồng, thỉnh thoảng sẽ l&ecirc;n n&uacute;i h&aacute;i thuốc. C&ocirc; con g&aacute;i của &ocirc;ng từ nhỏ lớn l&ecirc;n tr&ecirc;n n&uacute;i, nhưng suy nghĩ nhạy b&eacute;n như mấy c&ocirc; g&aacute;i th&agrave;nh thị. C&ocirc; con g&aacute;i k&eacute;o bố m&igrave;nh trốn v&agrave;o bụi cỏ, hai người nh&igrave;n bọn l&iacute;nh T&acirc;y lục so&aacute;t ba người được k&eacute;o l&ecirc;n, t&igrave;m được t&uacute;i sưởi tr&ecirc;n người Tiểu Vinh. Bọn họ ước chừng c&aacute;i t&uacute;i sưởi, rồi phủi tay bỏ đi. C&ocirc; g&aacute;i k&eacute;o tay bố m&igrave;nh đến chỗ ba ch&agrave;ng trai sắp chết c&oacute;ng.</p>
+<p>Khi Tiểu Vinh tỉnh dậy, anh thấy c&ocirc; g&aacute;i bưng một t&ocirc; b&aacute;nh canh trước mặt.</p>
+<p>Đ&acirc;y l&agrave; một c&ocirc; g&aacute;i xinh đẹp. Anh nghĩ. Da trắng, mắt s&acirc;u, t&oacute;c đen &oacute;ng ả, tết b&iacute;m t&oacute;c ph&iacute;a sau buộc lại bằng sợi d&acirc;y đỏ. Anh lại nghĩ.</p>
+<p>C&ocirc; g&aacute;i cũng đang nghĩ, đ&acirc;y l&agrave; một ch&agrave;ng trai tr&ocirc;ng kh&aacute; được, trắng trẻo nh&atilde; nhặn, g&ograve; m&aacute; gầy gầy cao cao, giống Hồng Thường Thanh trong &lt;Hồng Sắc Nương Tử Qu&acirc;n&gt;.</p>
+<p>Trong nh&agrave; c&ocirc; g&aacute;i, dưới bức tường đầy bụi đất c&acirc;y cỏ, Tiểu Vinh ăn xong t&ocirc; b&aacute;nh canh, lau sạch miệng, kh&ocirc;ng biết lấy từ đ&acirc;u ra một chiếc l&aacute;, thổi một b&agrave;i &lt;H&agrave;ng tr&uacute;c nhỏ giữa d&ograve;ng s&ocirc;ng&gt;. Ngồi dưới ngọn nến đỏ, c&ocirc; g&aacute;i cắt rất nhiều con bướm từ giấy m&agrave;u mua ở th&agrave;nh phố, rồi d&aacute;n ch&uacute;ng l&ecirc;n bức tường trắng x&aacute;m.</p>
+<p>Sau khi Tiểu Vinh b&igrave;nh phục, mỗi tuần anh đều đến đội y tế. C&ocirc; g&aacute;i sẽ th&ecirc;m thật nhiều bột chua cay v&agrave;o t&ocirc; b&aacute;nh canh của anh, để Tiểu Vinh c&oacute; thể trải qua ng&agrave;y đ&ocirc;ng lạnh gi&aacute; nhưng ấm l&ograve;ng theo phong c&aacute;ch miền Bắc.</p>
+<p>Khi xu&acirc;n đến, qu&ecirc; nh&agrave; của Tiểu Vinh gửi một g&oacute;i bưu phẩm, anh lấy hai chai dầu m&egrave;, một hộp bột ngọt, một chai bột chua cay v&agrave; một b&aacute;nh x&agrave; ph&ograve;ng thuốc, g&oacute;i trong một chiếc khăn mới m&agrave;u hồng rất đẹp, đưa đến nh&agrave; của c&ocirc; g&aacute;i.</p>
+<p>Anh cũng đưa một bao thuốc cho l&atilde;o Hồng, tr&ograve; chuyện với l&atilde;o Hồng tr&ecirc;n giường đất đến nửa đ&ecirc;m.</p>
+<p>C&ocirc; g&aacute;i kh&ocirc;ng ngừng vuốt ve chiếc khăn m&agrave;u hồng mới, trong l&ograve;ng thầm nghĩ, n&oacute; thật sự rất mềm rất đẹp. C&ocirc; nhẹ nh&agrave;ng &aacute;p khăn l&ecirc;n mặt, vừa quay đầu lại, đ&atilde; thấy nụ cười của Tiểu Vinh.</p>
+<p>C&ocirc; nghĩ, anh cười l&ecirc;n tr&ocirc;ng thật đẹp.</p>
+<p>Mấy ng&agrave;y sau, c&ocirc; g&aacute;i ph&aacute;t hiện bố m&igrave;nh c&oacute; th&ecirc;m thuốc t&acirc;y, thuốc chống vi&ecirc;m, thuốc kh&aacute;ng sinh, v.v&hellip; l&agrave; Tiểu Vinh đưa đến, n&oacute;i l&agrave; tiếp viện cho đội ngũ y tế.</p>
+<p>C&ocirc; mắng Tiểu Vinh l&agrave; quỷ trộm vặt, Tiểu Vinh chỉ nh&igrave;n c&ocirc; cười.</p>
+<p>L&atilde;o Hồng đ&agrave;o một c&aacute;i hố dưới giường đất c&aacute;ch xa nguồn lửa, lần lượt cất giấu rất nhiều thứ, đến nửa đ&ecirc;m th&igrave; v&aacute;c những thứ n&agrave;y v&agrave;o n&uacute;i, chạy đến ven s&ocirc;ng.</p>
+<p>C&ocirc; g&aacute;i b&iacute; mật theo d&otilde;i bố m&igrave;nh, thấy bố m&igrave;nh v&agrave; t&ecirc;n l&iacute;nh T&acirc;y n&oacute;i chuyện với nhau. &Ocirc;ng cha của c&ocirc; g&aacute;i c&oacute; huyết thống người T&acirc;y, cho n&ecirc;n đời sau của họ cũng biết n&oacute;i tiếng T&acirc;y, c&ocirc; g&aacute;i cũng biết, c&ocirc; lắng nghe cuộc đối thoại của bố v&agrave; t&ecirc;n l&iacute;nh T&acirc;y, biết bọn họ đang mặc cả.</p>
+<p>Khi l&atilde;o Hồng về nh&agrave;, c&ocirc; g&aacute;i dọn đồ trong hố ra ngo&agrave;i, &ocirc;ng g&otilde; l&ecirc;n tr&aacute;n con g&aacute;i, n&oacute;i: &ldquo;Tiểu Vinh l&agrave; một đứa th&ocirc;ng minh, th&agrave;nh phố tốt đẹp biết bao! Th&agrave;nh thị nơi cậu ta sống tốt hơn ở đ&acirc;y, con g&aacute;i, con muốn đi kh&ocirc;ng?&rdquo;</p>
+<p>C&ocirc; g&aacute;i chỉ lắc đầu.</p>
+<p>C&ocirc; tức giận đi t&igrave;m Tiểu Vinh, hẹn anh đến rừng c&acirc;y gần đ&oacute;, nghi&ecirc;m t&uacute;c cảnh c&aacute;o: &ldquo;Anh đang đầu cơ trục lợi, đ&acirc;y l&agrave; phạm tội.&rdquo;</p>
+<p>Tiểu Vinh chỉ lặng lẽ nh&igrave;n c&ocirc;, &aacute;nh mắt mang theo cảm t&igrave;nh kh&aacute;c nhau. Anh n&oacute;i: &ldquo;Nếu anh bị bắt, chắc sẽ bị kết &aacute;n tử h&igrave;nh nhỉ?&rdquo;</p>
+<p>C&ocirc; g&aacute;i kh&ocirc;ng n&oacute;i được g&igrave;.</p>
+<p>Tiểu Vinh n&oacute;i: &ldquo;T&ecirc;n l&iacute;nh T&acirc;y t&igrave;m anh mua đồ, c&oacute; thể kiếm ch&uacute;t tiền.&rdquo;</p>
+<p>C&ocirc; g&aacute;i vẫn kh&ocirc;ng n&oacute;i lời n&agrave;o.</p>
+<p>Tiểu Vinh lại n&oacute;i: &ldquo;Hiện giờ đ&atilde; c&oacute; người về th&agrave;nh phố, Tiểu Hổ đ&atilde; hứa, anh ấy sẽ nhờ bố nghĩ c&aacute;ch, sớm đưa anh về Thượng Hải, anh ấy c&oacute; v&agrave;i người quen c&oacute; thể giới thiệu c&ocirc;ng việc tốt cho anh.&rdquo;</p>
+<p>Sắc mặt c&ocirc; g&aacute;i trầm xuống: &ldquo;Anh chỉ muốn dựa dẫm v&agrave;o người kh&aacute;c.&rdquo;</p>
+<p>Tiểu Vinh kh&ocirc;ng tức giận: &ldquo;Em &agrave;, bố mẹ anh rời trường c&aacute;n bộ từ năm 1965, kh&ocirc;ng bao giờ quay về nữa.&rdquo;</p>
+<p>Kh&ocirc;ng biết c&ocirc; g&aacute;i lấy dũng kh&iacute; từ đ&acirc;u, chủ động &ocirc;m Tiểu Vinh, v&ugrave;i mặt v&agrave;o ngực anh.</p>
+<p>Tiểu Vinh n&oacute;i: &ldquo;Anh đang nghĩ, nếu ch&uacute;ng ta đi hết, bố em phải l&agrave;m sao? Anh muốn kiếm cho &ocirc;ng th&ecirc;m &iacute;t tiền dưỡng gi&agrave;.&rdquo; anh v&ograve;ng tay &ocirc;m c&ocirc;.</p>
+<p>Họ lặng lẽ tựa v&agrave;o nhau, nghe tiếng gi&oacute; x&agrave;o xạc trong rừng. Tiểu Vinh tiện tay ngắt một chiếc l&aacute;, d&ugrave;ng tay chụm lại đặt l&ecirc;n m&ocirc;i, thổi một b&agrave;i &lt;H&agrave;ng tr&uacute;c nhỏ giữa d&ograve;ng s&ocirc;ng&gt;.</p>
+<p>Sau đ&oacute;, l&atilde;o Hồng lại nhận một ấm nước từ Tiểu Vinh, được nhập lậu từ c&aacute;c th&agrave;nh phố ven biển ở miền Nam, được l&agrave;m rất tinh xảo. T&ecirc;n l&iacute;nh T&acirc;y muốn rất nhiều h&agrave;ng n&ecirc;n Tiểu Vinh giả ốm xin về nh&agrave; hai lần, thực chất l&agrave; đến tổ chức &nbsp;ở ph&iacute;a Nam để tổ chức cung cấp h&agrave;ng h&oacute;a.</p>
+<p>Tiểu Vinh v&agrave; t&ecirc;n l&iacute;nh T&acirc;y hẹn giao dịch ở đường bi&ecirc;n giới trong n&uacute;i, h&agrave;ng h&oacute;a được mang ra theo từng đợt, tất cả đều do Tiểu Vinh v&agrave; l&atilde;o Hồng c&ugrave;ng nhau đưa đến. Khi đến đợt h&agrave;ng cuối c&ugrave;ng, t&igrave;nh cờ binh đo&agrave;n c&oacute; một cuộc họp, c&ocirc; g&aacute;i n&oacute;i với Tiểu Vinh: &ldquo;Em đi với bố.&rdquo;</p>
+<p>Tiểu Vinh đồng &yacute;.</p>
+<p>Chỉ l&agrave; vận may của c&ocirc; g&aacute;i kh&ocirc;ng tốt, c&ocirc; v&agrave; l&atilde;o Hồng vừa đẩy xe v&agrave;o rừng th&igrave; bị đ&egrave;n pin rọi v&agrave;o mắt kh&ocirc;ng mở ra được.</p>
+<p>Hai người bị đưa đến trại tạm giam trong th&agrave;nh phố, đồng ch&iacute; thẩm vấn &ocirc;n tồn n&oacute;i, họ thấy l&iacute;nh Li&ecirc;n X&ocirc; đang đợi h&agrave;ng ở đầu rừng b&ecirc;n kia, nổ s&uacute;ng cảnh c&aacute;o, t&ecirc;n l&iacute;nh Li&ecirc;n X&ocirc; bỏ chạy. Họ t&igrave;m kiếm trong rừng cho đến khi bắt gặp hai cha con l&atilde;o Hồng.</p>
+<p>L&atilde;o Hồng phạm tội đ&atilde; v&agrave;o trại tạm giam cho người gi&agrave;, c&ocirc; g&aacute;i được đồng ch&iacute; cảnh s&aacute;t đưa đến cạnh &ocirc;ng. &Ocirc;ng kh&oacute; khăn nh&aacute;y mắt với c&ocirc; g&aacute;i, cho đến khi được đội y tế khi&ecirc;ng đi. C&ocirc; g&aacute;i biết &yacute; của bố m&igrave;nh, nếu kh&ocirc;ng khai ra Tiểu Vinh, họ sẽ phạm tội &lsquo;đầu cơ trục lợi&rsquo;, sẽ bị xử bắn. Nhưng nếu khai ra Tiểu Vinh, Tiểu Vinh sẽ bị xử bắn.</p>
+<p>Ngồi trong trại tạm giam lạnh lẽo, c&ocirc; g&aacute;i đặc biệt nhớ b&agrave;i h&aacute;t &lt;H&agrave;ng tr&uacute;c nhỏ giữa d&ograve;ng s&ocirc;ng&gt; được Tiểu Vinh thổi bằng l&aacute;.</p>
+<p>C&acirc;u chuyện kể đến đ&acirc;y, Giang Hồ gấp g&aacute;p hỏi Hồng Điệp: &ldquo;Tiểu Vinh c&oacute; đi cứu c&ocirc; g&aacute;i kh&ocirc;ng?&rdquo;</p>
+<p>Hồng Điệp lắc đầu: &ldquo;C&ocirc; g&aacute;i bị nhốt mấy th&aacute;ng, vốn kh&ocirc;ng biết b&ecirc;n ngo&agrave;i xảy ra chuyện g&igrave;, chỉ biết cuối c&ugrave;ng bố m&igrave;nh chủ động nhận tội, c&ograve;n ki&ecirc;n quyết n&oacute;i con g&aacute;i &ocirc;ng kh&ocirc;ng biết g&igrave; về chuyện n&agrave;y, sau c&ugrave;ng &ocirc;ng bị kết &aacute;n tử h&igrave;nh.&rdquo;</p>
+<p>Khi c&ocirc; g&aacute;i được thả, bố c&ocirc; đ&atilde; bị xử bắn, trước l&uacute;c l&acirc;m chung để lại cho c&ocirc; một tờ giấy, tr&ecirc;n đ&oacute; chỉ c&oacute; một c&acirc;u - &lsquo;h&atilde;y sống thật tốt&rsquo;.</p>
+<p>C&ocirc; nắm chặt tờ giấy, ch&ocirc;n cất bố m&igrave;nh, sau đ&oacute; chạy thẳng đến binh đo&agrave;n, muốn t&igrave;m Tiểu Vinh.</p>
+<p>Trong năm n&agrave;y, ch&agrave;ng trai học thức đ&atilde; về th&agrave;nh phố, binh đo&agrave;n v&agrave; n&ocirc;ng trại ồn &agrave;o hỗn loạn, mỗi ng&agrave;y đều c&oacute; xe tải lớn đến đ&oacute;n những ch&agrave;ng trai ngay từ đầu kh&ocirc;ng thuộc về nơi đ&acirc;y rời đi.</p>
+<p>C&ocirc; g&aacute;i t&igrave;m thấy đội trưởng của Tiểu Vinh, rồi t&igrave;m đến đo&agrave;n trưởng, họ đều l&agrave; những người đ&atilde; được c&ocirc; cứu c&ugrave;ng với Tiểu Vinh l&uacute;c đ&oacute;, c&ocirc; nghĩ họ nhất định biết Tiểu Vinh đi đ&acirc;u. Nhưng đội trưởng nhất quyết kh&ocirc;ng n&oacute;i, cuối c&ugrave;ng đo&agrave;n trưởng n&oacute;i với c&ocirc; g&aacute;i: &ldquo;Tiểu Vinh l&agrave; đợt rời đi đầu ti&ecirc;n, l&agrave; Tiểu Hổ gi&uacute;p quay về.&rdquo;</p>
+<p>Phần sau c&acirc;u chuyện được Hồng Điệp kể ngắn ngọn: &ldquo;Sau đ&oacute;, c&ocirc; g&aacute;i đến Th&acirc;m Quyến l&agrave;m việc. C&ocirc; biểu hiện rất tốt, đ&ocirc;i tay kh&eacute;o l&eacute;o nhanh nhẹn như k&eacute;o cắt giấy, thăng chức rất nhanh. C&ocirc; c&ograve;n đi học bổ t&uacute;c ban đ&ecirc;m. C&ocirc; gặp được người chồng sau n&agrave;y, cuộc sống của c&ocirc; ng&agrave;y c&agrave;ng tốt hơn, nhưng c&ocirc; sẽ kh&ocirc;ng bao giờ qu&ecirc;n, bố c&ocirc; v&igrave; c&ocirc; m&agrave; chết, nỗi &acirc;n hận trong l&ograve;ng sẽ theo c&ocirc; đến suốt cuộc đời, nhưng bố c&ocirc; hi vọng c&ocirc; sống thật tốt.&rdquo;</p>
+<p>Giang Hồ lẩm bẩm than thở: &ldquo;Nhưng kh&ocirc;ng phải Tiểu Vinh chết, th&igrave; l&agrave; bố c&ocirc; ấy chết. Lựa chọn như vậy thật sự rất kh&oacute;.&rdquo;</p>
+<p>Hồng Điệp n&oacute;i: &ldquo;D&ugrave; kh&oacute; đến đ&acirc;u, cũng phải vượt qua, sẽ lu&ocirc;n vượt qua được. Cuộc sống l&agrave; như vậy.&rdquo;</p>
+<p>Mặt trăng chuyển dời về T&acirc;y, cuộc sống cũng chỉ như vậy. Mặt trời sắp thay thế trăng tr&ograve;n, bắt đầu một h&agrave;nh tr&igrave;nh mới.</p>
+<p>Giang Hồ đứng l&ecirc;n trong suối nước n&oacute;ng, c&ocirc; k&eacute;o Hồng Điệp dậy n&oacute;i: &ldquo;D&igrave; Hồng, cảm ơn d&igrave;.&rdquo;</p>
+<p>Hồng Điệp nắm tay c&ocirc; bước ra khỏi suối nước n&oacute;ng, một l&agrave;n gi&oacute; n&uacute;i thổi đến. Hồng Điệp n&oacute;i: &ldquo;Ch&aacute;u xem, thời gian tr&ocirc;i qua thật nhanh, lại sang ng&agrave;y mới rồi. Tuy rằng ngược gi&oacute;, nhưng nơi ngược gi&oacute; c&oacute; &aacute;nh mặt trời.&rdquo;</p>
+<p>Giang Hồ ngẩng đầu, quả nhi&ecirc;n ngược gi&oacute; c&oacute; thể thấy mặt trời mọc, tia s&aacute;ng dần l&oacute; rạng từ dưới bức m&agrave;n tối, sưởi ấm đ&ocirc;i mắt, những v&igrave; sao rơi đ&atilde; kh&ocirc;ng c&ograve;n nữa.</p>
+<p>M&agrave; ng&agrave;y xu&acirc;n chắc hẳn sẽ đến nhanh th&ocirc;i.</p>
+    </article>
+
+    <!-- Thanh nút điều hướng cuối trang -->
+    <div class="reading-nav">
+        <a href="#" class="nav-btn disabled">⬅️ Chương trước</a>
+        <a href="../mucluc/toimuondinguocgio.html" class="nav-btn">📋 Mục lục</a>
+        <a href="toimuondinguocgio2.html" class="nav-btn">Chương sau ➡️</a>
+    </div>
+
+</main>
+
+<!-- ========================================================
+   KHUNG THẢO LUẬN TOÀN CHƯƠNG (UTTERANCES)
+   ======================================================== -->
+<div class="chapter-discussion-box">
+    <div class="discussion-header">
+        <span class="icon">🌿</span>
+        <h3>Thảo luận về chương này</h3>
+        <span class="icon">🌸</span>
+    </div>
+    <div class="comment-section">
+        <script src="https://utteranc.es/client.js"
+                repo="gocnhocuakhiet/gocnhocuakhiet.github.io"
+                issue-term="pathname"
+                label="comment"
+                theme="github-light"
+                crossorigin="anonymous"
+                async>
+        </script>
+    </div>
+</div>
+
+<!-- ========================================================
+   POPUP SIDEBAR BÌNH LUẬN THEO TỪNG ĐOẠN VĂN
+   ======================================================== -->
+<div id="comment-sidebar" class="comment-sidebar">
+    <div class="sidebar-header">
+        <h4 id="sidebar-paragraph-title">Bình luận đoạn văn</h4>
+        <button class="close-sidebar-btn" onclick="closeInlineComment()">✕</button>
+    </div>
+    <div class="quoted-paragraph-box" id="quoted-paragraph-box"></div>
+    <p class="sidebar-hint">Bình luận bên dưới áp dụng cho toàn chương. Đoạn văn bạn chọn đã được trích dẫn ở trên để tiện tham chiếu.</p>
+    <div id="sidebar-utterances-mount"></div>
+</div>
+<div id="sidebar-overlay" class="sidebar-overlay" onclick="closeInlineComment()"></div>
+
+<!-- ========================================================
+   TẬP LỆNH XỬ LÝ BÌNH LUẬN & UTTERANCES
+   ======================================================== -->
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const paragraphs = document.querySelectorAll('.story-content p');
+
+    paragraphs.forEach(function (p, index) {
+        const row = document.createElement('div');
+        row.className = 'comment-row';
+        p.parentNode.insertBefore(row, p);
+        row.appendChild(p);
+
+        const badge = document.createElement('span');
+        badge.className = 'comment-badge';
+        badge.innerHTML = '💬';
+        badge.title = 'Bình luận về đoạn này';
+        badge.onclick = function () {
+            openInlineComment(p.innerText.trim().substring(0, 120), index + 1);
+        };
+        row.appendChild(badge);
+    });
+});
+
+function openInlineComment(previewText, paragraphNumber) {
+    document.getElementById('sidebar-paragraph-title').innerText = 'Đoạn văn số ' + paragraphNumber;
+    document.getElementById('quoted-paragraph-box').innerText = '"' + previewText + (previewText.length >= 120 ? '…' : '') + '"';
+    document.getElementById('comment-sidebar').classList.add('active');
+    document.getElementById('sidebar-overlay').classList.add('active');
+
+    const mount = document.getElementById('sidebar-utterances-mount');
+    if (!mount.hasChildNodes()) {
+        const script = document.createElement('script');
+        script.src = 'https://utteranc.es/client.js';
+        script.setAttribute('repo', 'gocnhocuakhiet/gocnhocuakhiet.github.io');
+        script.setAttribute('issue-term', 'pathname');
+        script.setAttribute('label', 'comment');
+        script.setAttribute('theme', getCurrentUtterancesTheme());
+        script.setAttribute('crossorigin', 'anonymous');
+        script.async = true;
+        mount.appendChild(script);
+    }
+}
+
+function closeInlineComment() {
+    document.getElementById('comment-sidebar').classList.remove('active');
+    document.getElementById('sidebar-overlay').classList.remove('active');
+}
+
+function getCurrentUtterancesTheme() {
+    return document.body.classList.contains('dark-mode') ? 'github-dark' : 'github-light';
+}
+
+function syncUtterancesTheme(isDark) {
+    const theme = isDark ? 'github-dark' : 'github-light';
+    document.querySelectorAll('.utterances-frame').forEach(function (iframe) {
+        iframe.contentWindow.postMessage({ type: 'set-theme', theme: theme }, 'https://utteranc.es');
+    });
+}
+</script>
+
+<!-- ========================================================
+   CSS KHUNG BÌNH LUẬN & SIDEBAR
+   ======================================================== -->
+<style>
+.chapter-discussion-box {
+    max-width: 700px;
+    margin: 30px auto 50px auto;
+    padding: 25px;
+    background-color: #ffffff;
+    border-radius: 8px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.02);
+}
+
+.discussion-header {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 25px;
+    border-bottom: 1px dashed #dae5e0;
+    padding-bottom: 15px;
+}
+.discussion-header h3 { color: #4a6b5d; font-size: 1.2rem; margin: 0; }
+.comment-section { width: 100%; min-height: 150px; }
+
+.comment-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    gap: 15px;
+    margin-bottom: 22px;
+    width: 100%;
+}
+.comment-row p { flex: 1; margin-bottom: 0 !important; }
+
+.comment-badge {
+    cursor: pointer;
+    font-size: 0.9rem;
+    padding: 4px 6px;
+    background-color: #eaf2ee;
+    border-radius: 10px;
+    color: #4a6b5d;
+    transition: all 0.2s ease;
+    user-select: none;
+    margin-top: 3px;
+    flex-shrink: 0;
+}
+.comment-badge:hover { background-color: #4a6b5d; color: #ffffff; transform: scale(1.1); }
+
+.comment-sidebar {
+    position: fixed;
+    top: 0;
+    right: -420px;
+    width: 400px;
+    height: 100%;
+    background: #ffffff;
+    box-shadow: -5px 0 15px rgba(0,0,0,0.05);
+    z-index: 100000;
+    transition: right 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+    padding: 24px;
+    overflow-y: auto;
+    box-sizing: border-box;
+}
+.comment-sidebar.active { right: 0; }
+
+.sidebar-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid #dae5e0;
+    padding-bottom: 12px;
+    margin-bottom: 16px;
+}
+.sidebar-header h4 { color: #4a6b5d; margin: 0; }
+.close-sidebar-btn { background: none; border: none; font-size: 1.2rem; color: #999; cursor: pointer; }
+
+.quoted-paragraph-box {
+    background: #f0f7f4;
+    border-left: 3px solid #8fae9f;
+    border-radius: 4px;
+    padding: 10px 14px;
+    font-size: 0.88rem;
+    color: #4a6b5d;
+    font-style: italic;
+    line-height: 1.5;
+    margin-bottom: 12px;
+}
+
+.sidebar-hint {
+    font-size: 0.82rem;
+    color: #aaa;
+    text-align: center;
+    margin-bottom: 16px;
+}
+
+.sidebar-overlay {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: rgba(0,0,0,0.2);
+    z-index: 99999;
+    display: none;
+}
+.sidebar-overlay.active { display: block; }
+
+/* Dark mode - khung bình luận */
+body.dark-mode .chapter-discussion-box,
+body.dark-mode .comment-sidebar {
+    background-color: #1b2420 !important;
+    border-color: #2e3d36 !important;
+    color: #dae5e0 !important;
+}
+body.dark-mode .discussion-header,
+body.dark-mode .sidebar-header { border-bottom-color: #2e3d36 !important; }
+body.dark-mode .discussion-header h3,
+body.dark-mode .sidebar-header h4 { color: #8fae9f !important; }
+body.dark-mode .quoted-paragraph-box {
+    background: #232e29;
+    border-left-color: #4a6b5d;
+    color: #8fae9f;
+}
+body.dark-mode .comment-badge { background: #25332c; color: #8fae9f; }
+body.dark-mode .sidebar-hint { color: #666; }
+</style>
+
+</body>
+</html>
