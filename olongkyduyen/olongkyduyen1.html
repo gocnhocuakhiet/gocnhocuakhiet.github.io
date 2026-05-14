@@ -176,23 +176,17 @@
             margin-bottom: 22px; width: 100%;
         }
         .comment-row p { flex: 1; margin-bottom: 0 !important; }
+
+        /* Badge chỉ là nút mở sidebar — không hiện số đếm */
         .comment-badge {
             cursor: pointer; font-size: 0.88rem;
             padding: 4px 7px;
             background-color: #eaf2ee; border-radius: 10px;
             color: #4a6b5d; transition: all 0.2s ease;
             user-select: none; margin-top: 4px; flex-shrink: 0;
-            display: flex; align-items: center; gap: 4px;
+            display: flex; align-items: center;
         }
         .comment-badge:hover { background-color: #4a6b5d; color: #ffffff; transform: scale(1.08); }
-        .badge-count {
-            font-size: 0.75rem; font-weight: 600;
-            background: #4a6b5d; color: #fff;
-            border-radius: 8px; padding: 1px 5px;
-            min-width: 16px; text-align: center;
-            display: none;
-        }
-        .comment-badge:hover .badge-count { background: #fff; color: #4a6b5d; }
 
         /* ── KHUNG BÌNH LUẬN ── */
         .chapter-discussion-box {
@@ -266,8 +260,6 @@
         body.dark-mode .discussion-header h3 { color: #8fae9f; }
         body.dark-mode .quoted-paragraph-box { background: #232e29; border-left-color: #4a6b5d; color: #8fae9f; }
         body.dark-mode .comment-badge { background: #25332c; color: #8fae9f; }
-        body.dark-mode .badge-count { background: #8fae9f; color: #1b2420; }
-        body.dark-mode .comment-badge:hover .badge-count { background: #1b2420; color: #8fae9f; }
         body.dark-mode .sidebar-hint { color: #666; }
 
         @media (max-width: 480px) {
@@ -291,33 +283,20 @@
 </div>
 
 <script>
-/* ── Cấu hình Giscus ── */
-const GISCUS_REPO        = 'gocnhocuakhiet/gocnhocuakhiet.github.io';
-const GISCUS_REPO_ID     = 'R_kgDOSa8zng';
-const GISCUS_CATEGORY    = 'Announcements';
-const GISCUS_CATEGORY_ID = 'DIC_kwDOSa8zns4C9CVM';
-
 /* ── Dark mode ── */
-function getGiscusTheme() {
-    return document.body.classList.contains('dark-mode') ? 'dark' : 'light';
-}
-
-function syncGiscusTheme(isDark) {
-    /* Gửi message đến tất cả iframe giscus để đổi theme */
-    document.querySelectorAll('iframe.giscus-frame').forEach(function(iframe) {
-        iframe.contentWindow.postMessage(
-            { giscus: { setConfig: { theme: isDark ? 'dark' : 'light' } } },
-            'https://giscus.app'
-        );
-    });
-}
-
 function toggleDarkMode() {
     document.body.classList.toggle('dark-mode');
     const isDark = document.body.classList.contains('dark-mode');
     localStorage.setItem('night-mode', isDark ? 'on' : 'off');
     document.getElementById('dark-mode-btn').innerText = isDark ? '☀️' : '🌙';
-    syncGiscusTheme(isDark);
+    syncUtterancesTheme(isDark);
+}
+
+function syncUtterancesTheme(isDark) {
+    const theme = isDark ? 'github-dark' : 'github-light';
+    document.querySelectorAll('.utterances-frame').forEach(function(iframe) {
+        iframe.contentWindow.postMessage({ type: 'set-theme', theme: theme }, 'https://utteranc.es');
+    });
 }
 
 function changeFontSize(delta) {
@@ -341,7 +320,6 @@ document.addEventListener('click', function(e) {
     }
 });
 
-/* Áp dụng chế độ đã lưu khi mở trang */
 (function () {
     if (localStorage.getItem('night-mode') === 'on') {
         document.body.classList.add('dark-mode');
@@ -432,15 +410,22 @@ document.addEventListener('click', function(e) {
     </div>
 </div>
 
-<!-- ══ KHUNG BÌNH LUẬN GISCUS (toàn chương) ══════════════ -->
+<!-- ══ KHUNG BÌNH LUẬN UTTERANCES (toàn chương) ══════════ -->
 <div class="chapter-discussion-box">
     <div class="discussion-header">
         <span>🌿</span>
         <h3>Thảo luận về chương này</h3>
         <span>🌸</span>
     </div>
-    <div class="comment-section" id="giscus-main">
-        <!-- Giscus sẽ được nhúng bằng JS sau khi biết theme -->
+    <div class="comment-section">
+        <script src="https://utteranc.es/client.js"
+                repo="gocnhocuakhiet/gocnhocuakhiet.github.io"
+                issue-term="pathname"
+                label="comment"
+                theme="github-light"
+                crossorigin="anonymous"
+                async>
+        </script>
     </div>
 </div>
 
@@ -452,8 +437,7 @@ document.addEventListener('click', function(e) {
     </div>
     <div class="quoted-paragraph-box" id="quoted-paragraph-box"></div>
     <p class="sidebar-hint">Bình luận bên dưới áp dụng cho toàn chương. Đoạn văn bạn chọn đã được trích dẫn ở trên để tiện tham chiếu.</p>
-    <!-- Giscus sidebar — dùng chung issue với khung chính -->
-    <div id="giscus-sidebar"></div>
+    <div id="sidebar-utterances-mount"></div>
 </div>
 <div id="sidebar-overlay" class="sidebar-overlay" onclick="closeInlineComment()"></div>
 
@@ -462,54 +446,13 @@ document.addEventListener('click', function(e) {
 const PAGE_PATH = window.location.pathname;
 
 /* ════════════════════════════════════════════════════════
-   NHÚNG GISCUS (dùng JS để truyền theme đúng ngay từ đầu,
-   tránh nháy sáng/tối khi tải trang)
+   BONG BÓNG 💬 THEO ĐOẠN VĂN — chỉ là nút mở sidebar,
+   KHÔNG tự tăng số đếm, KHÔNG lưu localStorage
    ════════════════════════════════════════════════════════ */
-function createGiscusScript(containerId) {
-    const s = document.createElement('script');
-    s.src                           = 'https://giscus.app/client.js';
-    s.setAttribute('data-repo',          GISCUS_REPO);
-    s.setAttribute('data-repo-id',       GISCUS_REPO_ID);
-    s.setAttribute('data-category',      GISCUS_CATEGORY);
-    s.setAttribute('data-category-id',   GISCUS_CATEGORY_ID);
-    s.setAttribute('data-mapping',       'pathname');
-    s.setAttribute('data-strict',        '0');
-    s.setAttribute('data-reactions-enabled', '1');  /* emoji reactions ✅ */
-    s.setAttribute('data-emit-metadata', '0');
-    s.setAttribute('data-input-position','bottom'); /* ô nhập ở dưới */
-    s.setAttribute('data-theme',         getGiscusTheme());
-    s.setAttribute('data-lang',          'vi');
-    s.setAttribute('crossorigin',        'anonymous');
-    s.async = true;
-    document.getElementById(containerId).appendChild(s);
-}
-
-/* Nhúng khung bình luận chính ngay khi trang load xong */
 document.addEventListener('DOMContentLoaded', function () {
-    createGiscusScript('giscus-main');
-    initParagraphBadges();
-    initHeart();
-});
-
-/* ════════════════════════════════════════════════════════
-   BONG BÓNG 💬 THEO ĐOẠN VĂN
-   ════════════════════════════════════════════════════════ */
-const storageKey = 'para-cmt-count-' + PAGE_PATH;
-
-function getParaCounts() {
-    try { return JSON.parse(localStorage.getItem(storageKey)) || {}; } catch(_) { return {}; }
-}
-function saveParaCounts(obj) {
-    localStorage.setItem(storageKey, JSON.stringify(obj));
-}
-
-function initParagraphBadges() {
     const paragraphs = document.querySelectorAll('.story-content p');
-    const counts = getParaCounts();
 
     paragraphs.forEach(function (p, index) {
-        const paraId = 'p' + (index + 1);
-
         const row = document.createElement('div');
         row.className = 'comment-row';
         p.parentNode.insertBefore(row, p);
@@ -518,47 +461,38 @@ function initParagraphBadges() {
         const badge = document.createElement('span');
         badge.className = 'comment-badge';
         badge.title = 'Bình luận về đoạn này';
-
-        const iconSpan = document.createElement('span');
-        iconSpan.textContent = '💬';
-
-        const countSpan = document.createElement('span');
-        countSpan.className = 'badge-count';
-        countSpan.id = 'cnt-' + paraId;
-        const c = counts[paraId] || 0;
-        if (c > 0) { countSpan.textContent = c; countSpan.style.display = 'inline-block'; }
-
-        badge.appendChild(iconSpan);
-        badge.appendChild(countSpan);
+        badge.textContent = '💬';
         badge.onclick = function () {
-            openInlineComment(p.innerText.trim().substring(0, 120), index + 1, paraId);
+            openInlineComment(p.innerText.trim().substring(0, 120), index + 1);
         };
         row.appendChild(badge);
     });
-}
+
+    initHeart();
+});
 
 /* ════════════════════════════════════════════════════════
-   SIDEBAR BÌNH LUẬN THEO ĐOẠN VĂN
+   SIDEBAR — nhúng Utterances một lần duy nhất
    ════════════════════════════════════════════════════════ */
-function openInlineComment(previewText, paragraphNumber, paraId) {
+function openInlineComment(previewText, paragraphNumber) {
     document.getElementById('sidebar-paragraph-title').innerText = 'Đoạn văn số ' + paragraphNumber;
     document.getElementById('quoted-paragraph-box').innerText =
         '"' + previewText + (previewText.length >= 120 ? '…' : '') + '"';
     document.getElementById('comment-sidebar').classList.add('active');
     document.getElementById('sidebar-overlay').classList.add('active');
 
-    /* Nhúng Giscus vào sidebar chỉ một lần */
-    const sidebarEl = document.getElementById('giscus-sidebar');
-    if (!sidebarEl.hasChildNodes()) {
-        createGiscusScript('giscus-sidebar');
+    const mount = document.getElementById('sidebar-utterances-mount');
+    if (!mount.hasChildNodes()) {
+        const s = document.createElement('script');
+        s.src = 'https://utteranc.es/client.js';
+        s.setAttribute('repo', 'gocnhocuakhiet/gocnhocuakhiet.github.io');
+        s.setAttribute('issue-term', 'pathname');
+        s.setAttribute('label', 'comment');
+        s.setAttribute('theme', document.body.classList.contains('dark-mode') ? 'github-dark' : 'github-light');
+        s.setAttribute('crossorigin', 'anonymous');
+        s.async = true;
+        mount.appendChild(s);
     }
-
-    /* Tăng đếm lượt mở sidebar cho đoạn này */
-    const counts = getParaCounts();
-    counts[paraId] = (counts[paraId] || 0) + 1;
-    saveParaCounts(counts);
-    const el = document.getElementById('cnt-' + paraId);
-    if (el) { el.textContent = counts[paraId]; el.style.display = 'inline-block'; }
 }
 
 function closeInlineComment() {
