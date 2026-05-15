@@ -95,7 +95,7 @@
         }
 
         /* ══════════════════════════════════════════════
-           BỐ CỤC 3 CỘT: sidebar-trái | nội dung | sidebar-phải
+           BỐ CỤC 3 CỘT
         ══════════════════════════════════════════════ */
         .wrapper {
             max-width: 1260px; margin: 0 auto;
@@ -159,7 +159,7 @@
                        display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
         .muted-note  { font-size: .8rem; color: var(--text-faint); font-style: italic; }
 
-        /* ── KHUNG CHAT ── */
+        /* ── KHUNG CHAT (sidebar phải) ── */
         .chat-card {
             background: var(--bg-card); border: 1px solid var(--border);
             border-radius: var(--radius-lg); overflow: hidden;
@@ -207,9 +207,7 @@
         .announce-inner span {
             font-size: .84rem; color: var(--text-muted);
         }
-        /* Dừng lại khi hover */
         .announce-track:hover .announce-inner { animation-play-state: paused; }
-
         @keyframes marquee {
             0%   { transform: translateX(0); }
             100% { transform: translateX(-50%); }
@@ -302,19 +300,47 @@
         .pg-btn:disabled { opacity: .3; cursor: default; }
         .pg-dots { color: var(--text-faint); font-size: .85rem; }
 
-        /* ── NÚT NỔI ── */
-        .reader-controls {
+        /* ══════════════════════════════════════════════
+           NÚT BÁNH RĂNG + PANEL ẨN/HIỆN
+        ══════════════════════════════════════════════ */
+        .reader-controls-wrapper {
             position: fixed; bottom: 28px; right: 28px;
-            display: flex; flex-direction: column; gap: 10px; z-index: 10000;
+            display: flex; flex-direction: column; align-items: flex-end;
+            gap: 10px; z-index: 10000;
         }
-        .reader-controls button {
+
+        /* Panel chứa 3 nút con */
+        .reader-panel {
+            display: flex; flex-direction: column; gap: 8px;
+            overflow: hidden;
+            max-height: 0; opacity: 0; pointer-events: none;
+            transition: max-height .35s ease, opacity .3s ease;
+        }
+        .reader-panel.open {
+            max-height: 200px; opacity: 1; pointer-events: auto;
+        }
+        .reader-panel button {
             width: 44px; height: 44px; border-radius: 50%;
             border: 1.5px solid var(--green-light); background: var(--bg-card);
             color: var(--green); font-size: .85rem; font-weight: 500;
             font-family: 'Be Vietnam Pro', sans-serif;
             box-shadow: 0 4px 14px var(--shadow); transition: .2s;
         }
-        .reader-controls button:hover { background: var(--green); color: #fff; transform: scale(1.08); }
+        .reader-panel button:hover { background: var(--green); color: #fff; transform: scale(1.08); }
+
+        /* Nút bánh răng */
+        .gear-btn {
+            width: 44px; height: 44px; border-radius: 50%;
+            border: 1.5px solid var(--green-light); background: var(--bg-card);
+            color: var(--green); font-size: 1.1rem;
+            box-shadow: 0 4px 14px var(--shadow); transition: .25s;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .gear-btn:hover { background: var(--green); color: #fff; transform: scale(1.08); }
+        .gear-btn.active {
+            background: var(--green); color: #fff;
+            transform: rotate(45deg) scale(1.08);
+        }
 
         /* ── TOAST ── */
         .toast {
@@ -344,18 +370,15 @@
 
         /* ── RESPONSIVE ── */
         @media (max-width: 900px) {
-            .wrapper {
-                grid-template-columns: 1fr;
-            }
+            .wrapper { grid-template-columns: 1fr; }
             .sidebar-left, .sidebar-right { position: static; }
-            /* Trên mobile: sidebar phải lên trên library */
             .sidebar-right { order: -1; }
         }
         @media (max-width: 600px) {
             .wrapper { padding: 12px; gap: 12px; }
             .novel-grid { grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 10px; }
             .lib-topbar { flex-wrap: wrap; }
-            .reader-controls { bottom: 16px; right: 16px; }
+            .reader-controls-wrapper { bottom: 16px; right: 16px; }
             .navbar { padding: 0 16px; }
             .nav-links { display: none; }
             #chattable { height: 240px; }
@@ -382,11 +405,16 @@
     </nav>
 </header>
 
-<!-- ══ NÚT NỔI ════════════════════════════════════ -->
-<div class="reader-controls">
-    <button onclick="changeFontSize(1)"  title="Phóng to">A+</button>
-    <button onclick="changeFontSize(-1)" title="Thu nhỏ">A−</button>
-    <button onclick="toggleDark()" id="dark-btn" title="Chế độ tối">🌙</button>
+<!-- ══ NÚT BÁNH RĂNG NỔI ════════════════════════════ -->
+<div class="reader-controls-wrapper">
+    <!-- Panel ẩn (3 nút con) — hiện từ dưới lên -->
+    <div class="reader-panel" id="reader-panel">
+        <button onclick="changeFontSize(1)"  title="Phóng to chữ">A+</button>
+        <button onclick="changeFontSize(-1)" title="Thu nhỏ chữ">A−</button>
+        <button onclick="toggleDark()" id="dark-btn" title="Chế độ tối">🌙</button>
+    </div>
+    <!-- Nút bánh răng -->
+    <button class="gear-btn" id="gear-btn" onclick="toggleReaderPanel()" title="Tuỳ chỉnh">⚙️</button>
 </div>
 
 <!-- ══ NỘI DUNG CHÍNH ═════════════════════════════ -->
@@ -418,12 +446,6 @@
             </div>
         </div>
 
-        <!-- Chat -->
-        <div class="chat-card">
-            <div class="chat-card-header">🗨️ Chat cùng mọi người</div>
-            <iframe src="https://iframe.chat/embed?chat=91145876" id="chattable"></iframe>
-        </div>
-
     </aside>
 
     <!-- ── NỘI DUNG GIỮA ── -->
@@ -434,7 +456,6 @@
             <span class="announce-label">📢 Thông báo</span>
             <div class="announce-track">
                 <div class="announce-inner" id="announce-inner">
-                    <!-- Nội dung lặp đôi để marquee liền mạch -->
                     <span>...</span>
                     <span>🌿</span>
                     <span>...</span>
@@ -478,6 +499,12 @@
             </div>
         </div>
 
+        <!-- Chat chuyển xuống đây -->
+        <div class="chat-card">
+            <div class="chat-card-header">🗨️ Chat cùng mọi người</div>
+            <iframe src="https://iframe.chat/embed?chat=91145876" id="chattable"></iframe>
+        </div>
+
     </aside>
 
 </div>
@@ -500,7 +527,7 @@
 
 
 <!-- ════════════════════════════════════════════════
-     ⚙️  CẤU HÌNH — CHỈ SỬA PHẦN NÀY KHI CÓ TRUYỆN MỚI
+     ⚙️  CẤU HÌNH
      ════════════════════════════════════════════════ -->
 <script>
 const GH_OWNER = 'gocnhocuakhiet';
@@ -519,12 +546,8 @@ const NOVEL_NAME_MAP = {
     'chiatay'      : 'Chia Tay Thôi Mà',
 };
 
-/* ══ NỘI DUNG THÔNG BÁO — chỉ sửa dòng này ══
-   Thay "..." bằng nội dung thông báo thật của bạn.
-   Dùng " 🌸 " để ngăn cách nhiều thông báo.       */
 const ANNOUNCE_TEXT = '🌿 Chào mừng các bạn đến với Góc nhỏ của Khiết! 🌸 Trang web đang trong giai đoạn hoàn thiện, cảm ơn các bạn đã ghé thăm! 🌸 Mọi góp ý xin gửi qua Facebook hoặc bình luận bên dưới nhé~ 🌿';
 
-/* genre: 'nt' | 'dm' | 'dn' | 'other' */
 const NOVELS = [
     { id:1, title:'Đế Hoàng Thư',
       genre:'nt', status:'full', chapters:246,
@@ -562,7 +585,7 @@ const NOVELS = [
 
 
 <!-- ════════════════════════════════════════════════
-     LOGIC TỰ ĐỘNG — KHÔNG CẦN SỬA
+     LOGIC TỰ ĐỘNG
      ════════════════════════════════════════════════ -->
 <script>
 const GH_API    = `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}`;
@@ -575,10 +598,26 @@ let sortMode     = 'new';
 let currentPage  = 1;
 let lastCmtId    = null;
 
-/* ── Khởi tạo thanh thông báo ── */
+/* ── Bánh răng ẩn/hiện panel ── */
+function toggleReaderPanel() {
+    const panel   = document.getElementById('reader-panel');
+    const gearBtn = document.getElementById('gear-btn');
+    const isOpen  = panel.classList.toggle('open');
+    gearBtn.classList.toggle('active', isOpen);
+}
+
+/* Đóng panel khi click ra ngoài */
+document.addEventListener('click', function(e) {
+    const wrapper = document.querySelector('.reader-controls-wrapper');
+    if (!wrapper.contains(e.target)) {
+        document.getElementById('reader-panel').classList.remove('open');
+        document.getElementById('gear-btn').classList.remove('active');
+    }
+});
+
+/* ── Thông báo marquee ── */
 function initAnnounce() {
     const inner = document.getElementById('announce-inner');
-    /* Lặp đôi nội dung để chạy liền mạch không bị giật */
     inner.innerHTML =
         `<span>${ANNOUNCE_TEXT}</span>` +
         `<span style="margin:0 40px;color:var(--green-light)">✦</span>` +
@@ -727,7 +766,8 @@ async function loadUpdates() {
             } catch(_) { return {...f, date:'1970-01-01'}; }
         }));
         withDates.sort((a,b) => new Date(b.date)-new Date(a.date));
-        el.innerHTML = withDates.slice(0,7).map(f => {
+        /* Chỉ hiển thị 5 link mới nhất */
+        el.innerHTML = withDates.slice(0, 5).map(f => {
             const novel = guessName(f.name);
             const chap  = guessChap(f.name);
             const label = chap ? `${novel} – ${chap}` : novel;
