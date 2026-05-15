@@ -6,6 +6,10 @@
     <title>Góc nhỏ của Khiết</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;1,400&family=Be+Vietnam+Pro:wght@300;400;500&display=swap" rel="stylesheet">
+
+    <!-- ① Script Chattable — bắt buộc trong <head> -->
+    <script src="https://iframe.chat/scripts/main.min.js"></script>
+
     <style>
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -25,7 +29,6 @@
             --radius-md:   10px;
             --radius-lg:   14px;
         }
-
         body.dark-mode {
             --bg:          #111a16;
             --bg-card:     #1b2420;
@@ -43,17 +46,14 @@
 
         body {
             font-family: 'Be Vietnam Pro', sans-serif;
-            background: var(--bg);
-            color: var(--text);
-            line-height: 1.7;
-            transition: background .3s, color .3s;
+            background: var(--bg); color: var(--text);
+            line-height: 1.7; transition: background .3s, color .3s;
         }
 
         /* ── NAVBAR ── */
         .navbar {
             position: sticky; top: 0; z-index: 1000;
-            background: var(--bg-card);
-            border-bottom: 1px solid var(--border);
+            background: var(--bg-card); border-bottom: 1px solid var(--border);
             display: flex; align-items: center; justify-content: space-between;
             padding: 0 5%; height: 58px; gap: 20px;
         }
@@ -119,6 +119,7 @@
             letter-spacing: 1px; margin-bottom: 12px;
         }
         .profile-intro { font-size: .85rem; color: var(--text-muted); line-height: 1.6; }
+
         .filter-group { display: flex; flex-direction: column; gap: 2px; }
         .filter-btn {
             display: flex; justify-content: space-between; align-items: center;
@@ -154,19 +155,24 @@
                        display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
         .muted-note  { font-size: .8rem; color: var(--text-faint); font-style: italic; }
 
-        /* ── CHAT WIDGET ── */
+        /* ── KHUNG CHAT ── */
         .chat-card {
             background: var(--bg-card); border: 1px solid var(--border);
             border-radius: var(--radius-lg); overflow: hidden;
         }
         .chat-card-header {
-            padding: 12px 16px 0;
+            padding: 12px 16px 10px;
             font-family: 'Lora', serif; font-size: .78rem; font-weight: 400;
             color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px;
+            border-bottom: 1px solid var(--border);
         }
-        .chat-card iframe {
-            width: 100%; border: none; display: block;
-            height: 320px; border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+        /* ② iframe Chattable — style để vừa khớp card */
+        #chattable {
+            width: 100%;
+            height: 340px;
+            border: none;
+            display: block;
+            border-radius: 0 0 var(--radius-lg) var(--radius-lg);
         }
 
         /* ── THƯ VIỆN ── */
@@ -174,10 +180,9 @@
         .lib-topbar { display: flex; gap: 10px; margin-bottom: 14px; align-items: center; }
         .search-wrap { position: relative; flex: 1; }
         .search-wrap svg {
-            position: absolute; left: 11px; top: 50%;
-            transform: translateY(-50%);
-            width: 15px; height: 15px;
-            stroke: var(--text-faint); fill: none; stroke-width: 2; pointer-events: none;
+            position: absolute; left: 11px; top: 50%; transform: translateY(-50%);
+            width: 15px; height: 15px; stroke: var(--text-faint); fill: none;
+            stroke-width: 2; pointer-events: none;
         }
         .search-wrap input {
             width: 100%; padding: 9px 12px 9px 34px;
@@ -306,7 +311,7 @@
             .reader-controls { bottom: 16px; right: 16px; }
             .navbar { padding: 0 16px; }
             .nav-links { display: none; }
-            .chat-card iframe { height: 260px; }
+            #chattable { height: 260px; }
         }
     </style>
 </head>
@@ -379,15 +384,10 @@
             </div>
         </div>
 
-        <!-- ══ CHAT WIDGET ══════════════════════════ -->
+        <!-- ② iframe Chattable đặt trong sidebar -->
         <div class="chat-card">
-            <div class="chat-card-header">💬 Chat cùng mọi người</div>
-            <iframe
-                src="https://chattable.app/embed/91145876"
-                allow="clipboard-write"
-                loading="lazy"
-                title="Chat cùng độc giả">
-            </iframe>
+            <div class="chat-card-header">🗨️ Chat cùng mọi người</div>
+            <iframe src="https://iframe.chat/embed?chat=91145876" id="chattable"></iframe>
         </div>
 
     </aside>
@@ -451,39 +451,37 @@ const NOVEL_NAME_MAP = {
     'chiatay'      : 'Chia Tay Thôi Mà',
 };
 
-/*
-   genre: 'nt' | 'dm' | 'dn' | 'other'
-*/
+/* genre: 'nt' | 'dm' | 'dn' | 'other' */
 const NOVELS = [
-    { id:1, title:'Đế Hoàng Thư',
+    { id:1,  title:'Đế Hoàng Thư',
       genre:'nt', status:'full', chapters:246,
       cover:'images/dehoangthu.jpg', link:'mucluc/dehoangthu.html', emoji:'👑', color:'#fce7f3' },
 
-    { id:2, title:'Tôi Muốn Đi Ngược Gió',
+    { id:2,  title:'Tôi Muốn Đi Ngược Gió',
       genre:'nt', status:'full', chapters:9,
       cover:'images/toimuondinguocgio.png', link:'mucluc/toimuondinguocgio.html', emoji:'🌬️', color:'#e0f2fe' },
 
-    { id:3, title:'Quý Phi Mỗi Ngày Chỉ Muốn Làm Cá Muối',
+    { id:3,  title:'Quý Phi Mỗi Ngày Chỉ Muốn Làm Cá Muối',
       genre:'nt', status:'full', chapters:1183,
       cover:'images/quyphi.png', link:'mucluc/quyphi.html', emoji:'🐟', color:'#fef3c7' },
 
-    { id:4, title:'Cẩm Y Hành',
+    { id:4,  title:'Cẩm Y Hành',
       genre:'nt', status:'full', chapters:103,
       cover:'images/camyhanh.png', link:'mucluc/camyhanh.html', emoji:'⚔️', color:'#fef9c3' },
 
-    { id:5, title:'Ô Long Kỳ Duyên',
+    { id:5,  title:'Ô Long Kỳ Duyên',
       genre:'dm', status:'full', chapters:65,
       cover:'images/olongkyduyen.png', link:'mucluc/olongkyduyen.html', emoji:'🐉', color:'#ede9fe' },
 
-    { id:6, title:'Ta Trở Thành Anh Trai Của Nữ Chính Ngược Văn',
+    { id:6,  title:'Ta Trở Thành Anh Trai Của Nữ Chính Ngược Văn',
       genre:'dm', status:'full', chapters:140,
       cover:'images/tatrothanhanhtrai.png', link:'mucluc/tatrothanhanhtrai.html', emoji:'🌸', color:'#fce7f3' },
 
-    { id:7, title:'Nghe Nói Thừa Tướng Quyền Thế Muốn Hoàn Lương',
+    { id:7,  title:'Nghe Nói Thừa Tướng Quyền Thế Muốn Hoàn Lương',
       genre:'dm', status:'full', chapters:110,
       cover:'images/nghenoithuatuong.png', link:'mucluc/nghenoithuatuong.html', emoji:'🏯', color:'#f0fdf4' },
 
-    { id:8, title:'Chia Tay Thôi Mà, Sao Anh Ta Bỗng Dưng Điên Thế',
+    { id:8,  title:'Chia Tay Thôi Mà, Sao Anh Ta Bỗng Dưng Điên Thế',
       genre:'dm', status:'ongoing', chapters:100,
       cover:'images/chiataythoima.png', link:'mucluc/chiataythoima.html', emoji:'💔', color:'#fef2f2' },
 ];
@@ -559,7 +557,7 @@ function renderGrid() {
     const slice = list.slice(from, from + PAGE_SIZE);
 
     const genreLabel = { nt:'Ngôn tình', dm:'Đam mỹ', dn:'Đồng nhân', other:'Khác' };
-    const genreClass = { nt:'badge-nt',  dm:'badge-dm', dn:'badge-dn', other:'badge-other' };
+    const genreClass = { nt:'badge-nt', dm:'badge-dm', dn:'badge-dn', other:'badge-other' };
 
     document.getElementById('result-info').textContent =
         total ? `Hiển thị ${from+1}–${Math.min(from+PAGE_SIZE, total)} trong ${total} truyện` : '';
@@ -706,8 +704,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!b) return;
         filterGenre = b.dataset.genre; currentPage = 1;
         document.querySelectorAll('[data-genre]').forEach(x => x.classList.remove('active'));
-        b.classList.add('active');
-        renderGrid();
+        b.classList.add('active'); renderGrid();
     });
 
     document.getElementById('status-filters').addEventListener('click', e => {
@@ -715,8 +712,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!b) return;
         filterStatus = b.dataset.status; currentPage = 1;
         document.querySelectorAll('[data-status]').forEach(x => x.classList.remove('active'));
-        b.classList.add('active');
-        renderGrid();
+        b.classList.add('active'); renderGrid();
     });
 
     document.getElementById('search-input').addEventListener('input', e => {
@@ -751,6 +747,15 @@ function changeFontSize(d) {
 function closeWelcome() {
     document.getElementById('welcome-screen').classList.add('fade-out');
 }
+</script>
+
+<!-- ③ Khởi tạo Chattable sau khi DOM load xong -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    chattable.initialize({
+        theme: 'moderno'
+    });
+});
 </script>
 
 </body>
