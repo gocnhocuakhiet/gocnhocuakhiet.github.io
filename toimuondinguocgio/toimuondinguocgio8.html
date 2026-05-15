@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <link rel="stylesheet" href="../style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tôi Muốn Đi Ngược Gió - Vĩ thanh</title>
+    
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f1f7f4;
+            color: #2d3a34;
+            line-height: 1.8;
+        }
+
+        .navbar {
+            background-color: #ffffff;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 10%;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        .navbar .logo { font-size: 1.2rem; font-weight: bold; color: #4a6b5d; text-decoration: none; }
+        .nav-links a { color: #555; text-decoration: none; font-size: 0.95rem; transition: color 0.3s; }
+        .nav-links a:hover { color: #4a6b5d; }
+
+        .story-container {
+            max-width: 700px;
+            margin: 40px auto;
+            padding: 30px;
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.02);
+        }
+
+        .story-header {
+            text-align: center;
+            margin-bottom: 35px;
+            border-bottom: 1px dashed #8fae9f;
+            padding-bottom: 20px;
+        }
+        .story-header .novel-name {
+            font-size: 0.95rem; color: #777;
+            text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px;
+        }
+        .story-header .chapter-title { color: #4a6b5d; font-size: 1.6rem; font-weight: 600; }
+
+        .story-content { font-size: 1.15rem; color: #333333; text-align: justify; }
+        .story-content p { margin-bottom: 22px; text-indent: 25px; }
+
+        .reading-nav {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-top: 50px; padding-top: 25px; border-top: 1px dashed #8fae9f;
+        }
+        .nav-btn {
+            display: inline-block; padding: 10px 20px;
+            background-color: #ffffff; color: #4a6b5d;
+            text-decoration: none; border: 1px solid #8fae9f;
+            border-radius: 20px; font-size: 0.9rem; font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        .nav-btn:hover { background-color: #4a6b5d; color: #ffffff; border-color: #4a6b5d; box-shadow: 0 4px 8px rgba(74,107,93,0.2); }
+        .nav-btn.disabled { color: #bbb; border-color: #e0e0e0; background-color: #fafafa; pointer-events: none; box-shadow: none; }
+
+        @media (max-width: 480px) {
+            .story-container { padding: 15px; margin: 20px auto; }
+            .nav-btn { padding: 8px 14px; font-size: 0.8rem; }
+            .comment-sidebar { width: 100%; right: -100%; }
+        }
+
+        /* ── Dark mode ── */
+        body.dark-mode { background-color: #131a17; color: #dae5e0; }
+        body.dark-mode .navbar { background-color: #1b2420; box-shadow: 0 2px 5px rgba(0,0,0,0.3); }
+        body.dark-mode .navbar .logo { color: #8fae9f; }
+        body.dark-mode .nav-links a { color: #aaa; }
+        body.dark-mode .story-container { background-color: #1b2420; box-shadow: 0 2px 10px rgba(0,0,0,0.2); }
+        body.dark-mode .story-header .novel-name { color: #8fae9f; }
+        body.dark-mode .story-header .chapter-title { color: #8fae9f; }
+        body.dark-mode .story-content { color: #dae5e0; }
+        body.dark-mode .nav-btn { background-color: #1b2420; color: #8fae9f; border-color: #4a6b5d; }
+        body.dark-mode .nav-btn:hover { background-color: #4a6b5d; color: #ffffff; }
+        body.dark-mode .nav-btn.disabled { color: #444; border-color: #2e3d36; background-color: #161e1b; }
+
+        /* ── Reader controls ── */
+        .reader-controls-wrapper {
+            position: fixed; bottom: 30px; right: 30px;
+            z-index: 10000;
+            display: flex; flex-direction: column; align-items: flex-end; gap: 10px;
+        }
+        .reader-toggle-btn {
+            width: 48px; height: 48px; border-radius: 50%;
+            border: 2px solid #8fae9f; background: white; color: #4a6b5d;
+            font-size: 18px; cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15); transition: all 0.3s;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .reader-toggle-btn:hover { background: #4a6b5d; color: white; transform: scale(1.1); }
+        .reader-controls-group {
+            display: flex; flex-direction: column; gap: 10px;
+            overflow: hidden; max-height: 0; opacity: 0;
+            transition: max-height 0.35s ease, opacity 0.3s ease;
+        }
+        .reader-controls-group.open { max-height: 200px; opacity: 1; }
+        .reader-controls-group button {
+            width: 48px; height: 48px; border-radius: 50%;
+            border: 2px solid #8fae9f; background: white; color: #4a6b5d;
+            font-size: 15px; font-weight: bold; cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15); transition: all 0.3s;
+        }
+        .reader-controls-group button:hover { background: #4a6b5d; color: white; transform: scale(1.1); }
+        body.dark-mode .reader-toggle-btn,
+        body.dark-mode .reader-controls-group button { background: #1b2420; color: #8fae9f; border-color: #4a6b5d; }
+        body.dark-mode .reader-toggle-btn:hover,
+        body.dark-mode .reader-controls-group button:hover { background: #4a6b5d; color: white; }
+
+        /* ── Comment row ── */
+        .comment-row {
+            display: flex; justify-content: space-between;
+            align-items: flex-start; gap: 15px;
+            margin-bottom: 22px; width: 100%;
+        }
+        .comment-row p { flex: 1; margin-bottom: 0 !important; }
+
+        /* ── Badge: luôn là 💬 ── */
+        .comment-badge {
+            cursor: pointer; flex-shrink: 0; margin-top: 6px;
+            width: 30px; height: 30px; border-radius: 50%;
+            background-color: #eaf2ee; color: #4a6b5d;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.9rem; line-height: 1;
+            transition: all 0.2s ease; user-select: none; border: none;
+        }
+        .comment-badge:hover { background-color: #4a6b5d; color: #ffffff; transform: scale(1.12); }
+        body.dark-mode .comment-badge { background-color: #25332c; color: #8fae9f; }
+        body.dark-mode .comment-badge:hover { background-color: #4a6b5d; color: #ffffff; }
+
+        /* ── Sidebar ── */
+        .comment-sidebar {
+            position: fixed; top: 0; right: -420px; width: 400px; height: 100%;
+            background: #ffffff;
+            box-shadow: -5px 0 15px rgba(0,0,0,0.05);
+            z-index: 100000;
+            transition: right 0.4s cubic-bezier(0.25,0.8,0.25,1);
+            padding: 24px; overflow-y: auto; box-sizing: border-box;
+        }
+        .comment-sidebar.active { right: 0; }
+        .sidebar-header {
+            display: flex; justify-content: space-between; align-items: center;
+            border-bottom: 1px solid #dae5e0; padding-bottom: 12px; margin-bottom: 16px;
+        }
+        .sidebar-header h4 { color: #4a6b5d; margin: 0; }
+        .close-sidebar-btn { background: none; border: none; font-size: 1.2rem; color: #999; cursor: pointer; }
+        .quoted-paragraph-box {
+            background: #f0f7f4; border-left: 3px solid #8fae9f;
+            border-radius: 4px; padding: 10px 14px;
+            font-size: 0.88rem; color: #4a6b5d; font-style: italic;
+            line-height: 1.5; margin-bottom: 12px;
+        }
+        .sidebar-mention-hint {
+            font-size: 0.8rem; color: #888;
+            background: #f8faf9; border: 1px dashed #c8ddd5;
+            border-radius: 6px; padding: 8px 12px; margin-bottom: 14px; line-height: 1.5;
+        }
+        .sidebar-mention-hint code { background: #e4efe9; color: #4a6b5d; padding: 1px 5px; border-radius: 4px; font-size: 0.78rem; }
+        body.dark-mode .sidebar-mention-hint { background: #1e2b24; border-color: #2e3d36; color: #7a9a8a; }
+        body.dark-mode .sidebar-mention-hint code { background: #2a3830; color: #8fae9f; }
+        .sidebar-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.2); z-index: 99999; display: none;
+        }
+        .sidebar-overlay.active { display: block; }
+
+        /* Loading indicator trong sidebar */
+        .sidebar-loading {
+            text-align: center; padding: 30px 0;
+            color: #aaa; font-size: 0.9rem; font-style: italic;
+        }
+
+        /* ── Discussion box ── */
+        .chapter-discussion-box {
+            max-width: 700px; margin: 30px auto 50px auto;
+            padding: 25px; background-color: #ffffff;
+            border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.02);
+        }
+        .discussion-header {
+            display: flex; justify-content: space-between; align-items: center;
+            gap: 10px; margin-bottom: 25px;
+            border-bottom: 1px dashed #dae5e0; padding-bottom: 15px;
+        }
+        .discussion-header-left { display: flex; align-items: center; gap: 10px; }
+        .discussion-header h3 { color: #4a6b5d; font-size: 1.2rem; margin: 0; }
+        .discussion-actions { display: flex; align-items: center; gap: 10px; }
+        .action-btn {
+            display: flex; align-items: center; gap: 6px;
+            padding: 7px 14px; border-radius: 20px; border: 1px solid #8fae9f;
+            background: #ffffff; color: #4a6b5d;
+            font-size: 0.85rem; font-weight: 500; cursor: pointer;
+            transition: all 0.25s ease; user-select: none;
+        }
+        .action-btn:hover { background-color: #f0f7f4; box-shadow: 0 3px 8px rgba(74,107,93,0.15); }
+        .action-btn.liked { background-color: #fff0f3; border-color: #e8a0b0; color: #c0556a; }
+        .action-btn.liked .heart-icon { animation: heartPop 0.35s ease; }
+        @keyframes heartPop {
+            0% { transform: scale(1); } 40% { transform: scale(1.45); }
+            70% { transform: scale(0.9); } 100% { transform: scale(1); }
+        }
+        body.dark-mode .action-btn { background: #1b2420; color: #8fae9f; border-color: #4a6b5d; }
+        body.dark-mode .action-btn:hover { background-color: #232e29; }
+        body.dark-mode .action-btn.liked { background-color: #2a1e22; border-color: #7a3a4a; color: #e08090; }
+        .comment-section { width: 100%; min-height: 150px; }
+
+        body.dark-mode .chapter-discussion-box,
+        body.dark-mode .comment-sidebar { background-color: #1b2420 !important; }
+        body.dark-mode .discussion-header,
+        body.dark-mode .sidebar-header { border-bottom-color: #2e3d36 !important; }
+        body.dark-mode .discussion-header h3,
+        body.dark-mode .sidebar-header h4 { color: #8fae9f !important; }
+        body.dark-mode .quoted-paragraph-box { background: #232e29; border-left-color: #4a6b5d; color: #8fae9f; }
+
+        /* ── Share modal ── */
+        .share-modal-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.35);
+            z-index: 200000; display: none; align-items: center; justify-content: center;
+        }
+        .share-modal-overlay.active { display: flex; }
+        .share-modal {
+            background: #ffffff; border-radius: 12px;
+            padding: 28px 24px 22px; width: 380px; max-width: 92vw;
+            box-shadow: 0 12px 40px rgba(0,0,0,0.18);
+            animation: slideUp 0.25s ease;
+        }
+        @keyframes slideUp {
+            from { transform: translateY(20px); opacity: 0; }
+            to   { transform: translateY(0); opacity: 1; }
+        }
+        .share-modal h4 { color: #4a6b5d; font-size: 1.05rem; margin-bottom: 16px; text-align: center; }
+        .share-link-row { display: flex; gap: 8px; align-items: center; }
+        .share-link-input {
+            flex: 1; padding: 9px 12px; border: 1px solid #c8ddd5; border-radius: 8px;
+            font-size: 0.85rem; color: #444; background: #f8faf9;
+            outline: none; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
+        }
+        .copy-link-btn {
+            padding: 9px 16px; border-radius: 8px;
+            background: #4a6b5d; color: #ffffff; border: none;
+            font-size: 0.85rem; font-weight: 600; cursor: pointer;
+            transition: all 0.2s; white-space: nowrap;
+        }
+        .copy-link-btn:hover { background: #3a5a4d; }
+        .copy-link-btn.copied { background: #6aaa88; }
+        .share-modal-close {
+            display: block; width: 100%; margin-top: 14px;
+            padding: 8px; background: none; border: none;
+            color: #999; font-size: 0.85rem; cursor: pointer; text-align: center;
+        }
+        .share-modal-close:hover { color: #555; }
+        body.dark-mode .share-modal { background: #1b2420; }
+        body.dark-mode .share-modal h4 { color: #8fae9f; }
+        body.dark-mode .share-link-input { background: #232e29; border-color: #3a5040; color: #dae5e0; }
+        body.dark-mode .share-modal-close { color: #6a8a7a; }
+    </style>
+</head>
+<body>
+
+<!-- ── NÚT NỔI ── -->
+<div class="reader-controls-wrapper">
+    <div class="reader-controls-group" id="reader-group">
+        <button onclick="changeFontSize(1)" title="Phóng to chữ">A+</button>
+        <button onclick="changeFontSize(-1)" title="Thu nhỏ chữ">A-</button>
+        <button onclick="toggleDarkMode()" id="dark-mode-btn" title="Đổi màu nền">🌙</button>
+    </div>
+    <button class="reader-toggle-btn" id="reader-toggle" onclick="toggleReaderControls()" title="Tuỳ chỉnh đọc">⚙️</button>
+</div>
+
+<script>
+function toggleReaderControls() {
+    var group = document.getElementById('reader-group');
+    var btn   = document.getElementById('reader-toggle');
+    var isOpen = group.classList.toggle('open');
+    btn.style.background = isOpen ? '#4a6b5d' : '';
+    btn.style.color      = isOpen ? '#ffffff'  : '';
+}
+function toggleDarkMode() {
+    document.body.classList.toggle('dark-mode');
+    var isDark = document.body.classList.contains('dark-mode');
+    localStorage.setItem('night-mode', isDark ? 'on' : 'off');
+    document.getElementById('dark-mode-btn').innerText = isDark ? '☀️' : '🌙';
+    syncUtterancesTheme(isDark);
+}
+function changeFontSize(delta) {
+    var content = document.querySelector('.story-content') || document.body;
+    var cur = parseFloat(window.getComputedStyle(content).fontSize);
+    content.style.fontSize = (cur + delta) + 'px';
+}
+function syncUtterancesTheme(isDark) {
+    var theme = isDark ? 'github-dark' : 'github-light';
+    document.querySelectorAll('.utterances-frame').forEach(function(f) {
+        f.contentWindow.postMessage({ type: 'set-theme', theme: theme }, 'https://utteranc.es');
+    });
+}
+(function() {
+    if (localStorage.getItem('night-mode') === 'on') {
+        document.body.classList.add('dark-mode');
+        setTimeout(function() {
+            var b = document.getElementById('dark-mode-btn');
+            if (b) b.innerText = '☀️';
+        }, 80);
+    }
+})();
+</script>
+
+<!-- ── NAVBAR ── -->
+<header class="navbar">
+    <a href="../index.html" class="logo">🌿 Góc nhỏ của Khiết</a>
+    <nav class="nav-links"><a href="../index.html">Trang Chủ</a></nav>
+</header>
+
+<!-- ── KHUNG ĐỌC ── -->
+<main class="story-container">
+    <div class="story-header">
+       <p class="novel-name">Tôi Muốn Đi Ngược Gió</p>
+       <h1 class="chapter-title">Vĩ thanh</h1>
+    </div>
+
+    <article class="story-content">
+  <p>Buổi s&aacute;ng Giang Hồ thức dậy, mới ph&aacute;t hiện trời đang mưa. Mưa thu x&agrave;o xạc, đập v&agrave;o cửa k&iacute;nh, tiếng lốp bốp nghe rất phiền n&atilde;o.</p>
+<p>Tr&ecirc;n bệ cửa sổ c&oacute; một chậu thu hải đường đang nở rộ, những b&ocirc;ng hoa nhỏ m&agrave;u đỏ tr&ocirc;ng như những con bướm đang bay lượn, đối lập với khung cảnh m&ugrave;a thu ngo&agrave;i cửa sổ, v&ocirc; c&ugrave;ng sinh động.</p>
+<p>Giang Hồ đứng ngắm hoa một hồi, thế giới b&ecirc;n ngo&agrave;i đ&atilde; ẩm ướt, c&ocirc; suy nghĩ lung tung, đ&aacute;ng tiếc hải đường kh&ocirc;ng c&oacute; hương thơm, đ&aacute;ng tiếc th&agrave;nh phố n&agrave;y lu&ocirc;n mưa nhiều như vậy, gi&oacute; thu mưa thu l&agrave;m l&ograve;ng người sầu muộn.</p>
+<p>Di động reo, l&agrave; quản l&yacute; bộ phận kỹ thuật ở c&ocirc;ng trường. Việc trang tr&iacute; chi nh&aacute;nh ở t&ograve;a nh&agrave; quận ph&iacute;a Bắc gần như đ&atilde; ho&agrave;n tất v&agrave; sắp khai trương, nhưng đường ống dẫn kh&iacute; đốt trong khu nh&agrave; vẫn chưa th&ocirc;ng.</p>
+<p>Giang Hồ tắm rửa chải t&oacute;c gọn g&agrave;ng, đi giải quyết vấn đề rắc rối n&agrave;y.</p>
+<p>Chiếc Porsche Cayman đỏ rực ph&oacute;ng nhanh tr&ecirc;n con đường quen thuộc, Giang Hồ hạ k&iacute;nh xe, gi&oacute; thu trong l&agrave;nh xen lẫn l&agrave;n mưa m&aacute;t lạnh l&ugrave;a v&agrave;o, tạo n&ecirc;n bầu kh&ocirc;ng kh&iacute; trong l&agrave;nh sảng kho&aacute;i trong xe. Nhưng mưa ng&agrave;y c&agrave;ng nặng hạt, từ tr&ecirc;n trời tr&uacute;t xuống, c&ocirc; đ&agrave;nh phải n&acirc;ng k&iacute;nh xe, giảm tốc độ, l&aacute;i cẩn thận.</p>
+<p>Cuộc sống l&agrave; như vậy, chỉ cần c&ograve;n hơi thở, th&igrave; cần phải thỏa hiệp với hiện thực, từng bước hướng tới hiện thực, sống hết m&igrave;nh v&agrave; quen với n&oacute;.</p>
+<p>Giang Hồ đỗ xe trong b&atilde;i đỗ dưới tầng hầm của cửa h&agrave;ng b&aacute;ch h&oacute;a, tiếng m&aacute;y m&oacute;c g&igrave; đ&oacute; ầm ầm, m&agrave;ng nhĩ rung l&ecirc;n, t&ograve;a nh&agrave; văn ph&ograve;ng ở ph&iacute;a b&ecirc;n kia th&aacute;p đ&ocirc;i vẫn c&ograve;n gi&agrave;n gi&aacute;o v&agrave; tấm bạt xanh, xung quanh đầy bụi, vẫn chưa ho&agrave;n tất.</p>
+<p>Giang Hồ bước v&agrave;o thang m&aacute;y dưới tầng hầm, hai c&ocirc;ng nh&acirc;n đội mũ bảo hộ cũng v&agrave;o thang m&aacute;y, vẫn c&ograve;n đang chửi rủa.</p>
+<p>Một người n&oacute;i: &ldquo;Th&igrave; ra &ocirc;ng chủ Thẩm x&acirc;y dựng t&ograve;a nh&agrave; đ&atilde; bị kết &aacute;n mười năm t&ugrave;. Dự &aacute;n dang dở, suốt ng&agrave;y xảy ra vấn đề, mệt chết đi được.&rdquo;</p>
+<p>Một người kh&aacute;c n&oacute;i: &ldquo;T&ocirc;i nghe n&oacute;i &ocirc;ng chủ lớn đ&atilde; mời c&aacute;c chuy&ecirc;n gia x&acirc;y dựng đến, ph&aacute;t hiện kết cấu th&eacute;p c&oacute; vấn đề n&ecirc;n cần phải gia cố nền m&oacute;ng. Qua m&ugrave;a mưa lớn ng&agrave;y h&egrave;, lại gặp ng&agrave;y thu mưa nhiều, mấy ng&agrave;y nữa c&ocirc;ng tr&igrave;nh sẽ khởi c&ocirc;ng, mấy bức tường ph&iacute;a tr&ecirc;n nứt to&aacute;c cả.&rdquo;</p>
+<p>Nghe vậy, Giang Hồ c&oacute; hơi lo, nhưng khi đến c&ocirc;ng trường x&acirc;y dựng ở tầng hầm, thấy bảng hiệu bằng k&iacute;nh acrylic được nối điện, s&aacute;ng l&ecirc;n rất bắt mắt, c&ocirc; cảm thấy kh&aacute; h&agrave;i l&ograve;ng.</p>
+<p>C&ocirc; đi theo gi&aacute;m đốc bộ phận kỹ thuật t&igrave;m b&ecirc;n quản l&yacute; t&agrave;i sản giải quyết hồi l&acirc;u, cuối c&ugrave;ng &eacute;p đối phương phải chạy lại đường ống dẫn kh&iacute; đốt. Khi ra khỏi ph&ograve;ng quản l&yacute; t&agrave;i sản, c&ocirc; thấy cửa h&agrave;ng Đằng Dược tr&ecirc;n tầng hai đ&atilde; mở cửa.</p>
+<p>Muốn k&igrave;m l&ograve;ng nhưng vẫn kh&ocirc;ng k&igrave;m được. Giang Hồ ch&agrave;o tạm biệt gi&aacute;m đốc bộ phận kỹ thuật, rồi bước l&ecirc;n thang cuốn.</p>
+<p>Từ xu&acirc;n qua hạ rồi sang thu, l&agrave; một khoảng thời gian d&agrave;i, Giang Hồ vẫn ở trong trạng th&aacute;i mơ hồ, một năm qua, c&ocirc; kh&ocirc;ng c&ograve;n nhớ nhung ai đ&oacute; như năm ngo&aacute;i nữa. C&oacute; lẽ đ&acirc;y l&agrave; sự kỳ diệu của thời gian, d&ugrave; họ c&oacute; kh&ocirc;ng nỡ, kh&oacute; chịu, nhớ nhung, y&ecirc;u thương thế n&agrave;o cũng sẽ bị đồng hồ c&aacute;t thời gian ăn m&ograve;n, cuối c&ugrave;ng h&oacute;a th&agrave;nh gi&oacute; thoảng.</p>
+<p>C&ocirc; lại xem tin tức của anh, chỉ qua b&aacute;o, tạp ch&iacute; v&agrave; TV. Anh lu&ocirc;n rất giỏi trong việc sử dụng phương tiện truyền th&ocirc;ng l&agrave;m lợi thế cho m&igrave;nh, phục vụ mục đ&iacute;ch của m&igrave;nh trong những thời điểm đặc biệt nhất. Anh đ&atilde; l&agrave;m được.</p>
+<p>Giang Hồ v&ocirc; t&igrave;nh thu thập một số tờ b&aacute;o v&agrave; tạp ch&iacute;, cũng kh&ocirc;ng phải cố &yacute; thu thập ch&uacute;ng. Chỉ thỉnh thoảng khi c&ocirc; thấy một v&agrave;i từ về tập đo&agrave;n Từ Phong, c&ocirc; sẽ cuộn tạp ch&iacute; hoặc tờ b&aacute;o đặt dưới b&agrave;n c&agrave; ph&ecirc;.</p>
+<p>Từ những đoạn phim v&agrave; h&igrave;nh ảnh n&agrave;y thấy được Từ Tư, kh&ocirc;ng phải ở s&acirc;n bay th&igrave; l&agrave; trong cuộc họp. S&aacute;u th&aacute;ng qua, anh đi khắp nơi, từ nam ch&iacute; bắc, c&ograve;n ra nước ngo&agrave;i b&agrave;n chuyện hợp t&aacute;c. V&ocirc; c&ugrave;ng bận rộn. May l&agrave; cả người đ&atilde; trở lại trạng th&aacute;i ban đầu, khu&ocirc;n mặt đầu t&oacute;c gọn g&agrave;ng, quần &aacute;o lu&ocirc;n hợp thời trang, kh&ocirc;ng l&agrave;m tập đo&agrave;n Từ Phong mất mặt trước người kh&aacute;c.</p>
+<p>Thế n&ecirc;n, khi Giang Hồ thấy người đ&oacute; đứng trước cửa h&agrave;ng Đằng Dược, c&ocirc; do dự, c&ocirc; nghĩ, sao người n&agrave;y lại cao hơn trong tr&iacute; nhớ của c&ocirc; nhỉ? Lẽ n&agrave;o v&igrave; gầy đi sao? Sao anh vẫn th&iacute;ch mặc đồ trắng m&agrave; c&ograve;n l&agrave; bộ &acirc;u phục trắng rất k&eacute;n người mặc. C&oacute; lẽ c&ocirc; kh&ocirc;ng nh&igrave;n r&otilde; anh từ khoảng c&aacute;ch qu&aacute; xa.</p>
+<p>Thang cuốn đ&atilde; l&ecirc;n tới đỉnh. B&ecirc;n cạnh c&oacute; thang cuốn xuống lầu, Giang Hồ xoay người muốn xuống lầu. B&agrave;n tay c&ocirc; đặt tr&ecirc;n lan can bị giữ lại. Giang Hồ mở to mắt nh&igrave;n hai b&agrave;n tay đang giữ m&igrave;nh. Ng&oacute;n tay thon d&agrave;i, khớp xương r&otilde; r&agrave;ng. C&ocirc; ngước nh&igrave;n chủ nh&acirc;n của b&agrave;n tay. Ở khoảng c&aacute;ch gần như vậy, c&ocirc; c&oacute; hơi hoa mắt, tầm nh&igrave;n nh&ograve;e đi nhưng hơi thở ấm &aacute;p rất r&otilde; r&agrave;ng.</p>
+<p>&ldquo;Giang Hồ.&rdquo; giọng n&oacute;i n&agrave;y cũng rất quen thuộc.</p>
+<p>Giang Hồ muốn l&ugrave;i lại một bước, để c&oacute; thể nh&igrave;n r&otilde; mọi thứ, để c&oacute; thể biết m&igrave;nh c&oacute; đang nằm mơ hay kh&ocirc;ng. Những ng&agrave;y qua, c&ocirc; chưa từng mơ về người n&agrave;y.</p>
+<p>C&ocirc; được anh k&eacute;o l&ecirc;n thang cuốn. Họ từ từ đi xuống. Khi đứng tr&ecirc;n mặt đất, tr&aacute;i tim Giang Hồ cũng đặt xuống, hỏi: &ldquo;Sao anh lại ở đ&acirc;y?&rdquo;</p>
+<p>Từ Tư trả lời: &ldquo;Ng&agrave;y mai cửa h&agrave;ng khai trương, sẽ c&oacute; một hoạt động.&rdquo;</p>
+<p>Giang Hồ n&oacute;i: &ldquo;Em biết.&rdquo;</p>
+<p>C&oacute; người ph&iacute;a sau giục họ tr&aacute;nh đường, h&oacute;a ra hai người đứng dưới thang cuốn n&oacute;i chuyện. Từ Tư đi trước một bước, Giang Hồ bất gi&aacute;c đi theo anh.</p>
+<p>Từ Tư vẫn d&ugrave;ng giọng điệu ngả ngớn n&oacute;i: &ldquo;Anh l&agrave;m người bay mấy th&aacute;ng qua, sắp vượt qua Jordan rồi.&rdquo;</p>
+<p>Giang Hồ cười: &ldquo;Em biết.&rdquo;</p>
+<p>&ldquo;Thờ</p>
+<p>i gian qua rất bận, c&ocirc;ng ty đưa ra thị trường một loại thức uống tốt cho sức khỏe, dự định cạnh tranh với thương hiệu quốc tế lớn.&rdquo;</p>
+<p>&ldquo;Em biết.&rdquo;</p>
+<p>&ldquo;Little Red Horse đ&atilde; mở th&ecirc;m năm chi nh&aacute;nh, cửa h&agrave;ng ở Hồng K&ocirc;ng cũng đang chuẩn bị khai trương.&rdquo;</p>
+<p>&ldquo;Em biết.&rdquo;</p>
+<p>&ldquo;C&ograve;n nhớ Tiểu Cầu Cầu kh&ocirc;ng? Con b&eacute; sắp đ&oacute;n sinh nhật ba tuổi. Năm ngo&aacute;i, bố mẹ con b&eacute; tổ chức h&ocirc;n lễ ở Brazil, anh l&agrave; một trong những ph&ugrave; rể.&rdquo;</p>
+<p>Giang Hồ biết đ&aacute;m cưới n&agrave;y, kh&ocirc;ng phải v&igrave; giới truyền th&ocirc;ng đưa tin rầm rộ rằng CEO trang mạng nổi tiếng v&agrave; vợ tổ chức một đ&aacute;m cưới l&atilde;ng mạn muộn m&agrave;ng dưới sự ch&uacute;c ph&uacute;c của bộ tộc da đỏ ở Brazil, m&agrave; v&igrave; đ&atilde; nh&igrave;n thấy Từ Tư trong những bức ảnh hiện trường đ&aacute;m cưới.</p>
+<p>Mũi c&ocirc; chua x&oacute;t: &ldquo;Ừm.&rdquo;</p>
+<p>&ldquo;Vụ &aacute;n của th&iacute;m v&agrave; cậu cũng đ&atilde; được ph&aacute;n quyết.&rdquo;</p>
+<p>Giang Hồ im lặng.</p>
+<p>C&ocirc; cũng kh&ocirc;ng biết l&agrave;m c&aacute;ch n&agrave;o m&agrave; đi theo Từ Tư đến tận g&oacute;c khuất n&agrave;y, c&oacute; lẽ tiếng ầm ầm từ xa c&oacute; hơi lớn l&agrave;m t&ecirc; liệt thần kinh của c&ocirc;. Khi &acirc;m thanh đột ngột biến mất, thấy ba mặt tường c&aacute;ch ly phủ bạt trắng, Giang Hồ chợt nhận ra m&igrave;nh đ&atilde; v&ocirc; thức theo Từ Tư đến khu vực l&acirc;n cận của c&ocirc;ng trường x&acirc;y dựng kh&ocirc;ng người n&agrave;y.</p>
+<p>Từ Tư dừng lại. Anh nh&igrave;n c&ocirc;.</p>
+<p>Nơi n&agrave;y rất vắng vẻ, kh&ocirc;ng c&oacute; kh&aacute;ch h&agrave;ng cũng kh&ocirc;ng c&oacute; nh&acirc;n vi&ecirc;n, ngay cả m&aacute;y m&oacute;c l&agrave;m việc cũng kh&ocirc;ng hoạt động, ba mặt đều l&agrave; bạt trắng, đ&acirc;y l&agrave; một thế giới m&agrave;u trắng, y&ecirc;n tĩnh kh&ocirc;ng người quấy rầy. M&agrave; cảm x&uacute;c của họ đang dần xao động, họ nh&igrave;n nhau rồi khẽ quay mặt đi.</p>
+<p>Kh&ocirc;ng kh&iacute; xung quanh như ngưng đọng, c&oacute; qu&aacute; nhiều cảm x&uacute;c muốn thổ lộ. Những cảnh tượng hiện trong t&acirc;m tr&iacute; giống như một bộ phim cũ, chậm r&atilde;i chiếu lại những ngọt ng&agrave;o v&agrave; buồn b&atilde; của qu&aacute; khứ. Họ k&igrave;m l&ograve;ng kh&ocirc;ng nh&igrave;n nhau.</p>
+<p>Từ Tư b&igrave;nh tĩnh n&oacute;i: &ldquo;Lần đầu ti&ecirc;n gặp em, anh kh&ocirc;ng hề c&oacute; thiện cảm với em. Nh&igrave;n em như thấy một phi&ecirc;n bản đ&aacute;ng gh&eacute;t của anh - ki&ecirc;u ngạo, chủ quan, muốn l&agrave;m g&igrave; th&igrave; l&agrave;m, kh&ocirc;ng bao giờ quan t&acirc;m đến cảm nhận của người kh&aacute;c. L&uacute;c ở Nhật, em đ&aacute;ng thương như vậy, nhưng lại qu&aacute; ki&ecirc;u ngạo v&agrave; t&ugrave;y tiện, sau khi từ Nhật về, ng&agrave;y n&agrave;o em cũng b&aacute;m theo anh đ&ograve;i mua Đằng Dược, anh chỉ muốn xem thử, một tiểu thư nh&agrave; gi&agrave;u c&oacute; thể l&agrave;m được những g&igrave;. Hoặc l&agrave; em quen l&agrave;m bất cứ điều g&igrave; m&igrave;nh muốn, kh&ocirc;ng ph&acirc;n biệt nặng nhẹ, hoặc l&agrave; em mất phương hướng cuộc sống, muốn t&igrave;m một chỗ dựa. Anh chưa từng gặp c&ocirc; g&aacute;i n&agrave;o cả ng&agrave;y l&agrave;m phiền anh chỉ v&igrave; muốn anh gi&uacute;p c&ocirc; ấy khởi nghiệp.&rdquo;</p>
+<p>&ldquo;Giang Hồ, anh đ&atilde; đ&aacute;nh gi&aacute; thấp em. Em từng bước t&iacute;nh kế anh, chỉ v&igrave; nghi&ecirc;m t&uacute;c đầu tư v&agrave;o sự nghiệp. Ngược lại suy nghĩ của anh thật bỉ ổi. Anh thật sự muốn xem em l&agrave; người như thế n&agrave;o. Anh vui vẻ tiếp x&uacute;c với em.&rdquo;</p>
+<p>&ldquo;Nhưng kh&ocirc;ng biết từ l&uacute;c n&agrave;o, anh c&oacute; một suy nghĩ kỳ qu&aacute;i, anh dường như cảm thấy c&oacute; thể thay thế bố em, &ocirc;ng ấy cho em một cuộc sống thế n&agrave;o, anh cũng c&oacute; thể. &Yacute; nghĩ n&agrave;y thật ra rất đơn giản, anh chỉ muốn em lần nữa sống những ng&agrave;y th&aacute;ng như thế, giống như cuộc sống ban đầu của em.&rdquo;</p>
+<p>Giang Hồ ngước mắt, ngấn nước nh&igrave;n anh.</p>
+<p>&ldquo;Anh muốn b&aacute;n Đằng Dược v&igrave; đ&oacute; l&agrave; mối l&agrave;m ăn tốt, c&ograve;n v&igrave; em đ&atilde; qu&aacute; mệt mỏi với nh&agrave; xưởng n&agrave;y. Anh nghĩ, bố em m&agrave; c&ograve;n sẽ kh&ocirc;ng để em mệt mỏi như thế. Anh kh&ocirc;ng n&oacute;i với em, v&igrave; anh c&oacute; vẻ kh&ocirc;ng hiểu em như bản th&acirc;n anh đ&atilde; nghĩ, anh nghĩ anh c&oacute; thể xử l&yacute; n&oacute; đủ tốt, để em l&agrave;m theo mọi quyết định của anh. Đ&uacute;ng l&agrave; một &yacute; nghĩ ngu ngốc.&rdquo;</p>
+<p>&ldquo;Em biết anh ki&ecirc;u ngạo, chủ quan, l&agrave;m theo &yacute; m&igrave;nh, kh&ocirc;ng bao giờ nghĩ đến cảm x&uacute;c của người kh&aacute;c. Sau khi em đi, anh mới nhận ra những khuyết điểm của m&igrave;nh. Anh nghĩ, anh sống ngần ấy năm, nhưng cuối c&ugrave;ng nhờ em m&agrave; anh c&oacute; thể nh&igrave;n r&otilde; bản th&acirc;n m&igrave;nh.&rdquo;</p>
+<p>&ldquo;Anh thừa nhận, từ l&uacute;c gặp em ở Nhật, anh kh&ocirc;ng c&oacute; đồng cảm hay &yacute; tốt g&igrave;, anh coi cuộc gặp gỡ n&agrave;y như một cuộc t&igrave;nh. Nhưng c&agrave;ng đến gần em, anh c&agrave;ng m&acirc;u thuẫn. Cả đời n&agrave;y anh chưa từng c&oacute; cảm x&uacute;c như vậy, anh nghĩ anh thật sự th&iacute;ch em. Trong những ng&agrave;y em đến C&aacute;p Nhĩ T&acirc;n v&agrave; Nhật Bản, anh suy nghĩ rất nhiều, anh l&ecirc;n mạng t&igrave;m b&agrave;i đăng của em, anh biết trong l&ograve;ng em lu&ocirc;n c&oacute; Cao Ngật, l&uacute;c đ&oacute; anh c&ograve;n chưa biết cậu ấy l&agrave; anh trai của em. Em nhớ rất r&otilde; những chuyện xảy ra l&uacute;c mười tuổi.</p>
+<p>Từ chuyện xưa em viết trong b&agrave;i đăng, anh biết l&uacute;c nhỏ em t&ugrave;y hứng cố chấp với Cao Ngật, nhưng em cũng rất nghe lời cậu ấy, chưa từng b&agrave;y thủ đoạn g&igrave; với cậu ấy. Em d&ugrave;ng hết mọi thủ đoạn với anh, đến cuối c&ugrave;ng cũng kh&ocirc;ng muốn trả gi&aacute; điều g&igrave;. Anh sống đến b&acirc;y giờ, ngoại trừ bố mất sớm, hầu như kh&ocirc;ng gặp phải trở ngại n&agrave;o, muốn gi&oacute; được gi&oacute;, muốn mưa được mưa. Nhưng anh kh&ocirc;ng thể khiến em quan t&acirc;m đến anh như quan t&acirc;m Cao Ngật.&rdquo;</p>
+<p>&ldquo;Những ng&agrave;y em đi, anh vừa muốn qu&ecirc;n em đi, vừa muốn giữ em lại. Gặp lại em, anh chỉ muốn giữ em lại, kh&ocirc;ng m&agrave;ng đến chuyện cũ. Nhưng em lại kh&oacute;c trước mặt anh, Giang Hồ, lần đầu ti&ecirc;n anh thấy em kh&oacute;c v&igrave; anh. Nhưng em vẫn cố gắng đẩy anh từng bước ra xa. Nếu vết sẹo trong tim em kh&ocirc;ng l&agrave;nh, như em đ&atilde; n&oacute;i, c&oacute; thể một ng&agrave;y n&agrave;o đ&oacute; ch&uacute;ng ta sẽ o&aacute;n tr&aacute;ch nhau.&rdquo;</p>
+<p>Giang Hồ cứ nh&igrave;n Từ Tư, nh&igrave;n v&agrave;o mắt anh, đ&ocirc;i mắt anh chưa từng s&aacute;ng như h&ocirc;m nay, ch&uacute;ng phản chiếu s&acirc;u sắc trong mắt c&ocirc;, t&acirc;m tr&iacute; c&ocirc; v&agrave; cuộc đời c&ocirc;.</p>
+<p>&ldquo;Từ Tư &hellip;&rdquo;</p>
+<p>&ldquo;Giang Hồ, anh vẫn lu&ocirc;n muốn em nghỉ ngơi, mấy th&aacute;ng nay anh rất mệt mỏi, mẹ anh ng&atilde; bệnh, hiện tại trong nh&agrave; chỉ c&oacute; anh v&agrave; mẹ, mẹ chịu đả k&iacute;ch đủ rồi, anh phải chăm s&oacute;c t</p>
+<p>ốt cho mẹ. Thỉnh thoảng anh sẽ đi dạo dưới t&ograve;a nh&agrave; của em, anh thấy chậu thu hải đường em trồng b&ecirc;n bệ cửa sổ, anh kh&ocirc;ng t&igrave;m em, anh muốn em sống y&ecirc;n ổn v&agrave;i th&aacute;ng. Nhưng h&ocirc;m nay lại t&igrave;nh cờ gặp em ở đ&acirc;y. Giang Hồ &hellip;&rdquo;</p>
+<p>&ldquo;Từ Tư &hellip; anh muốn em l&agrave;m g&igrave;?&rdquo;</p>
+<p>&ldquo;Khi n&agrave;o em mới lấy lại can đảm đ&atilde; vụn vỡ? L&uacute;c em định nhảy vực ở n&uacute;i Amagi đ&oacute;, sau khi anh bắt được em, em đ&atilde; d&ugrave;ng sức bắt anh đ&aacute;nh anh thế n&agrave;o? Sau đ&oacute; em lấy hết can đảm, kh&ocirc;ng muốn chết nữa. Anh nghĩ, lần n&agrave;y em phải cần bao l&acirc;u mới c&oacute; thể lấy lại can đảm?&rdquo;</p>
+<p>Từ Tư n&oacute;i xong, nh&igrave;n Giang Hồ trước mặt. Đ&ocirc;i mắt to như b&uacute;p b&ecirc; của c&ocirc; đầy nước, nhưng h&agrave;ng m&agrave;y g&oacute;c cạnh l&agrave;m c&ocirc; tr&ocirc;ng cương nghị hơn. Người m&agrave; anh mong mỏi, mong mỏi qu&aacute; l&acirc;u, trong l&ograve;ng tho&aacute;ng nh&oacute;i đau. Anh c&uacute;i xuống h&ocirc;n l&ecirc;n m&ocirc;i Giang Hồ, d&ugrave;ng hết sức như muốn truyền hết lực lượng v&agrave; nỗi nhớ của m&igrave;nh cho c&ocirc; qua nụ h&ocirc;n n&agrave;y.</p>
+<p>Khi anh bu&ocirc;ng c&ocirc; ra, anh lại thấy c&ocirc; kh&oacute;c. D&aacute;ng vẻ c&ocirc; kh&oacute;c l&agrave;m anh thấy đau l&ograve;ng. Anh &ocirc;m c&ocirc; thật chặt.</p>
+<p>Giang Hồ ch&ocirc;n m&igrave;nh trong v&ograve;ng tay Từ Tư, c&ocirc; n&oacute;i: &ldquo;Em &hellip;&rdquo;</p>
+<p>Nhưng chưa kịp n&oacute;i, chợt c&oacute; tiếng động đinh tai nhức &oacute;c, như thể trời rung đất chuyển.</p>
+<p>Trước khi hoảng sợ, Giang Hồ cảm nhận c&oacute; một lực cực mạnh đẩy c&ocirc; ra ngo&agrave;i, kế đ&oacute; xung quanh đầy bụi, ầm ầm rơi xuống, kh&ocirc;ng biết l&agrave; tấm bạt hay tường gạch. Trước mắt tối sầm, c&ocirc; ng&atilde; xuống đất, khuỷu tay đập mạnh v&agrave;o s&agrave;n b&ecirc; t&ocirc;ng, cơn đau c&agrave;ng l&agrave;m c&ocirc; mất hồn mất v&iacute;a.</p>
+<p>Giang Hồ h&eacute;t l&ecirc;n: &ldquo;Từ Tư!&rdquo;</p>
+<p>Kế đ&oacute;, những tiếng động lớn li&ecirc;n tiếp vang l&ecirc;n, ầm ầm kh&ocirc;ng ngừng.</p>
+<p>Đầu &oacute;c Giang Hồ trống rỗng, ngơ ng&aacute;c kh&ocirc;ng biết chuyện g&igrave; xảy ra, sau khi tiếng động lớn ngừng lại, kh&oacute;i bụi tan đi, mới nh&igrave;n thấy g&oacute;c &aacute;o của Từ Tư ph&iacute;a sau tấm bạt xi măng.</p>
+<p>C&ocirc; như đi&ecirc;n lao đến, trong l&ograve;ng chỉ nghĩ, Từ Tư c&oacute; sao kh&ocirc;ng, c&oacute; bị tấm xi măng rơi tr&uacute;ng kh&ocirc;ng? Nếu Từ Tư bị thương, nếu Từ Tư xảy ra chuyện g&igrave; &hellip; b&ecirc;n kia bạt xi măng v&agrave; bạt vải chất chồng th&agrave;nh n&uacute;i, c&ocirc; kh&ocirc;ng thấy Từ Tư ở đ&acirc;u, chỉ c&oacute; thể đi&ecirc;n cuồng k&ecirc;u g&agrave;o: &ldquo;Từ Tư, Từ Tư.&rdquo;</p>
+<p>Khi Mạc Bắc bước v&agrave;o ph&ograve;ng bệnh, ph&ograve;ng bệnh đ&atilde; chật k&iacute;n người.</p>
+<p>Vu Trực đến rất sớm. Như mọi khi, anh lu&ocirc;n dẫn theo c&ocirc; con g&aacute;i y&ecirc;u qu&yacute; Cầu Cầu của m&igrave;nh. Quan Chỉ ngồi cạnh Vu Trực, cũng t&igrave;nh cờ dẫn theo c&ocirc; con g&aacute;i T&aacute; T&aacute; của m&igrave;nh. Hai c&ocirc; bạn th&acirc;n nhỏ gặp nhau th&igrave; thầm những điều chỉ m&igrave;nh mới hiểu. Thư k&yacute; của Từ Tư khom người nghe Từ Tư dặn d&ograve;, tr&ecirc;n tay Nhậm Băng cũng &ocirc;m một xấp t&agrave;i liệu đang chờ chỉ thị, quản gia của nh&agrave; họ Từ cũng c&oacute; mặt, đang m&uacute;c canh n&oacute;ng trong hộp giữ nhiệt, y t&aacute; ở đầu giường bệnh b&ecirc;n kia thay bịch truyền dịch cho Từ Tư, b&aacute;c sĩ trưởng khoa sau khi kh&aacute;m xong th&igrave; ra ngo&agrave;i, theo sau l&agrave; một nh&oacute;m b&aacute;c sĩ điều trị.</p>
+<p>Từ Tư bị b&oacute; bột ở ch&acirc;n v&agrave; tay nằm tr&ecirc;n giường bệnh, ch&acirc;n c&ograve;n bị treo l&ecirc;n, to&agrave;n th&acirc;n sưng tấy, nh&igrave;n rất đ&aacute;ng sợ.</p>
+<p>Hai c&ocirc; b&eacute; thấy cảnh tượng như vậy rất sợ h&atilde;i, nh&igrave;n Từ Tư một c&aacute;i, lập tức quay đầu đi, kh&ocirc;ng d&aacute;m ngẩng l&ecirc;n.</p>
+<p>Quan Chỉ ghẹo: &ldquo;Xem k&igrave;a, ch&uacute; Từ giống g&igrave; n&egrave;?&rdquo;</p>
+<p>Mấy c&ocirc; b&eacute; lắc đầu kh&ocirc;ng trả lời được. Quan Chỉ n&oacute;i: &ldquo;Giống x&aacute;c ướp.&rdquo;</p>
+<p>Mấy c&ocirc; b&eacute; đồng thanh: &ldquo;X&aacute;c ướp.&rdquo;</p>
+<p>Từ Tư đang n&oacute;i nửa chừng với thư k&yacute; Jane, nghe Quan Chỉ m&oacute;c mỉa anh, n&ecirc;n tranh thủ n&eacute;m sang một c&acirc;u: &ldquo;Muốn dạy g&igrave; th&igrave; đừng ở chỗ t&ocirc;i, c&uacute;t ra ngo&agrave;i đi.&rdquo;</p>
+<p>Quan Chỉ lập tức &ocirc;m c&aacute;i đầu nhỏ của con g&aacute;i v&agrave; Cầu Cầu: &ldquo;Ch&uacute;ng ta đừng nghe mấy lời chửi bậy của ch&uacute; Từ, ch&uacute;ng ta l&agrave; người lịch sự.&rdquo;</p>
+<p>Từ Tư tức giận trợn tr&ograve;n mắt.</p>
+<p>Mạc Bắc tiến l&ecirc;n cười n&oacute;i: &ldquo;Quan Chỉ n&oacute;i cậu rảnh qu&aacute; chạy đến c&ocirc;ng trường thi c&ocirc;ng, bị tấm xi măng rơi xuống liệt nửa người, t&ocirc;i thấy kh&aacute; ổn, c&ograve;n sức chửi người.&rdquo;</p>
+<p>Anh lại cười với Nhậm Băng: &ldquo;Cũng c&ograve;n sức chỉ đạo c&ocirc;ng việc.&rdquo;</p>
+<p>Vu Trực đi theo cười n&oacute;i: &ldquo;Tinh thần quả nhi&ecirc;n rất tốt.&rdquo;</p>
+<p>Nhậm Băng cũng cười: &ldquo;C&oacute; thể xem Từ tổng l&agrave; nh&acirc;n vi&ecirc;n gương mẫu, hội nghị cấp cao của c&ocirc;ng ty cũng được họp trong ph&ograve;ng bệnh.&rdquo;</p>
+<p>Quản gia bưng b&aacute;t canh bổ đến, n&oacute;i: &ldquo;Mẹ cậu bảo nhất định phải uống.&rdquo;</p>
+<p>Từ Tư kh&ocirc;ng t&igrave;nh nguyện, đặt b&aacute;t canh sang một b&ecirc;n, kh&ocirc;ng chạm v&agrave;o n&oacute;. Thay v&agrave;o đ&oacute; kể v&agrave;i c&acirc;u chuyện cười với những người trong ph&ograve;ng.</p>
+<p>Cửa ph&ograve;ng bệnh lại mở ra, Phương Mặc B&igrave;nh bước v&agrave;o, thấy trong ph&ograve;ng chật n&iacute;ch người, b&agrave; nh&iacute;u m&agrave;y.</p>
+<p>Quan Chỉ v&agrave; Vu Trực bế con g&aacute;i trong tay đứng dậy, Vu Trực n&oacute;i với Từ Tư: &ldquo;Ch&uacute;ng t&ocirc;i đi trước.&rdquo;</p>
+<p>Mọi người đều đồng &yacute;.</p>
+<p>Trước khi đi, Mạc Bắc nhẹ nh&agrave;ng n&oacute;i với Từ Tư: &ldquo;T&ocirc;i thấy Giang Hồ dưới lầu.&rdquo;</p>
+<p>Từ Tư gật đầu.</p>
+<p>Đột nhi&ecirc;n trong ph&ograve;ng chỉ c&ograve;n lại hai mẹ con. Phương Mặc B&igrave;nh thấy b&aacute;t canh c&ograve;n đầy, tự m&igrave;nh bưng l&ecirc;n, Từ Tư lập tức ngồi dậy n&oacute;i: &ldquo;Đừng, mẹ, mẹ muốn đ&uacute;t cho con hả, c&oacute; c&ograve;n muốn để con sống kh&ocirc;ng?&rdquo;</p>
+<p>Thế l&agrave; Phương Mặc B&igrave;nh đặt b&aacute;t canh xuống, nghi&ecirc;m t&uacute;c n&oacute;i: &ldquo;Con c&oacute; c&ograve;n muốn để mẹ sống kh&ocirc;ng? Trong nh&agrave; xảy ra rất nhiều chuyện rồi, c&ograve;n con g&acirc;y th&ecirc;m chuyện nữa, h&ocirc;m qua bệnh viện gọi cho mẹ l&agrave;m mẹ su&yacute;t l&ecirc;n cơn đau tim. Nếu con xảy ra chuyện g&igrave;, mẹ phải ăn n&oacute;i l&agrave;m sao với bố con?&rdquo;</p>
+<p>Từ Tư vội n&oacute;i: &ldquo;Chẳng phải con kh&ocirc;ng sao rồi &agrave;? Chỉ bị g&atilde;y xương bắp ch&acirc;n, g&atilde;y một c&aacute;i tay.&rdquo;</p>
+<p>Phương Mặc B&igrave;nh liếc nh&igrave;n hồ sơ do thư k&yacute; của Từ Tư để lại, cảm thấy nhẹ nh&otilde;m một ch&uacute;t. Con trai tr&ecirc;n giường bệnh tinh thần rất tốt, b&agrave; cũng t&igrave;m hiểu cặn kẽ vết thương, kh&ocirc;ng c&oacute; g&igrave; đ&aacute;ng ngại.</p>
+<p>Thế nhưng, người quản l&yacute; t&agrave;i sản của cửa h&agrave;ng b&aacute;ch h&oacute;a sợ đến mức đ</p>
+<p>&iacute;ch th&acirc;n đến nh&agrave; xin lỗi v&agrave; giải th&iacute;ch với b&agrave;. Th&igrave; ra l&agrave; nền m&oacute;ng của t&ograve;a nh&agrave; phụ kh&ocirc;ng ổn định, thanh th&eacute;p cũng k&eacute;m chất lượng, đ&oacute; l&agrave; c&ocirc;ng tr&igrave;nh m&agrave; Thẩm Qu&yacute; đ&atilde; tiếp nhận năm đ&oacute;. Nh&agrave; thầu mới kh&ocirc;ng muốn đầu tư số tiền lớn để ph&aacute; đi x&acirc;y lại, chỉ tiếp tục gia cố phần r&igrave;a, do m&ugrave;a mưa k&eacute;o d&agrave;i mấy th&aacute;ng n&ecirc;n l&agrave;m c&ocirc;ng tr&igrave;nh dang dở n&agrave;y sụp xuống.</p>
+<p>Khi tấm xi măng rơi xuống tạo th&agrave;nh một g&oacute;c với h&agrave;ng r&agrave;o b&ecirc;n dưới, thế n&ecirc;n n&oacute; kh&ocirc;ng đập v&agrave;o Từ Tư. Chỉ v&igrave; d&aacute;ng người anh cao, bắp ch&acirc;n của anh kh&ocirc;ng tr&aacute;nh được khi bị đ&aacute; rơi từ đầu b&ecirc;n kia đ&egrave; l&ecirc;n, khuỷu tay của anh cũng bị khung bạt va phải.</p>
+<p>Phương Mặc B&igrave;nh nh&igrave;n tay ch&acirc;n bị b&oacute; bột của con trai, nghĩ đến những ng&agrave;y th&aacute;ng vất vả của con, trong l&ograve;ng mềm nhũn.</p>
+<p>Cuộc đời b&agrave; l&agrave; cuộc thi chạy tiếp sức, bắt đầu từ chồng b&agrave;, đến em rể, sau đ&oacute; đến b&agrave; v&agrave; em d&acirc;u Hồng Điệp tiếp quản, hết người n&agrave;y đến người kh&aacute;c, chăm chỉ mới c&oacute; thể t&iacute;ch lũy th&agrave;nh quả, muốn tiếp nối vinh quang, phải xem người kế nhiệm Từ Tư c&oacute; thể g&aacute;nh v&aacute;c trọng tr&aacute;ch lớn kh&ocirc;ng. Tập đo&agrave;n Từ Phong đạt được th&agrave;nh c&ocirc;ng tiếp theo, chỉ c&oacute; thể dựa v&agrave;o Từ Tư.</p>
+<p>B&agrave; n&oacute;i với Từ Tư: &ldquo;Mẹ gi&agrave; rồi, chống đỡ mấy chục năm, mới kh&ocirc;ng phụ ủy th&aacute;c của bố con x&acirc;y dựng được nền tảng của Từ Phong. Mẹ giao n&oacute; cho con, con c&oacute; nghĩa vụ g&aacute;nh v&aacute;c n&oacute;. Đương nhi&ecirc;n, mấy năm qua con l&agrave;m rất tốt. Nhưng sự nghiệp th&agrave;nh c&ocirc;ng cần c&oacute; cống hiến v&agrave; hi sinh, kh&ocirc;ng thể tr&aacute;nh được.&rdquo;</p>
+<p>Từ Tư cau m&agrave;y khi nghe lời n&agrave;y của mẹ.</p>
+<p>H&ocirc;m qua Giang Hồ gọi xe cấp cứu đưa anh đến bệnh viện, rồi kh&ocirc;ng thấy xuất hiện nữa. Sau khi mẹ đến, trong mắt b&agrave; lu&ocirc;n c&oacute; sự tự tr&aacute;ch. Anh nghĩ, mẹ c&oacute; điều muốn n&oacute;i. Mấy th&aacute;ng qua, sự im lặng qu&aacute; mức của b&agrave; khiến Từ Tư hiểu nỗi buồn của b&agrave; kh&oacute; c&oacute; thể chữa l&agrave;nh.</p>
+<p>Phương Mặc B&igrave;nh tiếp tục: &ldquo;Kh&ocirc;ng phải mẹ kh&ocirc;ng ph&aacute;t hiện t&acirc;m tư ch&ocirc;n giấu bao nhi&ecirc;u năm qua của th&iacute;m, cũng kh&ocirc;ng phải kh&ocirc;ng biết &acirc;n o&aacute;n giữa th&iacute;m v&agrave; Giang Kỳ Thắng. Th&iacute;m thật sự l&agrave; một nh&acirc;n t&agrave;i rất tốt. Những năm ch&uacute; con bị bệnh, đ&oacute; l&agrave; khoảng thời gian kh&oacute; khăn của Từ Phong. Doanh số b&aacute;n h&agrave;ng ế ẩm, nợ nần chồng chất, c&aacute;c đối thủ cạnh tranh khốc liệt. L&uacute;c đ&oacute;, mẹ phụ tr&aacute;ch chiến lược, c&ograve;n th&iacute;m phụ tr&aacute;ch thị trường. Th&iacute;m v&agrave; mẹ nỗ lực sản xuất nước tinh khiết v&agrave; đồ uống c&oacute; ga, đồng thời t&aacute;i gia nhập thị trường hạng hai từ thị trường hạng ba, mới từng bước tho&aacute;t khỏi t&igrave;nh thế tuyệt vọng.</p>
+<p>Th&iacute;m dũng cảm t&agrave;i giỏi tr&ecirc;n thương trường, về chuyện ri&ecirc;ng, th&iacute;m kh&ocirc;ng &iacute;ch kỷ chia rẽ nh&agrave; họ Từ, xem con như con ruột của m&igrave;nh. Thế n&ecirc;n mẹ để th&iacute;m l&agrave;m theo &yacute; m&igrave;nh. Chỉ cần kh&ocirc;ng x&acirc;m phạm lợi &iacute;ch của Từ Phong, mẹ c&oacute; thể hiểu v&agrave; bao dung cho th&iacute;m bằng cả tr&aacute;i tim của một người phụ nữ. Mẹ thậm ch&iacute; c&ograve;n bội phục sự dũng cảm v&agrave; ki&ecirc;n tr&igrave; của th&iacute;m, thương tiếc th&iacute;m phải g&aacute;nh chịu tổn thương v&agrave; bất c&ocirc;ng.&rdquo;</p>
+<p>&ldquo;Mẹ nghĩ Giang Kỳ Thắng chết rồi th&igrave; mọi chuyện sẽ kết th&uacute;c. Mẹ v&agrave; th&iacute;m c&oacute; thể y&ecirc;n t&acirc;m giao Từ Phong cho con, nửa đời sau sẽ an nh&agrave;n hưởng thụ tuổi gi&agrave;. Thời gian tr&ocirc;i qua, người gi&agrave; đi, th&ugrave; hận trong l&ograve;ng th&iacute;m cũng sẽ ti&ecirc;u tan, chuyện cũng sẽ kh&ocirc;ng d&iacute;nh d&aacute;ng tới cậu con. Nhưng m&agrave;, cuộc gọi đ&oacute; của Giang Hồ đ&atilde; ho&agrave;n to&agrave;n x&oacute;a sạch những suy nghĩ tốt đẹp của mẹ.&rdquo;</p>
+<p>&ldquo;L&uacute;c đ&oacute;, mẹ mới nhận ra đồng cảm v&agrave; khoan dung của mẹ đối với th&iacute;m giống như đặt một quả bom hẹn giờ cạnh m&igrave;nh, sớm muộn g&igrave; cũng sẽ ph&aacute;t nổ. Th&iacute;m c&oacute; kiểm so&aacute;t tốt đến đ&acirc;u th&igrave; sức c&ocirc;ng ph&aacute; của vụ nổ n&agrave;y vẫn c&oacute; thể hủy hoại t&acirc;m huyết mấy chục năm của mẹ trong ph&uacute;t chốc. Mạo hiểm như vậy, mẹ sẽ kh&ocirc;ng phạm phải lần thứ hai.&rdquo;</p>
+<p>B&agrave; n&oacute;i xong, nghi&ecirc;m nghị nh&igrave;n Từ Tư, Từ Tư hơi r&ugrave;ng m&igrave;nh, sau đ&oacute; hắng giọng n&oacute;i: &ldquo;Mẹ, thời đại đ&atilde; sang trang mới, con kh&ocirc;ng phải l&agrave; Giang Kỳ Thắng, Giang Hồ cũng kh&ocirc;ng giống như th&iacute;m. D&ugrave; c&aacute;i chết của bố c&ocirc; ấy kh&ocirc;ng tho&aacute;t khỏi c&oacute; li&ecirc;n quan đến cậu v&agrave; nh&agrave; ch&uacute;ng ta. Hai thế hệ ch&uacute;ng ta lớn l&ecirc;n trong ho&agrave;n cảnh kh&aacute;c nhau.</p>
+<p>Phải cảm ơn mọi người đ&atilde; tạo ra một thế giới hạnh ph&uacute;c, bao dung, l&agrave;nh mạnh cho ch&uacute;ng con trưởng th&agrave;nh. Mỗi thế hệ đều c&oacute; quy tắc ứng xử v&agrave; ng&ocirc;n ngữ kinh doanh ri&ecirc;ng, ban đầu con v&agrave; Giang Hồ c&oacute; thể hơi kh&aacute;c nhau, nhưng kh&ocirc;ng biết từ khi n&agrave;o h&agrave;nh động v&agrave; ng&ocirc;n ngữ của ch&uacute;ng con bắt đầu thống nhất.&rdquo;</p>
+<p>&ldquo;Từ Tư!&rdquo; Phương Mặc B&igrave;nh trầm giọng gọi anh.</p>
+<p>&ldquo;Con đ&atilde; c&acirc;n nhắc rất l&acirc;u mới n&oacute;i với mẹ những lời n&agrave;y.&rdquo; Từ Tư n&oacute;i: &ldquo;Sự nghiệp th&agrave;nh c&ocirc;ng cần c&oacute; cống hiến v&agrave; hi sinh, nhưng chỉ sau khi cống hiến v&agrave; hi sinh, mới biết n&ecirc;n bỏ v&agrave; kh&ocirc;ng n&ecirc;n bỏ điều g&igrave;. Vừa hay con cũng trải qua qu&aacute; tr&igrave;nh n&agrave;y n&ecirc;n con hiểu cống hiến, hi sinh của bố, của mẹ v&agrave; th&iacute;m. Cuộc đời th&iacute;m qu&aacute; khổ cực, v&igrave; đến cuối c&ugrave;ng th&iacute;m kh&ocirc;ng thể bu&ocirc;ng bỏ được bản th&acirc;n m&igrave;nh, mỗi ng&agrave;y nỗi khổ lại nh&acirc;n l&ecirc;n gấp bội. Mẹ, mẹ kh&ocirc;ng giống th&iacute;m, mẹ v&agrave; bố tự do y&ecirc;u đương, mẹ c&oacute; xuất th&acirc;n, cũng kh&ocirc;ng ch&ecirc; bố ngh&egrave;o kh&oacute;. Tuy bố mất sớm nhưng phần t&igrave;nh cảm n&agrave;y vẫn l&agrave; di sản qu&yacute; gi&aacute; nhất trong k&yacute; ức của mẹ. N&oacute; khiến mẹ ki&ecirc;n cường, cả đời kh&ocirc;ng c&ograve;n c&ocirc; đơn nữa. Mẹ, mẹ n&oacute;i c&oacute; đ&uacute;ng kh&ocirc;ng?&rdquo;</p>
+<p>Phương Mặc B&igrave;nh chưa từng n&oacute;i chuyện t&igrave;nh cảm với con trai, cũng chưa kể với cho con trai về cuộc h&ocirc;n nh&acirc;n hạnh ph&uacute;c đầy t&igrave;nh y&ecirc;u v&agrave; nỗi buồn khi chồng qua đời. Nhưng con trai b&agrave; biết hết, b&acirc;y giờ rủ rỉ b&ecirc;n tai, như mưa xu&acirc;n tr&uacute;t xuống đất kh&ocirc;, tiếng x&agrave;o xạc b&ecirc;n tai lay động từng vết nứt trong s&acirc;u thẳm tr&aacute;i&nbsp;</p>
+<p>tim b&agrave;. Nỗi nhớ thương k&igrave;m n&eacute;n bao năm c&ocirc; đơn l&uacute;c n&agrave;y tr&agrave;n về trong l&ograve;ng. &Aacute;o gi&aacute;p mạnh mẽ đến đ&acirc;u cũng kh&ocirc;ng ngừng rung chuyển, sẽ bị dỡ xuống.</p>
+<p>B&agrave; quay lưng, lạnh giọng mạnh mẽ n&oacute;i với con trai: &ldquo;Con đ&uacute;ng l&agrave; m&ecirc; muội đầu &oacute;c.&rdquo;</p>
+<p>Kh&ocirc;ng ngờ con trai mặt d&agrave;y n&oacute;i: &ldquo;Con đ&uacute;ng l&agrave; m&ecirc; muội đầu &oacute;c, mong mẹ đồng &yacute;.&rdquo;</p>
+<p>Bước ch&acirc;n Phương Mặc B&igrave;nh chợt dừng, xoay người đ&aacute; cửa ra ngo&agrave;i.</p>
+<p>Giang Hồ rụt r&egrave; đứng trước cửa ph&ograve;ng bệnh.</p>
+<p>C&ocirc; g&aacute;i mặc sơ mi trắng c&oacute; cổ, b&ecirc;n ngo&agrave;i l&agrave; &aacute;o cổ thuyền m&agrave;u đen, chiếc quần len đen tiệp m&agrave;u. &Aacute;o sơ mi của MIUMIU, &aacute;o cổ thuyền của David Rodriguez v&agrave; quần của Versace, phối rất hợp thời. Cho thấy c&ocirc; g&aacute;i sẽ lu&ocirc;n giữ ph&eacute;p lịch sự v&agrave; trang nghi&ecirc;m khi xuất hiện trong bất kỳ dịp n&agrave;o. C&ocirc; tr&agrave;n đầy sức sống v&agrave; hi vọng. Đ&ocirc;i mắt c&ocirc; rất trong s&aacute;ng, thẳng thắn nh&igrave;n m&igrave;nh. Phương Mặc B&igrave;nh nghĩ b&agrave; sẽ kh&ocirc;ng bao giờ qu&ecirc;n c&ocirc; g&aacute;i từng đọ sức với m&igrave;nh, c&ograve;n kh&ocirc;ng rơi v&agrave;o thế bất lợi, nghĩ vậy, b&agrave; v&eacute;n t&oacute;c b&ecirc;n tr&aacute;n.</p>
+<p>Giang Hồ gọi b&agrave;: &ldquo;D&igrave;.&rdquo;</p>
+<p>Phương Mặc B&igrave;nh gật đầu: &ldquo;Ch&aacute;u c&oacute; l&ograve;ng rồi.&rdquo;</p>
+<p>Giang Hồ tiếp tục: &ldquo;Ch&aacute;u đến thăm Từ Tư.&rdquo;</p>
+<p>C&ocirc; g&aacute;i thẳng lưng, như c&oacute; thể chịu được s&oacute;ng gi&oacute;, đ&atilde; chuẩn bị sẵn s&agrave;ng. Phương Mặc B&igrave;nh mỉm cười thoải m&aacute;i, b&agrave; đi thẳng v&agrave;o vấn đề: &ldquo;Chuyện trở n&ecirc;n tồi tệ kể từ khi ch&aacute;u gọi cho em d&acirc;u của d&igrave; hỏi tường tận mọi thứ, theo lập trường của d&igrave;, trong l&ograve;ng dĩ nhi&ecirc;n vẫn c&ograve;n kh&uacute;c mắc. Đứa trẻ như ch&aacute;u &hellip;&rdquo;</p>
+<p>B&agrave; thở d&agrave;i: &ldquo;L&agrave;m chuyện g&igrave; cũng kh&ocirc;ng chừa đường lui, kh&ocirc;ng tốt đ&acirc;u.&rdquo;</p>
+<p>Giang Hồ lắng nghe với th&aacute;i độ t&ocirc;n trọng, sau đ&oacute; c&uacute;i người trước Phương Mặc B&igrave;nh, c&ocirc; n&oacute;i: &ldquo;D&igrave;, xin lỗi. D&igrave; kh&ocirc;ng hiểu ch&aacute;u, ch&aacute;u c&oacute; thể hiểu. Ch&aacute;u n&oacute;i xin lỗi với d&igrave;, v&igrave; trong chuyện n&agrave;y, nếu cho ch&aacute;u lựa chọn lần nữa, c&oacute; lẽ ch&aacute;u vẫn sẽ l&agrave;m vậy. V&agrave; cũng v&igrave; d&igrave; đồng &yacute; cho Từ Tư ủng hộ ch&aacute;u trong l&uacute;c ch&aacute;u kh&oacute; khăn nhất, m&agrave; ch&aacute;u mới c&oacute; được Đằng Dược. V&igrave; hai chuyện n&agrave;y, ch&aacute;u xin lỗi v&igrave; nỗi đau v&agrave; bất hạnh do những g&igrave; ch&aacute;u l&agrave;m đ&atilde; g&acirc;y ra cho d&igrave;.&rdquo;</p>
+<p>Phương Mặc B&igrave;nh thở d&agrave;i mỉm cười, c&ocirc; g&aacute;i n&agrave;y c&oacute; hiểu biết, th&ocirc;ng minh v&agrave; s&aacute;ng suốt như vậy, kh&ocirc;ng lấy l&agrave;m lạ khi con trai b&agrave; động l&ograve;ng.</p>
+<p>B&agrave; hơi mệt n&ecirc;n dựa v&agrave;o tường, Giang Hồ thấy vậy muốn đỡ b&agrave;, lại bị b&agrave; giơ tay ngăn lại. B&agrave; nhanh ch&oacute;ng đứng thẳng lưng, ngẩng đầu l&ecirc;n, lịch sự đ&aacute;p lại Giang Hồ: &ldquo;Vậy được th&ocirc;i, tạm biệt.&rdquo;</p>
+<p>Khi b&agrave; đi, bước ch&acirc;n vẫn vững v&agrave;ng dứt kho&aacute;t, b&agrave; mạnh mẽ cả đời, c&oacute; một số th&oacute;i quen kh&ocirc;ng thể thay đổi được nữa.</p>
+<p>Giang Hồ nh&igrave;n b&agrave; đi, rồi quay lại thấy Từ Tư bị b&oacute; bột tay ch&acirc;n kh&ocirc;ng biết l&agrave;m sao đi được đến cửa ph&ograve;ng bệnh, cười như c&oacute; như kh&ocirc;ng. Anh quả thật c&oacute; ngoại h&igrave;nh của cậu ấm phong lưu ph&oacute;ng kho&aacute;ng, to&agrave;n th&acirc;n sưng ph&ugrave;, mặc &aacute;o bệnh viện sọc xanh trắng, m&agrave; vẫn c&oacute; kh&iacute; chất nh&agrave;n nh&atilde; ung dung như vậy.</p>
+<p>Từ Tư n&oacute;i: &ldquo;Quanh quẩn nửa ng&agrave;y rồi sao c&ograve;n kh&ocirc;ng v&agrave;o? Anh hết tay uống canh rồi. Đừng c&oacute; than với anh &aacute;p lực rất lớn, b&ecirc; b&aacute;t canh th&ocirc;i chắc kh&ocirc;ng vấn đề g&igrave; nhỉ, đại tiểu thư?&rdquo;</p>
+<p>Cửa ph&ograve;ng anh mở toang, một tia nắng từ đ&oacute; hắt ra, đổ b&oacute;ng anh d&agrave;i tr&ecirc;n mặt đất.</p>
+<p>D&ugrave; trời gần đến ho&agrave;ng h&ocirc;n, nhưng vẫn c&oacute; những luồng &aacute;nh s&aacute;ng v&ocirc; tận, chỉ cần chịu kh&oacute; nh&igrave;n th&igrave; c&oacute; thể thấy nơi s&aacute;ng sủa. Nơi n&agrave;y rất ấm, kh&ocirc;ng c&oacute; gi&oacute;, như thể mọi thứ đều b&igrave;nh lặng.</p>
+<p>Giang Hồ nhớ đến mặt trời mọc ngược gi&oacute; tr&ecirc;n n&uacute;i Amagi, thật ra cũng rất ấm &aacute;p.</p>
+<p>M&ugrave;a xu&acirc;n hẳn sẽ đến nhanh th&ocirc;i.</p>
+    </article>
+
+    <!-- Thanh nút điều hướng cuối trang -->
+    <div class="reading-nav">
+        <a href="toimuondinguocgio7.html" class="nav-btn">⬅️ Chương trước</a>
+        <a href="../mucluc/toimuondinguocgio.html" class="nav-btn">📋 Mục lục</a>
+        <a href="toimuondinguocgiongoaitruyen.html" class="nav-btn">Chương sau ➡️</a>
+    </div>
+
+
+</main>
+
+<!-- ── KHUNG THẢO LUẬN TOÀN CHƯƠNG ── -->
+<div class="chapter-discussion-box">
+    <div class="discussion-header">
+        <div class="discussion-header-left">
+            <span>🌿</span>
+            <h3>Thảo luận về chương này</h3>
+            <span>🌸</span>
+        </div>
+        <div class="discussion-actions">
+            <button class="action-btn" id="like-btn" onclick="toggleLike()" title="Thả tim chương này">
+                <span class="heart-icon">🤍</span>
+                <span id="like-count">0</span>
+            </button>
+            <button class="action-btn" onclick="openShareModal()" title="Chia sẻ chương này">
+                🔗 Chia sẻ
+            </button>
+        </div>
+    </div>
+    <div class="comment-section">
+        <script src="https://utteranc.es/client.js"
+                repo="gocnhocuakhiet/gocnhocuakhiet.github.io"
+                issue-term="pathname"
+                label="comment"
+                theme="github-light"
+                crossorigin="anonymous"
+                async>
+        </script>
+    </div>
+</div>
+
+<!-- ── SHARE MODAL ── -->
+<div class="share-modal-overlay" id="share-modal-overlay" onclick="handleOverlayClick(event)">
+    <div class="share-modal">
+        <h4>🔗 Chia sẻ chương này</h4>
+        <div class="share-link-row">
+            <input class="share-link-input" id="share-link-input" type="text" readonly>
+            <button class="copy-link-btn" id="copy-link-btn" onclick="copyLink()">Sao chép</button>
+        </div>
+        <button class="share-modal-close" onclick="closeShareModal()">Đóng</button>
+    </div>
+</div>
+
+<!-- ── SIDEBAR BÌNH LUẬN THEO ĐOẠN ── -->
+<div id="comment-sidebar" class="comment-sidebar">
+    <div class="sidebar-header">
+        <h4 id="sidebar-paragraph-title">Bình luận đoạn văn</h4>
+        <button class="close-sidebar-btn" onclick="closeInlineComment()">✕</button>
+    </div>
+    <div class="quoted-paragraph-box" id="quoted-paragraph-box"></div>
+    <div class="sidebar-mention-hint">
+        💡 Dùng <code>@tên-người</code> để nhắc đến ai đó trong bình luận.
+    </div>
+    <div id="sidebar-utterances-mount"></div>
+</div>
+<div id="sidebar-overlay" class="sidebar-overlay" onclick="closeInlineComment()"></div>
+
+<!-- ── SCRIPT CHÍNH ── -->
+<script>
+var GH_REPO  = 'gocnhocuakhiet/gocnhocuakhiet.github.io';
+var GH_LABEL = 'comment';
+
+/* ════════════════════════════════════════════════
+   TẠO TITLE RIÊNG CHO MỖI ĐOẠN
+   Utterances dùng <title> của trang để đặt tên issue.
+   Khi mở sidebar đoạn N, ta đổi tạm <title> sang title
+   riêng của đoạn đó → Utterances tạo issue riêng biệt.
+   ════════════════════════════════════════════════ */
+var ORIGINAL_TITLE = document.title; // "Ô Long Kỳ Duyên - Chương 1"
+
+function paragraphTitle(paraNum) {
+    // Ví dụ: "Ô Long Kỳ Duyên - Chương 1 [Đoạn 3]"
+    return ORIGINAL_TITLE + ' [Đoạn ' + paraNum + ']';
+}
+
+/* ════════════════════════════════════════════════
+   BADGE 💬 — chỉ là nút mở sidebar, không đếm số
+   ════════════════════════════════════════════════ */
+document.addEventListener('DOMContentLoaded', function () {
+    var paragraphs = document.querySelectorAll('.story-content p');
+    paragraphs.forEach(function (p, index) {
+        var paraNum = index + 1;
+
+        var row = document.createElement('div');
+        row.className = 'comment-row';
+        p.parentNode.insertBefore(row, p);
+        row.appendChild(p);
+
+        var badge = document.createElement('span');
+        badge.className = 'comment-badge';
+        badge.title = 'Bình luận về đoạn này';
+        badge.textContent = '💬';
+        badge.onclick = function () {
+            openInlineComment(p.innerText.trim().substring(0, 120), paraNum);
+        };
+        row.appendChild(badge);
+    });
+
+    initLike();
+});
+
+/* ════════════════════════════════════════════════
+   SIDEBAR — nhúng Utterances với title riêng mỗi đoạn
+   ════════════════════════════════════════════════ */
+var currentParaNum = null;
+
+function openInlineComment(previewText, paraNum) {
+    document.getElementById('sidebar-paragraph-title').innerText = 'Đoạn ' + paraNum;
+    document.getElementById('quoted-paragraph-box').innerText =
+        '"' + previewText + (previewText.length >= 120 ? '…' : '') + '"';
+    document.getElementById('comment-sidebar').classList.add('active');
+    document.getElementById('sidebar-overlay').classList.add('active');
+
+    // Chỉ reload Utterances khi mở đoạn khác
+    if (currentParaNum === paraNum) return;
+    currentParaNum = paraNum;
+
+    var mount = document.getElementById('sidebar-utterances-mount');
+    mount.innerHTML = '<div class="sidebar-loading">Đang tải bình luận…</div>';
+
+    // Đổi <title> sang title của đoạn này để Utterances nhận đúng issue
+    document.title = paragraphTitle(paraNum);
+
+    // Tạo script Utterances với issue-term="title"
+    var s = document.createElement('script');
+    s.src = 'https://utteranc.es/client.js';
+    s.setAttribute('repo',         GH_REPO);
+    s.setAttribute('issue-term',   'title');   // ← dùng <title> làm tên issue
+    s.setAttribute('label',        GH_LABEL);
+    s.setAttribute('theme',        document.body.classList.contains('dark-mode') ? 'github-dark' : 'github-light');
+    s.setAttribute('crossorigin',  'anonymous');
+    s.async = true;
+
+    // Khi script load xong thì xoá loading, restore <title>
+    s.onload = function () {
+        var loading = mount.querySelector('.sidebar-loading');
+        if (loading) loading.remove();
+        // Restore title gốc sau khi Utterances đã đọc được title đoạn
+        document.title = ORIGINAL_TITLE;
+    };
+
+    mount.innerHTML = '';
+    mount.appendChild(s);
+}
+
+function closeInlineComment() {
+    document.getElementById('comment-sidebar').classList.remove('active');
+    document.getElementById('sidebar-overlay').classList.remove('active');
+    // Đảm bảo title gốc được restore khi đóng sidebar
+    document.title = ORIGINAL_TITLE;
+}
+
+/* ════════════════════════════════════════════════
+   LIKE
+   ════════════════════════════════════════════════ */
+function initLike() {
+    var key      = 'like-'      + window.location.pathname;
+    var countKey = 'likecount-' + window.location.pathname;
+    var liked    = localStorage.getItem(key) === '1';
+    var count    = parseInt(localStorage.getItem(countKey) || '0', 10);
+    updateLikeUI(liked, count);
+}
+
+function toggleLike() {
+    var key      = 'like-'      + window.location.pathname;
+    var countKey = 'likecount-' + window.location.pathname;
+    var liked    = localStorage.getItem(key) === '1';
+    var count    = parseInt(localStorage.getItem(countKey) || '0', 10);
+    liked = !liked;
+    count = liked ? count + 1 : Math.max(0, count - 1);
+    localStorage.setItem(key,      liked ? '1' : '0');
+    localStorage.setItem(countKey, count);
+    updateLikeUI(liked, count);
+}
+
+function updateLikeUI(liked, count) {
+    var btn       = document.getElementById('like-btn');
+    var heartSpan = btn.querySelector('.heart-icon');
+    var countSpan = document.getElementById('like-count');
+    heartSpan.textContent = liked ? '❤️' : '🤍';
+    countSpan.textContent = count;
+    liked ? btn.classList.add('liked') : btn.classList.remove('liked');
+}
+
+/* ════════════════════════════════════════════════
+   SHARE MODAL
+   ════════════════════════════════════════════════ */
+function openShareModal() {
+    document.getElementById('share-link-input').value = window.location.href;
+    document.getElementById('copy-link-btn').textContent = 'Sao chép';
+    document.getElementById('copy-link-btn').classList.remove('copied');
+    document.getElementById('share-modal-overlay').classList.add('active');
+}
+function closeShareModal() {
+    document.getElementById('share-modal-overlay').classList.remove('active');
+}
+function handleOverlayClick(e) {
+    if (e.target === document.getElementById('share-modal-overlay')) closeShareModal();
+}
+function copyLink() {
+    var input = document.getElementById('share-link-input');
+    var btn   = document.getElementById('copy-link-btn');
+    navigator.clipboard.writeText(input.value).then(function () {
+        btn.textContent = '✓ Đã sao chép';
+        btn.classList.add('copied');
+        setTimeout(function () { btn.textContent = 'Sao chép'; btn.classList.remove('copied'); }, 2000);
+    }).catch(function () {
+        input.select(); document.execCommand('copy');
+        btn.textContent = '✓ Đã sao chép'; btn.classList.add('copied');
+        setTimeout(function () { btn.textContent = 'Sao chép'; btn.classList.remove('copied'); }, 2000);
+    });
+}
+
+function syncUtterancesTheme(isDark) {
+    var theme = isDark ? 'github-dark' : 'github-light';
+    document.querySelectorAll('.utterances-frame').forEach(function (f) {
+        f.contentWindow.postMessage({ type: 'set-theme', theme: theme }, 'https://utteranc.es');
+    });
+}
+</script>
+
+</body>
+</html>
