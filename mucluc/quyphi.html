@@ -599,23 +599,30 @@ var PER_PAGE   = 50;
 var totalPages = Math.ceil(CHAPTERS.length / PER_PAGE);
 var currentPage = 1;
 
-/* ── Render lưới chương (ĐÃ SỬA) ── */
+/* ── Render lưới chương ── */
 function renderGrid(page) {
     var grid  = document.getElementById('chapter-grid');
     var start = (page - 1) * PER_PAGE;
     var end   = Math.min(start + PER_PAGE, CHAPTERS.length);
     var slice = CHAPTERS.slice(start, end);
 
-    /* Lưới 2 cột: chương đi tuần tự trái→phải từng hàng */
+    /* Cột trái: nửa đầu, cột phải: nửa sau — đọc từ trên xuống theo cột */
+    var half  = Math.ceil(slice.length / 2);
+    var left  = slice.slice(0, half);
+    var right = slice.slice(half);
+
     var html = '';
-    for (var i = 0; i < slice.length; i++) {
-        html += '<a href="' + slice[i].url + '">'
+    for (var i = 0; i < half; i++) {
+        html += '<a href="' + left[i].url + '">'
               + '<span class="chapter-marker">❖</span>'
-              + slice[i].label + '</a>';
-    }
-    /* Nếu số chương lẻ, thêm ô trống để grid không bị lệch */
-    if (slice.length % 2 !== 0) {
-        html += '<span></span>';
+              + left[i].label + '</a>';
+        if (right[i]) {
+            html += '<a href="' + right[i].url + '">'
+                  + '<span class="chapter-marker">❖</span>'
+                  + right[i].label + '</a>';
+        } else {
+            html += '<span></span>';
+        }
     }
     grid.innerHTML = html;
 }
