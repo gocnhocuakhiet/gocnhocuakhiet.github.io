@@ -1,0 +1,790 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mục Lục: TÔI MUỐN ĐI NGƯỢC GIÓ</title>
+    <link rel="stylesheet" href="../style.css">
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f1f7f4;
+            color: #2d3a34;
+            line-height: 1.8;
+        }
+
+        /* ── DARK MODE ── */
+        body.dark-mode { background-color: #131a17; color: #dae5e0; }
+        body.dark-mode .navbar { background-color: #1b2420; }
+        body.dark-mode .navbar .logo { color: #8fae9f; }
+        body.dark-mode .nav-links a { color: #aaa; }
+        body.dark-mode .info-container,
+        body.dark-mode .fb-main-comment-container { background-color: #1b2420 !important; border-color: #2e3d36 !important; }
+        body.dark-mode .header-title { border-bottom-color: #2e3d36; color: #8fae9f; }
+        body.dark-mode .meta-details { color: #aaa; }
+        body.dark-mode .meta-details strong { color: #dae5e0; }
+        body.dark-mode .novel-main-title { color: #8fae9f; }
+        body.dark-mode .summary-content { color: #dae5e0; }
+        body.dark-mode .fb-main-comment-container { border-top-color: #8fae9f !important; }
+        body.dark-mode .discussion-header { border-bottom-color: #2e3d36 !important; }
+        body.dark-mode .discussion-header h3 { color: #8fae9f !important; }
+        body.dark-mode .action-btn { background: #1b2420; color: #8fae9f; border-color: #4a6b5d; }
+        body.dark-mode .action-btn:hover { background-color: #232e29; }
+        body.dark-mode .action-btn.liked { background-color: #2a1e22; border-color: #7a3a4a; color: #e08090; }
+        body.dark-mode .share-modal { background: #1b2420; }
+        body.dark-mode .share-modal h4 { color: #8fae9f; }
+        body.dark-mode .share-link-input { background: #232e29; border-color: #3a5040; color: #dae5e0; }
+        body.dark-mode .share-modal-close { color: #6a8a7a; }
+        body.dark-mode .reader-toggle-btn,
+        body.dark-mode .reader-controls-group button { background: #1b2420; color: #8fae9f; border-color: #4a6b5d; }
+        body.dark-mode .reader-toggle-btn:hover,
+        body.dark-mode .reader-controls-group button:hover { background: #4a6b5d; color: white; }
+        body.dark-mode .rating-score-text { color: #8fae9f; }
+        body.dark-mode .rating-score-text strong { color: #dae5e0; }
+        body.dark-mode .voted-badge { background: #2a3830; color: #8fae9f; border-color: #4a6b5d; }
+        body.dark-mode .star-tooltip-inline { background: #2a3830; color: #8fae9f; border-color: #4a6b5d; }
+
+        /* ── Danh sách chương dark mode ── */
+        body.dark-mode .volume-block { background: #1b2420; border-color: #2e3d36; }
+        body.dark-mode .volume-header { background: #232e29; border-bottom-color: #2e3d36; }
+        body.dark-mode .volume-header h3 { color: #8fae9f; }
+        body.dark-mode .volume-header .vol-meta { color: #6a8a7a; }
+        body.dark-mode .chap-group-title { color: #6a8a7a; border-bottom-color: #2e3d36; }
+        body.dark-mode .chap-item a { color: #aaa; }
+        body.dark-mode .chap-item a:hover { color: #8fae9f; background: #232e29; }
+        body.dark-mode .chap-item.special a { color: #8fae9f; background: #1e2b24; border-color: #2e3d36; }
+        body.dark-mode .chap-item.special a:hover { background: #232e29; }
+        body.dark-mode .chap-item.extra a { color: #8a9fba; background: #1e2428; border-color: #2a3340; }
+        body.dark-mode .chap-item.extra a:hover { background: #222c36; }
+
+        /* ── NÚT NỔI ── */
+        .reader-controls-wrapper {
+            position: fixed; bottom: 30px; right: 30px;
+            z-index: 10000;
+            display: flex; flex-direction: column; align-items: flex-end; gap: 10px;
+        }
+        .reader-toggle-btn {
+            width: 48px; height: 48px; border-radius: 50%;
+            border: 2px solid #8fae9f; background: white; color: #4a6b5d;
+            font-size: 18px; cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15); transition: all 0.3s;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .reader-toggle-btn:hover { background: #4a6b5d; color: white; transform: scale(1.1); }
+        .reader-controls-group {
+            display: flex; flex-direction: column; gap: 10px;
+            overflow: hidden; max-height: 0; opacity: 0;
+            transition: max-height 0.35s ease, opacity 0.3s ease;
+        }
+        .reader-controls-group.open { max-height: 200px; opacity: 1; }
+        .reader-controls-group button {
+            width: 48px; height: 48px; border-radius: 50%;
+            border: 2px solid #8fae9f; background: white; color: #4a6b5d;
+            font-size: 15px; font-weight: bold; cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15); transition: all 0.3s;
+        }
+        .reader-controls-group button:hover { background: #4a6b5d; color: white; transform: scale(1.1); }
+
+        /* ── INFO CONTAINER ── */
+        .info-container {
+            max-width: 1000px; margin: 30px auto;
+            padding: 20px; background: #ffffff;
+            border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+        }
+        .header-title {
+            font-size: 0.9rem; color: #777; text-transform: uppercase;
+            border-bottom: 1px solid #dae5e0;
+            padding-bottom: 10px; margin-bottom: 20px;
+        }
+        .main-info { display: flex; gap: 40px; margin-bottom: 40px; }
+        .left-col { flex: 1; max-width: 250px; }
+        .cover-box {
+            width: 100%; height: 400px; border-radius: 4px;
+            box-shadow: 3px 3px 10px rgba(0,0,0,0.15);
+            object-fit: cover; margin-bottom: 20px;
+        }
+        .meta-details {
+            font-size: 0.9rem; line-height: 1.8; color: #444;
+            border-top: 1px dashed #dae5e0; padding-top: 15px;
+        }
+        .meta-details strong { color: #2d3a34; }
+        .status-full { color: #4a6b5d; font-weight: bold; }
+        .right-col { flex: 2; }
+        .novel-main-title {
+            font-size: 1.8rem; color: #4a6b5d;
+            text-align: center; margin-bottom: 10px; text-transform: uppercase;
+        }
+
+        /* ── Rating compact ── */
+        .rating-compact {
+            display: flex; flex-direction: column; align-items: center;
+            gap: 4px; margin-bottom: 18px; position: relative;
+        }
+        .star-row { display: flex; align-items: center; gap: 1px; }
+        .star-btn {
+            background: none; border: none; cursor: pointer;
+            font-size: 1.3rem; line-height: 1; padding: 0 1px;
+            transition: transform 0.15s; color: #ddd;
+        }
+        .star-btn:hover, .star-btn.hovered { color: #f5a623; transform: scale(1.2); }
+        .star-btn.voted { color: #f5a623; }
+        .rating-score-text { font-size: 0.8rem; color: #888; }
+        .rating-score-text strong { color: #4a6b5d; font-weight: 600; }
+        .voted-badge {
+            display: none; font-size: 0.72rem; color: #4a6b5d;
+            background: #eaf2ee; border: 1px solid #c8ddd5;
+            border-radius: 10px; padding: 1px 10px;
+        }
+        .star-tooltip-inline {
+            position: absolute; top: -32px; left: 50%; transform: translateX(-50%);
+            background: #fff; border: 1px solid #dae5e0; border-radius: 6px;
+            padding: 3px 10px; font-size: 0.82rem; color: #4a6b5d;
+            white-space: nowrap; pointer-events: none; opacity: 0;
+            transition: opacity 0.15s; box-shadow: 0 3px 10px rgba(0,0,0,0.08); z-index: 10;
+        }
+        .rating-compact:hover .star-tooltip-inline { opacity: 1; }
+
+        .summary-content { font-size: 1rem; line-height: 1.7; color: #333; text-align: justify; }
+        .summary-content p { margin-bottom: 15px; }
+
+        /* ════════════════════════════════════════
+           DANH SÁCH CHƯƠNG 2 QUYỂN
+        ════════════════════════════════════════ */
+        .chapter-section {
+            border-top: 1px solid #dae5e0;
+            padding-top: 30px;
+            margin-top: 10px;
+        }
+        .chapter-section-title {
+            font-size: 1.2rem; color: #4a6b5d; text-transform: uppercase;
+            margin-bottom: 24px; text-align: center;
+            border-bottom: 1px solid #dae5e0; padding-bottom: 10px; letter-spacing: 1px;
+        }
+
+        /* Tổng quan 2 quyển */
+        .volumes-overview {
+            display: flex; gap: 14px; margin-bottom: 28px; flex-wrap: wrap;
+        }
+        .vol-badge {
+            flex: 1; min-width: 180px;
+            background: linear-gradient(135deg, #eaf2ee 0%, #f4f8f5 100%);
+            border: 1px solid #c8ddd5; border-radius: 10px;
+            padding: 14px 18px; text-align: center;
+        }
+        .vol-badge .vb-name {
+            font-size: 0.72rem; font-weight: 600; color: #4a6b5d;
+            text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px;
+        }
+        .vol-badge .vb-count {
+            font-size: 1.5rem; font-weight: 700; color: #4a6b5d; line-height: 1.2;
+        }
+        .vol-badge .vb-label { font-size: 0.75rem; color: #8fae9f; }
+        body.dark-mode .vol-badge { background: #1e2b24; border-color: #2e3d36; }
+        body.dark-mode .vol-badge .vb-name { color: #8fae9f; }
+        body.dark-mode .vol-badge .vb-count { color: #dae5e0; }
+        body.dark-mode .vol-badge .vb-label { color: #6a8a7a; }
+
+        /* Khối từng quyển */
+        .volume-block {
+            border: 1px solid #dae5e0;
+            border-radius: 12px;
+            overflow: hidden;
+            margin-bottom: 24px;
+        }
+
+        /* Header quyển */
+        .volume-header {
+            display: flex; align-items: center; justify-content: space-between;
+            background: #f0f7f4;
+            border-bottom: 1px solid #dae5e0;
+            padding: 14px 20px;
+            cursor: pointer;
+            user-select: none;
+            transition: background 0.2s;
+        }
+        .volume-header:hover { background: #e4f0e8; }
+        .volume-header h3 {
+            font-size: 1rem; font-weight: 600; color: #4a6b5d;
+            text-transform: uppercase; letter-spacing: 0.5px; margin: 0;
+        }
+        .vol-meta { font-size: 0.8rem; color: #8fae9f; }
+        .vol-toggle { font-size: 1rem; color: #8fae9f; transition: transform 0.25s; }
+        .vol-toggle.open { transform: rotate(180deg); }
+
+        /* Nội dung quyển — ẩn/hiện */
+        .volume-body {
+            padding: 0 20px 16px;
+            display: block;
+        }
+        .volume-body.collapsed { display: none; }
+
+        /* Nhóm chương (Mở đầu / Chính / Ngoại truyện) */
+        .chap-group { margin-top: 18px; }
+        .chap-group-title {
+            font-size: 0.7rem; font-weight: 600; color: #8fae9f;
+            text-transform: uppercase; letter-spacing: 1.2px;
+            border-bottom: 1px dashed #dae5e0;
+            padding-bottom: 5px; margin-bottom: 10px;
+        }
+
+        /* Lưới link chương */
+        .chap-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+            gap: 6px;
+        }
+        .chap-grid.wide {
+            grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+        }
+
+        /* Từng ô chương */
+        .chap-item a {
+            display: block;
+            padding: 5px 10px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-size: 0.82rem;
+            color: #4a7060;
+            background: #f8fafA;
+            border: 1px solid #e8f0ec;
+            transition: all 0.18s;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .chap-item a:hover {
+            background: #eaf2ee;
+            color: #2d5a47;
+            border-color: #c8ddd5;
+            padding-left: 13px;
+        }
+
+        /* Mở đầu — nổi bật hơn */
+        .chap-item.special a {
+            background: #f0f7f4;
+            border-color: #c0d8cc;
+            color: #3a6050;
+            font-weight: 500;
+        }
+        .chap-item.special a:hover {
+            background: #dff0e8;
+            border-color: #8fae9f;
+        }
+
+        /* Ngoại truyện — màu khác biệt nhẹ */
+        .chap-item.extra a {
+            background: #f0f4f8;
+            border-color: #c8d4e0;
+            color: #3a5070;
+            font-style: italic;
+        }
+        .chap-item.extra a:hover {
+            background: #e0eaf4;
+            border-color: #8faece;
+        }
+
+        /* ── KHUNG BÌNH LUẬN ── */
+        .fb-main-comment-container {
+            max-width: 100%; margin: 50px auto 10px auto;
+            padding: 25px; background-color: #ffffff;
+            border: 1px solid #dae5e0; border-top: 4px solid #4a6b5d;
+            border-radius: 12px;
+        }
+        .discussion-header {
+            display: flex; justify-content: space-between; align-items: center;
+            gap: 10px; margin-bottom: 25px;
+            border-bottom: 1px dashed #dae5e0; padding-bottom: 15px;
+        }
+        .discussion-header-left { display: flex; align-items: center; gap: 10px; }
+        .discussion-header h3 {
+            color: #4a6b5d; font-size: 1.25rem; font-weight: 600;
+            text-transform: uppercase; letter-spacing: 0.5px; margin: 0;
+        }
+        .discussion-header .icon { font-size: 1.2rem; }
+        .comment-section { width: 100%; margin-top: 10px; min-height: 150px; }
+
+        .discussion-actions { display: flex; align-items: center; gap: 10px; }
+        .action-btn {
+            display: flex; align-items: center; gap: 6px;
+            padding: 7px 14px; border-radius: 20px; border: 1px solid #8fae9f;
+            background: #ffffff; color: #4a6b5d;
+            font-size: 0.85rem; font-weight: 500; cursor: pointer;
+            transition: all 0.25s ease; user-select: none; font-family: inherit;
+        }
+        .action-btn:hover { background-color: #f0f7f4; box-shadow: 0 3px 8px rgba(74,107,93,0.15); }
+        .action-btn.liked { background-color: #fff0f3; border-color: #e8a0b0; color: #c0556a; }
+        .action-btn.liked .heart-icon { animation: heartPop 0.35s ease; }
+        @keyframes heartPop {
+            0% { transform: scale(1); } 40% { transform: scale(1.45); }
+            70% { transform: scale(0.9); } 100% { transform: scale(1); }
+        }
+
+        /* ── SHARE MODAL ── */
+        .share-modal-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.35);
+            z-index: 200000; display: none; align-items: center; justify-content: center;
+        }
+        .share-modal-overlay.active { display: flex; }
+        .share-modal {
+            background: #ffffff; border-radius: 12px;
+            padding: 28px 24px 22px; width: 380px; max-width: 92vw;
+            box-shadow: 0 12px 40px rgba(0,0,0,0.18); animation: slideUp 0.25s ease;
+        }
+        @keyframes slideUp {
+            from { transform: translateY(20px); opacity: 0; }
+            to   { transform: translateY(0); opacity: 1; }
+        }
+        .share-modal h4 { color: #4a6b5d; font-size: 1.05rem; margin-bottom: 16px; text-align: center; }
+        .share-link-row { display: flex; gap: 8px; align-items: center; }
+        .share-link-input {
+            flex: 1; padding: 9px 12px; border: 1px solid #c8ddd5; border-radius: 8px;
+            font-size: 0.85rem; color: #444; background: #f8faf9;
+            outline: none; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; min-width: 0;
+        }
+        .copy-link-btn {
+            padding: 9px 16px; border-radius: 8px; background: #4a6b5d;
+            color: #ffffff; border: none; font-size: 0.85rem; font-weight: 600;
+            cursor: pointer; transition: all 0.2s; white-space: nowrap; font-family: inherit;
+        }
+        .copy-link-btn:hover { background: #3a5a4d; }
+        .copy-link-btn.copied { background: #6aaa88; }
+        .share-modal-close {
+            display: block; width: 100%; margin-top: 14px; padding: 8px;
+            background: none; border: none; color: #999; font-size: 0.85rem;
+            cursor: pointer; text-align: center; font-family: inherit;
+        }
+        .share-modal-close:hover { color: #555; }
+
+        @media (max-width: 768px) {
+            .main-info { flex-direction: column; align-items: center; }
+            .left-col { max-width: 100%; text-align: center; }
+            .chap-grid { grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); }
+            .volumes-overview { flex-direction: column; }
+        }
+        @media (max-width: 600px) {
+            .discussion-header { flex-direction: column; align-items: flex-start; gap: 12px; }
+            .volume-header { flex-wrap: wrap; gap: 6px; }
+        }
+    </style>
+</head>
+<body>
+
+<!-- ── NÚT NỔI ── -->
+<div class="reader-controls-wrapper">
+    <div class="reader-controls-group" id="reader-group">
+        <button onclick="changeFontSize(1)" title="Phóng to chữ">A+</button>
+        <button onclick="changeFontSize(-1)" title="Thu nhỏ chữ">A-</button>
+        <button onclick="toggleDarkMode()" id="dark-mode-btn" title="Đổi màu nền">🌙</button>
+    </div>
+    <button class="reader-toggle-btn" id="reader-toggle" onclick="toggleReaderControls()" title="Tuỳ chỉnh">⚙️</button>
+</div>
+
+<script>
+function toggleReaderControls() {
+    var group = document.getElementById('reader-group');
+    var btn   = document.getElementById('reader-toggle');
+    var open  = group.classList.toggle('open');
+    btn.style.background = open ? '#4a6b5d' : '';
+    btn.style.color      = open ? '#ffffff'  : '';
+}
+function toggleDarkMode() {
+    document.body.classList.toggle('dark-mode');
+    var isDark = document.body.classList.contains('dark-mode');
+    localStorage.setItem('night-mode', isDark ? 'on' : 'off');
+    document.getElementById('dark-mode-btn').innerText = isDark ? '☀️' : '🌙';
+    document.querySelectorAll('.utterances-frame').forEach(function(f) {
+        f.contentWindow.postMessage({ type:'set-theme', theme: isDark ? 'github-dark' : 'github-light' }, 'https://utteranc.es');
+    });
+}
+function changeFontSize(delta) {
+    var el = document.querySelector('.info-container') || document.body;
+    el.style.fontSize = (parseFloat(window.getComputedStyle(el).fontSize) + delta) + 'px';
+}
+(function() {
+    if (localStorage.getItem('night-mode') === 'on') {
+        document.body.classList.add('dark-mode');
+        setTimeout(function() {
+            var b = document.getElementById('dark-mode-btn');
+            if (b) b.innerText = '☀️';
+        }, 80);
+    }
+})();
+</script>
+
+<!-- ── NAVBAR ── -->
+<header class="navbar">
+    <div class="logo">🌿 Góc nhỏ của Khiết</div>
+    <nav class="nav-links"><a href="../index.html">Trang Chủ</a></nav>
+</header>
+
+<!-- ── NỘI DUNG ── -->
+<main class="info-container">
+    <div class="header-title">Thông Tin Truyện</div>
+
+    <div class="main-info">
+        <div class="left-col">
+            <img class="cover-box" src="../images/dehoangthu.jpg" alt="Đế Hoàng Thư">
+            <div class="meta-details">
+                <p><strong>Tác giả:</strong> ...</p>
+                <p><strong>Thể loại:</strong> Ngôn tình, Cổ đại</p>
+                <p><strong>Trạng thái:</strong> <span class="status-full">Hoàn thành</span></p>
+                <p><strong>Số chương:</strong> 246 chương + 5 ngoại truyện</p>
+            </div>
+        </div>
+        <div class="right-col">
+            <h1 class="novel-main-title">ĐẾ HOÀNG THƯ</h1>
+
+            <!-- Rating -->
+            <div class="rating-compact" id="rating-compact">
+                <div class="star-tooltip-inline" id="star-tooltip"></div>
+                <div class="star-row" id="star-row"></div>
+                <div class="rating-score-text" id="rating-score-text">Đang tải…</div>
+                <div class="voted-badge" id="voted-badge">✓ Bạn đã đánh giá</div>
+            </div>
+
+            <div class="summary-content">
+                <p>Tóm tắt truyện...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- ════ DANH SÁCH CHƯƠNG ════ -->
+    <div class="chapter-section">
+        <h2 class="chapter-section-title">📖 Danh Sách Chương</h2>
+
+        <!-- Tổng quan nhanh -->
+        <div class="volumes-overview">
+            <div class="vol-badge">
+                <div class="vb-name">📘 Quyển 1</div>
+                <div class="vb-count">138</div>
+                <div class="vb-label">1 mở đầu · 136 chương · 3 ngoại truyện</div>
+            </div>
+            <div class="vol-badge">
+                <div class="vb-name">📗 Quyển 2</div>
+                <div class="vb-count">108</div>
+                <div class="vb-label">1 mở đầu · 105 chương · 2 ngoại truyện</div>
+            </div>
+            <div class="vol-badge">
+                <div class="vb-name">📚 Tổng cộng</div>
+                <div class="vb-count">246</div>
+                <div class="vb-label">chương + 5 ngoại truyện</div>
+            </div>
+        </div>
+
+        <!-- ══ QUYỂN 1 ══ -->
+        <div class="volume-block">
+            <div class="volume-header" onclick="toggleVolume('vol1')">
+                <div>
+                    <h3>📘 Quyển 1</h3>
+                    <span class="vol-meta">1 mở đầu · 136 chương · 3 ngoại truyện</span>
+                </div>
+                <span class="vol-toggle open" id="toggle-vol1">▼</span>
+            </div>
+            <div class="volume-body" id="vol1">
+
+                <!-- Mở đầu -->
+                <div class="chap-group">
+                    <div class="chap-group-title">✦ Mở đầu</div>
+                    <div class="chap-grid wide">
+                        <div class="chap-item special">
+                            <a href="../dehoangthu/dehoangthuq1modau.html">📜 Mở đầu Quyển 1</a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Chương chính -->
+                <div class="chap-group">
+                    <div class="chap-group-title">✦ Chương chính (136 chương)</div>
+                    <div class="chap-grid" id="q1-grid"></div>
+                </div>
+
+                <!-- Ngoại truyện -->
+                <div class="chap-group">
+                    <div class="chap-group-title">✦ Ngoại truyện</div>
+                    <div class="chap-grid wide">
+                        <div class="chap-item extra">
+                            <a href="../dehoangthu/dehoangthuq1-ngoaitruyen1.html">🌸 Ngoại truyện 1</a>
+                        </div>
+                        <div class="chap-item extra">
+                            <a href="../dehoangthu/dehoangthuq1-ngoaitruyen2.html">🌸 Ngoại truyện 2</a>
+                        </div>
+                        <div class="chap-item extra">
+                            <a href="../dehoangthu/dehoangthuq1-ngoaitruyen3.html">🌸 Ngoại truyện 3</a>
+                        </div>
+                    </div>
+                </div>
+
+            </div><!-- /volume-body vol1 -->
+        </div><!-- /volume-block -->
+
+        <!-- ══ QUYỂN 2 ══ -->
+        <div class="volume-block">
+            <div class="volume-header" onclick="toggleVolume('vol2')">
+                <div>
+                    <h3>📗 Quyển 2</h3>
+                    <span class="vol-meta">1 mở đầu · 105 chương · 2 ngoại truyện</span>
+                </div>
+                <span class="vol-toggle open" id="toggle-vol2">▼</span>
+            </div>
+            <div class="volume-body" id="vol2">
+
+                <!-- Mở đầu -->
+                <div class="chap-group">
+                    <div class="chap-group-title">✦ Mở đầu</div>
+                    <div class="chap-grid wide">
+                        <div class="chap-item special">
+                            <a href="../dehoangthu/dehoangthuq2modau.html">📜 Mở đầu Quyển 2</a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Chương chính -->
+                <div class="chap-group">
+                    <div class="chap-group-title">✦ Chương chính (105 chương)</div>
+                    <div class="chap-grid" id="q2-grid"></div>
+                </div>
+
+                <!-- Ngoại truyện -->
+                <div class="chap-group">
+                    <div class="chap-group-title">✦ Ngoại truyện</div>
+                    <div class="chap-grid wide">
+                        <div class="chap-item extra">
+                            <a href="../dehoangthu/dehoangthuq2-ngoaitruyen1.html">🌸 Ngoại truyện 1</a>
+                        </div>
+                        <div class="chap-item extra">
+                            <a href="../dehoangthu/dehoangthuq2ngoaitruyen2.html">🌸 Ngoại truyện 2</a>
+                        </div>
+                    </div>
+                </div>
+
+            </div><!-- /volume-body vol2 -->
+        </div><!-- /volume-block -->
+
+    </div><!-- /chapter-section -->
+
+    <!-- KHUNG BÌNH LUẬN -->
+    <div class="fb-main-comment-container">
+        <div class="discussion-header">
+            <div class="discussion-header-left">
+                <span class="icon">🌿</span>
+                <h3>Đánh giá &amp; Bình luận truyện</h3>
+                <span class="icon">🌸</span>
+            </div>
+            <div class="discussion-actions">
+                <button class="action-btn" id="like-btn" onclick="toggleLike()" title="Thả tim truyện này">
+                    <span class="heart-icon">🤍</span>
+                    <span id="like-count">0</span>
+                </button>
+                <button class="action-btn" onclick="openShareModal()" title="Chia sẻ trang này">
+                    🔗 Chia sẻ
+                </button>
+            </div>
+        </div>
+        <div class="comment-section">
+            <script src="https://utteranc.es/client.js"
+                    repo="gocnhocuakhiet/gocnhocuakhiet.github.io"
+                    issue-term="pathname"
+                    label="comment"
+                    theme="github-light"
+                    crossorigin="anonymous"
+                    async>
+            </script>
+        </div>
+    </div>
+</main>
+
+<!-- ── SHARE MODAL ── -->
+<div class="share-modal-overlay" id="share-modal-overlay" onclick="handleOverlayClick(event)">
+    <div class="share-modal">
+        <h4>🔗 Chia sẻ trang này</h4>
+        <div class="share-link-row">
+            <input class="share-link-input" id="share-link-input" type="text" readonly>
+            <button class="copy-link-btn" id="copy-link-btn" onclick="copyLink()">Sao chép</button>
+        </div>
+        <button class="share-modal-close" onclick="closeShareModal()">Đóng</button>
+    </div>
+</div>
+
+<footer class="footer">
+    <p>© 2026 Góc nhỏ của Khiết. Được lưu trữ miễn phí trên GitHub Pages.</p>
+</footer>
+
+<!-- ════ SCRIPT ════ -->
+<script>
+/* ── Tạo link chương tự động ── */
+document.addEventListener('DOMContentLoaded', function() {
+    /* Quyển 1: chương 1-136 */
+    var g1 = document.getElementById('q1-grid');
+    for (var i = 1; i <= 136; i++) {
+        var d = document.createElement('div');
+        d.className = 'chap-item';
+        d.innerHTML = '<a href="../dehoangthu/dehoangthuq1-' + i + '.html">Chương ' + i + '</a>';
+        g1.appendChild(d);
+    }
+
+    /* Quyển 2: chương 1-105 */
+    var g2 = document.getElementById('q2-grid');
+    for (var j = 1; j <= 105; j++) {
+        var e = document.createElement('div');
+        e.className = 'chap-item';
+        e.innerHTML = '<a href="../dehoangthu/dehoangthuq2-' + j + '.html">Chương ' + j + '</a>';
+        g2.appendChild(e);
+    }
+
+    initRating();
+    initLike();
+});
+
+/* ── Ẩn/hiện quyển ── */
+function toggleVolume(id) {
+    var body    = document.getElementById(id);
+    var toggle  = document.getElementById('toggle-' + id);
+    var collapsed = body.classList.toggle('collapsed');
+    toggle.classList.toggle('open', !collapsed);
+}
+
+/* ── Rating ── */
+var GH_OWNER     = 'gocnhocuakhiet';
+var GH_REPO      = 'gocnhocuakhiet.github.io';
+var RATING_LABEL = 'rating';
+var RATING_ISSUE_TITLE = 'Đánh giá: Đế Hoàng Thư';
+var GH_API = 'https://api.github.com/repos/' + GH_OWNER + '/' + GH_REPO;
+var myVoteKey = 'rating-vote-dehoangthu';
+
+var STAR_MOODS = [
+    '', '-- __ --', '(¬_¬)', '(￣ヘ￣)', '(・_・)', '(＾▽＾)',
+    '(｡◕‿◕｡)', '(★ω★)', '(≧◡≦)', '(*≧∀≦*)', '(๑˃̵ᴗ˂̵)ﻭ'
+];
+
+var totalStars = 0;
+var totalVotes = 0;
+var myVote = parseInt(localStorage.getItem(myVoteKey) || '0', 10);
+
+function initRating() {
+    var row     = document.getElementById('star-row');
+    var tooltip = document.getElementById('star-tooltip');
+    for (var i = 1; i <= 10; i++) {
+        (function(n) {
+            var btn = document.createElement('button');
+            btn.className = 'star-btn';
+            btn.textContent = '★';
+            btn.setAttribute('aria-label', n + ' sao');
+            btn.dataset.star = n;
+            btn.addEventListener('mouseenter', function() {
+                highlightStars(n); tooltip.textContent = STAR_MOODS[n];
+            });
+            btn.addEventListener('click', function() { submitRating(n); });
+            row.appendChild(btn);
+        })(i);
+    }
+    row.addEventListener('mouseleave', function() {
+        resetStars(); tooltip.textContent = myVote ? STAR_MOODS[myVote] : '';
+    });
+    if (myVote) {
+        tooltip.textContent = STAR_MOODS[myVote];
+        document.getElementById('voted-badge').style.display = 'inline-block';
+    }
+    resetStars();
+    loadRatingData();
+}
+
+function highlightStars(n) {
+    document.querySelectorAll('.star-btn').forEach(function(btn) {
+        var s = parseInt(btn.dataset.star, 10);
+        btn.classList.toggle('hovered', s <= n);
+        btn.classList.remove('voted');
+    });
+}
+function resetStars() {
+    document.querySelectorAll('.star-btn').forEach(function(btn) {
+        var s = parseInt(btn.dataset.star, 10);
+        btn.classList.remove('hovered');
+        btn.classList.toggle('voted', myVote > 0 && s <= myVote);
+    });
+}
+function submitRating(stars) {
+    if (myVote > 0) { alert('Bạn đã đánh giá rồi! (' + myVote + '/10 ⭐)'); return; }
+    myVote = stars;
+    localStorage.setItem(myVoteKey, stars);
+    resetStars();
+    document.getElementById('voted-badge').style.display = 'inline-block';
+    document.getElementById('star-tooltip').textContent = STAR_MOODS[stars];
+    totalStars += stars; totalVotes += 1;
+    updateDisplay();
+}
+async function findRatingIssue() {
+    try {
+        var q = encodeURIComponent('repo:' + GH_OWNER + '/' + GH_REPO + ' label:' + RATING_LABEL + ' "' + RATING_ISSUE_TITLE + '" in:title is:issue');
+        var r = await fetch('https://api.github.com/search/issues?q=' + q + '&per_page=1', { headers: { Accept: 'application/vnd.github+json' } });
+        var d = await r.json();
+        return (d.items && d.items.length > 0) ? d.items[0].number : null;
+    } catch(e) { return null; }
+}
+async function loadRatingData() {
+    try {
+        var num = await findRatingIssue();
+        if (!num) { updateDisplay(); return; }
+        var r = await fetch(GH_API + '/issues/' + num + '/comments?per_page=100', { headers: { Accept: 'application/vnd.github+json' } });
+        if (!r.ok) { updateDisplay(); return; }
+        var cmts = await r.json();
+        totalStars = 0; totalVotes = 0;
+        cmts.forEach(function(c) {
+            var m = c.body.match(/\((\d+)\/10\)/);
+            if (m) { var s = parseInt(m[1],10); if (s >= 1 && s <= 10) { totalStars += s; totalVotes++; } }
+        });
+        updateDisplay();
+    } catch(e) { updateDisplay(); }
+}
+function updateDisplay() {
+    var el = document.getElementById('rating-score-text');
+    if (totalVotes === 0) {
+        el.innerHTML = 'Chưa có đánh giá — hãy là người đầu tiên!';
+    } else {
+        var avg = (totalStars / totalVotes).toFixed(1);
+        el.innerHTML = 'Đánh giá: <strong>' + avg + '/10</strong> từ <strong>' + totalVotes + '</strong> lượt';
+    }
+    if (myVote > 0) document.getElementById('voted-badge').style.display = 'inline-block';
+    resetStars();
+}
+
+/* ── Like & Share ── */
+function initLike() {
+    var key = 'like-' + window.location.pathname;
+    var ck  = 'likecount-' + window.location.pathname;
+    updateLikeUI(localStorage.getItem(key) === '1', parseInt(localStorage.getItem(ck) || '0', 10));
+}
+function toggleLike() {
+    var key = 'like-' + window.location.pathname;
+    var ck  = 'likecount-' + window.location.pathname;
+    var liked = localStorage.getItem(key) === '1';
+    var count = parseInt(localStorage.getItem(ck) || '0', 10);
+    liked = !liked; count = liked ? count + 1 : Math.max(0, count - 1);
+    localStorage.setItem(key, liked ? '1' : '0'); localStorage.setItem(ck, count);
+    updateLikeUI(liked, count);
+}
+function updateLikeUI(liked, count) {
+    var btn = document.getElementById('like-btn');
+    btn.querySelector('.heart-icon').textContent = liked ? '❤️' : '🤍';
+    document.getElementById('like-count').textContent = count;
+    liked ? btn.classList.add('liked') : btn.classList.remove('liked');
+}
+function openShareModal() {
+    document.getElementById('share-link-input').value = window.location.href;
+    document.getElementById('copy-link-btn').textContent = 'Sao chép';
+    document.getElementById('copy-link-btn').classList.remove('copied');
+    document.getElementById('share-modal-overlay').classList.add('active');
+}
+function closeShareModal() { document.getElementById('share-modal-overlay').classList.remove('active'); }
+function handleOverlayClick(e) { if (e.target === document.getElementById('share-modal-overlay')) closeShareModal(); }
+function copyLink() {
+    var input = document.getElementById('share-link-input');
+    var btn   = document.getElementById('copy-link-btn');
+    navigator.clipboard.writeText(input.value).then(function() {
+        btn.textContent = '✓ Đã sao chép'; btn.classList.add('copied');
+        setTimeout(function() { btn.textContent = 'Sao chép'; btn.classList.remove('copied'); }, 2000);
+    }).catch(function() { input.select(); document.execCommand('copy'); });
+}
+</script>
+
+</body>
+</html>
