@@ -1,0 +1,749 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <link rel="stylesheet" href="../style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chia Tay Thôi Mà - Chương 53</title>
+    
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f1f7f4;
+            color: #2d3a34;
+            line-height: 1.8;
+        }
+
+        .navbar {
+            background-color: #ffffff;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 10%;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        .navbar .logo { font-size: 1.2rem; font-weight: bold; color: #4a6b5d; text-decoration: none; }
+        .nav-links a { color: #555; text-decoration: none; font-size: 0.95rem; transition: color 0.3s; }
+        .nav-links a:hover { color: #4a6b5d; }
+
+        .story-container {
+            max-width: 700px;
+            margin: 40px auto;
+            padding: 30px;
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.02);
+        }
+
+        .story-header {
+            text-align: center;
+            margin-bottom: 35px;
+            border-bottom: 1px dashed #8fae9f;
+            padding-bottom: 20px;
+        }
+        .story-header .novel-name {
+            font-size: 0.95rem; color: #777;
+            text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px;
+        }
+        .story-header .chapter-title { color: #4a6b5d; font-size: 1.6rem; font-weight: 600; }
+
+        .story-content { font-size: 1.15rem; color: #333333; text-align: justify; }
+        .story-content p { margin-bottom: 22px; text-indent: 25px; }
+
+        .reading-nav {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-top: 50px; padding-top: 25px; border-top: 1px dashed #8fae9f;
+        }
+        .nav-btn {
+            display: inline-block; padding: 10px 20px;
+            background-color: #ffffff; color: #4a6b5d;
+            text-decoration: none; border: 1px solid #8fae9f;
+            border-radius: 20px; font-size: 0.9rem; font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        .nav-btn:hover { background-color: #4a6b5d; color: #ffffff; border-color: #4a6b5d; box-shadow: 0 4px 8px rgba(74,107,93,0.2); }
+        .nav-btn.disabled { color: #bbb; border-color: #e0e0e0; background-color: #fafafa; pointer-events: none; box-shadow: none; }
+
+        @media (max-width: 480px) {
+            .story-container { padding: 15px; margin: 20px auto; }
+            .nav-btn { padding: 8px 14px; font-size: 0.8rem; }
+            .comment-sidebar { width: 100%; right: -100%; }
+        }
+
+        /* ── Dark mode ── */
+        body.dark-mode { background-color: #131a17; color: #dae5e0; }
+        body.dark-mode .navbar { background-color: #1b2420; box-shadow: 0 2px 5px rgba(0,0,0,0.3); }
+        body.dark-mode .navbar .logo { color: #8fae9f; }
+        body.dark-mode .nav-links a { color: #aaa; }
+        body.dark-mode .story-container { background-color: #1b2420; box-shadow: 0 2px 10px rgba(0,0,0,0.2); }
+        body.dark-mode .story-header .novel-name { color: #8fae9f; }
+        body.dark-mode .story-header .chapter-title { color: #8fae9f; }
+        body.dark-mode .story-content { color: #dae5e0; }
+        body.dark-mode .nav-btn { background-color: #1b2420; color: #8fae9f; border-color: #4a6b5d; }
+        body.dark-mode .nav-btn:hover { background-color: #4a6b5d; color: #ffffff; }
+        body.dark-mode .nav-btn.disabled { color: #444; border-color: #2e3d36; background-color: #161e1b; }
+
+        /* ── Reader controls ── */
+        .reader-controls-wrapper {
+            position: fixed; bottom: 30px; right: 30px;
+            z-index: 10000;
+            display: flex; flex-direction: column; align-items: flex-end; gap: 10px;
+        }
+        .reader-toggle-btn {
+            width: 48px; height: 48px; border-radius: 50%;
+            border: 2px solid #8fae9f; background: white; color: #4a6b5d;
+            font-size: 18px; cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15); transition: all 0.3s;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .reader-toggle-btn:hover { background: #4a6b5d; color: white; transform: scale(1.1); }
+        .reader-controls-group {
+            display: flex; flex-direction: column; gap: 10px;
+            overflow: hidden; max-height: 0; opacity: 0;
+            transition: max-height 0.35s ease, opacity 0.3s ease;
+        }
+        .reader-controls-group.open { max-height: 200px; opacity: 1; }
+        .reader-controls-group button {
+            width: 48px; height: 48px; border-radius: 50%;
+            border: 2px solid #8fae9f; background: white; color: #4a6b5d;
+            font-size: 15px; font-weight: bold; cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15); transition: all 0.3s;
+        }
+        .reader-controls-group button:hover { background: #4a6b5d; color: white; transform: scale(1.1); }
+        body.dark-mode .reader-toggle-btn,
+        body.dark-mode .reader-controls-group button { background: #1b2420; color: #8fae9f; border-color: #4a6b5d; }
+        body.dark-mode .reader-toggle-btn:hover,
+        body.dark-mode .reader-controls-group button:hover { background: #4a6b5d; color: white; }
+
+        /* ── Comment row ── */
+        .comment-row {
+            display: flex; justify-content: space-between;
+            align-items: flex-start; gap: 15px;
+            margin-bottom: 22px; width: 100%;
+        }
+        .comment-row p { flex: 1; margin-bottom: 0 !important; }
+
+        /* ── Badge ── */
+        .comment-badge {
+            cursor: pointer; flex-shrink: 0; margin-top: 6px;
+            width: 30px; height: 30px; border-radius: 50%;
+            background-color: #eaf2ee; color: #4a6b5d;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.9rem; line-height: 1;
+            transition: all 0.2s ease; user-select: none; border: none;
+        }
+        .comment-badge:hover { background-color: #4a6b5d; color: #ffffff; transform: scale(1.12); }
+        body.dark-mode .comment-badge { background-color: #25332c; color: #8fae9f; }
+        body.dark-mode .comment-badge:hover { background-color: #4a6b5d; color: #ffffff; }
+
+        /* ── Sidebar ── */
+        .comment-sidebar {
+            position: fixed; top: 0; right: -420px; width: 400px; height: 100%;
+            background: #ffffff;
+            box-shadow: -5px 0 15px rgba(0,0,0,0.05);
+            z-index: 100000;
+            transition: right 0.4s cubic-bezier(0.25,0.8,0.25,1);
+            padding: 24px; overflow-y: auto; box-sizing: border-box;
+        }
+        .comment-sidebar.active { right: 0; }
+        .sidebar-header {
+            display: flex; justify-content: space-between; align-items: center;
+            border-bottom: 1px solid #dae5e0; padding-bottom: 12px; margin-bottom: 16px;
+        }
+        .sidebar-header h4 { color: #4a6b5d; margin: 0; }
+        .close-sidebar-btn { background: none; border: none; font-size: 1.2rem; color: #999; cursor: pointer; }
+        .quoted-paragraph-box {
+            background: #f0f7f4; border-left: 3px solid #8fae9f;
+            border-radius: 4px; padding: 10px 14px;
+            font-size: 0.88rem; color: #4a6b5d; font-style: italic;
+            line-height: 1.5; margin-bottom: 12px;
+        }
+        .sidebar-mention-hint {
+            font-size: 0.8rem; color: #888;
+            background: #f8faf9; border: 1px dashed #c8ddd5;
+            border-radius: 6px; padding: 8px 12px; margin-bottom: 14px; line-height: 1.5;
+        }
+        .sidebar-mention-hint code { background: #e4efe9; color: #4a6b5d; padding: 1px 5px; border-radius: 4px; font-size: 0.78rem; }
+        body.dark-mode .sidebar-mention-hint { background: #1e2b24; border-color: #2e3d36; color: #7a9a8a; }
+        body.dark-mode .sidebar-mention-hint code { background: #2a3830; color: #8fae9f; }
+        .sidebar-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.2); z-index: 99999; display: none;
+        }
+        .sidebar-overlay.active { display: block; }
+        .sidebar-loading {
+            text-align: center; padding: 30px 0;
+            color: #aaa; font-size: 0.9rem; font-style: italic;
+        }
+
+        /* ── Discussion box ── */
+        .chapter-discussion-box {
+            max-width: 700px; margin: 30px auto 50px auto;
+            padding: 25px; background-color: #ffffff;
+            border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.02);
+        }
+        .discussion-header {
+            display: flex; justify-content: space-between; align-items: center;
+            gap: 10px; margin-bottom: 25px;
+            border-bottom: 1px dashed #dae5e0; padding-bottom: 15px;
+        }
+        .discussion-header-left { display: flex; align-items: center; gap: 10px; }
+        .discussion-header h3 { color: #4a6b5d; font-size: 1.2rem; margin: 0; }
+        .discussion-actions { display: flex; align-items: center; gap: 10px; }
+        .action-btn {
+            display: flex; align-items: center; gap: 6px;
+            padding: 7px 14px; border-radius: 20px; border: 1px solid #8fae9f;
+            background: #ffffff; color: #4a6b5d;
+            font-size: 0.85rem; font-weight: 500; cursor: pointer;
+            transition: all 0.25s ease; user-select: none;
+        }
+        .action-btn:hover { background-color: #f0f7f4; box-shadow: 0 3px 8px rgba(74,107,93,0.15); }
+        .action-btn.liked { background-color: #fff0f3; border-color: #e8a0b0; color: #c0556a; }
+        .action-btn.liked .heart-icon { animation: heartPop 0.35s ease; }
+        @keyframes heartPop {
+            0% { transform: scale(1); } 40% { transform: scale(1.45); }
+            70% { transform: scale(0.9); } 100% { transform: scale(1); }
+        }
+        body.dark-mode .action-btn { background: #1b2420; color: #8fae9f; border-color: #4a6b5d; }
+        body.dark-mode .action-btn:hover { background-color: #232e29; }
+        body.dark-mode .action-btn.liked { background-color: #2a1e22; border-color: #7a3a4a; color: #e08090; }
+        .comment-section { width: 100%; min-height: 150px; }
+
+        body.dark-mode .chapter-discussion-box,
+        body.dark-mode .comment-sidebar { background-color: #1b2420 !important; }
+        body.dark-mode .discussion-header,
+        body.dark-mode .sidebar-header { border-bottom-color: #2e3d36 !important; }
+        body.dark-mode .discussion-header h3,
+        body.dark-mode .sidebar-header h4 { color: #8fae9f !important; }
+        body.dark-mode .quoted-paragraph-box { background: #232e29; border-left-color: #4a6b5d; color: #8fae9f; }
+
+        /* ── Share modal ── */
+        .share-modal-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.35);
+            z-index: 200000; display: none; align-items: center; justify-content: center;
+        }
+        .share-modal-overlay.active { display: flex; }
+        .share-modal {
+            background: #ffffff; border-radius: 12px;
+            padding: 28px 24px 22px; width: 380px; max-width: 92vw;
+            box-shadow: 0 12px 40px rgba(0,0,0,0.18);
+            animation: slideUp 0.25s ease;
+        }
+        @keyframes slideUp {
+            from { transform: translateY(20px); opacity: 0; }
+            to   { transform: translateY(0); opacity: 1; }
+        }
+        .share-modal h4 { color: #4a6b5d; font-size: 1.05rem; margin-bottom: 16px; text-align: center; }
+        .share-link-row { display: flex; gap: 8px; align-items: center; }
+        .share-link-input {
+            flex: 1; padding: 9px 12px; border: 1px solid #c8ddd5; border-radius: 8px;
+            font-size: 0.85rem; color: #444; background: #f8faf9;
+            outline: none; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
+        }
+        .copy-link-btn {
+            padding: 9px 16px; border-radius: 8px;
+            background: #4a6b5d; color: #ffffff; border: none;
+            font-size: 0.85rem; font-weight: 600; cursor: pointer;
+            transition: all 0.2s; white-space: nowrap;
+        }
+        .copy-link-btn:hover { background: #3a5a4d; }
+        .copy-link-btn.copied { background: #6aaa88; }
+        .share-modal-close {
+            display: block; width: 100%; margin-top: 14px;
+            padding: 8px; background: none; border: none;
+            color: #999; font-size: 0.85rem; cursor: pointer; text-align: center;
+        }
+        .share-modal-close:hover { color: #555; }
+        body.dark-mode .share-modal { background: #1b2420; }
+        body.dark-mode .share-modal h4 { color: #8fae9f; }
+        body.dark-mode .share-link-input { background: #232e29; border-color: #3a5040; color: #dae5e0; }
+        body.dark-mode .share-modal-close { color: #6a8a7a; }
+    </style>
+</head>
+<body>
+
+<!-- ── NÚT NỔI ── -->
+<div class="reader-controls-wrapper">
+    <div class="reader-controls-group" id="reader-group">
+        <button onclick="changeFontSize(1)" title="Phóng to chữ">A+</button>
+        <button onclick="changeFontSize(-1)" title="Thu nhỏ chữ">A-</button>
+        <button onclick="toggleDarkMode()" id="dark-mode-btn" title="Đổi màu nền">🌙</button>
+    </div>
+    <button class="reader-toggle-btn" id="reader-toggle" onclick="toggleReaderControls()" title="Tuỳ chỉnh đọc">⚙️</button>
+</div>
+
+<script>
+function toggleReaderControls() {
+    var group = document.getElementById('reader-group');
+    var btn   = document.getElementById('reader-toggle');
+    var isOpen = group.classList.toggle('open');
+    btn.style.background = isOpen ? '#4a6b5d' : '';
+    btn.style.color      = isOpen ? '#ffffff'  : '';
+}
+function toggleDarkMode() {
+    document.body.classList.toggle('dark-mode');
+    var isDark = document.body.classList.contains('dark-mode');
+    localStorage.setItem('night-mode', isDark ? 'on' : 'off');
+    document.getElementById('dark-mode-btn').innerText = isDark ? '☀️' : '🌙';
+    syncUtterancesTheme(isDark);
+}
+function changeFontSize(delta) {
+    var content = document.querySelector('.story-content') || document.body;
+    var cur = parseFloat(window.getComputedStyle(content).fontSize);
+    content.style.fontSize = (cur + delta) + 'px';
+}
+function syncUtterancesTheme(isDark) {
+    var theme = isDark ? 'github-dark' : 'github-light';
+    document.querySelectorAll('.utterances-frame').forEach(function(f) {
+        f.contentWindow.postMessage({ type: 'set-theme', theme: theme }, 'https://utteranc.es');
+    });
+}
+(function() {
+    if (localStorage.getItem('night-mode') === 'on') {
+        document.body.classList.add('dark-mode');
+        setTimeout(function() {
+            var b = document.getElementById('dark-mode-btn');
+            if (b) b.innerText = '☀️';
+        }, 80);
+    }
+})();
+</script>
+
+<!-- ── NAVBAR ── -->
+<header class="navbar">
+    <a href="../index.html" class="logo">🌿 Góc nhỏ của Khiết</a>
+    <nav class="nav-links"><a href="../index.html">Trang Chủ</a></nav>
+</header>
+
+<!-- ── KHUNG ĐỌC ── -->
+<main class="story-container">
+    <div class="story-header">
+        <p class="novel-name">Chia Tay Thôi Mà, Sao Anh Ta Bỗng Dưng Điên Thế</p>
+        <h1 class="chapter-title">Chương 53</h1>
+    </div>
+
+    <article class="story-content">
+        <p>“Đã 11 giờ rồi, lúc nãy anh còn đang bàn công việc với trợ lý Trương sao?” Phương Nhiên Tri tò mò hỏi về thói quen làm thêm giờ của Lục Tễ Hành, CEO tập đoàn Lục thị “Ngày nào cũng bận rộn như vậy, không biết trợ lý Trương có âm thầm oán trách anh là... tư bản vô tình không?”</p>
+        <p>Lục Tễ Hành đã vệ sinh cá nhân xong xuôi, chiếc điện thoại không biết bị quăng đi đâu mất.</p>
+        <p>Dùng xong là vứt.</p>
+        <p>Tay nhà tư bản trống không, chẳng còn công cụ nào để bắt nhân viên làm việc cật lực ngày đêm nữa. Sau đó, anh khoác tay ôm lấy eo thon nhỏ nhắn của Phương Nhiên Tri.</p>
+        <p>Thực ra, anh bàn với Trương Trình không phải chuyện công ty mà là việc riêng.</p>
+        <p>Theo sát Uông Thu Phàm.</p>
+        <p>Lục Tễ Hành phải chắc chắn Uông Thu Phàm không có bản sao lưu nào.</p>
+        <p>Những chuyện này chưa thể nói với Phương Nhiên Tri.</p>
+        <p>Nói ra chỉ khiến cậu thêm phiền muộn. Anh đợi mọi thứ ổn định sẽ giải thích sau.</p>
+        <p>Nếu lúc đó Chỉ Chỉ muốn nói, anh sẽ lắng nghe và đồng hành; nếu không muốn, anh cũng không ép.</p>
+        <p>Vừa rồi Trương Trình đang báo cáo tình hình mới nhất:</p>
+        <p>Uông Thu Phàm lúc 9 giờ 10 phút tối mang theo chiếc máy tính hỏng ra khỏi nhà.</p>
+        <p>Chiếc máy tính có vẻ bị đập vỡ, phần bản lề gãy rời.</p>
+        <p>Ông ta đi thẳng đến một cửa hàng sửa chữa.</p>
+        <p>Mặt mày hung dữ, nhưng cái đầu quấn băng trắng xóa như xác ướp đen đúa, trông càng nực cười.</p>
+        <p>Dáng vẻ kỳ dị khiến người qua đường đưa mắt nhìn rồi bàn tán xì xào.</p>
+        <p>Cả ngày Uông Thu Phàm không dám ra đường vì sợ bộ mặt sưng vếu, nhưng lại quá cần sửa máy.</p>
+        <p>Ông ta muốn chuyên gia khôi phục dữ liệu.</p>
+        <p>Cú đập lúc trước quá nóng giận, khiến chiếc máy vốn đã hỏng càng thêm tệ.</p>
+        <p>Giờ đành ngậm bồ đắng chạy vội đến cửa hàng.</p>
+        <p>Tới nơi, chủ tiệm bảo cần kiểm tra kỹ, hẹn chiều hôm sau đến lấy.</p>
+        <p>“Nhất định phải khôi phục lại hình ảnh và video tôi xóa nhầm!” Uông Thu Phàm không chịu nổi ánh mắt dò xét, “Ông chủ cố gắng giúp tôi, tiền không thành vấn đề!”</p>
+        <p>Nói xong, bất kể chủ tiệm trả lời gì, ông ta ôm đầu chạy mất.</p>
+        <p>Nghe xong báo cáo, Lục Tễ Hành trầm ngâm: “Mấy thứ đó có khôi phục được không?”</p>
+        <p>Trương Trình, một trợ lý tốt nghiệp danh giá, am hiểu thiết bị điện tử tự tin đáp: “Không thể.”</p>
+        <p>Nhưng để phòng ngừa, cậu vẫn xuống xe mua chuộc chủ tiệm, bảo ông nhận tiền thì làm theo chỉ thị.</p>
+        <p>Vừa lúc đó, Phương Nhiên Tri bước ra từ phòng tắm.</p>
+        <p>Và giờ, cậu đang ngồi vắt lên đùi Lục Tễ Hành, tay thoa chất bôi trơn lên vật thể cuồng nhiệt trước mặt, tỉ mỉ từng chút.</p>
+        <p>Hơi đáng sợ, Phương Nhiên Tri thậm chí cảm thấy một bàn tay mình không nắm hết.</p>
+        <p>“Lương anh trả cho cậu ta rất cao, bận mấy cũng phải làm,” Lục Tễ Hành dựa vào đầu giường, hoàn toàn không có ý thức của một nhà tư bản, mải mê ngắm Chỉ Chỉ, “Anh có lương tâm, không bóc lột vô cớ, sao cậu ta dám chửi.”</p>
+        <p>“Vì... nhà tư bản nào cũng bị chửi... ừm…” Phương Nhiên Tri rên khẽ, cắn môi.</p>
+        <p>Áo sơ mi trắng rộng che kín đôi chân dài, nhưng vải phía trước lại phồng lên một cục nhỏ. Lục Tễ Hành đưa tay ấn lên đầu nhọn qua lớp vải, Phương Nhiên Tri toàn thân run lên, đùi non siết chặt, chút dịch ẩm rỉ ra.</p>
+        <p>Lục Tễ Hành phủ cả bàn tay lên, trêu chọc: “Chỉ Chỉ, em còn biết nhảy nữa à.”</p>
+        <p>Phương Nhiên Tri mím môi không nhìn, lòng bàn tay cảm nhận mạch đập, lẩm bẩm: “Nhưng... gân xanh của tiên sinh... cũng đang giật kìa.”</p>
+        <p>“Ừ,” Lục Tễ Hành thừa nhận, “Nó đang rất sốt ruột. Chỉ Chỉ, ngồi xuống đi.”</p>
+        <p>Anh bắt đầu cởi cúc áo của Phương Nhiên Tri, để lộ xương quai xanh tuyệt mỹ, “Hôm nay ở trường quay, sao không hỏi anh nói gì với tên họ Trác?”</p>
+        <p>“Không... không cần hỏi... anh đã nói, dù anh ta nói gì thì anh cũng không tin,” Phương Nhiên Tri một tay chống lên bụng Lục Tễ Hành, tay kia nắm lấy vật nóng bỏng, từ từ hạ thấp thân hình, hơi thở gấp gáp, “Em chỉ... tin lời anh nói với em thôi.”</p>
+        <p>Đã vào đến tận đáy.</p>
+        <p>Phương Nhiên Tri không dám động đậy, căng tức, lưng ướt đẫm mồ hôi. Lục Tễ Hành cong chân thúc giục: “Chỉ Chỉ, làm nhân viên thì phải chăm chỉ, đừng học thói lười.”</p>
+        <p>Không biết có phải Lục Tễ Hành đang trả thù không, chỉ vì ban ngày Phương Nhiên Tri gọi anh là Lục tổng, giờ liền bắt bẻ lại.</p>
+        <p>Đồ keo kiệt!</p>
+        <p>Phương Nhiên Tri biện giải: “Em... em không lười, anh đừng... thúc em.”</p>
+        <p>“Được thôi,” Lục Tễ Hành như chịu thiệt, “Cho em một phút.”</p>
+        <p>Phương Nhiên Tri mặc cả: “...Hai phút đi mà.”</p>
+        <p>Nhà tư bản vô tình Lục Tễ Hành lạnh lùng: “Còn 56 giây.”</p>
+        <p>“...52 giây,” anh nói tiếp, “Nếu em không biết làm, anh đành vất vả tự dạy em vậy.”</p>
+        <p>Dạy kiểu gì? Dùng hai tay siết eo rồi đẩy mạnh lên sao? Phương Nhiên Tri đã từng trải nghiệm rồi, nếu để Lục Tễ Hành nắm quyền kiểm soát ngay từ đầu thì mất mạng mất!</p>
+        <p>Cậu vội vàng: “Em biết làm. Em biết!”</p>
+        <p>Lục Tễ Hành: “46 giây.”</p>
+        <p>Phương Nhiên Tri giật mình: “Anh à…”</p>
+        <p>“36 giây,” Lục Tễ Hành nói.</p>
+        <p>Phương Nhiên Tri giật mình, “Anh không thể đếm kiểu đó được.”</p>
+        <p>“18 giây.”</p>
+        <p>“.…..” Phương Nhiên Tri cảm thấy vô cùng oan ức, lí nhí than thở, “Anh bắt nạt người ta quá rồi.”</p>
+        <p>“8 giây.”</p>
+        <p>“.…..”</p>
+        <p>Lục Tễ Hành nhìn cậu chằm chằm, không chớp mắt đếm ngược: “5... 4... 3...”</p>
+        <p>Phương Nhiên Tri lần đầu tiên trải nghiệm cảm giác bị đếm ngược như vậy, chẳng khác nào thời gian sống cuối cùng đang trôi qua, căng thẳng đến mức mồ hôi túa ra khắp lưng, lòng bàn tay ướt đẫm.</p>
+        <p>Cậu vội vã nhích người ra xa hai mét, rồi lập tức quay lại ngồi xuống, giận dỗi không nói lời nào, ngay cả ánh mắt cũng hoe đỏ: “Lục... Lục Tễ Hành, anh... anh không thể đối xử với em như vậy, quá đáng lắm rồi.”</p>
+        <p>Chưa từng nghe Phương Nhiên Tri gọi tên mình, Lục Tễ Hành khựng lại, trong mắt hiện lên chút ngỡ ngàng.</p>
+        <p>Đó là một cảm xúc khó diễn tả, trong chuyện ân ái, được người mình yêu gọi tên, hình như còn ý nghĩa hơn bất kỳ danh xưng nào khác. Có lẽ bởi những xưng hô khác anh đều đã có rồi, chỉ riêng cái tên này là điều anh càng khao khát được nghe từ miệng cậu.</p>
+        <p>“Bé cưng,” giọng Lục Tễ Hành trầm ấm, mang chút dịu dàng, “Em gọi tên anh, nghe hay thật.”</p>
+        <p>Phương Nhiên Tri tập trung vào “công việc”, không để ý đến anh.</p>
+        <p>Lông mi nhanh chóng bị hơi nước thấm ướt, long lanh như giọt sương sớm, trong veo và tinh khiết.</p>
+        <p>“...Anh à, chuyện hot search lúc trưa...” Phương Nhiên Tri hơi thở gấp gáp, hai má đỏ bừng, “Cái tin xấu về Trác Khinh Mạc... là do anh sắp xếp sao?”</p>
+        <p>Lục Tễ Hành trầm giọng đáp: “Ừ.”</p>
+        <p>Rõ ràng là vì Trác Khinh Mạc đã nói gì đó khiến Lục Tễ Hành nổi giận, nên mới bị đối xử như vậy.</p>
+        <p>Trong lòng Phương Nhiên Tri dâng lên một tia tò mò, nhưng lại không dám hỏi sâu.</p>
+        <p>Cũng giống như Trác Khinh Mạc, nhân vật chính của hot search hôm nay, khi bị hỏi lý do, anh ta cũng không dám nói thật.</p>
+        <p>Mười hai giờ đêm.</p>
+        <p>Trác Khinh Mạc vẫn chưa ngủ.</p>
+        <p>Chai rượu đỏ thứ hai đã cạn, gương mặt anh đỏ bừng vì men rượu.</p>
+        <p>Trên màn hình điện thoại vẫn đang hiển thị giao diện cuộc gọi.</p>
+        <p>Qua loa ngoài, người quản lý hôm nay lần thứ năm hỏi anh:</p>
+        <p>“Khinh Mạc, rốt cuộc cậu và Lục Tễ Hành có quan hệ gì? Sao lại đắc tội với người ta?”</p>
+        <p>Vì một người.</p>
+        <p>Cũng vì một đoạn video.</p>
+        <p>Những thứ đó, anh đã giấu suốt bao năm, không ai biết được.</p>
+        <p>Trác Khinh Mạc đương nhiên sẽ không nói thật với quản lý.</p>
+        <p>“Đã bảo là tại tôi không biết ăn nói mà, không biết câu nào chạm đến dây thần kinh của anh ta, nên mới bị chơi xỏ thôi,” Trác Khinh Mạc nói bằng giọng điệu uể oải, “Tôi có thể có quan hệ gì với anh ta chứ... tôi xứng sao.”</p>
+        <p>Giọng anh như kẻ đã say, lộ ra một tia thất vọng mơ hồ.</p>
+        <p>Như thể vừa đánh mất điều gì rất quan trọng.</p>
+        <p>“Cậu vẫn luôn biết chừng mực mà, sao cứ gặp Lục Tễ Hành là nói năng không kiềm chế được?” người quản lý cau mày, hiếm khi trách móc, “... Thôi bỏ đi, chuyện đã xảy ra rồi, sau này phải chú ý thái độ. Mười năm mới có được vị trí hôm nay, không thể vì chuyện nhỏ mà bị hủy hoại.”</p>
+        <p>Trác Khinh Mạc không trả lời, chỉ lặng lẽ rót thêm một ly rượu.</p>
+        <p>Giọng người quản lý vẫn vọng ra từ điện thoại: “Còn nữa, cậu đang quay phim không thể tổ chức họp báo, vài hôm nữa chờ tin nóng này hạ nhiệt, cậu phải mở livestream, giải thích rõ ràng về hot search hôm nay. Cứ theo bản thảo công ty gửi mà nói, giả vờ chân thành vào, tách mình ra khỏi mọi liên quan...”</p>
+        <p>Dưới ánh đèn lấp loáng vì men rượu, Trác Khinh Mạc cảm thấy mệt mỏi, đưa tay bóp nhẹ hai bên thái dương: “Ừ, biết rồi. Trưa mai tôi còn có cảnh quay, không thức khuya nữa, cúp đây, ngủ đây.”</p>
+        <p>Anh ấn mạnh ngón tay xuống nút kết thúc cuộc gọi.</p>
+        <p>Chiếc điện thoại đặt trên bàn trà nhanh chóng tối màn hình.</p>
+        <p>Trác Khinh Mạc ngồi bệt trên sàn, đầu tựa vào ghế sô pha, giống như một kẻ say rượu rệu rã.</p>
+        <p>Rõ ràng ánh đèn chói mắt, vậy mà anh vẫn cố chấp nhìn thẳng vào.</p>
+        <p>Rồi anh giơ tay phải lên, đưa ra ánh sáng, chăm chú nhìn vào cổ tay có một vết sẹo ngang rõ rệt của mình.</p>
+        <p>Người hâm mộ của Trác Khinh Mạc đều biết, đó là “vết bớt” anh mang từ trong bụng mẹ.</p>
+        <p>Ngầu lắm.</p>
+        <p>Nhưng thật ra, đó là vết dao anh tự cắt năm mười bảy tuổi, khi trốn lên sân thượng với con dao gọt trái cây.</p>
+        <p>Bị Uông Thu Phàm bắt nạt từ năm mười lăm tuổi, vừa bị uy hiếp, vừa bị tống tiền, Trác Khinh Mạc không thể chịu đựng được nữa.</p>
+        <p>Những đứa trẻ bị bỏ lại trong viện phúc lợi Hồng Hoa vì đủ thứ lý do, lớn lên không có gì gọi là hạnh phúc, đến niềm vui cũng là điều xa xỉ.</p>
+        <p>Trác Khinh Mạc học hành chăm chỉ, cố gắng trốn thoát, nhưng đều vô ích.</p>
+        <p>Uông Thu Phàm có thể hóa thành bóng tối, thành chiếc bóng, thành cơn ác mộng.</p>
+        <p>Ở đâu cũng có mặt.</p>
+        <p>Dù có trốn thoát tạm thời, Uông Xuân Bình cũng sẽ tiếp tay cho ông ta, để ông ta tìm thấy anh lần nữa.</p>
+        <p>Khi con dao cắt vào cổ tay, thật sự không đau.</p>
+        <p>Lưỡi dao rạch qua da thịt, cảm giác đầu tiên là nóng như lửa thiêu đốt, rồi mới đến cơn đau nhói khi máu ào ạt trào ra.</p>
+        <p>Trác Khinh Mạc đã cắt rất sâu, không hề do dự.</p>
+        <p>Nhưng máu mới chảy ra chút ít, phía trên vết thương đã bị một sợi dây đỏ mảnh siết chặt.</p>
+        <p>Đó là một đôi tay rất nhỏ.</p>
+        <p>Bàn tay của một đứa trẻ, rõ ràng vẫn chưa trưởng thành.</p>
+        <p>Trác Khinh Mạc đờ người, ngước mắt nhìn cậu bé khoảng mười một mười hai tuổi đang thành thạo xử lý vết thương cho mình, như thể đã làm việc này nhiều lần.</p>
+        <p>Da mặt cậu bé tái nhợt, dường như sợ hãi trước máu me, nhưng vẫn cố gắng ấn chặt.</p>
+        <p>“...Cậu làm gì thế?” Trác Khinh Mạc không quen biết cậu bé, nhưng câu đầu tiên không phải “Cậu là ai?”.</p>
+        <p>Anh chỉ kinh ngạc trước hành động của đứa trẻ này.</p>
+        <p>Cậu bé ngẩng mặt lên, giọng nói trong trẻo chưa vỡ: “Anh ơi, chị Trà Trà bảo nếu người ta chết đi thì sẽ chẳng còn gì cả.”</p>
+        <p>Rồi nói thêm: “Anh hãy sống đi.”</p>
+        <p>Trác Khinh Mạc không hiểu, gắt lên: “Cậu hiểu gì chứ?”</p>
+        <p>Giọng điệu khá hung dữ.</p>
+        <p>“Em cũng lớn lên ở viện phúc lợi, em hiểu mà.” Phương Nhiên Tri mười hai tuổi không hề bị dọa, đôi mắt đen láy nhưng ánh nhìn không còn ngây thơ, “Lúc anh lấy dao từ bếp, em đã đi theo anh rồi.”</p>
+        <p>“Em còn lén gọi cấp cứu, xe cứu thương đang tới. Em chỉ biết băng bó tạm thôi, không cầm máu được, anh cần bác sĩ.”</p>
+        <p>Hai người chênh nhau năm tuổi, chẳng quen biết, lại ở khu khác nhau trong viện, chỉ thỉnh thoảng thoáng qua.</p>
+        <p>Nhưng Phương Nhiên Tri nói với Trác Khinh Mạc: “Anh ơi, anh hãy sống đi.”</p>
+        <p>Và thế là...</p>
+        <p>Trác Khinh Mạc đã sống.</p>
+        <p>Về sau, họ vẫn ít gặp nhau, chỉ như người lướt qua đời nhau. Phương Nhiên Tri cũng chẳng nhớ anh.</p>
+        <p>Ký ức đó với Trác Khinh Mạc cũng mờ nhạt.</p>
+        <p>Anh chỉ nhớ Uông Thu Phàm sợ xảy ra chuyện, khi xe cứu thương tới đón anh khỏi viện phúc lợi Hồng Hoa, kẻ hoảng sợ nhất chính là ông ta.</p>
+        <p>Ông ta có thể bắt nạt những đứa trẻ xinh đẹp, nhưng không dám giết chúng.</p>
+        <p>Sống và chết là hai thứ hoàn toàn khác nhau.</p>
+        <p>Khi Trác Khinh Mạc từ bệnh viện trở về, Uông Thu Phàm gặp mặt là chửi: “Đồ vô dụng! Chuyện nhỏ xíu đã muốn chết!”</p>
+        <p>Nhưng suốt một năm sau, ông ta không đụng đến anh nữa.</p>
+        <p>Rồi dần dà, sau vài lần chứng kiến cảnh tương tự với đứa trẻ khác, Uông Thu Phàm trở nên trơ lì.</p>
+        <p>Ông ta thậm chí còn chủ động cầm dao, nói có thể giúp...</p>
+        <p>Trác Khinh Mạc thấy tay mỏi nhừ, buộc phải hạ xuống, lấy mu bàn tay che mắt, nhắm nghiền suy nghĩ.</p>
+        <p>Biết Phương Nhiên Tri kết hôn, anh tất nhiên bất mãn.</p>
+        <p>Lại còn là với Lục Tễ Hành!</p>
+        <p>Anh tự cho rằng hai người không xứng, thậm chí độc ác muốn Lục Tễ Hành biết về quá khứ tồi tệ của Phương Nhiên Tri.</p>
+        <p>Anh nghĩ, một khi Lục Tễ Hành biết chuyện, ắt sẽ ruồng bỏ cậu.</p>
+        <p>Người yêu bên cạnh từng bị ép quay phim đồi trụy, ai mà không ghê tởm?</p>
+        <p>Nhưng Lục Tễ Hành đã biết từ lâu...</p>
+        <p>Biết, mà không màng.</p>
+        <p>Còn anh thì sao?</p>
+        <p>Trác Khinh Mạc không kiềm được suy nghĩ, Phương Nhiên Tri cứu anh, mà anh lại muốn hủy hoại cậu.</p>
+        <p>Mình rốt cuộc... đang làm cái gì thế này?</p>
+        <p>Đây gọi là yêu ư?</p>
+        <p>Quả thực méo mó như chính cuộc đời anh.</p>
+        <p>…...</p>
+        <p>“Sao im thin thít thế?” Lục Tễ Hành ngước mắt nhìn người đang “làm việc” trên người mình, dĩ nhiên là bị ép. Nếu lúc trước áo sơ mi trắng bị ướt do nước phòng tắm, thì giờ nửa thân trên bộ đồ đã ướt đẫm mồ hôi.</p>
+        <p>Vải cao cấp dính sát ngực Phương Nhiên Tri, lộ rõ làn da phấn hồng bên trong. Hai đỉnh hồng vì ma sát mà căng cứng, Lục Tễ Hành dùng ngón tay búng nhẹ, khiến ngực cậu co rúm rồi lại ưỡn ra. Áo sơ mi trắng dính ướt cả trước lẫn sau, Phương Nhiên Tri cảm thấy toàn thân như bốc lửa, nóng bức đến phát điên. Cậu lắc đầu, nước mắt văng tung tóe, cổ họng nghẹn đặc không thốt nên lời.</p>
+        <p>Lục Tễ Hành hỏi khẽ: “Sao không gọi ông xã nữa? Lúc nãy còn gọi ngọt thế kia?”</p>
+        <p>“...…” Phương Nhiên Tri há miệng nhưng không phát ra âm thanh, mãi sau mới thở dốc: “Em... anh ơi, em không chịu nổi nữa... em…”</p>
+        <p>Không biết Lục Tễ Hành có nghe không, biểu cảm anh bình thản nhưng ánh mắt thì ngược lại, như muốn nuốt sống người trước mặt ngay lập tức.</p>
+        <p>Phương Nhiên Tri đang ngồi vắt trên eo anh, đầu gối chống giường, cảm thấy đùi non rã rời đến mức chuột rút. Toàn thân cậu co giật không ngừng, giọng nức nở: “Anh ơi... eo em... eo em mềm nhũn rồi…”</p>
+        <p>Đã hai giờ sáng, Lục Tễ Hành mới “xả” hai lần. Anh nói phải đủ năm lần mới thôi. Phương Nhiên Tri khóc thút thít trong tuyệt vọng, không biết phải chịu đựng bao lâu nữa. Cậu chỉ cảm thấy eo không còn là eo, chân không còn là chân, tê dại hoàn toàn. Nhưng một bộ phận khác lại liên tục chạm vào điểm nhạy cảm, khiến cậu ngửa cổ rên rỉ.</p>
+        <p>Có lẽ vì đầu óc hoàn toàn mụ mị, Phương Nhiên Tri gọi Lục Tễ Hành bằng đủ thứ danh xưng: Lục Tễ Hành, Lục tổng, chú nhỏ, rồi đột nhiên là mẹ, thậm chí... ba.</p>
+        <p>Danh xưng cuối cùng vừa thốt ra, Lục Tễ Hành cảm thấy như có luồng điện kích thích xuyên thẳng từ đỉnh đầu xuống gót chân. Anh nghĩ một cách kỳ quái, sao lại có cảm giác loạn luân đầy tội lỗi thế này?</p>
+        <p>Nhưng anh không ngăn cản, trái lại còn dụ dỗ một cách đáng sợ: “Bé cưng, gọi thêm một tiếng nữa đi.”</p>
+        <p>Phương Nhiên Tri ngã vật vào ngực Lục Tễ Hành, má áp sát hõm vai anh, ánh mắt vô hồn như linh hồn bị ma quỷ cuỗm mất. Đôi môi run rẩy thì thào cầu cứu người thân mà cậu chưa từng gặp: “Ba à…”</p>
+        <p>Lục Tễ Hành nhắc khẽ: “Còn hai lần nữa.”</p>
+        <p>Phương Nhiên Tri lại rên: “Cứu con…”</p>
+        <p>Rồi cậu chìm vào giấc ngủ, không mở mắt nữa.</p>
+        <p>Lục Tễ Hành thở dài tiếc nuối.</p>
+        <p>Chiều hôm sau tỉnh dậy, Phương Nhiên Tri nằm co ro trong chăn, mắt láo liên nhìn quanh rồi xấu hổ lấy gối đập vào đầu mình.</p>
+        <p>Cậu thật sự xấu hổ chết đi được!</p>
+        <p>Lần nào cũng thế, cậu là người chủ động trêu chọc, táo bạo trăm phương ngàn kế. Nhưng cũng luôn là kẻ đầu hàng đầu tiên.</p>
+        <p>Còn gọi đủ thứ tên kỳ quặc nữa chứ! Phải chăng Lục Tễ Hành đã khơi dậy thứ gì đó không đúng đắn trong cậu?</p>
+        <p>Đang lúc cậu muốn đào hố chôn mình hoặc nhảy xuống biển cho tỉnh táo thì chăn bị giật phăng.</p>
+        <p>Lục Tễ Hành không cho cậu chốn trốn: “Bé cưng, dậy ăn đi. Tối em còn cảnh quay.”</p>
+        <p>Không biết có phải ảo giác không, nhưng cách Lục Tễ Hành gọi “bé cưng” hôm nay khác mọi khi, dường như thêm chút gia vị gì đó.</p>
+        <p>Đằng nào cũng xấu hổ đến tận mặt trăng rồi, Phương Nhiên Tri liều mạng nói: “Anh không thể đẻ ra... một đứa con trai lớn như em đâu.”</p>
+        <p>Lục Tễ Hành cười khẽ, cúi người sát vào tai cậu: “Ừ, anh không đẻ được. Nhưng làm bố nuôi cũng được mà. Em làm con nuôi của anh đi.”</p>
+        <p>“Đúng không, bé cưng?”</p>
+        <p>Phương Nhiên Tri: “...…”</p>
+        <p>Xấu hổ đến phát khóc, cậu giật lại chăn trùm kín đầu, giả vờ rên rỉ: “Em không thèm nói chuyện với anh nữa!”</p>
+        <p>Lục Tễ Hành vội vàng xin lỗi, dỗ dành mãi mới kéo được cậu ra khỏi hang, ép cậu ăn chút gì đó.</p>
+        <p>Khi Phương Nhiên Tri vào phòng tắm đánh răng, Lục Tễ Hành nhìn theo bóng lưng cậu, chợt nhận ra:</p>
+        <p>Người yêu nhỏ đã biết giận dỗi rồi.</p>
+        <p>Rất tốt.</p>
+        <p>Anh sẽ khiến cậu duy trì thói quen này.</p>
+        <p>Nhờ Lục Tễ Hành giám sát tại trường quay, Phương Nhiên Tri diễn xuất tràn đầy năng lượng chưa từng có.</p>
+        <p>Trác Khinh Mạc nhiều lần muốn tiếp cận cậu, dường như để nói chuyện riêng.</p>
+        <p>Nhưng hễ thấy anh tiến lại gần, Phương Nhiên Tri lập tức quay sang bàn cảnh với đạo diễn, hoặc là tìm người khác trò chuyện, không thì chạy thẳng đến chỗ Lục Tễ Hành.</p>
+        <p>Sự lạnh nhạt giữa họ khiến cả đoàn phim đều nhận ra. Ngoài cảnh quay, Phương Nhiên Tri tuyệt giao với Trác Khinh Mạc.</p>
+        <p>Mỗi ngày, Trác Khinh Mạc đều nhìn cậu bằng ánh mắt thất vọng và khát khao, như chú chó bị chủ ruồng bỏ.</p>
+        <p>Tình trạng này bị một nhân viên hậu trường chụp lén đăng lên mạng, gây bão nhiệt:</p>
+        <p>#Phương Nhiên Tri -Trác Khinh Mạc, nghi ngờ rạn nứt#</p>
+        <p>#CP Trác Nhiên có thể đã BE#</p>
+        <p>Dù chưa lên top bạo, nhưng hashtag vẫn cháy đỏ chữ nóng.</p>
+        <p>Siêu thoại bùng cháy với hơn mười triệu lượt thảo luận.</p>
+        <p>[Hu hu chuyện gì xảy ra vậy? Anh Trác và Tri Tri cãi nhau à? CP của tôi thật sự kết thúc rồi sao?]</p>
+        <p>[Còn ship nữa? Mấy ngày trước Trác Khinh Mạc bị lộ tin đồn xử lý tình cảm kiểu đó, xin hãy tránh xa Tri Tri ra!]</p>
+        <p>[Đúng vậy... Tri Tri chưa yêu bao giờ, đừng lừa dối cậu ấy!]</p>
+        <p>[Fan của Phương Nhiên Tri đừng quá đáng, lúc anh Trác không có scandal thì các người bám đuôi, giờ có tin xấu thì quay sang chà đạp?]</p>
+        <p>[Cạn lời thật sự, đề nghị fan của tên đàn ông bắt cá hai tay kia quay lại xem lại show cho rõ đi, rốt cuộc là ai bám lấy ai? Không phải ngày nào Trác Khinh Mạc cũng tìm Tri Tri, bảo cậu ấy dạy làm bánh ngọt sao? Là anh ta ngày ngày dính lấy Phương Nhiên Tri, các người đúng là mở mắt mà nói dối không biết ngượng, phục thật đấy.]</p>
+        <p>[Phương Nhiên Tri rất ôn hòa, bọn fan tụi tôi cũng rất ôn hòa, nhưng ai mà bắt nạt tới nơi thì tụi tôi chiến hết mình đấy nhé!]</p>
+        <p>[...…]</p>
+        <p>Hai nhóm fan vốn dĩ trước nay chưa từng cãi nhau, nay bỗng tranh cãi kịch liệt.</p>
+        <p>Sự yên bình bị phá vỡ bởi danh tiếng bị bôi nhọ kia, cho dù Trác Khinh Mạc có lên livestream giải thích cũng vô dụng.</p>
+        <p>Phương Nhiên Tri có lượng lớn “fan mẹ”, “fan dì”, mà fan “mẹ” thì sức chiến đấu để bảo vệ “con trai” mình khỏi bị kẻ trăng hoa lừa dối tình cảm thực sự rất mạnh mẽ.</p>
+        <p>Chỉ là vừa quay xong một cảnh phim, dùng tài khoản phụ lướt weibo nhìn thấy đầy màn hình là những bình luận như: “Tri Tri chưa yêu bao giờ”, “Tri Tri chưa từng nắm tay ai”, “Tri Tri chưa từng hôn ai”, “Tri Tri còn nguyên zin”, “Tri Tri tuyệt đối không bắt cá hai tay”, “Tri Tri rất thuần khiết”...</p>
+        <p>Ngoại trừ câu “không bắt cá hai tay” là chính xác, còn lại... thì sai toàn tập.</p>
+        <p>Cậu từng yêu, từng nắm tay, từng hôn, từng làm chuyện ấy.</p>
+        <p>Cậu còn chủ động quyến rũ Lục Tễ Hành, hầu như là mỗi ngày, vậy nên... hoàn toàn không thuần khiết chút nào.</p>
+        <p>Nhìn fan bảo vệ mình như vậy, Phương Nhiên Tri chỉ cảm thấy xấu hổ đến mức không biết giấu mặt vào đâu, giống như đang bị lương tâm gõ mạnh lên đầu vậy.</p>
+        <p>Lương tâm cắn rứt đến mức muốn nổ tung.</p>
+        <p>Nhưng thân phận của Lục Tễ Hành lại đặc biệt, sự nghiệp của cậu cũng chưa ổn định, không thể công khai…</p>
+        <p>Dù sao thì bây giờ cũng không phải lúc quan tâm đến chuyện đó.</p>
+        <p>Cậu không muốn fan của mình cãi nhau với người khác, không đáng chút nào cả.</p>
+        <p>Lỡ đâu còn hại đến sức khỏe của họ.</p>
+        <p>Như vậy thì cậu sẽ càng ghét Trác Khinh Mạc hơn nữa.</p>
+        <p>Cậu định đi tìm anh để bàn đối sách, vừa mở điện thoại ra đã thấy xuất hiện một bài đăng mới từ Trác Khinh Mạc.</p>
+        <p>Trác Khinh Mạc: [#Phương Nhiên Tri -Trác Khinh Mạc, nghi ngờ rạn nứt# Giữa tôi và Nhiên Tri thực sự có chút vấn đề, nhưng không phải vì scandal gần đây. Trước đó, do lời nói và hành động của tôi không phù hợp, Nhiên Tri đã xa lánh tôi. Cụ thể là chuyện gì thì không tiện nói, tôi đang tìm cơ hội xin lỗi. Cậu ấy không phải người vì fame mà bám đuôi ai. Mọi chỉ trích xin nhắm vào tôi, lỗi hoàn toàn thuộc về tôi.]</p>
+        <p>Phương Nhiên Tri cau mày, sững người tại chỗ, trong lòng bỗng dâng lên cảm giác bất an, ngẩng đầu nhìn quanh để tìm bóng dáng Trác Khinh Mạc.</p>
+        <p>Phương Nhiên Tri nhíu mày, ngẩng lên tìm Trác Khinh Mạc, thấy anh ta đang đứng cạnh Lục Tễ Hành, mặt đầy uất ức gõ điện thoại.</p>
+        <p>Nhìn bộ dạng đó... hình như là bị ép buộc.</p>
+        <p>Khoảnh khắc ấy, Phương Nhiên Tri thậm chí còn có chút thương hại cho anh ta.</p>
+        <p>Nhưng ngay sau đó, cậu không còn thời gian để thương ai khác nữa mà bắt đầu thương cho chính mình.</p>
+        <p>Dưới ánh nhìn trân trối của chính mình, Phương Nhiên Tri tận mắt thấy hai từ khóa hot search mới đột ngột leo lên top.</p>
+        <p>Một là bạo, một là nóng.</p>
+        <p>#Phương Nhiên Tri - Lục Tễ Hành# - Bạo</p>
+        <p>#Trác Nhiên CP# - Nóng</p>
+        <p>Phương Nhiên Tri: “......”</p>
+        <p>Phương Nhiên Tri: “?”</p>
+        <p>Phương Nhiên Tri: “!”</p>
+        <p>Chuyện gì vậy? Đây là gì?</p>
+        <p>Tại sao lại đột nhiên kéo cả Lục Tễ Hành vào?</p>
+        <p>Sao anhlại bị lộ rồi?!</p>
+        <p>Ai đăng thế hả?!</p>
+        <p>Người này thật quá đáng!</p>
+        <p>Phương Nhiên Tri trợn to mắt, sợ đến nỗi nín thở, lập tức chạy đi tìm Lục Tễ Hành.</p>
+    </article>
+
+    <div class="reading-nav">
+        <a href="chiataythoima52.html" class="nav-btn">⬅️ Chương trước</a>
+        <a href="../mucluc/chiataythoima.html" class="nav-btn">📋 Mục lục</a>
+        <a href="chiataythoima54.html" class="nav-btn">Chương sau ➡️</a>
+    </div>
+</main>
+
+<!-- ── KHUNG THẢO LUẬN TOÀN CHƯƠNG ── -->
+<div class="chapter-discussion-box">
+    <div class="discussion-header">
+        <div class="discussion-header-left">
+            <span>🌿</span>
+            <h3>Thảo luận về chương này</h3>
+            <span>🌸</span>
+        </div>
+        <div class="discussion-actions">
+            <button class="action-btn" id="like-btn" onclick="toggleLike()" title="Thả tim chương này">
+                <span class="heart-icon">🤍</span>
+                <span id="like-count">0</span>
+            </button>
+            <button class="action-btn" onclick="openShareModal()" title="Chia sẻ chương này">
+                🔗 Chia sẻ
+            </button>
+        </div>
+    </div>
+    <div class="comment-section">
+        <script src="https://utteranc.es/client.js"
+                repo="gocnhocuakhiet/gocnhocuakhiet.github.io"
+                issue-term="pathname"
+                label="comment"
+                theme="github-light"
+                crossorigin="anonymous"
+                async>
+        </script>
+    </div>
+</div>
+
+<!-- ── SHARE MODAL ── -->
+<div class="share-modal-overlay" id="share-modal-overlay" onclick="handleOverlayClick(event)">
+    <div class="share-modal">
+        <h4>🔗 Chia sẻ chương này</h4>
+        <div class="share-link-row">
+            <input class="share-link-input" id="share-link-input" type="text" readonly>
+            <button class="copy-link-btn" id="copy-link-btn" onclick="copyLink()">Sao chép</button>
+        </div>
+        <button class="share-modal-close" onclick="closeShareModal()">Đóng</button>
+    </div>
+</div>
+
+<!-- ── SIDEBAR BÌNH LUẬN THEO ĐOẠN ── -->
+<div id="comment-sidebar" class="comment-sidebar">
+    <div class="sidebar-header">
+        <h4 id="sidebar-paragraph-title">Bình luận đoạn văn</h4>
+        <button class="close-sidebar-btn" onclick="closeInlineComment()">✕</button>
+    </div>
+    <div class="quoted-paragraph-box" id="quoted-paragraph-box"></div>
+    <div class="sidebar-mention-hint">
+        💡 Dùng <code>@tên-người</code> để nhắc đến ai đó trong bình luận.
+    </div>
+    <div id="sidebar-utterances-mount"></div>
+</div>
+<div id="sidebar-overlay" class="sidebar-overlay" onclick="closeInlineComment()"></div>
+
+<!-- ── SCRIPT CHÍNH ── -->
+<script>
+var GH_REPO  = 'gocnhocuakhiet/gocnhocuakhiet.github.io';
+var GH_LABEL = 'comment';
+var ORIGINAL_TITLE = document.title;
+
+function paragraphTitle(paraNum) {
+    return ORIGINAL_TITLE + ' [Đoạn ' + paraNum + ']';
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+    var paragraphs = document.querySelectorAll('.story-content p');
+    paragraphs.forEach(function (p, index) {
+        var paraNum = index + 1;
+        var row = document.createElement('div');
+        row.className = 'comment-row';
+        p.parentNode.insertBefore(row, p);
+        row.appendChild(p);
+        var badge = document.createElement('span');
+        badge.className = 'comment-badge';
+        badge.title = 'Bình luận về đoạn này';
+        badge.textContent = '💬';
+        badge.onclick = function () {
+            openInlineComment(p.innerText.trim().substring(0, 120), paraNum);
+        };
+        row.appendChild(badge);
+    });
+    initLike();
+});
+
+var currentParaNum = null;
+
+function openInlineComment(previewText, paraNum) {
+    document.getElementById('sidebar-paragraph-title').innerText = 'Đoạn ' + paraNum;
+    document.getElementById('quoted-paragraph-box').innerText =
+        '"' + previewText + (previewText.length >= 120 ? '…' : '') + '"';
+    document.getElementById('comment-sidebar').classList.add('active');
+    document.getElementById('sidebar-overlay').classList.add('active');
+    if (currentParaNum === paraNum) return;
+    currentParaNum = paraNum;
+    var mount = document.getElementById('sidebar-utterances-mount');
+    mount.innerHTML = '<div class="sidebar-loading">Đang tải bình luận…</div>';
+    document.title = paragraphTitle(paraNum);
+    var s = document.createElement('script');
+    s.src = 'https://utteranc.es/client.js';
+    s.setAttribute('repo',         GH_REPO);
+    s.setAttribute('issue-term',   'title');
+    s.setAttribute('label',        GH_LABEL);
+    s.setAttribute('theme',        document.body.classList.contains('dark-mode') ? 'github-dark' : 'github-light');
+    s.setAttribute('crossorigin',  'anonymous');
+    s.async = true;
+    s.onload = function () {
+        var loading = mount.querySelector('.sidebar-loading');
+        if (loading) loading.remove();
+        document.title = ORIGINAL_TITLE;
+    };
+    mount.innerHTML = '';
+    mount.appendChild(s);
+}
+
+function closeInlineComment() {
+    document.getElementById('comment-sidebar').classList.remove('active');
+    document.getElementById('sidebar-overlay').classList.remove('active');
+    document.title = ORIGINAL_TITLE;
+}
+
+function initLike() {
+    var key      = 'like-'      + window.location.pathname;
+    var countKey = 'likecount-' + window.location.pathname;
+    var liked    = localStorage.getItem(key) === '1';
+    var count    = parseInt(localStorage.getItem(countKey) || '0', 10);
+    updateLikeUI(liked, count);
+}
+
+function toggleLike() {
+    var key      = 'like-'      + window.location.pathname;
+    var countKey = 'likecount-' + window.location.pathname;
+    var liked    = localStorage.getItem(key) === '1';
+    var count    = parseInt(localStorage.getItem(countKey) || '0', 10);
+    liked = !liked;
+    count = liked ? count + 1 : Math.max(0, count - 1);
+    localStorage.setItem(key,      liked ? '1' : '0');
+    localStorage.setItem(countKey, count);
+    updateLikeUI(liked, count);
+}
+
+function updateLikeUI(liked, count) {
+    var btn       = document.getElementById('like-btn');
+    var heartSpan = btn.querySelector('.heart-icon');
+    var countSpan = document.getElementById('like-count');
+    heartSpan.textContent = liked ? '❤️' : '🤍';
+    countSpan.textContent = count;
+    liked ? btn.classList.add('liked') : btn.classList.remove('liked');
+}
+
+function openShareModal() {
+    document.getElementById('share-link-input').value = window.location.href;
+    document.getElementById('copy-link-btn').textContent = 'Sao chép';
+    document.getElementById('copy-link-btn').classList.remove('copied');
+    document.getElementById('share-modal-overlay').classList.add('active');
+}
+function closeShareModal() {
+    document.getElementById('share-modal-overlay').classList.remove('active');
+}
+function handleOverlayClick(e) {
+    if (e.target === document.getElementById('share-modal-overlay')) closeShareModal();
+}
+function copyLink() {
+    var input = document.getElementById('share-link-input');
+    var btn   = document.getElementById('copy-link-btn');
+    navigator.clipboard.writeText(input.value).then(function () {
+        btn.textContent = '✓ Đã sao chép';
+        btn.classList.add('copied');
+        setTimeout(function () { btn.textContent = 'Sao chép'; btn.classList.remove('copied'); }, 2000);
+    }).catch(function () {
+        input.select(); document.execCommand('copy');
+        btn.textContent = '✓ Đã sao chép'; btn.classList.add('copied');
+        setTimeout(function () { btn.textContent = 'Sao chép'; btn.classList.remove('copied'); }, 2000);
+    });
+}
+
+function syncUtterancesTheme(isDark) {
+    var theme = isDark ? 'github-dark' : 'github-light';
+    document.querySelectorAll('.utterances-frame').forEach(function (f) {
+        f.contentWindow.postMessage({ type: 'set-theme', theme: theme }, 'https://utteranc.es');
+    });
+}
+</script>
+
+</body>
+</html>

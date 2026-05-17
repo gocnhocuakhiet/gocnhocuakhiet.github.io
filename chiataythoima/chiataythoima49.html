@@ -1,0 +1,753 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <link rel="stylesheet" href="../style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chia Tay Thôi Mà - Chương 49</title>
+    
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f1f7f4;
+            color: #2d3a34;
+            line-height: 1.8;
+        }
+
+        .navbar {
+            background-color: #ffffff;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 10%;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        .navbar .logo { font-size: 1.2rem; font-weight: bold; color: #4a6b5d; text-decoration: none; }
+        .nav-links a { color: #555; text-decoration: none; font-size: 0.95rem; transition: color 0.3s; }
+        .nav-links a:hover { color: #4a6b5d; }
+
+        .story-container {
+            max-width: 700px;
+            margin: 40px auto;
+            padding: 30px;
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.02);
+        }
+
+        .story-header {
+            text-align: center;
+            margin-bottom: 35px;
+            border-bottom: 1px dashed #8fae9f;
+            padding-bottom: 20px;
+        }
+        .story-header .novel-name {
+            font-size: 0.95rem; color: #777;
+            text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px;
+        }
+        .story-header .chapter-title { color: #4a6b5d; font-size: 1.6rem; font-weight: 600; }
+
+        .story-content { font-size: 1.15rem; color: #333333; text-align: justify; }
+        .story-content p { margin-bottom: 22px; text-indent: 25px; }
+
+        .reading-nav {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-top: 50px; padding-top: 25px; border-top: 1px dashed #8fae9f;
+        }
+        .nav-btn {
+            display: inline-block; padding: 10px 20px;
+            background-color: #ffffff; color: #4a6b5d;
+            text-decoration: none; border: 1px solid #8fae9f;
+            border-radius: 20px; font-size: 0.9rem; font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        .nav-btn:hover { background-color: #4a6b5d; color: #ffffff; border-color: #4a6b5d; box-shadow: 0 4px 8px rgba(74,107,93,0.2); }
+        .nav-btn.disabled { color: #bbb; border-color: #e0e0e0; background-color: #fafafa; pointer-events: none; box-shadow: none; }
+
+        @media (max-width: 480px) {
+            .story-container { padding: 15px; margin: 20px auto; }
+            .nav-btn { padding: 8px 14px; font-size: 0.8rem; }
+            .comment-sidebar { width: 100%; right: -100%; }
+        }
+
+        /* ── Dark mode ── */
+        body.dark-mode { background-color: #131a17; color: #dae5e0; }
+        body.dark-mode .navbar { background-color: #1b2420; box-shadow: 0 2px 5px rgba(0,0,0,0.3); }
+        body.dark-mode .navbar .logo { color: #8fae9f; }
+        body.dark-mode .nav-links a { color: #aaa; }
+        body.dark-mode .story-container { background-color: #1b2420; box-shadow: 0 2px 10px rgba(0,0,0,0.2); }
+        body.dark-mode .story-header .novel-name { color: #8fae9f; }
+        body.dark-mode .story-header .chapter-title { color: #8fae9f; }
+        body.dark-mode .story-content { color: #dae5e0; }
+        body.dark-mode .nav-btn { background-color: #1b2420; color: #8fae9f; border-color: #4a6b5d; }
+        body.dark-mode .nav-btn:hover { background-color: #4a6b5d; color: #ffffff; }
+        body.dark-mode .nav-btn.disabled { color: #444; border-color: #2e3d36; background-color: #161e1b; }
+
+        /* ── Reader controls ── */
+        .reader-controls-wrapper {
+            position: fixed; bottom: 30px; right: 30px;
+            z-index: 10000;
+            display: flex; flex-direction: column; align-items: flex-end; gap: 10px;
+        }
+        .reader-toggle-btn {
+            width: 48px; height: 48px; border-radius: 50%;
+            border: 2px solid #8fae9f; background: white; color: #4a6b5d;
+            font-size: 18px; cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15); transition: all 0.3s;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .reader-toggle-btn:hover { background: #4a6b5d; color: white; transform: scale(1.1); }
+        .reader-controls-group {
+            display: flex; flex-direction: column; gap: 10px;
+            overflow: hidden; max-height: 0; opacity: 0;
+            transition: max-height 0.35s ease, opacity 0.3s ease;
+        }
+        .reader-controls-group.open { max-height: 200px; opacity: 1; }
+        .reader-controls-group button {
+            width: 48px; height: 48px; border-radius: 50%;
+            border: 2px solid #8fae9f; background: white; color: #4a6b5d;
+            font-size: 15px; font-weight: bold; cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15); transition: all 0.3s;
+        }
+        .reader-controls-group button:hover { background: #4a6b5d; color: white; transform: scale(1.1); }
+        body.dark-mode .reader-toggle-btn,
+        body.dark-mode .reader-controls-group button { background: #1b2420; color: #8fae9f; border-color: #4a6b5d; }
+        body.dark-mode .reader-toggle-btn:hover,
+        body.dark-mode .reader-controls-group button:hover { background: #4a6b5d; color: white; }
+
+        /* ── Comment row ── */
+        .comment-row {
+            display: flex; justify-content: space-between;
+            align-items: flex-start; gap: 15px;
+            margin-bottom: 22px; width: 100%;
+        }
+        .comment-row p { flex: 1; margin-bottom: 0 !important; }
+
+        /* ── Badge ── */
+        .comment-badge {
+            cursor: pointer; flex-shrink: 0; margin-top: 6px;
+            width: 30px; height: 30px; border-radius: 50%;
+            background-color: #eaf2ee; color: #4a6b5d;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.9rem; line-height: 1;
+            transition: all 0.2s ease; user-select: none; border: none;
+        }
+        .comment-badge:hover { background-color: #4a6b5d; color: #ffffff; transform: scale(1.12); }
+        body.dark-mode .comment-badge { background-color: #25332c; color: #8fae9f; }
+        body.dark-mode .comment-badge:hover { background-color: #4a6b5d; color: #ffffff; }
+
+        /* ── Sidebar ── */
+        .comment-sidebar {
+            position: fixed; top: 0; right: -420px; width: 400px; height: 100%;
+            background: #ffffff;
+            box-shadow: -5px 0 15px rgba(0,0,0,0.05);
+            z-index: 100000;
+            transition: right 0.4s cubic-bezier(0.25,0.8,0.25,1);
+            padding: 24px; overflow-y: auto; box-sizing: border-box;
+        }
+        .comment-sidebar.active { right: 0; }
+        .sidebar-header {
+            display: flex; justify-content: space-between; align-items: center;
+            border-bottom: 1px solid #dae5e0; padding-bottom: 12px; margin-bottom: 16px;
+        }
+        .sidebar-header h4 { color: #4a6b5d; margin: 0; }
+        .close-sidebar-btn { background: none; border: none; font-size: 1.2rem; color: #999; cursor: pointer; }
+        .quoted-paragraph-box {
+            background: #f0f7f4; border-left: 3px solid #8fae9f;
+            border-radius: 4px; padding: 10px 14px;
+            font-size: 0.88rem; color: #4a6b5d; font-style: italic;
+            line-height: 1.5; margin-bottom: 12px;
+        }
+        .sidebar-mention-hint {
+            font-size: 0.8rem; color: #888;
+            background: #f8faf9; border: 1px dashed #c8ddd5;
+            border-radius: 6px; padding: 8px 12px; margin-bottom: 14px; line-height: 1.5;
+        }
+        .sidebar-mention-hint code { background: #e4efe9; color: #4a6b5d; padding: 1px 5px; border-radius: 4px; font-size: 0.78rem; }
+        body.dark-mode .sidebar-mention-hint { background: #1e2b24; border-color: #2e3d36; color: #7a9a8a; }
+        body.dark-mode .sidebar-mention-hint code { background: #2a3830; color: #8fae9f; }
+        .sidebar-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.2); z-index: 99999; display: none;
+        }
+        .sidebar-overlay.active { display: block; }
+        .sidebar-loading {
+            text-align: center; padding: 30px 0;
+            color: #aaa; font-size: 0.9rem; font-style: italic;
+        }
+
+        /* ── Discussion box ── */
+        .chapter-discussion-box {
+            max-width: 700px; margin: 30px auto 50px auto;
+            padding: 25px; background-color: #ffffff;
+            border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.02);
+        }
+        .discussion-header {
+            display: flex; justify-content: space-between; align-items: center;
+            gap: 10px; margin-bottom: 25px;
+            border-bottom: 1px dashed #dae5e0; padding-bottom: 15px;
+        }
+        .discussion-header-left { display: flex; align-items: center; gap: 10px; }
+        .discussion-header h3 { color: #4a6b5d; font-size: 1.2rem; margin: 0; }
+        .discussion-actions { display: flex; align-items: center; gap: 10px; }
+        .action-btn {
+            display: flex; align-items: center; gap: 6px;
+            padding: 7px 14px; border-radius: 20px; border: 1px solid #8fae9f;
+            background: #ffffff; color: #4a6b5d;
+            font-size: 0.85rem; font-weight: 500; cursor: pointer;
+            transition: all 0.25s ease; user-select: none;
+        }
+        .action-btn:hover { background-color: #f0f7f4; box-shadow: 0 3px 8px rgba(74,107,93,0.15); }
+        .action-btn.liked { background-color: #fff0f3; border-color: #e8a0b0; color: #c0556a; }
+        .action-btn.liked .heart-icon { animation: heartPop 0.35s ease; }
+        @keyframes heartPop {
+            0% { transform: scale(1); } 40% { transform: scale(1.45); }
+            70% { transform: scale(0.9); } 100% { transform: scale(1); }
+        }
+        body.dark-mode .action-btn { background: #1b2420; color: #8fae9f; border-color: #4a6b5d; }
+        body.dark-mode .action-btn:hover { background-color: #232e29; }
+        body.dark-mode .action-btn.liked { background-color: #2a1e22; border-color: #7a3a4a; color: #e08090; }
+        .comment-section { width: 100%; min-height: 150px; }
+
+        body.dark-mode .chapter-discussion-box,
+        body.dark-mode .comment-sidebar { background-color: #1b2420 !important; }
+        body.dark-mode .discussion-header,
+        body.dark-mode .sidebar-header { border-bottom-color: #2e3d36 !important; }
+        body.dark-mode .discussion-header h3,
+        body.dark-mode .sidebar-header h4 { color: #8fae9f !important; }
+        body.dark-mode .quoted-paragraph-box { background: #232e29; border-left-color: #4a6b5d; color: #8fae9f; }
+
+        /* ── Share modal ── */
+        .share-modal-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.35);
+            z-index: 200000; display: none; align-items: center; justify-content: center;
+        }
+        .share-modal-overlay.active { display: flex; }
+        .share-modal {
+            background: #ffffff; border-radius: 12px;
+            padding: 28px 24px 22px; width: 380px; max-width: 92vw;
+            box-shadow: 0 12px 40px rgba(0,0,0,0.18);
+            animation: slideUp 0.25s ease;
+        }
+        @keyframes slideUp {
+            from { transform: translateY(20px); opacity: 0; }
+            to   { transform: translateY(0); opacity: 1; }
+        }
+        .share-modal h4 { color: #4a6b5d; font-size: 1.05rem; margin-bottom: 16px; text-align: center; }
+        .share-link-row { display: flex; gap: 8px; align-items: center; }
+        .share-link-input {
+            flex: 1; padding: 9px 12px; border: 1px solid #c8ddd5; border-radius: 8px;
+            font-size: 0.85rem; color: #444; background: #f8faf9;
+            outline: none; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
+        }
+        .copy-link-btn {
+            padding: 9px 16px; border-radius: 8px;
+            background: #4a6b5d; color: #ffffff; border: none;
+            font-size: 0.85rem; font-weight: 600; cursor: pointer;
+            transition: all 0.2s; white-space: nowrap;
+        }
+        .copy-link-btn:hover { background: #3a5a4d; }
+        .copy-link-btn.copied { background: #6aaa88; }
+        .share-modal-close {
+            display: block; width: 100%; margin-top: 14px;
+            padding: 8px; background: none; border: none;
+            color: #999; font-size: 0.85rem; cursor: pointer; text-align: center;
+        }
+        .share-modal-close:hover { color: #555; }
+        body.dark-mode .share-modal { background: #1b2420; }
+        body.dark-mode .share-modal h4 { color: #8fae9f; }
+        body.dark-mode .share-link-input { background: #232e29; border-color: #3a5040; color: #dae5e0; }
+        body.dark-mode .share-modal-close { color: #6a8a7a; }
+    </style>
+</head>
+<body>
+
+<!-- ── NÚT NỔI ── -->
+<div class="reader-controls-wrapper">
+    <div class="reader-controls-group" id="reader-group">
+        <button onclick="changeFontSize(1)" title="Phóng to chữ">A+</button>
+        <button onclick="changeFontSize(-1)" title="Thu nhỏ chữ">A-</button>
+        <button onclick="toggleDarkMode()" id="dark-mode-btn" title="Đổi màu nền">🌙</button>
+    </div>
+    <button class="reader-toggle-btn" id="reader-toggle" onclick="toggleReaderControls()" title="Tuỳ chỉnh đọc">⚙️</button>
+</div>
+
+<script>
+function toggleReaderControls() {
+    var group = document.getElementById('reader-group');
+    var btn   = document.getElementById('reader-toggle');
+    var isOpen = group.classList.toggle('open');
+    btn.style.background = isOpen ? '#4a6b5d' : '';
+    btn.style.color      = isOpen ? '#ffffff'  : '';
+}
+function toggleDarkMode() {
+    document.body.classList.toggle('dark-mode');
+    var isDark = document.body.classList.contains('dark-mode');
+    localStorage.setItem('night-mode', isDark ? 'on' : 'off');
+    document.getElementById('dark-mode-btn').innerText = isDark ? '☀️' : '🌙';
+    syncUtterancesTheme(isDark);
+}
+function changeFontSize(delta) {
+    var content = document.querySelector('.story-content') || document.body;
+    var cur = parseFloat(window.getComputedStyle(content).fontSize);
+    content.style.fontSize = (cur + delta) + 'px';
+}
+function syncUtterancesTheme(isDark) {
+    var theme = isDark ? 'github-dark' : 'github-light';
+    document.querySelectorAll('.utterances-frame').forEach(function(f) {
+        f.contentWindow.postMessage({ type: 'set-theme', theme: theme }, 'https://utteranc.es');
+    });
+}
+(function() {
+    if (localStorage.getItem('night-mode') === 'on') {
+        document.body.classList.add('dark-mode');
+        setTimeout(function() {
+            var b = document.getElementById('dark-mode-btn');
+            if (b) b.innerText = '☀️';
+        }, 80);
+    }
+})();
+</script>
+
+<!-- ── NAVBAR ── -->
+<header class="navbar">
+    <a href="../index.html" class="logo">🌿 Góc nhỏ của Khiết</a>
+    <nav class="nav-links"><a href="../index.html">Trang Chủ</a></nav>
+</header>
+
+<!-- ── KHUNG ĐỌC ── -->
+<main class="story-container">
+    <div class="story-header">
+        <p class="novel-name">Chia Tay Thôi Mà, Sao Anh Ta Bỗng Dưng Điên Thế</p>
+        <h1 class="chapter-title">Chương 49</h1>
+    </div>
+
+    <article class="story-content">
+        <p>“Bốp!”</p>
+        <p>“Bốp!”</p>
+        <p>“BỐP!”</p>
+        <p>Nắm đấm siết chặt đến mức dần trở nên trắng bệch, mất đi màu sắc khỏe mạnh vốn có, đó là kết quả của sự dồn nén lực mạnh khiến cơ thịt bị ép sát vào xương.</p>
+        <p>Nhưng các khớp ngón tay nhanh chóng loang đỏ, chất lỏng từng sợi từng sợi trượt xuống, đó là máu của Uông Thu Phàm, cả những vết thương bị rạch ra khi khớp xương của Lục Tễ Hành đấm mạnh vào răng ông.</p>
+        <p>“Ai... ai vậy... aaaa!!” Uông Thu Phàm thét lên thảm thiết, bởi một chiếc răng cửa đã rơi mất, một chiếc khác thì gãy đôi, khiến ông vừa nói vừa rít gió, miệng hở hoác như chiếc ống bể nát vô dụng.</p>
+        <p>Bị đánh đến mức cổ họng khản đặc, mỗi âm thanh phát ra đều khô khốc, méo mó, giống như nhìn thấy ma quỷ trong cơn ác mộng.</p>
+        <p>“Cứu với… cứu mạng với…” Uông Thu Phàm hai chân đạp loạn, đôi giày da vì gót trượt trên mặt đất mà bị hất bay ra.</p>
+        <p>Đôi mắt ông trợn trừng, thâm tím đỏ quạch, nhìn Lục Tễ Hành đầy khiếp đảm, sống mũi dường như cũng bị đánh gãy, cơn đau quặn thắt như xuyên tim, khiến nước mắt trào ra không ngừng.</p>
+        <p>“Aaaa aaaa giết người rồi, giết người rồi…”</p>
+        <p>Uông Thu Phàm vừa rên vừa la, hơi thở hắt qua miệng đầy máu và gió: “Có ai không cứu tôi với… cứu mạng, đừng đánh nữa, đừng đánh nữa tôi đưa tiền mà, xin anh đấy... AAAAA!!”</p>
+        <p>Lục Tễ Hành đè đầu ông xuống, hung hăng đập vào mặt đất lạnh cứng, Uông Thu Phàm lập tức choáng váng, mắt hoa đầu váng, tiếng hét cũng ngưng bặt trong thoáng chốc.</p>
+        <p>Máu rịn ra từ khóe trán ông ta, nóng hổi nhuộm ướt tóc mai.</p>
+        <p>Khi ánh mắt lướt qua vệt đỏ tuyệt vọng ấy, đồng tử Uông Thu Phàm co rút dữ dội, há miệng cứng đờ, không dám thở mạnh.</p>
+        <p>Ông nghĩ mình sắp chết rồi.</p>
+        <p>Ông sắp bị một người đàn ông mà ông còn chưa từng gặp giết chết.</p>
+        <p>Sao lại có người dám làm chuyện như thế này trong xã hội pháp trị...</p>
+        <p>Sao hắn dám ở nơi công cộng giữa ban ngày ban mặt phạm tội trắng trợn như vậy?</p>
+        <p>Người đàn ông trẻ tuổi ấy, gương mặt lạnh lùng đến rợn người, vứt Uông Thu Phàm xuống đất, chỉ túm cổ áo ông mà không cần thêm bất kỳ áp lực nào khác, Uông Thu Phàm cũng không tài nào đứng dậy nổi.</p>
+        <p>Ông nằm vặn vẹo trên mặt đất, cả khuôn mặt be bét máu, xung quanh đã có rất nhiều người vây lại.</p>
+        <p>Trong cơn đau khiến người ta chỉ muốn chết quách đi, Uông Thu Phàm thầm nghĩ: mình chắc chắn được cứu rồi, sẽ có người gọi cảnh sát.</p>
+        <p>Rất nhiều người đang bàn tán, nói chuyện.</p>
+        <p>Nhưng...</p>
+        <p>Nhưng sao họ lại đang nói những điều này?</p>
+        <p>“Nghe nói là cái cặp công văn của cậu thanh niên kia bị rơi, quay lại tìm thì thấy người nằm dưới đất kia nhặt được, trong đó có hai trăm ngàn tệ, cậu ấy bảo người kia trả lại, ông ta không chịu, còn chửi người ta bị điên, không bị đánh mới lạ.”</p>
+        <p>Một bà cô thở dài cảm khái: “Hai trăm ngàn đâu phải hai tệ, người ta mà không quay lại thì thôi, đằng này quay lại rồi, ông ta không những không trả, còn xúc phạm người ta...”</p>
+        <p>“Thật á? Sao lại có người thế này? Cô nghe ai kể vậy?”</p>
+        <p>Bà cô nghiêm mặt: “Vừa nãy có cậu trai trẻ nói, người đánh là sếp của cậu ấy, họ đi công chuyện nên rút hai trăm ngàn tiền mặt, chẳng may làm rơi cái cặp, trong đó còn có cả hóa đơn rút tiền nữa…”</p>
+        <p>Bà vừa ăn hạt dưa vừa cho vỏ vào túi, định quay tìm cậu trai đó nhưng người quá đông không thấy đâu, bèn quay lại nói tiếp: “Đã rõ là tiền có chủ, mà ông ta nhặt được không trả thì là ăn trộm, phải trị!”</p>
+        <p>“Nhưng mà... cậu ấy đánh gần chết người ta rồi còn gì...”</p>
+        <p>Uông Thu Phàm đầu óc mơ hồ, chóng mặt dữ dội, gì mà hai trăm ngàn, gì mà không trả, gì mà đáng bị đánh... đang nói ông sao?</p>
+        <p>Sao vẫn chưa có ai gọi cảnh sát?</p>
+        <p>“Yên tâm, không chết được đâu, chỉ chảy tí máu mũi thôi,” bà cô chắc nịch, “Cậu ấy nói là đã bảo nhân viên gọi cảnh sát rồi, tức là sẽ giao cho pháp luật xử lý, không đánh tiếp đâu. Hơn nữa là cái người nhặt được tiền kia mới là người ra tay trước, cậu trẻ kia chỉ là tự vệ thôi, tình huống này cùng lắm thì cũng chỉ là ẩu đả.”</p>
+        <p>Tai ù đi, lờ mờ nghe được những lời ấy, Uông Thu Phàm trợn trừng mắt, không khỏi hoài nghi, không thể tin nổi…</p>
+        <p>Tên đánh ông kia lại dám tự gọi cảnh sát?</p>
+        <p>Tên đó nghĩ sẽ thắng được sao?</p>
+        <p>Mà... tên đó đã ra tay lúc nào cơ chứ?!</p>
+        <p>Cuộc bạo hành đơn phương này kéo dài bao lâu Uông Thu Phàm cũng không rõ, chỉ thấy mắt mình sưng vù, đau đớn tột độ, chẳng mấy chốc trước mắt chỉ còn lại lớp sương đỏ mờ mịt.</p>
+        <p>Trương Trình đứng ngoài vòng người vây quanh, sừng sững như núi, chẳng hề dao động, làm một kẻ ngoài cuộc điển hình.</p>
+        <p>Trước khi đến đây, Lục Tễ Hành đã ghé qua gặp quản lý của khu chung cư tồi tàn này, nói rằng anh muốn đầu tư phát triển xây dựng nơi này. Nếu môi trường dân cư tốt, thì có thể cân nhắc ký kết hợp đồng và các thỏa thuận tiếp theo.</p>
+        <p>Đúng kiểu “bánh từ trên trời rơi xuống”, quản lý vừa nghe xong thì mắt sáng rực như có ánh lục quang, liên tục cam đoan rằng cư dân nơi đây ai cũng hiền lành, thân thiện dễ gần. Thế mà chưa đầy mười phút sau, ông nhận được tin rằng ngay bên đường có vụ ẩu đả và cướp tiền nghiêm trọng, sợ đến mức dẫn theo bảy tám bảo vệ chạy bổ đến hiện trường.</p>
+        <p>Tới nơi nhìn rõ mới chết lặng, người ra tay đánh người lại chính là vị tổng giám đốc họ Lục vừa mới đề xuất đầu tư cho khu này!</p>
+        <p>Quản lý lập tức tối sầm mặt mày, cảm thấy cơ hội đầu tư tiêu rồi. Vì muốn cứu vớt chút tín nhiệm mong manh còn sót lại, ông vội ra lệnh cho bảo vệ giữ trật tự, khuyên cư dân đứng gần đừng quay video hay chụp ảnh để đăng mạng câu view, tất cả phải xóa sạch.</p>
+        <p>Để phòng ngừa bất trắc, Trương Trình cũng đã thông báo cho bộ phận quan hệ công chúng của công ty từ trước, gửi tọa độ hiện tại, dặn rằng nếu có IP nào thuộc khu dân cư này đăng tải video liên quan lên mạng, phải kịp thời xóa bỏ và kiểm soát.</p>
+        <p>Trước khi hành động, Lục Tễ Hành đã căn dặn:</p>
+        <p>Không được để chuyện này gây chú ý.</p>
+        <p>Tuyệt đối không để Phương Nhiên Tri nhìn thấy.</p>
+        <p>Cho dù là vô tình nhìn thấy cũng không được.</p>
+        <p>Anh lo liệu mọi thứ chu toàn, kín kẽ.</p>
+        <p>Và quả thật, anh làm được.</p>
+        <p>Thế nên anh toàn tâm toàn ý xử lý Uông Thu Phàm, thậm chí không buồn ngẩng đầu.</p>
+        <p>Tới khi cảnh sát đến nơi, Lục Tễ Hành mới dừng việc lấy nắm đấm đập vào mặt ông. Chiếc cà vạt quấn trên tay phải anh đầy vết máu, anh cúi đầu tháo xuống, lạnh nhạt ném vào thùng rác.</p>
+        <p>Các khớp ngón tay trắng bệch, dính máu đỏ tươi, không chỉ máu của Uông Thu Phàm, mà còn cả máu của anh do bị răng đối phương cứa rách.</p>
+        <p>Mặt mũi Uông Thu Phàm sưng vù trông đến khiếp, nhưng đều là ngoại thương không chí mạng. Chỉ có sống mũi trông hơi lệch lệch, cộng thêm mất một chiếc rưỡi răng cửa, mỗi lần mở miệng thở dốc, trông vừa nhếch nhác vừa buồn cười.</p>
+        <p>Ông nằm vật ra đất, nửa sống nửa chết, hai mắt sưng húp đầy căm hận và sợ hãi nhìn chằm chằm Lục Tễ Hành, người đã đánh ông gần chết.</p>
+        <p>Nhưng người đàn ông kia giờ lại đứng ven đường, thong thả châm một điếu thuốc.</p>
+        <p>Thật là lịch thiệp, tao nhã làm sao... như thể mọi chuyện vừa rồi chỉ là ảo ảnh.</p>
+        <p>Thuốc cháy lên, anh lại không hút, chỉ để nó âm ỉ cháy giữa hai ngón tay.</p>
+        <p>Làn khói trắng bay thẳng lên không, chứng tỏ hôm nay trời lặng gió.</p>
+        <p>Lục Tễ Hành kẹp thuốc trong tay phải, dáng vẻ tùy ý, cụp mắt nhìn đốm lửa màu đỏ đang chậm rãi thiêu rụi điếu thuốc, giống như sinh mệnh của một vài người.</p>
+        <p>Sớm muộn gì cũng sẽ tàn.</p>
+        <p>Anh liếc mắt, ánh nhìn trống rỗng không chút cảm xúc quét qua Uông Thu Phàm.</p>
+        <p>Chỉ một ánh mắt đó khiến toàn thân Uông Thu Phàm run lên bần bật, không tài nào kiểm soát nổi.</p>
+        <p>Rõ ràng họ chưa từng gặp nhau, cũng chẳng quen biết.</p>
+        <p>Tại sao... tại sao ánh mắt đó lại mang theo sát khí muốn giết người đến vậy, quá đáng sợ.</p>
+        <p>Quá đáng sợ.</p>
+        <p>Ông muốn gọi anh trai mình, Uông Thu Phàm nghĩ, để anh của ông bắt tên này lại.</p>
+        <p>Người này vô cớ đánh người ở nơi công cộng giữa ban ngày, cố ý gây rối, bản chất hành vi cực kỳ tồi tệ, chỉ cần nói một tiếng với anh trai, tên này nhất định sẽ bị xử theo mức án cao nhất của tội cố ý gây rối trật tự.</p>
+        <p>Hắn đừng hòng trốn tránh trách nhiệm!</p>
+        <p>Nhưng mọi chuyện lại phát triển hoàn toàn trái ngược với suy nghĩ của ông.</p>
+        <p>Chiếc cặp công văn được cho là chứa hai trăm ngàn tệ tiền mặt nằm ngay bên cạnh Uông Thu Phàm, chính là ông nhặt được và không chịu trả.</p>
+        <p>Sau khi nhặt được khoản tiền lớn, ông  còn lăng mạ người sở hữu là Lục Tễ Hành, thậm chí ra tay trước.</p>
+        <p>Người dân đứng quanh gần như ai cũng là nhân chứng.</p>
+        <p>Quản lý khu dân cư cũng là một trong số đó, ông tới đồn cảnh sát làm bản tường trình, tuy hơi xấu hổ nhưng vẫn khách quan nói rằng Uông Thu Phàm bình thường nhân phẩm vốn chẳng ra gì, còn Lục Tễ Hành thì đến đây để khảo sát đầu tư đất đai, chẳng có lý do gì tự nhiên gây sự.</p>
+        <p>Từng câu từng chữ, từng lời khai đều bất lợi với Uông Thu Phàm.</p>
+        <p>Tại đồn cảnh sát, Uông Thu Phàm nóng nảy giậm chân gào to: “Hắn nói dối! Không phải tôi! Là hắn đột nhiên xông lên, vô cớ đánh tôi... tôi... tôi muốn gọi cho Cục trưởng Uông! Tôi muốn gọi cho Cục trưởng Uông!”</p>
+        <p>Ông phì phò nói, gió thổi qua hai khoảng đen ngòm từng là răng cửa, cộng thêm gương mặt bầm tím sưng vù, trông vừa buồn cười vừa thảm hại.</p>
+        <p>Viên cảnh sát trẻ đang ghi biên bản bên cạnh khẽ nhếch khóe môi, cố nhịn cười mà không được. Biết rằng như vậy là không đúng, nên cậu vội cúi thấp đầu đến sát ngực, đôi vai khẽ rung lên từng nhịp.</p>
+        <p>“Chết tiệt, điện thoại tôi đâu rồi!”</p>
+        <p>Uông Thu Phàm đổ mồ hôi lạnh vì đau, tay mò khắp người vẫn không tìm thấy điện thoại, trên trán đã lấm tấm một lớp mồ hôi.</p>
+        <p>Chắc chắn là lúc nãy bị đánh, điện thoại đã rơi khỏi túi quần.</p>
+        <p>Uông Thu Phàm vừa nghĩ, vừa bước đi, định quay lại tìm điện thoại của mình.</p>
+        <p>Một cánh tay mặc đồng phục chặn thẳng trước mặt ông, người lên tiếng mặt mày không chút thiện ý: “Ông tưởng đây là nhà ông chắc?”</p>
+        <p>“Anh có biết tôi là ai không?” Uông Thu Phàm giận dữ quát lên, “Tôi nói mấy người không tin đúng không? Vậy thì điều tra camera đi!”</p>
+        <p>“Ở đó không có camera.”</p>
+        <p>Gương mặt vừa sưng vừa đỏ của Uông Thu Phàm nghe đến câu này thì thoáng chốc tái xanh khó coi.</p>
+        <p>Ông bắt đầu nhận ra, lần này dù có lý cũng khó mà nói rõ.</p>
+        <p>Bên cạnh không có camera, cũng không có nhân chứng đứng về phía ông, mà cái cặp công văn kia đúng là do ông nhặt trước.</p>
+        <p>Mẹ kiếp, có phải ông bị gài bẫy rồi không?</p>
+        <p>Khoảng sáu giờ rưỡi chiều, Uông Xuân Bình trong trang phục thường dân đến đồn cảnh sát để đón em trai mình.</p>
+        <p>Mọi người biết Uông Thu Phàm có quan hệ như vậy thì đều bất ngờ, thi nhau nói mấy lời tốt đẹp, muốn biểu đạt rằng không cố ý làm khó em trai ông.</p>
+        <p>Nhưng ngay sau đó, họ thấy Uông Xuân Bình chẳng buồn liếc nhìn em trai lấy một cái, mà đi thẳng đến chỗ Lục Tễ Hành, còn vô cùng hòa nhã.</p>
+        <p>Cuối cùng, Uông Xuân Bình thay mặt em trai mình, kẻ “vừa không chịu trả tiền lại còn đánh người” mở lời xin lỗi với Lục Tễ Hành.</p>
+        <p>Nói xong lời xin lỗi, ông ta liền chuyển giọng, Lục Tễ Hành cũng đã đánh Uông Thu Phàm đến mức như vậy rồi, hai bên đều có trách nhiệm, hy vọng cả hai không truy cứu nữa, hòa giải là hơn.</p>
+        <p>Làm to chuyện ra thì chẳng có lợi cho ai.</p>
+        <p>Uông Xuân Bình nói: “Ngài Lục, chuyện này vốn dĩ cũng không phải việc gì lớn, chỉ là chút xích mích nhỏ thôi, đúng không nào?”</p>
+        <p>“Brừ…”</p>
+        <p>Điện thoại trong tay rung lên, Lục Tễ Hành cụp mắt nhìn màn hình, thuận miệng nói: “Được, tôi tha thứ cho ông ta.”</p>
+        <p>Lúc nói câu đó, anh thậm chí còn chẳng buồn ngước mắt nhìn lấy một cái, dáng vẻ kiêu ngạo đến mức khiến người khác không thở nổi.</p>
+        <p>Thế nhưng Uông Xuân Bình lại không hề tỏ thái độ gì, chỉ tiếp tục mỉm cười, còn chân thành cảm ơn anh.</p>
+        <p>Trước khi rời đi, ánh mắt Lục Tễ Hành lướt qua Uông Thu Phàm, ánh nhìn lạnh như tử vong, trống rỗng như vực sâu không đáy.</p>
+        <p>Tựa như... chỉ khi giết chết ông, mới có thể khiến mặt hồ lặng lẽ kia gợn lên một tia gợn sóng.</p>
+        <p>Trải qua hai tiếng hồi phục, thân thể Uông Thu Phàm vốn đã ngừng run rẩy lại một lần nữa bắt đầu không kiểm soát được mà run lên, như đang bị cơn lạnh thấu xương giày vò.</p>
+        <p>Ông đột nhiên có một dự cảm kỳ lạ khủng khiếp, từ hôm nay trở đi, cuộc sống của ông sẽ chẳng khác gì sống không bằng chết.</p>
+        <p>…...</p>
+        <p>Ra khỏi đồn cảnh sát, Lục Tễ Hành mở cửa xe Lexus ngồi vào ghế sau, rồi nhắn tin trả lời Phương Nhiên Tri.</p>
+        <p>Vừa nãy là cậu nhắn tin cho anh.</p>
+        <p>Chỉ Chỉ hỏi: [Anh à, anh về nhà chưa?]</p>
+        <p>Lục Tễ Hành trả lời: [Vẫn chưa.]</p>
+        <p>Lại nhắn thêm: [Sao thế bé cưng?]</p>
+        <p>Tại phim trường, Phương Nhiên Tri vừa kết thúc phân cảnh cao trào của ngày hôm nay. Quay xong, cậu lặng lẽ ngồi ở một góc thất thần.</p>
+        <p>Nửa tiếng trôi qua, cậu vẫn không hề nhúc nhích.</p>
+        <p>Cứ như cơ thể đã hóa thành một con rối gỗ, phải có người giật dây mới có thể cử động.</p>
+        <p>Từ lúc ánh tà dương dần chìm về phía tây, đến khi bầu trời chỉ còn lại một dải mây đỏ nhạt nơi chân trời, gió chiều se lạnh bất ngờ lùa tới khiến mắt Phương Nhiên Tri đau nhói, lúc này cậu mới như tỉnh mộng.</p>
+        <p>Trong phòng trang điểm, từng câu từng chữ mà Trác Khinh Mạc nói cứ như bám chặt vào xương tủy cậu, đau đến mức gần như không thể đứng thẳng.</p>
+        <p>Cậu chỉ muốn lập tức cuộn người lại, co thành một cục, biến mất khỏi thế giới này, không gặp ai nữa.</p>
+        <p>Nhưng cậu là con người, cậu không có vỏ cứng để ẩn mình, cũng không thể thực sự trốn tránh, mà vẫn còn công việc phải hoàn thành.</p>
+        <p>“...Nhiên Nhiên, em đang lừa anh đúng không?”</p>
+        <p>Khi ấy, Trác Khinh Mạc nhìn chằm chằm vào chiếc nhẫn bạc trên sợi dây chuyền của Phương Nhiên Tri, cố gắng phân biệt kiểu dáng chiếc nhẫn đó với chiếc mà Lục Tễ Hành đeo. Nhưng dù cố phủ nhận thế nào, chúng vẫn là một đôi nhẫn cặp.</p>
+        <p>Thế nhưng anh không tin, nên nhất định phải tự rước nhục mà hỏi cho rõ.</p>
+        <p>“Tiền bối Trác, xin anh đừng gọi tôi như thế, khó nghe lắm.” môi Phương Nhiên Tri trắng bệch, lên tiếng, “Tôi lừa anh để làm gì? Tôi với anh chẳng có quan hệ gì, tôi có lừa anh hay không, thì tôi được lợi gì?”</p>
+        <p>Rõ ràng cậu đã bị lời nói của Trác Khinh Mạc dọa sợ, run lên vì hoảng, đến cả giọng nói cố gắng giữ bình tĩnh cũng khẽ run rẩy.</p>
+        <p>Nhưng cậu vẫn ngẩng cao cái cổ mảnh mai, kiên cường đối mặt.</p>
+        <p>Phản bác anh.</p>
+        <p>Công kích anh.</p>
+        <p>Giống như sáu năm trước, khi bị lột sạch quần áo, bị quay video, cậu vẫn kiên cường không chịu cúi đầu, suýt nữa bị làm nhục thậm tệ.</p>
+        <p>“Nhiên Nhiên...” Trác Khinh Mạc đưa tay định chạm vào cậu.</p>
+        <p>Phương Nhiên Tri lập tức lùi lại một bước, cảnh giác nhìn bàn tay đó: “Tránh xa tôi ra.”</p>
+        <p>Bàn tay phải của Trác Khinh Mạc khựng lại giữa không trung, vết bớt nhạt màu trên cổ tay anh đột nhiên trở nên nổi bật một cách kỳ lạ.</p>
+        <p>Ánh mắt Phương Nhiên Tri như bị thôi miên, không tự chủ được mà nhìn chằm chằm vào đó.</p>
+        <p>Có gì đó... đang muốn phá vỡ lớp ký ức bụi mờ đã bị phong kín từ lâu.</p>
+        <p>Hình như là... sáu năm trước...</p>
+        <p>“Giữ chặt nó lại cho tao!”</p>
+        <p>Khuôn mặt dữ tợn của Uông Thu Phàm gào thẳng vào mặt Phương Nhiên Tri, hai hàm răng nghiến chặt như muốn nuốt sống cậu: “Đcm còn dám báo cảnh sát, là lần thứ mấy rồi hả thằng oắt con? Tao nói mày bao nhiêu lần rồi là vô ích, chỉ tổ làm phiền đến phó cục thôi, sao mà ngu thế, tao tưởng chỉ có đàn bà mới dài dòng, ngây thơ như vậy. Mẹ kiếp, hôm nay tao mà không đánh chết mày thì không xứng mặt người, tao sẽ chơi mày, tin không?”</p>
+        <p>Phương Nhiên Tri vùng vẫy trốn chạy, cậu không thể ra khỏi cánh cổng của viện phúc lợi. Nhưng viện phúc lợi thì chỉ rộng đến vậy, dù cậu trốn ở đâu, cuối cùng cũng sẽ bị lôi ra.</p>
+        <p>“Trác Tiêu! Rất nhiều video của mày còn trong tay tao đấy! Tao bảo mày bắt lấy nó, lột sạch nó cho tao!”</p>
+        <p>Giọng Uông Thu Phàm vang lên như tiếng ác quỷ gào rú, khiến sống lưng lạnh buốt.</p>
+        <p>Ngay sau đó, một nam sinh đeo khẩu trang túm lấy Phương Nhiên Tri. Cổ tay phải của người đó có một vết sẹo xấu xí.</p>
+        <p>“...Là anh?”</p>
+        <p>Trong phòng hóa trang, giọng Phương Nhiên Tri vang lên như mộng, đầy nghi hoặc, âm thanh không còn vững vàng.</p>
+        <p>Cậu nhìn Trác Khinh Mạc với vẻ hoang mang và sợ hãi, vô thức lùi lại một bước:</p>
+        <p>“Trác... Tiêu?”</p>
+        <p>Thời gian đã trôi qua quá lâu, mà ký ức năm ấy cậu lại cố ý quên đi, nên cái tên đó rốt cuộc có đúng hay không, Phương Nhiên Tri cũng không còn chắc nữa.</p>
+        <p>Nhưng cậu cảm thấy, Trác Khinh Mạc từng nói vết giống như vết cắt cổ tay ấy là bớt bẩm sinh, kỳ thực không phải vậy.</p>
+        <p>Đó chính là sẹo.</p>
+        <p>Chỉ là sau đó đã phẫu thuật thẩm mỹ xử lý qua.</p>
+        <p>Nhưng không hiểu sao lại không xóa sạch được.</p>
+        <p>“Nhiên Nhiên,” Trác Khinh Mạc khẽ cười, giọng nói mang theo chút cay đắng, “Giờ em mới nhận ra anh à?”</p>
+        <p>Thì ra là thật. Anh thậm chí không buồn phủ nhận, không hề chống chế, cũng chẳng giả ngu hỏi “Trác Tiêu là ai”.</p>
+        <p>“Cho nên em thấy đó, Nhiên Nhiên, người hiểu em nhất chính là anh.” Trác Khinh Mạc nói, nét mặt bình thản, “Quá khứ của em, anh biết hết. Còn Lục Tễ Hành thì sao? Hắn biết không?”</p>
+        <p>Phương Nhiên Tri nói nhỏ: “Anh đừng nói nữa.”</p>
+        <p>“Nếu như hắn biết rồi, liệu còn muốn ở bên em không?”</p>
+        <p>“Trác Khinh Mạc, anh câm miệng cho tôi!”</p>
+        <p>Phương Nhiên Tri rất muốn hỏi, nếu hai người họ đều xuất thân từ viện phúc lợi Hồng Hoa, nếu kẻ thù của cả hai đều là Uông Thu Phàm, tại sao Trác Khinh Mạc lại muốn uy hiếp cậu?</p>
+        <p>Nhưng cậu không buồn mở miệng hỏi nữa.</p>
+        <p>Tâm đã thối rữa thì là thối rữa rồi, không thể cứu được.</p>
+        <p>Đó chính là cảm xúc lúc này của Phương Nhiên Tri, phẫn nộ, bất an, kinh hoàng... và tuyệt vọng.</p>
+        <p>Ngay cả Uông Thu Phàm mà cậu còn chưa hoàn toàn thoát khỏi, giờ lại xuất hiện thêm một Trác Khinh Mạc.</p>
+        <p>Ai cũng đem Lục Tễ Hành ra làm điểm uy hiếp cậu.</p>
+        <p>Chỉ vì yêu là điểm yếu sao?</p>
+        <p>...Tại sao lại phải như thế này?</p>
+        <p>Bị Uông Thu Phàm tống tiền suốt bảy năm, Phương Nhiên Tri hiểu rõ, Trác Khinh Mạc năm nay đã hai mươi bảy tuổi, chắc chắn còn bị đe dọa lâu hơn. Cậu hiểu sự vặn vẹo trong lòng người này.</p>
+        <p>Nhưng cậu không đồng tình.</p>
+        <p>Lại càng không thỏa hiệp.</p>
+        <p>“Cút.” cậu khàn giọng nói: “Chuyện anh Lục muốn hay không muốn tôi, là chuyện giữa tôi và anh ấy, không liên quan đến anh.”</p>
+        <p>“Vậy anh sẽ nói...”</p>
+        <p>“Anh đi đi!” giọng Phương Nhiên Tri không khống chế được mà cao lên, “Muốn chết sớm đầu thai sớm, giờ đi luôn đi! Tôi không sợ anh, anh Lục của tôi cũng chẳng thèm để mắt tới anh!”</p>
+        <p>“Em chắc chứ?”</p>
+        <p>Trác Khinh Mạc tiến lên một bước: “Nhiên Nhiên...”</p>
+        <p>Nhưng lời nói của anh bị cắt ngang bởi tiếng gõ cửa của chuyên viên trang điểm.</p>
+        <p>Khoảnh khắc đó vang lên, Trác Khinh Mạc lập tức im lặng, lui về phía sau.</p>
+        <p>Trước khi xoay người rời đi, anh nhẹ nhàng thở dài một tiếng: “Em cứ quay phim cho tốt đi.”</p>
+        <p>Tâm trạng và tinh thần đã bị phá nát thế kia, còn quay nổi sao?</p>
+        <p>Phương Nhiên Tri nghĩ rằng, khi máy quay bắt đầu, mình sẽ hoàn toàn mất trạng thái, chắc chắn sẽ NG đến hàng chục lần.</p>
+        <p>Nhưng ngoài dự đoán, không hề có lỗi NG nào.</p>
+        <p>Nhân vật Ôn Tự Lương yêu cầu phải thể hiện một chuỗi cảm xúc phức tạp: mâu thuẫn, rối ren, nghi hoặc và hoang mang. Và lúc này, Phương Nhiên Tri lại đang có đủ cả. Trong đó có hai cảnh quay dài quay một mạch không cắt, quay xong cả lưng cậu đẫm mồ hôi.</p>
+        <p>Bắt đầu quay lúc năm giờ hai phút, kết thúc lúc năm giờ năm mươi hai.</p>
+        <p>Phương Nhiên Tri ngồi xuống ghế gấp nhỏ. Hôm nay cậu không có cảnh quay đêm, có thể nhẹ nhõm kết thúc công việc mà về khách sạn nghỉ ngơi.</p>
+        <p>Nhưng cậu lại không nhớ đến chuyện đó, chỉ ngồi lặng ở đó.</p>
+        <p>Ngô Chí đi đến trò chuyện với cậu, nhưng Phương Nhiên Tri lại cảm thấy giọng nói kia rất xa, như chẳng hề nói với mình.</p>
+        <p>Vì thế, không đáp lại.</p>
+        <p>Chuyện diễn viên đắm chìm trong vai diễn là chuyện thường gặp, cần tự mình điều chỉnh và thoát ra. Ngô Chí tưởng Phương Nhiên Tri cũng đang như vậy, nhất là sau cảnh cao trào vừa rồi, tiêu hao cảm xúc rất nhiều, nên anh không tiếp tục quấy rầy.</p>
+        <p>Nhưng anh không hề biết, trong đầu Phương Nhiên Tri lúc này vẫn là những lời nói của Trác Khinh Mạc và cả hình bóng Lục Tễ Hành.</p>
+        <p>Đến sáu giờ rưỡi, cậu cuối cùng không nhịn được nữa, gửi tin nhắn cho anh.</p>
+        <p>Không biết anh từ khách sạn rời đi là về thẳng nhà, hay lại về công ty làm việc tiếp, rồi mới tan làm.</p>
+        <p>Tôi là Tri Tri: [Anh về đến nhà chưa ạ?]</p>
+        <p>Anh [trái tim tình yêu]: [Chưa về.]</p>
+        <p>Anh [trái tim tình yêu]: [Sao vậy bé cưng?]</p>
+        <p>Lục Tễ Hành rời đi từ hơn hai giờ, vậy mà gần bảy giờ rồi vẫn chưa về đến nhà, Phương Nhiên Tri hơi nhíu mày, nhưng ánh mắt lại bị câu “Sao vậy bé cưng?” kia hút chặt. Cậu đột nhiên cảm thấy mắt mình đau rát, chỉ trong thoáng chốc đã mờ hẳn, chẳng nhìn rõ gì nữa.</p>
+        <p>Cậu đúng là hay khóc thật.</p>
+        <p>Chỉ cần Lục Tễ Hành vừa xuất hiện, tuyến lệ của cậu liền như đập nước, phát triển quá mức.</p>
+        <p>Nhưng hiện tại vẫn đang ở phim trường, không thể để nước mắt rơi.</p>
+        <p>Tôi là Tri Tri:  [Không có gì đâu, chỉ là muốn hỏi anh đã về nhà chưa, em muốn trò chuyện với anh.]</p>
+        <p>Anh [trái tim tình yêu]: [Quay xong cảnh hôm nay rồi à? Gọi điện thoại được không?]</p>
+        <p>Phương Nhiên Tri liếc quanh bốn phía, người vẫn còn đông.</p>
+        <p>Tôi là Tri Tri:  [Không tiện lắm ạ.]</p>
+        <p>Tôi là Tri Tri:  [Anh à, đợi em về đến khách sạn rồi gọi cho anh nha.]</p>
+        <p>Anh [trái tim tình yêu]: [Được.]</p>
+        <p>Có được niềm tin làm chỗ dựa, Phương Nhiên Tri đứng dậy, dậm dậm đôi chân đã tê cứng, rồi đi tẩy trang thay đồ.</p>
+        <p>Bảy giờ hai mươi phút, xe bảo mẫu rời khỏi phim trường, thẳng tiến về phía khách sạn.</p>
+        <p>Trác Khinh Mạc cố tình đứng nhìn cậu rời đi rồi mới chịu tan làm.</p>
+        <p>Anh vẫn không tin Lục Tễ Hành thực sự sẽ kết hôn với Phương Nhiên Tri.</p>
+        <p>Một người sinh ra ở La Mã, một người lớn lên trong bùn đất, sao có thể xứng đôi?</p>
+        <p>Khi đến khách sạn, đứng trước cánh cửa quen thuộc của căn phòng, Phương Nhiên Tri mới cảm thấy cơ thể buông lỏng.</p>
+        <p>Ở đây không có Trác Khinh Mạc.</p>
+        <p>Ở đây cũng không có ác mộng.</p>
+        <p>“—Nhiên Nhiên.”</p>
+        <p>Tay Phương Nhiên Tri khựng lại trước đầu đọc thẻ từ, “tích” một tiếng, cửa mở ra, nhưng cậu lại không bước vào.</p>
+        <p>Cậu chậm rãi xoay người, nhìn thấy Trác Khinh Mạc từ một người lịch thiệp nhã nhặn, giờ đây hóa thành một con quỷ đội lốt người, sự kiên nhẫn hiếm hoi đã cạn sạch: “Anh rốt cuộc muốn gì?”</p>
+        <p>“Anh không muốn gì cả, em cũng không nên chất vấn anh như thế,” Trác Khinh Mạc thật sự rất đau lòng, “Anh nói rồi, anh hiểu em, anh cũng rất thích em, sao em lại không tin? Lại còn đột nhiên tránh anh như tránh rắn rết.”</p>
+        <p>“Anh thích tôi?”</p>
+        <p>Dù đã sớm nhận ra ý đồ của Trác Khinh Mạc, nhưng đây là lần đầu tiên anh nói ra chữ “thích” một cách rõ ràng.</p>
+        <p>Phương Nhiên Tri không kìm được thì thầm hỏi lại, cảm thấy dạ dày như bị khuấy đảo. Cậu nói: “Tôi nói lại lần nữa, tôi đã kết hôn rồi.”</p>
+        <p>Trác Khinh Mạc nói: “Chắc chỉ là một cuộc giao dịch chứ gì?”</p>
+        <p>Anh đoán: “Hợp đồng hôn nhân?”</p>
+        <p>Đồng tử Phương Nhiên Tri khẽ chấn động.</p>
+        <p>“Nhiên Nhiên, hắn còn chẳng cho em tài nguyên tốt, còn anh thì có thể...”</p>
+        <p>“Rầm!”</p>
+        <p>Cánh cửa phòng phía sau bỗng bị người bên trong mạnh tay kéo ra, vang lên một tiếng động lớn.</p>
+        <p>Một bóng người cao lớn xuất hiện ngay tức thì.</p>
+        <p>Một cánh tay mạnh mẽ vươn ra, ôm lấy cổ vai Phương Nhiên Tri, kéo cậu về phía mình.</p>
+        <p>Phương Nhiên Tri chưa kịp phản ứng, chân bước loạng choạng một bước, cả người ngã nhào về phía sau.</p>
+        <p>Lưng cậu dán chặt vào lồng ngực quen thuộc ấy.</p>
+        <p>Phương Nhiên Tri đột ngột ngẩng đầu, đôi mắt mở to, hoàn toàn không thể tin được, Lục Tễ Hành lẽ ra giờ này phải trở về biệt thự Tử Kinh, lại đột nhiên xuất hiện trong phòng khách sạn của cậu.</p>
+        <p>“Anh à…” cậu mấp máy môi, muốn gọi một tiếng, nhưng âm thanh lại nghẹn trong cổ họng, không sao phát ra nổi.</p>
+        <p>Lục Tễ Hành ôm chặt lấy Phương Nhiên Tri, ánh mắt lạnh lẽo nhìn chằm chằm Trác Khinh Mạc, cất giọng: “Anh Trác, tôi và vợ tôi giống giao dịch ở chỗ nào? Đừng đội lốt cái gọi là thích rồi đi chen chân phá hoại, có thấy ghê tởm không?”</p>
+        <p>Mặt Trác Khinh Mạc lập tức sa sầm, tái mét không còn giọt máu.</p>
+        <p>“Cái loại đàn ông ti tiện, mặt dày chen vào giữa người ta mà cũng dám giành vợ với tôi.”</p>
+        <p>Lục Tễ Hành siết chặt vòng tay quanh vai Phương Nhiên Tri, các đốt ngón tay nhẹ nhàng vuốt ve vai cậu, như một cách âm thầm trấn an.</p>
+        <p>Ánh mắt anh sắc lạnh đến mức như có thể xuyên thấu, găm chặt vào Trác Khinh Mạc, từng chữ bật ra như băng lạnh: “Rác rưởi.”</p>
+    </article>
+
+    <div class="reading-nav">
+        <a href="chiataythoima48.html" class="nav-btn">⬅️ Chương trước</a>
+        <a href="../mucluc/chiataythoima.html" class="nav-btn">📋 Mục lục</a>
+        <a href="chiataythoima50.html" class="nav-btn">Chương sau ➡️</a>
+    </div>
+</main>
+
+<!-- ── KHUNG THẢO LUẬN TOÀN CHƯƠNG ── -->
+<div class="chapter-discussion-box">
+    <div class="discussion-header">
+        <div class="discussion-header-left">
+            <span>🌿</span>
+            <h3>Thảo luận về chương này</h3>
+            <span>🌸</span>
+        </div>
+        <div class="discussion-actions">
+            <button class="action-btn" id="like-btn" onclick="toggleLike()" title="Thả tim chương này">
+                <span class="heart-icon">🤍</span>
+                <span id="like-count">0</span>
+            </button>
+            <button class="action-btn" onclick="openShareModal()" title="Chia sẻ chương này">
+                🔗 Chia sẻ
+            </button>
+        </div>
+    </div>
+    <div class="comment-section">
+        <script src="https://utteranc.es/client.js"
+                repo="gocnhocuakhiet/gocnhocuakhiet.github.io"
+                issue-term="pathname"
+                label="comment"
+                theme="github-light"
+                crossorigin="anonymous"
+                async>
+        </script>
+    </div>
+</div>
+
+<!-- ── SHARE MODAL ── -->
+<div class="share-modal-overlay" id="share-modal-overlay" onclick="handleOverlayClick(event)">
+    <div class="share-modal">
+        <h4>🔗 Chia sẻ chương này</h4>
+        <div class="share-link-row">
+            <input class="share-link-input" id="share-link-input" type="text" readonly>
+            <button class="copy-link-btn" id="copy-link-btn" onclick="copyLink()">Sao chép</button>
+        </div>
+        <button class="share-modal-close" onclick="closeShareModal()">Đóng</button>
+    </div>
+</div>
+
+<!-- ── SIDEBAR BÌNH LUẬN THEO ĐOẠN ── -->
+<div id="comment-sidebar" class="comment-sidebar">
+    <div class="sidebar-header">
+        <h4 id="sidebar-paragraph-title">Bình luận đoạn văn</h4>
+        <button class="close-sidebar-btn" onclick="closeInlineComment()">✕</button>
+    </div>
+    <div class="quoted-paragraph-box" id="quoted-paragraph-box"></div>
+    <div class="sidebar-mention-hint">
+        💡 Dùng <code>@tên-người</code> để nhắc đến ai đó trong bình luận.
+    </div>
+    <div id="sidebar-utterances-mount"></div>
+</div>
+<div id="sidebar-overlay" class="sidebar-overlay" onclick="closeInlineComment()"></div>
+
+<!-- ── SCRIPT CHÍNH ── -->
+<script>
+var GH_REPO  = 'gocnhocuakhiet/gocnhocuakhiet.github.io';
+var GH_LABEL = 'comment';
+var ORIGINAL_TITLE = document.title;
+
+function paragraphTitle(paraNum) {
+    return ORIGINAL_TITLE + ' [Đoạn ' + paraNum + ']';
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+    var paragraphs = document.querySelectorAll('.story-content p');
+    paragraphs.forEach(function (p, index) {
+        var paraNum = index + 1;
+        var row = document.createElement('div');
+        row.className = 'comment-row';
+        p.parentNode.insertBefore(row, p);
+        row.appendChild(p);
+        var badge = document.createElement('span');
+        badge.className = 'comment-badge';
+        badge.title = 'Bình luận về đoạn này';
+        badge.textContent = '💬';
+        badge.onclick = function () {
+            openInlineComment(p.innerText.trim().substring(0, 120), paraNum);
+        };
+        row.appendChild(badge);
+    });
+    initLike();
+});
+
+var currentParaNum = null;
+
+function openInlineComment(previewText, paraNum) {
+    document.getElementById('sidebar-paragraph-title').innerText = 'Đoạn ' + paraNum;
+    document.getElementById('quoted-paragraph-box').innerText =
+        '"' + previewText + (previewText.length >= 120 ? '…' : '') + '"';
+    document.getElementById('comment-sidebar').classList.add('active');
+    document.getElementById('sidebar-overlay').classList.add('active');
+    if (currentParaNum === paraNum) return;
+    currentParaNum = paraNum;
+    var mount = document.getElementById('sidebar-utterances-mount');
+    mount.innerHTML = '<div class="sidebar-loading">Đang tải bình luận…</div>';
+    document.title = paragraphTitle(paraNum);
+    var s = document.createElement('script');
+    s.src = 'https://utteranc.es/client.js';
+    s.setAttribute('repo',         GH_REPO);
+    s.setAttribute('issue-term',   'title');
+    s.setAttribute('label',        GH_LABEL);
+    s.setAttribute('theme',        document.body.classList.contains('dark-mode') ? 'github-dark' : 'github-light');
+    s.setAttribute('crossorigin',  'anonymous');
+    s.async = true;
+    s.onload = function () {
+        var loading = mount.querySelector('.sidebar-loading');
+        if (loading) loading.remove();
+        document.title = ORIGINAL_TITLE;
+    };
+    mount.innerHTML = '';
+    mount.appendChild(s);
+}
+
+function closeInlineComment() {
+    document.getElementById('comment-sidebar').classList.remove('active');
+    document.getElementById('sidebar-overlay').classList.remove('active');
+    document.title = ORIGINAL_TITLE;
+}
+
+function initLike() {
+    var key      = 'like-'      + window.location.pathname;
+    var countKey = 'likecount-' + window.location.pathname;
+    var liked    = localStorage.getItem(key) === '1';
+    var count    = parseInt(localStorage.getItem(countKey) || '0', 10);
+    updateLikeUI(liked, count);
+}
+
+function toggleLike() {
+    var key      = 'like-'      + window.location.pathname;
+    var countKey = 'likecount-' + window.location.pathname;
+    var liked    = localStorage.getItem(key) === '1';
+    var count    = parseInt(localStorage.getItem(countKey) || '0', 10);
+    liked = !liked;
+    count = liked ? count + 1 : Math.max(0, count - 1);
+    localStorage.setItem(key,      liked ? '1' : '0');
+    localStorage.setItem(countKey, count);
+    updateLikeUI(liked, count);
+}
+
+function updateLikeUI(liked, count) {
+    var btn       = document.getElementById('like-btn');
+    var heartSpan = btn.querySelector('.heart-icon');
+    var countSpan = document.getElementById('like-count');
+    heartSpan.textContent = liked ? '❤️' : '🤍';
+    countSpan.textContent = count;
+    liked ? btn.classList.add('liked') : btn.classList.remove('liked');
+}
+
+function openShareModal() {
+    document.getElementById('share-link-input').value = window.location.href;
+    document.getElementById('copy-link-btn').textContent = 'Sao chép';
+    document.getElementById('copy-link-btn').classList.remove('copied');
+    document.getElementById('share-modal-overlay').classList.add('active');
+}
+function closeShareModal() {
+    document.getElementById('share-modal-overlay').classList.remove('active');
+}
+function handleOverlayClick(e) {
+    if (e.target === document.getElementById('share-modal-overlay')) closeShareModal();
+}
+function copyLink() {
+    var input = document.getElementById('share-link-input');
+    var btn   = document.getElementById('copy-link-btn');
+    navigator.clipboard.writeText(input.value).then(function () {
+        btn.textContent = '✓ Đã sao chép';
+        btn.classList.add('copied');
+        setTimeout(function () { btn.textContent = 'Sao chép'; btn.classList.remove('copied'); }, 2000);
+    }).catch(function () {
+        input.select(); document.execCommand('copy');
+        btn.textContent = '✓ Đã sao chép'; btn.classList.add('copied');
+        setTimeout(function () { btn.textContent = 'Sao chép'; btn.classList.remove('copied'); }, 2000);
+    });
+}
+
+function syncUtterancesTheme(isDark) {
+    var theme = isDark ? 'github-dark' : 'github-light';
+    document.querySelectorAll('.utterances-frame').forEach(function (f) {
+        f.contentWindow.postMessage({ type: 'set-theme', theme: theme }, 'https://utteranc.es');
+    });
+}
+</script>
+
+</body>
+</html>

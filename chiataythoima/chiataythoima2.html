@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <link rel="stylesheet" href="../style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chia Tay Thôi Mà - Chương 2</title>
+    
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f1f7f4;
+            color: #2d3a34;
+            line-height: 1.8;
+        }
+
+        .navbar {
+            background-color: #ffffff;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 10%;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        .navbar .logo { font-size: 1.2rem; font-weight: bold; color: #4a6b5d; text-decoration: none; }
+        .nav-links a { color: #555; text-decoration: none; font-size: 0.95rem; transition: color 0.3s; }
+        .nav-links a:hover { color: #4a6b5d; }
+
+        .story-container {
+            max-width: 700px;
+            margin: 40px auto;
+            padding: 30px;
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.02);
+        }
+
+        .story-header {
+            text-align: center;
+            margin-bottom: 35px;
+            border-bottom: 1px dashed #8fae9f;
+            padding-bottom: 20px;
+        }
+        .story-header .novel-name {
+            font-size: 0.95rem; color: #777;
+            text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px;
+        }
+        .story-header .chapter-title { color: #4a6b5d; font-size: 1.6rem; font-weight: 600; }
+
+        .story-content { font-size: 1.15rem; color: #333333; text-align: justify; }
+        .story-content p { margin-bottom: 22px; text-indent: 25px; }
+
+        .reading-nav {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-top: 50px; padding-top: 25px; border-top: 1px dashed #8fae9f;
+        }
+        .nav-btn {
+            display: inline-block; padding: 10px 20px;
+            background-color: #ffffff; color: #4a6b5d;
+            text-decoration: none; border: 1px solid #8fae9f;
+            border-radius: 20px; font-size: 0.9rem; font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        .nav-btn:hover { background-color: #4a6b5d; color: #ffffff; border-color: #4a6b5d; box-shadow: 0 4px 8px rgba(74,107,93,0.2); }
+        .nav-btn.disabled { color: #bbb; border-color: #e0e0e0; background-color: #fafafa; pointer-events: none; box-shadow: none; }
+
+        @media (max-width: 480px) {
+            .story-container { padding: 15px; margin: 20px auto; }
+            .nav-btn { padding: 8px 14px; font-size: 0.8rem; }
+            .comment-sidebar { width: 100%; right: -100%; }
+        }
+
+        /* ── Dark mode ── */
+        body.dark-mode { background-color: #131a17; color: #dae5e0; }
+        body.dark-mode .navbar { background-color: #1b2420; box-shadow: 0 2px 5px rgba(0,0,0,0.3); }
+        body.dark-mode .navbar .logo { color: #8fae9f; }
+        body.dark-mode .nav-links a { color: #aaa; }
+        body.dark-mode .story-container { background-color: #1b2420; box-shadow: 0 2px 10px rgba(0,0,0,0.2); }
+        body.dark-mode .story-header .novel-name { color: #8fae9f; }
+        body.dark-mode .story-header .chapter-title { color: #8fae9f; }
+        body.dark-mode .story-content { color: #dae5e0; }
+        body.dark-mode .nav-btn { background-color: #1b2420; color: #8fae9f; border-color: #4a6b5d; }
+        body.dark-mode .nav-btn:hover { background-color: #4a6b5d; color: #ffffff; }
+        body.dark-mode .nav-btn.disabled { color: #444; border-color: #2e3d36; background-color: #161e1b; }
+
+        /* ── Reader controls ── */
+        .reader-controls-wrapper {
+            position: fixed; bottom: 30px; right: 30px;
+            z-index: 10000;
+            display: flex; flex-direction: column; align-items: flex-end; gap: 10px;
+        }
+        .reader-toggle-btn {
+            width: 48px; height: 48px; border-radius: 50%;
+            border: 2px solid #8fae9f; background: white; color: #4a6b5d;
+            font-size: 18px; cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15); transition: all 0.3s;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .reader-toggle-btn:hover { background: #4a6b5d; color: white; transform: scale(1.1); }
+        .reader-controls-group {
+            display: flex; flex-direction: column; gap: 10px;
+            overflow: hidden; max-height: 0; opacity: 0;
+            transition: max-height 0.35s ease, opacity 0.3s ease;
+        }
+        .reader-controls-group.open { max-height: 200px; opacity: 1; }
+        .reader-controls-group button {
+            width: 48px; height: 48px; border-radius: 50%;
+            border: 2px solid #8fae9f; background: white; color: #4a6b5d;
+            font-size: 15px; font-weight: bold; cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15); transition: all 0.3s;
+        }
+        .reader-controls-group button:hover { background: #4a6b5d; color: white; transform: scale(1.1); }
+        body.dark-mode .reader-toggle-btn,
+        body.dark-mode .reader-controls-group button { background: #1b2420; color: #8fae9f; border-color: #4a6b5d; }
+        body.dark-mode .reader-toggle-btn:hover,
+        body.dark-mode .reader-controls-group button:hover { background: #4a6b5d; color: white; }
+
+        /* ── Comment row ── */
+        .comment-row {
+            display: flex; justify-content: space-between;
+            align-items: flex-start; gap: 15px;
+            margin-bottom: 22px; width: 100%;
+        }
+        .comment-row p { flex: 1; margin-bottom: 0 !important; }
+
+        /* ── Badge ── */
+        .comment-badge {
+            cursor: pointer; flex-shrink: 0; margin-top: 6px;
+            width: 30px; height: 30px; border-radius: 50%;
+            background-color: #eaf2ee; color: #4a6b5d;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.9rem; line-height: 1;
+            transition: all 0.2s ease; user-select: none; border: none;
+        }
+        .comment-badge:hover { background-color: #4a6b5d; color: #ffffff; transform: scale(1.12); }
+        body.dark-mode .comment-badge { background-color: #25332c; color: #8fae9f; }
+        body.dark-mode .comment-badge:hover { background-color: #4a6b5d; color: #ffffff; }
+
+        /* ── Sidebar ── */
+        .comment-sidebar {
+            position: fixed; top: 0; right: -420px; width: 400px; height: 100%;
+            background: #ffffff;
+            box-shadow: -5px 0 15px rgba(0,0,0,0.05);
+            z-index: 100000;
+            transition: right 0.4s cubic-bezier(0.25,0.8,0.25,1);
+            padding: 24px; overflow-y: auto; box-sizing: border-box;
+        }
+        .comment-sidebar.active { right: 0; }
+        .sidebar-header {
+            display: flex; justify-content: space-between; align-items: center;
+            border-bottom: 1px solid #dae5e0; padding-bottom: 12px; margin-bottom: 16px;
+        }
+        .sidebar-header h4 { color: #4a6b5d; margin: 0; }
+        .close-sidebar-btn { background: none; border: none; font-size: 1.2rem; color: #999; cursor: pointer; }
+        .quoted-paragraph-box {
+            background: #f0f7f4; border-left: 3px solid #8fae9f;
+            border-radius: 4px; padding: 10px 14px;
+            font-size: 0.88rem; color: #4a6b5d; font-style: italic;
+            line-height: 1.5; margin-bottom: 12px;
+        }
+        .sidebar-mention-hint {
+            font-size: 0.8rem; color: #888;
+            background: #f8faf9; border: 1px dashed #c8ddd5;
+            border-radius: 6px; padding: 8px 12px; margin-bottom: 14px; line-height: 1.5;
+        }
+        .sidebar-mention-hint code { background: #e4efe9; color: #4a6b5d; padding: 1px 5px; border-radius: 4px; font-size: 0.78rem; }
+        body.dark-mode .sidebar-mention-hint { background: #1e2b24; border-color: #2e3d36; color: #7a9a8a; }
+        body.dark-mode .sidebar-mention-hint code { background: #2a3830; color: #8fae9f; }
+        .sidebar-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.2); z-index: 99999; display: none;
+        }
+        .sidebar-overlay.active { display: block; }
+        .sidebar-loading {
+            text-align: center; padding: 30px 0;
+            color: #aaa; font-size: 0.9rem; font-style: italic;
+        }
+
+        /* ── Discussion box ── */
+        .chapter-discussion-box {
+            max-width: 700px; margin: 30px auto 50px auto;
+            padding: 25px; background-color: #ffffff;
+            border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.02);
+        }
+        .discussion-header {
+            display: flex; justify-content: space-between; align-items: center;
+            gap: 10px; margin-bottom: 25px;
+            border-bottom: 1px dashed #dae5e0; padding-bottom: 15px;
+        }
+        .discussion-header-left { display: flex; align-items: center; gap: 10px; }
+        .discussion-header h3 { color: #4a6b5d; font-size: 1.2rem; margin: 0; }
+        .discussion-actions { display: flex; align-items: center; gap: 10px; }
+        .action-btn {
+            display: flex; align-items: center; gap: 6px;
+            padding: 7px 14px; border-radius: 20px; border: 1px solid #8fae9f;
+            background: #ffffff; color: #4a6b5d;
+            font-size: 0.85rem; font-weight: 500; cursor: pointer;
+            transition: all 0.25s ease; user-select: none;
+        }
+        .action-btn:hover { background-color: #f0f7f4; box-shadow: 0 3px 8px rgba(74,107,93,0.15); }
+        .action-btn.liked { background-color: #fff0f3; border-color: #e8a0b0; color: #c0556a; }
+        .action-btn.liked .heart-icon { animation: heartPop 0.35s ease; }
+        @keyframes heartPop {
+            0% { transform: scale(1); } 40% { transform: scale(1.45); }
+            70% { transform: scale(0.9); } 100% { transform: scale(1); }
+        }
+        body.dark-mode .action-btn { background: #1b2420; color: #8fae9f; border-color: #4a6b5d; }
+        body.dark-mode .action-btn:hover { background-color: #232e29; }
+        body.dark-mode .action-btn.liked { background-color: #2a1e22; border-color: #7a3a4a; color: #e08090; }
+        .comment-section { width: 100%; min-height: 150px; }
+
+        body.dark-mode .chapter-discussion-box,
+        body.dark-mode .comment-sidebar { background-color: #1b2420 !important; }
+        body.dark-mode .discussion-header,
+        body.dark-mode .sidebar-header { border-bottom-color: #2e3d36 !important; }
+        body.dark-mode .discussion-header h3,
+        body.dark-mode .sidebar-header h4 { color: #8fae9f !important; }
+        body.dark-mode .quoted-paragraph-box { background: #232e29; border-left-color: #4a6b5d; color: #8fae9f; }
+
+        /* ── Share modal ── */
+        .share-modal-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.35);
+            z-index: 200000; display: none; align-items: center; justify-content: center;
+        }
+        .share-modal-overlay.active { display: flex; }
+        .share-modal {
+            background: #ffffff; border-radius: 12px;
+            padding: 28px 24px 22px; width: 380px; max-width: 92vw;
+            box-shadow: 0 12px 40px rgba(0,0,0,0.18);
+            animation: slideUp 0.25s ease;
+        }
+        @keyframes slideUp {
+            from { transform: translateY(20px); opacity: 0; }
+            to   { transform: translateY(0); opacity: 1; }
+        }
+        .share-modal h4 { color: #4a6b5d; font-size: 1.05rem; margin-bottom: 16px; text-align: center; }
+        .share-link-row { display: flex; gap: 8px; align-items: center; }
+        .share-link-input {
+            flex: 1; padding: 9px 12px; border: 1px solid #c8ddd5; border-radius: 8px;
+            font-size: 0.85rem; color: #444; background: #f8faf9;
+            outline: none; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
+        }
+        .copy-link-btn {
+            padding: 9px 16px; border-radius: 8px;
+            background: #4a6b5d; color: #ffffff; border: none;
+            font-size: 0.85rem; font-weight: 600; cursor: pointer;
+            transition: all 0.2s; white-space: nowrap;
+        }
+        .copy-link-btn:hover { background: #3a5a4d; }
+        .copy-link-btn.copied { background: #6aaa88; }
+        .share-modal-close {
+            display: block; width: 100%; margin-top: 14px;
+            padding: 8px; background: none; border: none;
+            color: #999; font-size: 0.85rem; cursor: pointer; text-align: center;
+        }
+        .share-modal-close:hover { color: #555; }
+        body.dark-mode .share-modal { background: #1b2420; }
+        body.dark-mode .share-modal h4 { color: #8fae9f; }
+        body.dark-mode .share-link-input { background: #232e29; border-color: #3a5040; color: #dae5e0; }
+        body.dark-mode .share-modal-close { color: #6a8a7a; }
+    </style>
+</head>
+<body>
+
+<!-- ── NÚT NỔI ── -->
+<div class="reader-controls-wrapper">
+    <div class="reader-controls-group" id="reader-group">
+        <button onclick="changeFontSize(1)" title="Phóng to chữ">A+</button>
+        <button onclick="changeFontSize(-1)" title="Thu nhỏ chữ">A-</button>
+        <button onclick="toggleDarkMode()" id="dark-mode-btn" title="Đổi màu nền">🌙</button>
+    </div>
+    <button class="reader-toggle-btn" id="reader-toggle" onclick="toggleReaderControls()" title="Tuỳ chỉnh đọc">⚙️</button>
+</div>
+
+<script>
+function toggleReaderControls() {
+    var group = document.getElementById('reader-group');
+    var btn   = document.getElementById('reader-toggle');
+    var isOpen = group.classList.toggle('open');
+    btn.style.background = isOpen ? '#4a6b5d' : '';
+    btn.style.color      = isOpen ? '#ffffff'  : '';
+}
+function toggleDarkMode() {
+    document.body.classList.toggle('dark-mode');
+    var isDark = document.body.classList.contains('dark-mode');
+    localStorage.setItem('night-mode', isDark ? 'on' : 'off');
+    document.getElementById('dark-mode-btn').innerText = isDark ? '☀️' : '🌙';
+    syncUtterancesTheme(isDark);
+}
+function changeFontSize(delta) {
+    var content = document.querySelector('.story-content') || document.body;
+    var cur = parseFloat(window.getComputedStyle(content).fontSize);
+    content.style.fontSize = (cur + delta) + 'px';
+}
+function syncUtterancesTheme(isDark) {
+    var theme = isDark ? 'github-dark' : 'github-light';
+    document.querySelectorAll('.utterances-frame').forEach(function(f) {
+        f.contentWindow.postMessage({ type: 'set-theme', theme: theme }, 'https://utteranc.es');
+    });
+}
+(function() {
+    if (localStorage.getItem('night-mode') === 'on') {
+        document.body.classList.add('dark-mode');
+        setTimeout(function() {
+            var b = document.getElementById('dark-mode-btn');
+            if (b) b.innerText = '☀️';
+        }, 80);
+    }
+})();
+</script>
+
+<!-- ── NAVBAR ── -->
+<header class="navbar">
+    <a href="../index.html" class="logo">🌿 Góc nhỏ của Khiết</a>
+    <nav class="nav-links"><a href="../index.html">Trang Chủ</a></nav>
+</header>
+
+<!-- ── KHUNG ĐỌC ── -->
+<main class="story-container">
+    <div class="story-header">
+        <p class="novel-name">Chia Tay Thôi Mà, Sao Anh Ta Bỗng Dưng Điên Thế</p>
+        <h1 class="chapter-title">Chương 2</h1>
+    </div>
+
+    <article class="story-content">
+        <p>Hành lang rộng lớn, ngoài hiên mưa không ngớt, ngược lại ngày càng nặng hạt.</p>
+        <p>Theo tiếng mưa rơi xuống đất, Phương Nhiên Tri mím môi bấm số gọi điện cho người trong phòng khách cách đó hai bước: “Anh Ngô, anh tắm xong rồi phải không…… em vừa đặt phòng ở khách sạn đối diện cho anh rồi, lái xe chỉ mất ba phút thôi.”</p>
+        <p>Ngô Chí nói: “Cậu không ở nhà sao? Tiếng mưa bên ngoài to thế kia, cậu ở nhà mà gọi cho tôi hả? Dư tiền điện thoại à? Vừa nãy tôi gọi cậu sao không trả lời? Sao tự dưng đặt khách sạn cho tôi? Tôi là quản lý của cậu, không phải kim chủ của cậu, cậu sợ gì chứ ……”</p>
+        <p>May là tiếng mưa đã át bớt tiếng của Ngô Chí trong điện thoại, Phương Nhiên Tri siết chặt điện thoại nghĩ thầm, đã là lúc nào rồi đừng đùa nữa, kim chủ của em về rồi.</p>
+        <p>Lục Tễ Hành đứng bên cạnh, im lặng nghe cậu nói chuyện điện thoại, vừa nãy có người lao về phía anh, gió mạnh tạt vào mặt, làm áo khoác dính đầy nước ướt nhẹp.</p>
+        <p>Bàn tay to lớn của Lục Tễ Hành nắm lấy cánh tay của Phương Nhiên Tri, kéo cậu lại gần về phía anh, để nước mưa bị gió thổi bay không chạm tới Phương Nhiên Tri.</p>
+        <p>Chẳng biết trong điện thoại nói gì mà Phương Nhiên Tri không thể giải thích rõ ràng, tức đến mức rúc vào trong lòng Lục Tễ Hành, trán tì vào ngực anh như đang tìm kiếm sức mạnh.</p>
+        <p>Cuối cùng, cậu cảm thấy tự tin, ấp úng nói: “Bố em về rồi, ông ấy dữ lắm, không thích người ngoài.”</p>
+        <p>Lục tổng vừa bước sang tuổi ba mươi hai đã có đứa con hai mươi hai tuổi hơi nhướng mày.</p>
+        <p>Còn dữ lắm, dữ chỗ nào?</p>
+        <p>Nhưng nhớ lại lúc nãy Phương Nhiên Tri hoảng sợ đóng cửa, lao tới ôm anh còn vụng trộm trốn ở góc hành lang, kích thích hơn cả chuyện “bố em về rồi.”</p>
+        <p>Ngô Chí là quản lý do công ty sắp xếp cho Phương Nhiên Tri, có đầu óc cũng có ba bốn năm kinh nghiệm, nếu không Lục Tễ Hành nhất định sa thải anh ta.</p>
+        <p>Nhà ai cũng dám vào.</p>
+        <p>Sau khi gửi địa chỉ khách sạn cho Ngô Chí, cửa trong biệt thự có tiếng động, sau đó là tiếng động cơ xe, chiếc Land Rover đi theo hướng trước đó ra khỏi cửa ngoài.</p>
+        <p>Phương Nhiên Tri thở phào nhẹ nhõm.</p>
+        <p>Lục Tễ Hành cụp mắt nhìn người tình bé nhỏ: “Anh ta nói muốn ở đây?”</p>
+        <p>Phương Nhiên Tri lấy lại giọng điệu, ngước nhìn Lục Tễ Hành.</p>
+        <p>Chiều cao một mét tám hoàn toàn không là gì ở trước mặt người đàn ông này, chóp cằm chọc vào vạt áo, khiến cậu trông càng nhỏ nhắn: “Anh à, anh cao quá.”</p>
+        <p>Lục Tễ Hành giơ tay lên như muốn sờ gáy cậu, sau lại phát hiện tay mình vừa ướt vừa lạnh, bèn đặt xuống: “Còn muốn đổi chủ đề.”</p>
+        <p>“Vào trước đi, đừng để bị cảm lạnh.”</p>
+        <p>Năm phút sau, Ngô Chí đến khách sạn đối diện trong tình trạng vẫn còn ngơ ngác, không hiểu tại sao nửa tiếng trước Phương Nhiên Tri còn nói trời mưa to lái xe không an toàn, thì nửa tiếng sau lại ‘đuổi’ anh ra khỏi nhà.</p>
+        <p>Không thể hiểu được, thì ra đàn ông dễ thay đổi thế à? Trước khi xuống xe, Ngô Chí chợt thắc mắc: “Không đúng, chẳng phải Nhiên Tri lớn lên ở viện mồ côi sao, bố ở đâu ra chứ?”</p>
+        <p>Hơn nữa vừa nãy khi lái xe ra ngoài, anh luôn cảm thấy sau lưng lạnh toát, như thể có người đang nhìn chằm chằm, chờ ám sát anh.</p>
+        <p>Bên trong tủ giày ngay cửa có đôi dép to hơn của Phương Nhiên Tri mấy cỡ, Lục Tễ Hành lấy ra cúi xuống xỏ vào.</p>
+        <p>Phương Nhiên Tri đi rót một ly nước nóng, gặp được Lục Tễ Hành thì vui mừng quên cả chính mình.</p>
+        <p>Quay đầu thấy Lục Tễ Hành đang thay giày, cảm thấy người tình bé nhỏ như cậu đây chưa đủ tiêu chuẩn, ấy thế mà không chăm sóc ân cần cho kim chủ, nhưng ánh sáng trong mắt không hề nhạt đi, cậu vội quay lại nói: “Em đang định quay lại lấy cho anh.”</p>
+        <p>Lục Tễ Hành bất đắc dĩ nói: “Tôi không phải người khuyết tật cả dép cũng không mang được.”</p>
+        <p>Đôi giày được cất kỹ, tất cả đồ dùng cá nhân mà Lục Tễ Hành có thể sử dụng đều được cất đi, cho dù có người ngoài đến cũng sẽ không nhận ra có người thứ hai sống ở đây.</p>
+        <p>Ly nước nóng là ly Moomin xanh đậm, ngày thường không mấy khi dùng, sau khi rửa sạch sẽ thì lấy ra dùng, nó có kiểu dáng giống ly xanh nhạt bên cạnh.</p>
+        <p>“Anh à, sao anh về hôm nay vậy? Không phải chuyến bay bị hủy rồi à?” Phương Nhiên Tri cầm ly xanh đậm đưa cho Lục Tễ Hành.</p>
+        <p>“Ừ, Đông Thành mưa to, không đi máy bay được.” Lục Tễ Hành sờ tay Phương Nhiên Tri, cảm giác hơi lạnh nên không cầm ly nước mà đẩy về tay cậu sưởi ấm, “Tôi đi tàu cao tốc.”</p>
+        <p>Từ Đông Thành đi máy bay về một tiếng rưỡi, còn đi tàu cao tốc phải mất ba bốn tiếng.</p>
+        <p>Sau khi tới trạm thì phải có tài xế đón, sau đó tự lái xe đến khu nhà Tử Kinh phải mất thêm nửa tiếng.</p>
+        <p>Phương Nhiên Tri khó hiểu: “Anh biến mất bốn năm tiếng, trợ lý Trương không hề phát hiện sao?”</p>
+        <p>Xem ra đã gọi cho Trương Trình, chắc chắn là không gọi cho mình, Lục Tễ Hành nói: “Đúng thế, làm trợ lý chưa đạt tiêu chuẩn, nhận lương mà làm việc không ra hồn, ngày mai đuổi việc cậu ta.”</p>
+        <p>“Ơ? Đừng mà.” Phương Nhiên Tri không ngờ họa lại từ miệng mình mà ra, nên vội nói thêm, “Vừa rồi em không nói gì hết, anh cũng không nghe thấy gì cả.”</p>
+        <p>Sao lại dễ chọc thế, Lục Tễ Hành bật cười.</p>
+        <p>Sau nhiều ngày đàm phán hợp tác, bận việc xong còn ngồi tàu cao tốc, làm cho Lục tổng thường xem công việc là bữa cơm hàng ngày cũng thấy hơi mệt, tuy là thế nhưng anh đã ngủ ba tiếng trên tàu, bây giờ tinh thần khá tốt.</p>
+        <p>“Lần hợp tác này khá phức tạp, ai nấy đều mệt mỏi, tôi đã bảo trợ lý đặt khách sạn thêm hai ngày để mọi người nghỉ ngơi.” Lục Tễ Hành cởi áo khoác, nới lỏng cà vạt, bầu không khí ngột ngạt cũng tiêu tan đi rất nhiều, “Còn tôi tự về trước.”</p>
+        <p>Nước không còn nóng nữa, Phương Nhiên Tri nắm  tay Lục Tễ Hành, nhét ly vào tay anh: “Anh à, anh chưa ăn cơm đúng không? Em đi nấu cho anh.”</p>
+        <p>Phương Nhiên Tri thích chơi Sudoku vì có thể tập trung tinh thần, cậu còn thích nấu cơm cho Lục Tễ Hành vì thấy thoải mái hài lòng.</p>
+        <p>Lục Tễ Hành: “Em ăn chưa?”</p>
+        <p>Ở White Hyacinths chủ yếu là mọi người làm quen, uống rượu nhiều, món no bụng cũng ít. Phương Nhiên Tri không biết uống rượu, Lục Tễ Hành cũng không cho cậu uống, đặc biệt là trong các buổi liên hoan hay tiệc tùng.</p>
+        <p>Phương Nhiên Tri nói: “Vẫn chưa, để em nấu hai tô mì.”</p>
+        <p>Lục Tễ Hành: “Được.” còn hỏi thêm “Cần tôi giúp không?”</p>
+        <p>Phương Nhiên Tri chạy vào bếp, cao giọng nói: “Không cần.”</p>
+        <p>Những lúc Phương Nhiên Tri không làm việc đều ở đây, Lục Tễ Hành không bận cũng thường ghé qua, trong tủ lạnh không thiếu thực phẩm, nếu thiếu sẽ có dì giúp việc tới lắp đầy.</p>
+        <p>Khuôn mặt Phương Nhiên Tri với góc nghiêng trơn tru, hàng mi tạo bóng mờ ở mí mắt dưới đang bận rộn trong căn bếp nửa mở, nước trong nồi đang sôi, âm thanh không lớn cũng không ảnh hưởng đến tâm trí người khác.</p>
+        <p>Lục Tễ Hành ngồi trong phòng khách, chống tay lên má chăm chú nhìn Phương Nhiên Tri.</p>
+        <p>Phương Nhiên Tri dường như cảm nhận được, hơi nghiêng đầu liếc nhìn thì không thấy Lục Tễ Hành nhìn mình, cậu cũng không thất vọng, dù sao anh cũng đang ở cạnh cậu rồi.</p>
+        <p>Lục Tễ Hành gỡ gói đồ lấy trên xe khi vừa về nhà đã diễn ra màn vụng trộm, di động mới còn chưa mở máy.</p>
+        <p>Anh ngủ trên tàu cao tốc nên chưa cài đặt gì. Lắp thẻ sim, đăng nhập tài khoản, khôi phục bản sao lưu, phải mất một lúc lâu nhưng Lục Tễ Hành vẫn luôn kiên nhẫn.</p>
+        <p>Trước tiên đăng nhập wechat, phía trên có một tin nhắn được ghim chưa đọc, Phương Nhiên Tri gửi lúc 12:21 hỏi anh hôm nay có về không.</p>
+        <p>Ngoài câu đó ra không có câu nào khác.</p>
+        <p>Có thể gọi cho Trương Trình, lại không muốn hỏi mình thêm câu nào.</p>
+        <p>Wechat còn có tin nhắn và cuộc gọi nhỡ của Phó Văn, nhưng Lục Tễ Hành không xem.</p>
+        <p>“Chỉ Chỉ.” Lục Tễ Hành đứng dậy đi vào bếp, thân hình cao lớn gần như che kín toàn bộ cánh cửa.</p>
+        <p>Phương Nhiên Tri đang bỏ trứng ốp la vào tô mì, nghe thấy tiếng thì quay đầu lại, đôi mắt cong lên, cậu rất thích Lục Tễ Hành gọi cậu thân mật như vậy: “Dạ?”</p>
+        <p>Lục Tễ Hành trông như muốn nói gì đó, nhưng mở miệng lại im lặng, chuyển chủ đề: “Nấu mì xong chưa?”</p>
+        <p>Phương Nhiên Tri khẽ cười: “Xong rồi.”</p>
+        <p>Sau đó rửa tay trước khi ăn.</p>
+        <p>TV LCD đang chiếu một bộ phim tình cảm hòa với tiếng mưa bên ngoài, ngồi cạnh người mình thích trên thảm lông cừu, ăn cùng một món mì, Phương Nhiên Tri thấy ấm áp cả người.</p>
+        <p>“Anh à, hôm nay thời tiết xấu, anh Ngô về cũng mất nhiều thời gian.” Phương Nhiên Tri gắp mì lên lại buông xuống, “Em sợ không an toàn nên mới bảo anh ấy ở lại đây.”</p>
+        <p>Cậu đang giải thích, bình thường ngoài Lục Tễ Hành thì không ai có thể đến đây.</p>
+        <p>Lục Tễ Hành đáp: “Tôi biết rồi.”</p>
+        <p>Bộ phim vẫn đang chiếu, tâm trạng của Phương Nhiên Tri đang trong trạng thái hưng phấn, nhưng lúc này đã bớt đi phần nào. Cậu thấy cổ tay trái Lục Tễ Hành đeo một chiếc đồng hồ, mặt số khác với lần trước.</p>
+        <p>Đồng hồ này rất tinh xảo, thủ công khéo léo, mặt trong chạm khắc tỉ mỉ, dây đeo vàng hồng ôm lấy cổ tay Lục Tễ Hành, nhìn rất đẹp nhưng lại không hợp lắm.</p>
+        <p>Bàn tay Lục Tễ Hành to, đường gân phía sau cổ tay rõ ràng, mặt số lớn sẽ bắt mắt hơn, phù hợp với khí chất của anh hơn.</p>
+        <p>Nhưng mặt số của đồng hồ này hơi nhỏ, có vẻ như cấp dưới không có mắt nhìn nên đã mua bừa một chiếc đồng hồ không hợp, cũng có vẻ như ai đó định tặng quà mà không biết kích cỡ nên cuối cùng lại mua quá nhỏ.</p>
+        <p>Lục Tễ Hành biết rõ không hợp, nhưng vẫn đeo lên cổ tay.</p>
+        <p>Đây là đồng hồ đắt tiền, nếu Phương Nhiên Tri không biết nhãn hiệu thì khả năng cao là cậu cũng không mua nổi.</p>
+        <p>Liệu có phải là quà của chàng trai mà Lục Tễ Hành thích tặng không?</p>
+        <p>Sợi mì trên đũa nguội dần, đầu óc Phương Nhiên Tri rối bời, làm người tình bí mật theo hợp đồng của Lục Tễ Hành đã hai năm rưỡi, thật ra cậu muốn thử tiến tới: “Anh à, nếu sau này em dẫn bạn trong ngành…… về chơi, anh có thấy phiền không?”</p>
+        <p>Đôi đũa tre chạm vào miệng tô, Lục Tễ Hành liếc mắt nhìn Phương Nhiên Tri, còn cậu nắm chặt đôi đũa không dám thở mạnh, trong lòng thầm hối hận vì đã nói quá nhiều.</p>
+        <p>Với kiểu quan hệ giao dịch thân thể của bọn họ có thể duy trì lâu như vậy đã là điều xa xỉ rồi, Lục Tễ Hành rất tốt với cậu, có thể cho cậu bất cứ thứ gì.</p>
+        <p>Ngoại trừ tình cảm.</p>
+        <p>Phương Nhiên Tri sợ bị mắng bèn cụp mắt, muốn rút lại lời nói: “Anh à, em……”</p>
+        <p>“Không phiền.” hồi sau, Lục Tễ Hành mới nói, “Em nên có bạn bè của mình.”</p>
+        <p>“Ờ.” Phương Nhiên Tri không cảm nhận được vị gì mà ăn hết tô mì, hưng phấn cũng không còn, cảm thấy ngượng vô cùng.</p>
+        <p>Lục Tễ Hành đợi cậu ăn xong thì mang tô vào bếp rửa.</p>
+        <p>Phương Nhiên Tri dựa vào ghế sô pha, bĩu môi nhìn bóng lưng Lục Tễ Hành, chiếc đồng hồ không hợp kia vừa đẹp vừa chói mắt, cậu ủ rũ lẩm bẩm: “Sao lại không phiền, anh phải phiền chứ.”</p>
+        <p>Sau khi dọn xong tầng dưới, hai người lên lầu, Lục Tễ Hành đi tắm trước, Phương Nhiên Tri không đi theo, sợ bản thân không bước ra nổi phòng tắm, chuyện đó tốt nhất vẫn nên bắt đầu từ trên giường.</p>
+        <p>Tiếng nước chảy róc rách trong phòng tắm, Phương Nhiên Tri cầm mấy bộ đồ ngủ không mấy đứng đắn ra so, phân vân giữa quần lót tam giác với quần lót dạng đùi.</p>
+        <p>Mặc cái nào đây nhỉ?</p>
+        <p>Quần tam giác sẽ tình thú hơn, nhưng mà ……</p>
+        <p>Cuối cùng cậu vẫn chọn dạng ôm đùi, mặc quần tam giác quá xấu hổ, cậu sợ chân cứ khép lại, không dám mở ra.</p>
+        <p>“Lách cách.”</p>
+        <p>Tiếng cửa phòng tắm mở ra làm Phương Nhiên Tri sợ hãi run lên, cậu vội vàng nhặt quần lót trên giường giấu ra sau lưng.</p>
+        <p>“Sao vậy?” Lục Tễ Hành lau tóc bước ra, tuy là dùng câu nghi vấn, nhưng giọng điệu như đã biết còn cố hỏi. Quả thật anh không nhìn thấy, cũng không biết Phương Nhiên Tri đang giấu cái gì.</p>
+        <p>“Không có gì, em đi tắm đây.” Phương Nhiên Tri vội vàng trả lời, men theo mép giường đi vào phòng tắm, Lục Tễ Hành thậm chí còn không thấy rõ tối nay cậu sẽ mặc bộ đồ ngủ nào.</p>
+        <p>Khoảng hai mươi phút sau, Phương Nhiên Tri mở cửa ra, thấy Lục Tễ Hành đang tựa vào đầu giường, một chân dài thả lỏng duỗi thẳng, chân còn lại co lên kê máy tính dự phòng để ở đây, chắc đang xử lý email.</p>
+        <p>Nghe thấy tiếng động, Lục Tễ Hành ngước mắt lên, động tác gõ bàn phím dừng lại.</p>
+        <p>Bộ đồ ngủ màu trắng như voan mỏng che đi đùi của Phương Nhiên Tri, chỉ lộ ra đôi chân thon trắng nõn, đường nét cơ bụng vùng eo mập mờ ẩn hiện, rõ ràng là đang mặc quần áo, lại như chẳng mặc gì.</p>
+        <p>Quần lót dạng đùi màu đen trung hòa với lụa trắng, màu đen không đậm, màu trắng không thuần, vô cùng bắt mắt.</p>
+        <p>Xé nó ra là được.</p>
+        <p>Nhưng bạn nhỏ lúc nào cũng khóc bảo anh quá đáng, còn nói không được xé quần áo của cậu, giọng Lục Tễ Hành khàn đi nhưng ra vẻ nói: “Em ngủ trước đi.”</p>
+        <p>Phương Nhiên Tri vừa mới đi tới bên giường, nét mặt ngơ ngác, buột miệng nói: “Không làm hả?”</p>
+        <p>Trái cổ của anh chợt khô khan đau nhức, Lục Tễ Hành giở trò ép cậu nói nhiều hơn, tiếp tục giả vờ: “Em muốn làm không?”</p>
+        <p>Câu hỏi đột nhiên chuyển sang cậu, Phương Nhiên Tri hơi ngượng ngùng, giống như cậu đói khát lâu ngày không có được, cúi đầu lẩm bẩm: “Em không muốn.”</p>
+        <p>“Bốp…”</p>
+        <p>Đầu gối của cậu đột nhiên đập vào giường, lưng dưới đập vào đầu gối cong lên của Lục Tễ Hành, ánh mắt Phương Nhiên Tri chấn động, trước khi ngã hẳn xuống, cậu vội túm lấy vạt áo trước ngực Lục Tễ Hành.</p>
+        <p>Máy tính vẫn còn bật, rơi xuống đầu giường bên kia, may là chưa rơi xuống sàn.</p>
+        <p>“Anh à …” Phương Nhiên Tri bị ép ngồi đối diện với anh, quần áo nhàu nhĩ, đốt ngón tay không tự chủ siết chặt.</p>
+        <p>Lục Tễ Hành cong ngón trỏ nâng cằm Phương Nhiên Tri lên, nói: “Em cũng đã hỏi tôi rồi, không muốn cũng phải muốn.”</p>
+    </article>
+
+    <div class="reading-nav">
+        <a href="chiataythoima1.html" class="nav-btn">⬅️ Chương trước</a>
+        <a href="../mucluc/chiataythoima.html" class="nav-btn">📋 Mục lục</a>
+        <a href="chiataythoima3.html" class="nav-btn">Chương sau ➡️</a>
+    </div>
+</main>
+
+<!-- ── KHUNG THẢO LUẬN TOÀN CHƯƠNG ── -->
+<div class="chapter-discussion-box">
+    <div class="discussion-header">
+        <div class="discussion-header-left">
+            <span>🌿</span>
+            <h3>Thảo luận về chương này</h3>
+            <span>🌸</span>
+        </div>
+        <div class="discussion-actions">
+            <button class="action-btn" id="like-btn" onclick="toggleLike()" title="Thả tim chương này">
+                <span class="heart-icon">🤍</span>
+                <span id="like-count">0</span>
+            </button>
+            <button class="action-btn" onclick="openShareModal()" title="Chia sẻ chương này">
+                🔗 Chia sẻ
+            </button>
+        </div>
+    </div>
+    <div class="comment-section">
+        <script src="https://utteranc.es/client.js"
+                repo="gocnhocuakhiet/gocnhocuakhiet.github.io"
+                issue-term="pathname"
+                label="comment"
+                theme="github-light"
+                crossorigin="anonymous"
+                async>
+        </script>
+    </div>
+</div>
+
+<!-- ── SHARE MODAL ── -->
+<div class="share-modal-overlay" id="share-modal-overlay" onclick="handleOverlayClick(event)">
+    <div class="share-modal">
+        <h4>🔗 Chia sẻ chương này</h4>
+        <div class="share-link-row">
+            <input class="share-link-input" id="share-link-input" type="text" readonly>
+            <button class="copy-link-btn" id="copy-link-btn" onclick="copyLink()">Sao chép</button>
+        </div>
+        <button class="share-modal-close" onclick="closeShareModal()">Đóng</button>
+    </div>
+</div>
+
+<!-- ── SIDEBAR BÌNH LUẬN THEO ĐOẠN ── -->
+<div id="comment-sidebar" class="comment-sidebar">
+    <div class="sidebar-header">
+        <h4 id="sidebar-paragraph-title">Bình luận đoạn văn</h4>
+        <button class="close-sidebar-btn" onclick="closeInlineComment()">✕</button>
+    </div>
+    <div class="quoted-paragraph-box" id="quoted-paragraph-box"></div>
+    <div class="sidebar-mention-hint">
+        💡 Dùng <code>@tên-người</code> để nhắc đến ai đó trong bình luận.
+    </div>
+    <div id="sidebar-utterances-mount"></div>
+</div>
+<div id="sidebar-overlay" class="sidebar-overlay" onclick="closeInlineComment()"></div>
+
+<!-- ── SCRIPT CHÍNH ── -->
+<script>
+var GH_REPO  = 'gocnhocuakhiet/gocnhocuakhiet.github.io';
+var GH_LABEL = 'comment';
+var ORIGINAL_TITLE = document.title;
+
+function paragraphTitle(paraNum) {
+    return ORIGINAL_TITLE + ' [Đoạn ' + paraNum + ']';
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+    var paragraphs = document.querySelectorAll('.story-content p');
+    paragraphs.forEach(function (p, index) {
+        var paraNum = index + 1;
+        var row = document.createElement('div');
+        row.className = 'comment-row';
+        p.parentNode.insertBefore(row, p);
+        row.appendChild(p);
+        var badge = document.createElement('span');
+        badge.className = 'comment-badge';
+        badge.title = 'Bình luận về đoạn này';
+        badge.textContent = '💬';
+        badge.onclick = function () {
+            openInlineComment(p.innerText.trim().substring(0, 120), paraNum);
+        };
+        row.appendChild(badge);
+    });
+    initLike();
+});
+
+var currentParaNum = null;
+
+function openInlineComment(previewText, paraNum) {
+    document.getElementById('sidebar-paragraph-title').innerText = 'Đoạn ' + paraNum;
+    document.getElementById('quoted-paragraph-box').innerText =
+        '"' + previewText + (previewText.length >= 120 ? '…' : '') + '"';
+    document.getElementById('comment-sidebar').classList.add('active');
+    document.getElementById('sidebar-overlay').classList.add('active');
+    if (currentParaNum === paraNum) return;
+    currentParaNum = paraNum;
+    var mount = document.getElementById('sidebar-utterances-mount');
+    mount.innerHTML = '<div class="sidebar-loading">Đang tải bình luận…</div>';
+    document.title = paragraphTitle(paraNum);
+    var s = document.createElement('script');
+    s.src = 'https://utteranc.es/client.js';
+    s.setAttribute('repo',         GH_REPO);
+    s.setAttribute('issue-term',   'title');
+    s.setAttribute('label',        GH_LABEL);
+    s.setAttribute('theme',        document.body.classList.contains('dark-mode') ? 'github-dark' : 'github-light');
+    s.setAttribute('crossorigin',  'anonymous');
+    s.async = true;
+    s.onload = function () {
+        var loading = mount.querySelector('.sidebar-loading');
+        if (loading) loading.remove();
+        document.title = ORIGINAL_TITLE;
+    };
+    mount.innerHTML = '';
+    mount.appendChild(s);
+}
+
+function closeInlineComment() {
+    document.getElementById('comment-sidebar').classList.remove('active');
+    document.getElementById('sidebar-overlay').classList.remove('active');
+    document.title = ORIGINAL_TITLE;
+}
+
+function initLike() {
+    var key      = 'like-'      + window.location.pathname;
+    var countKey = 'likecount-' + window.location.pathname;
+    var liked    = localStorage.getItem(key) === '1';
+    var count    = parseInt(localStorage.getItem(countKey) || '0', 10);
+    updateLikeUI(liked, count);
+}
+
+function toggleLike() {
+    var key      = 'like-'      + window.location.pathname;
+    var countKey = 'likecount-' + window.location.pathname;
+    var liked    = localStorage.getItem(key) === '1';
+    var count    = parseInt(localStorage.getItem(countKey) || '0', 10);
+    liked = !liked;
+    count = liked ? count + 1 : Math.max(0, count - 1);
+    localStorage.setItem(key,      liked ? '1' : '0');
+    localStorage.setItem(countKey, count);
+    updateLikeUI(liked, count);
+}
+
+function updateLikeUI(liked, count) {
+    var btn       = document.getElementById('like-btn');
+    var heartSpan = btn.querySelector('.heart-icon');
+    var countSpan = document.getElementById('like-count');
+    heartSpan.textContent = liked ? '❤️' : '🤍';
+    countSpan.textContent = count;
+    liked ? btn.classList.add('liked') : btn.classList.remove('liked');
+}
+
+function openShareModal() {
+    document.getElementById('share-link-input').value = window.location.href;
+    document.getElementById('copy-link-btn').textContent = 'Sao chép';
+    document.getElementById('copy-link-btn').classList.remove('copied');
+    document.getElementById('share-modal-overlay').classList.add('active');
+}
+function closeShareModal() {
+    document.getElementById('share-modal-overlay').classList.remove('active');
+}
+function handleOverlayClick(e) {
+    if (e.target === document.getElementById('share-modal-overlay')) closeShareModal();
+}
+function copyLink() {
+    var input = document.getElementById('share-link-input');
+    var btn   = document.getElementById('copy-link-btn');
+    navigator.clipboard.writeText(input.value).then(function () {
+        btn.textContent = '✓ Đã sao chép';
+        btn.classList.add('copied');
+        setTimeout(function () { btn.textContent = 'Sao chép'; btn.classList.remove('copied'); }, 2000);
+    }).catch(function () {
+        input.select(); document.execCommand('copy');
+        btn.textContent = '✓ Đã sao chép'; btn.classList.add('copied');
+        setTimeout(function () { btn.textContent = 'Sao chép'; btn.classList.remove('copied'); }, 2000);
+    });
+}
+
+function syncUtterancesTheme(isDark) {
+    var theme = isDark ? 'github-dark' : 'github-light';
+    document.querySelectorAll('.utterances-frame').forEach(function (f) {
+        f.contentWindow.postMessage({ type: 'set-theme', theme: theme }, 'https://utteranc.es');
+    });
+}
+</script>
+
+</body>
+</html>
