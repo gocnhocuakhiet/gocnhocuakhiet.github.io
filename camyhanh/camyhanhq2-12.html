@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <link rel="stylesheet" href="../style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cẩm Y Hành - Chương 12: Bài học thứ hai</title>
+    
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f1f7f4;
+            color: #2d3a34;
+            line-height: 1.8;
+        }
+
+        .navbar {
+            background-color: #ffffff;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 10%;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        .navbar .logo { font-size: 1.2rem; font-weight: bold; color: #4a6b5d; text-decoration: none; }
+        .nav-links a { color: #555; text-decoration: none; font-size: 0.95rem; transition: color 0.3s; }
+        .nav-links a:hover { color: #4a6b5d; }
+
+        .story-container {
+            max-width: 700px;
+            margin: 40px auto;
+            padding: 30px;
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.02);
+        }
+
+        .story-header {
+            text-align: center;
+            margin-bottom: 35px;
+            border-bottom: 1px dashed #8fae9f;
+            padding-bottom: 20px;
+        }
+        .story-header .novel-name {
+            font-size: 0.95rem; color: #777;
+            text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px;
+        }
+        .story-header .chapter-title { color: #4a6b5d; font-size: 1.6rem; font-weight: 600; }
+
+        .story-content { font-size: 1.15rem; color: #333333; text-align: justify; }
+        .story-content p { margin-bottom: 22px; text-indent: 25px; }
+
+        .reading-nav {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-top: 50px; padding-top: 25px; border-top: 1px dashed #8fae9f;
+        }
+        .nav-btn {
+            display: inline-block; padding: 10px 20px;
+            background-color: #ffffff; color: #4a6b5d;
+            text-decoration: none; border: 1px solid #8fae9f;
+            border-radius: 20px; font-size: 0.9rem; font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        .nav-btn:hover { background-color: #4a6b5d; color: #ffffff; border-color: #4a6b5d; box-shadow: 0 4px 8px rgba(74,107,93,0.2); }
+        .nav-btn.disabled { color: #bbb; border-color: #e0e0e0; background-color: #fafafa; pointer-events: none; box-shadow: none; }
+
+        @media (max-width: 480px) {
+            .story-container { padding: 15px; margin: 20px auto; }
+            .nav-btn { padding: 8px 14px; font-size: 0.8rem; }
+            .comment-sidebar { width: 100%; right: -100%; }
+        }
+
+        body.dark-mode { background-color: #131a17; color: #dae5e0; }
+        body.dark-mode .navbar { background-color: #1b2420; box-shadow: 0 2px 5px rgba(0,0,0,0.3); }
+        body.dark-mode .navbar .logo { color: #8fae9f; }
+        body.dark-mode .nav-links a { color: #aaa; }
+        body.dark-mode .story-container { background-color: #1b2420; box-shadow: 0 2px 10px rgba(0,0,0,0.2); }
+        body.dark-mode .story-header .novel-name { color: #8fae9f; }
+        body.dark-mode .story-header .chapter-title { color: #8fae9f; }
+        body.dark-mode .story-content { color: #dae5e0; }
+        body.dark-mode .nav-btn { background-color: #1b2420; color: #8fae9f; border-color: #4a6b5d; }
+        body.dark-mode .nav-btn:hover { background-color: #4a6b5d; color: #ffffff; }
+        body.dark-mode .nav-btn.disabled { color: #444; border-color: #2e3d36; background-color: #161e1b; }
+
+        .reader-controls-wrapper {
+            position: fixed; bottom: 30px; right: 30px;
+            z-index: 10000;
+            display: flex; flex-direction: column; align-items: flex-end; gap: 10px;
+        }
+        .reader-toggle-btn {
+            width: 48px; height: 48px; border-radius: 50%;
+            border: 2px solid #8fae9f; background: white; color: #4a6b5d;
+            font-size: 18px; cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15); transition: all 0.3s;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .reader-toggle-btn:hover { background: #4a6b5d; color: white; transform: scale(1.1); }
+        .reader-controls-group {
+            display: flex; flex-direction: column; gap: 10px;
+            overflow: hidden; max-height: 0; opacity: 0;
+            transition: max-height 0.35s ease, opacity 0.3s ease;
+        }
+        .reader-controls-group.open { max-height: 200px; opacity: 1; }
+        .reader-controls-group button {
+            width: 48px; height: 48px; border-radius: 50%;
+            border: 2px solid #8fae9f; background: white; color: #4a6b5d;
+            font-size: 15px; font-weight: bold; cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15); transition: all 0.3s;
+        }
+        .reader-controls-group button:hover { background: #4a6b5d; color: white; transform: scale(1.1); }
+        body.dark-mode .reader-toggle-btn,
+        body.dark-mode .reader-controls-group button { background: #1b2420; color: #8fae9f; border-color: #4a6b5d; }
+        body.dark-mode .reader-toggle-btn:hover,
+        body.dark-mode .reader-controls-group button:hover { background: #4a6b5d; color: white; }
+
+        .comment-row {
+            display: flex; justify-content: space-between;
+            align-items: flex-start; gap: 15px;
+            margin-bottom: 22px; width: 100%;
+        }
+        .comment-row p { flex: 1; margin-bottom: 0 !important; }
+
+        .comment-badge {
+            cursor: pointer; flex-shrink: 0; margin-top: 6px;
+            width: 30px; height: 30px; border-radius: 50%;
+            background-color: #eaf2ee; color: #4a6b5d;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.9rem; line-height: 1;
+            transition: all 0.2s ease; user-select: none; border: none;
+        }
+        .comment-badge:hover { background-color: #4a6b5d; color: #ffffff; transform: scale(1.12); }
+        body.dark-mode .comment-badge { background-color: #25332c; color: #8fae9f; }
+        body.dark-mode .comment-badge:hover { background-color: #4a6b5d; color: #ffffff; }
+
+        .comment-sidebar {
+            position: fixed; top: 0; right: -420px; width: 400px; height: 100%;
+            background: #ffffff;
+            box-shadow: -5px 0 15px rgba(0,0,0,0.05);
+            z-index: 100000;
+            transition: right 0.4s cubic-bezier(0.25,0.8,0.25,1);
+            padding: 24px; overflow-y: auto; box-sizing: border-box;
+        }
+        .comment-sidebar.active { right: 0; }
+        .sidebar-header {
+            display: flex; justify-content: space-between; align-items: center;
+            border-bottom: 1px solid #dae5e0; padding-bottom: 12px; margin-bottom: 16px;
+        }
+        .sidebar-header h4 { color: #4a6b5d; margin: 0; }
+        .close-sidebar-btn { background: none; border: none; font-size: 1.2rem; color: #999; cursor: pointer; }
+        .quoted-paragraph-box {
+            background: #f0f7f4; border-left: 3px solid #8fae9f;
+            border-radius: 4px; padding: 10px 14px;
+            font-size: 0.88rem; color: #4a6b5d; font-style: italic;
+            line-height: 1.5; margin-bottom: 12px;
+        }
+        .sidebar-mention-hint {
+            font-size: 0.8rem; color: #888;
+            background: #f8faf9; border: 1px dashed #c8ddd5;
+            border-radius: 6px; padding: 8px 12px; margin-bottom: 14px; line-height: 1.5;
+        }
+        .sidebar-mention-hint code { background: #e4efe9; color: #4a6b5d; padding: 1px 5px; border-radius: 4px; font-size: 0.78rem; }
+        body.dark-mode .sidebar-mention-hint { background: #1e2b24; border-color: #2e3d36; color: #7a9a8a; }
+        body.dark-mode .sidebar-mention-hint code { background: #2a3830; color: #8fae9f; }
+        .sidebar-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.2); z-index: 99999; display: none;
+        }
+        .sidebar-overlay.active { display: block; }
+        .sidebar-loading {
+            text-align: center; padding: 30px 0;
+            color: #aaa; font-size: 0.9rem; font-style: italic;
+        }
+
+        .chapter-discussion-box {
+            max-width: 700px; margin: 30px auto 50px auto;
+            padding: 25px; background-color: #ffffff;
+            border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.02);
+        }
+        .discussion-header {
+            display: flex; justify-content: space-between; align-items: center;
+            gap: 10px; margin-bottom: 25px;
+            border-bottom: 1px dashed #dae5e0; padding-bottom: 15px;
+        }
+        .discussion-header-left { display: flex; align-items: center; gap: 10px; }
+        .discussion-header h3 { color: #4a6b5d; font-size: 1.2rem; margin: 0; }
+        .discussion-actions { display: flex; align-items: center; gap: 10px; }
+        .action-btn {
+            display: flex; align-items: center; gap: 6px;
+            padding: 7px 14px; border-radius: 20px; border: 1px solid #8fae9f;
+            background: #ffffff; color: #4a6b5d;
+            font-size: 0.85rem; font-weight: 500; cursor: pointer;
+            transition: all 0.25s ease; user-select: none;
+        }
+        .action-btn:hover { background-color: #f0f7f4; box-shadow: 0 3px 8px rgba(74,107,93,0.15); }
+        .action-btn.liked { background-color: #fff0f3; border-color: #e8a0b0; color: #c0556a; }
+        .action-btn.liked .heart-icon { animation: heartPop 0.35s ease; }
+        @keyframes heartPop {
+            0% { transform: scale(1); } 40% { transform: scale(1.45); }
+            70% { transform: scale(0.9); } 100% { transform: scale(1); }
+        }
+        body.dark-mode .action-btn { background: #1b2420; color: #8fae9f; border-color: #4a6b5d; }
+        body.dark-mode .action-btn:hover { background-color: #232e29; }
+        body.dark-mode .action-btn.liked { background-color: #2a1e22; border-color: #7a3a4a; color: #e08090; }
+        .comment-section { width: 100%; min-height: 150px; }
+
+        body.dark-mode .chapter-discussion-box,
+        body.dark-mode .comment-sidebar { background-color: #1b2420 !important; }
+        body.dark-mode .discussion-header,
+        body.dark-mode .sidebar-header { border-bottom-color: #2e3d36 !important; }
+        body.dark-mode .discussion-header h3,
+        body.dark-mode .sidebar-header h4 { color: #8fae9f !important; }
+        body.dark-mode .quoted-paragraph-box { background: #232e29; border-left-color: #4a6b5d; color: #8fae9f; }
+
+        .share-modal-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.35);
+            z-index: 200000; display: none; align-items: center; justify-content: center;
+        }
+        .share-modal-overlay.active { display: flex; }
+        .share-modal {
+            background: #ffffff; border-radius: 12px;
+            padding: 28px 24px 22px; width: 380px; max-width: 92vw;
+            box-shadow: 0 12px 40px rgba(0,0,0,0.18);
+            animation: slideUp 0.25s ease;
+        }
+        @keyframes slideUp {
+            from { transform: translateY(20px); opacity: 0; }
+            to   { transform: translateY(0); opacity: 1; }
+        }
+        .share-modal h4 { color: #4a6b5d; font-size: 1.05rem; margin-bottom: 16px; text-align: center; }
+        .share-link-row { display: flex; gap: 8px; align-items: center; }
+        .share-link-input {
+            flex: 1; padding: 9px 12px; border: 1px solid #c8ddd5; border-radius: 8px;
+            font-size: 0.85rem; color: #444; background: #f8faf9;
+            outline: none; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
+        }
+        .copy-link-btn {
+            padding: 9px 16px; border-radius: 8px;
+            background: #4a6b5d; color: #ffffff; border: none;
+            font-size: 0.85rem; font-weight: 600; cursor: pointer;
+            transition: all 0.2s; white-space: nowrap;
+        }
+        .copy-link-btn:hover { background: #3a5a4d; }
+        .copy-link-btn.copied { background: #6aaa88; }
+        .share-modal-close {
+            display: block; width: 100%; margin-top: 14px;
+            padding: 8px; background: none; border: none;
+            color: #999; font-size: 0.85rem; cursor: pointer; text-align: center;
+        }
+        .share-modal-close:hover { color: #555; }
+        body.dark-mode .share-modal { background: #1b2420; }
+        body.dark-mode .share-modal h4 { color: #8fae9f; }
+        body.dark-mode .share-link-input { background: #232e29; border-color: #3a5040; color: #dae5e0; }
+        body.dark-mode .share-modal-close { color: #6a8a7a; }
+    </style>
+</head>
+<body>
+
+<div class="reader-controls-wrapper">
+    <div class="reader-controls-group" id="reader-group">
+        <button onclick="changeFontSize(1)" title="Phóng to chữ">A+</button>
+        <button onclick="changeFontSize(-1)" title="Thu nhỏ chữ">A-</button>
+        <button onclick="toggleDarkMode()" id="dark-mode-btn" title="Đổi màu nền">🌙</button>
+    </div>
+    <button class="reader-toggle-btn" id="reader-toggle" onclick="toggleReaderControls()" title="Tuỳ chỉnh đọc">⚙️</button>
+</div>
+
+<script>
+function toggleReaderControls() {
+    var group = document.getElementById('reader-group');
+    var btn   = document.getElementById('reader-toggle');
+    var isOpen = group.classList.toggle('open');
+    btn.style.background = isOpen ? '#4a6b5d' : '';
+    btn.style.color      = isOpen ? '#ffffff'  : '';
+}
+function toggleDarkMode() {
+    document.body.classList.toggle('dark-mode');
+    var isDark = document.body.classList.contains('dark-mode');
+    localStorage.setItem('night-mode', isDark ? 'on' : 'off');
+    document.getElementById('dark-mode-btn').innerText = isDark ? '☀️' : '🌙';
+    syncUtterancesTheme(isDark);
+}
+function changeFontSize(delta) {
+    var content = document.querySelector('.story-content') || document.body;
+    var cur = parseFloat(window.getComputedStyle(content).fontSize);
+    content.style.fontSize = (cur + delta) + 'px';
+}
+function syncUtterancesTheme(isDark) {
+    var theme = isDark ? 'github-dark' : 'github-light';
+    document.querySelectorAll('.utterances-frame').forEach(function(f) {
+        f.contentWindow.postMessage({ type: 'set-theme', theme: theme }, 'https://utteranc.es');
+    });
+}
+(function() {
+    if (localStorage.getItem('night-mode') === 'on') {
+        document.body.classList.add('dark-mode');
+        setTimeout(function() {
+            var b = document.getElementById('dark-mode-btn');
+            if (b) b.innerText = '☀️';
+        }, 80);
+    }
+})();
+</script>
+
+<header class="navbar">
+    <a href="../index.html" class="logo">🌿 Góc nhỏ của Khiết</a>
+    <nav class="nav-links"><a href="../index.html">Trang Chủ</a></nav>
+</header>
+
+<main class="story-container">
+    <div class="story-header">
+        <p class="novel-name">Cẩm Y Hành - Quyển 2</p>
+        <h1 class="chapter-title">Chương 12: Bài học thứ hai</h1>
+    </div>
+
+    <article class="story-content">
+        <p>Điều thứ hai mà Mạnh Kiếm Khanh không ngờ tới chính là... đồ ăn ở Giảng Võ Đường lại dở tệ đến thế.</p>
+        <p>Ghế dài trong nhà ăn vừa hẹp vừa cứng, chỉ đủ miễn cưỡng ngồi cho có lệ, như cố tình không cho họ thoải mái ăn uống. Trên những chiếc bàn dài gồ ghề, bát đất thô và đũa tre xếp thành hàng, mỗi người chỉ được một bát cơm gạo lứt và một đĩa dưa muối.</p>
+        <p>Đám tân sinh không khỏi xì xào bàn tán.</p>
+        <p>Phó tổng giáo tập Thái Bổn bước vào.</p>
+        <p>Dù là tân sinh, nhưng cũng có nhiều người từng nghe danh vị Thái tổng giáo tập nổi tiếng nghiêm khắc này. Nghe nói Thái Bổn vốn là thị vệ thân cận của Hồng Vũ Đế, lập nhiều chiến công nên được phong Thiên hộ, đóng quân ở vệ sở Tô Châu vốn là sào huyệt của Trương Sĩ Thành, đủ thấy Hồng Vũ Đế tin tưởng Thái Bổn đến mức nào.</p>
+        <p>Vụ án Cao Khải chấn động mấy năm trước cũng là do Thái Bổn vạch trần, khiến người được mệnh danh là thi nhân số một đương thời phải chịu án lăng trì, vụ án dường như còn liên lụy đến nhiều chuyện nhạy cảm khác, Thái Bổn vì thế bị điều về Ứng Thiên, nhận chiếu xây dựng Giảng Võ Đường, tránh phiền phức bên ngoài.</p>
+        <p>Xét về chức vụ, Thái Bổn chỉ là Phó tổng giáo tập; nhưng Tổng giáo tập lại do Thái tử Chu Tiêu đảm nhiệm. Thái tử bận trăm công nghìn việc, mọi việc đều giao cho Thái Bổn quản lý, nên quyền lực của vị Phó tổng giáo tập này cực lớn, trong Giảng Võ Đường ai cũng biết Thái Bổn mới là người nắm quyền thật sự.</p>
+        <p>Thái Bổn vừa bước vào, liền mang theo một luồng áp lực âm u bao trùm khiến đám tân sinh không khỏi im bặt.</p>
+        <p>Ông đảo mắt nhìn quanh rồi chậm rãi nói: “Mạnh Tử từng dạy: Trời muốn giao trọng trách cho ai, ắt phải làm khổ tâm chí họ, nhọc xương cốt họ trước. Giống như tục ngữ cũng có câu: Nhai được rễ rau, việc gì cũng làm nên. Nếu ngay cả ải ham muốn ăn uống tầm thường cũng không vượt qua được, thì đâu đáng mặt đàn ông!”</p>
+        <p>Đám tân sinh liếc nhìn nhau, thầm cười trong bụng. Câu “nhai được rễ rau, việc gì cũng làm nên” vốn là câu cửa miệng ưa thích của Thái tổng giáo tập, dần dà biến thành biệt danh của ông, có kẻ còn thêm chữ “đắng” vào trước rễ rau thành “Rễ Rau Đắng”.</p>
+        <p>Trong không khí im lặng, có người rụt rè hỏi: “Xin hỏi Thái tổng giáo tập, chúng tôi phải chịu đựng bao lâu mới qua ải?”</p>
+        <p>Ánh mắt sắc như dao của Thái Bổn xoáy vào người hỏi, khiến hắn không khỏi co rúm lại.</p>
+        <p>Thái Bổn chậm rãi đáp: “Chịu đến khi nào ta thấy đủ thì thôi.”</p>
+        <p>Gần như tất cả tân sinh trong nhà ăn đều không nén nổi hít sâu một hơi.</p>
+        <p>Thái Bổn ngồi xuống.</p>
+        <p>Về sau mọi người mới biết, hơn hai năm nay, Thái tổng giáo tập luôn kiên trì dùng bữa cùng học viên, để họ không có cớ phàn nàn.</p>
+        <p>Đám tân sinh càng thở dài ngao ngán. Nghĩ đến ba năm tới phải sống dưới con mắt giám sát của vị Tổng giáo tập này, thật đáng sợ...</p>
+        <p>Tiếng chuông vang lên, mọi người đồng loạt cầm đũa, ăn ngấu nghiến như cuồng phong quét lá, chớp mắt đã ăn sạch không sót một hột cơm. Mọi người nhìn nhau, ai nấy đều cảm thấy càng ăn càng đói.</p>
+        <p>Nhưng không ai dám phàn nàn trước mặt Thái tổng giáo tập.</p>
+        <p>Nửa đêm, Mạnh Kiếm Khanh bị cơn đói đánh thức</p>
+        <p>Trong phòng ngoài Mạnh Kiếm Thần và Công Tôn Nghĩa, còn ba tân sinh Chiết Giang khác, lúc này cũng đã thức giấc, tiếng bụng đói cồn cào vang lên từng hồi, Công Tôn Nghĩa lẩm bẩm: “Thật chẳng khác gì sống không bằng chết.”</p>
+        <p>Bình thường hắn ăn rất khỏe, ba tháng kể từ khi vào Giảng Võ Đường, nhịn mãi nhịn mãi, đến tối nay không thể chịu nổi nữa, bật dậy nói: “Mấy huynh thế nào? Ta thì phải kiếm gì đó bỏ bụng, không thì chết đói mất!”</p>
+        <p>Mọi người lập tức phấn chấn, một người hỏi: “Huynh định kiếm đồ ăn ở đâu?”</p>
+        <p>Công Tôn Nghĩa đương nhiên đáp: “Thì nhà bếp chứ đâu!”</p>
+        <p>Dù giữa đêm mò ra ngoài mà bị bắt sẽ bị đánh mười gậy, nhưng so với cảm giác đói như mèo cào, Công Tôn Nghĩa thà chịu mười  gậy, huống chi chưa chắc đã bị bắt.</p>
+        <p>Công Tôn Nghĩa đi chưa đầy nửa canh giờ đã lủi thủi trở về, bực bội nói: “Lạ thật, trong bếp ngoài dầu muối và củi ra, đến một cọng rau, một hạt gạo cũng chẳng có!”</p>
+        <p>Chắc hẳn nhà bếp đã từng chịu cảnh đồ ăn không cánh mà bay, nên mới áp dụng chiến thuật “vườn không nhà trống”, không để lại gì cho họ.</p>
+        <p>Tiếng ếch ngoài tường cứ râm ran không dứt, càng khiến họ bứt rứt.</p>
+        <p>Mạnh Kiếm Thần chợt nói: “Đến bếp lấy ít muối, chúng ta bắt vài con ếch nướng.”</p>
+        <p>Cũng là một cách hay. Bọn họ bàn bạc rồi quyết định: Công Tôn Nghĩa sẽ đi trộm muối, hắn đã làm một lần nên quen đường quen lối rồi, còn hai huynh đệ Mạnh gia sẽ mang muối trèo tường ra ngoài nướng ếch.</p>
+        <p>Bức tường cao gấp ba người cũng không ngăn được Mạnh Kiếm Thần. Hắn rút một cây thương dài từ giá vũ khí bên võ trường, vác thương chạy thẳng tới chân tường. Khi sắp chạm tường, hắn chống mũi thương xuống đất lấy đà, cả người bật lên theo ngọn thương, lộn một vòng qua đầu tường, nhẹ nhàng tiếp đất bên ngoài.</p>
+        <p>Mạnh Kiếm Khanh ném cây thương sang.</p>
+        <p>Hắn biết Mạnh Kiếm Thần chưa chắc muốn dùng cách của mình để trèo về.</p>
+        <p>Mạnh Kiếm Khanh vung mạnh sợi dây thừng nhỏ quấn chặt quanh eo, móc sắt năm chân ở đầu dây móc vào đỉnh tường, hắn bám dây leo qua.</p>
+        <p>Mạnh Kiếm Thần nhìn hắn, bĩu môi: “Loại đồ chơi mánh khóe mà bọn trộm cướp hay dùng lại cất như báu vật. Chắc còn mang theo mê hương nữa chứ gì?”</p>
+        <p>Mạnh Kiếm Khanh không để ý: “Mê hương thì ta không dám mang theo, sợ các giáo tập nhìn thấy sẽ phiền phức. Còn dây móc này, có ích thì dùng, cần gì phải phân biệt của ai?”</p>
+        <p>Đặc biệt là khi bắt ếch càng hữu dụng.</p>
+        <p>Chỉ trong chốc lát, họ đã bắt đầy một túi ếch. Mạnh Kiếm Thần nhóm lửa, nhìn Mạnh Kiếm Khanh thoăn thoắt làm sạch, ướp muối rồi đặt lên lửa nướng, trong lòng bỗng có chút cảm giác khó nói. Bình thường hắn vốn chẳng bao giờ làm mấy việc thế này.</p>
+        <p>Mạnh Kiếm Khanh ngẩng đầu nhìn hắn: “Đệ cũng học đi, sau này ra ngoài, không phải lúc nào cũng có đầu bếp kè kè bên cạnh đâu.”</p>
+        <p>Mạnh Kiếm Thần biết câu này rất đúng, nhưng từ miệng Mạnh Kiếm Khanh nói ra, nghe sao thấy bực bội. Đang nghĩ cách châm chọc thì trong gió đêm thoảng mùi cá nướng. Hai người hít hà, đêm khuya thanh vắng, ai lại đi nướng cá ngoài đồng thế này?</p>
+        <p>Khi họ no nê quay về, mang theo một túi ếch nướng, bất ngờ đụng mặt Quan Tây và một học viên khóa hai khác, Quan Tây còn xách một túi vải, miệng túi ló ra đầu cá.</p>
+        <p>Bốn người nhìn nhau, ngơ ra hồi lâu, rồi cùng phá lên cười.</p>
+        <p>Nếu Thái tổng giáo tập biết được cách họ lấp đầy bụng đói, không biết có tức nổ mắt không?</p>
+        <p>Mỗi tối trước khi ngủ, Mạnh Kiếm Khanh đều nghĩ cách trốn ra ngoài, tìm thức ăn ở đâu, làm sao trở về. Kỳ lạ thay, từ đó hắn không còn mơ thấy Nghiêm Nhị tiên sinh, nỗi ám ảnh bấy lâu nữa.</p>
+        <p>Số người trốn ra ngoài ban đêm ngày càng đông. Cuối cùng có một đêm, hai người bị binh lính tuần tra bắt gặp, mỗi người bị đánh mười gậy. Từ đó việc kiểm tra phòng được nâng từ một lần lên ba lần mỗi đêm, trên đầu tường gắn thêm hàng gai sắt cao hơn một thước.</p>
+        <p>Nhưng đạo cao một thước, ma cao một trượng, chẳng mấy chốc có người đào địa đạo. Mỗi lần ra vào đều để lại một phần thức ăn cho người gác. Chỉ có điều địa đạo này về sau làm ăn quá phát đạt, người gác cửa vì quá đắc ý nên xảy ra sơ suất, khiến đường hầm bị lính tuần tra phát hiện, từ đó con đường này cũng đứt luôn.</p>
+        <p>Cũng có những học viên gia cảnh giàu có bí mật sai người đến các tiệm gần Giảng Võ Đường, hẹn sẵn thời gian địa điểm, nửa đêm thì ném gói đồ ăn vào cho họ bắt lấy, rồi lại ném bạc trả ngược ra. Cứ như vậy nhiều lần, cuối cùng cũng bị phát hiện, đi đêm có ngày gặp ma, cũng là chuyện khó tránh.</p>
+        <p>Sáu người Mạnh Kiếm Khanh lạnh lùng quan sát trò mèo vờn chuột này. Họ vẫn dùng cách cũ là trèo tường. Tuy tường cao, nhưng không ngăn được hai huynh đệ Mạnh gia. Tục ngữ nói nơi nguy hiểm nhất lại là nơi an toàn nhất, ai cũng cho rằng bức tường đã được canh phòng nghiêm ngặt, trở thành cấm địa, ngay cả lính tuần cũng bắt đầu lơi lỏng, thành ra lại thuận tiện cho họ ra vào dễ dàng.</p>
+        <p>Dù ra vào không thành vấn đề, hai huynh đệ Mạnh Kiếm Khanh gặp phải vấn đề khác, ếch nhái quanh đây ngày càng ít đi, không đủ lấp đầy bụng họ nữa.</p>
+        <p>Hồ Huyền Vũ vốn là hồ phóng sinh, cá lớn cá bé đầy hồ, nhưng nhóm người Quan Tây bắt cá quá nhiều, cuối cùng bị các sư chùa Kê Minh bên hồ phát hiện. Hai bên ẩu đả khi nhà sư ngăn cản, đương nhiên nhà sư không phải đối thủ, lại không tài nào bắt được bọn trộm cá, đành đêm đêm tuần tra, hễ nghe động tĩnh là khua chiêng gõ mõ.</p>
+        <p>Quan Tây sợ bị quân tuần phòng bắt gặp sẽ phiền phức, đành chuyển sang nơi khác; các nhà sư chùa Kê Minh không yên tâm, tiếp tục tuần tra không nghỉ đêm nào, Mạnh Kiếm Khanh đành ngửa mặt than trời, âm thầm chửi đám nhà sư kia sao mà cứng nhắc thế.</p>
+        <p>Thế là phạm vi tìm thức ăn của hai huynh đệ Mạnh gia ngày càng mở rộng, từ trong năm dặm quanh Giảng Võ Đường, lên mười dặm, rồi hai mươi dặm... từ ếch nhái đến thỏ rừng gà hoang, cá tôm rắn cua... về sau, trong phạm vi ba mươi dặm, con gì bay trên trời, bò dưới đất, bơi dưới nước, ngửi thấy hơi họ là chuồn mất. Mỗi lần nói đến chuyện này lại khiến bốn người Công Tôn Nghĩa cười như điên.</p>
+        <p>Đúng lúc này, lớp bắn cung của Khổng giáo tập gợi ý cho họ một ý tưởng mới, hai huynh đệ Mạnh Kiếm Khanh bắt đầu bắn cá.</p>
+        <p>Họ buộc dây câu mảnh vào đuôi tên, nấp ngoài tầm tuần tra của các sư chùa Kê Minh, hễ mấy vị sư kia quay đi chỗ khác, liền có hai con cá bị bắn trúng rồi kéo nhanh vào bụi cây.</p>
+        <p>Mạnh Kiếm Thần xách túi cá, bám sát sau lưng Mạnh Kiếm Khanh, khom người chạy thục mạng qua các lùm cây thấp, đến khi xa hẳn hồ Huyền Vũ mới dừng lại nướng cá. Trong lòng hắn vừa cảm thấy vui như chơi trò mạo hiểm, đồng thời khó chịu nhận ra nếu ném hắn và Mạnh Kiếm Khanh vào rừng hoang, thì chắc chắn người sống sót sẽ là Mạnh Kiếm Khanh.</p>
+        <p>Nếu Khổng giáo tập biết được họ luyện bắn cung như vậy, không biết sẽ giận sôi máu hay cười xòa cho qua?</p>
+        <p>Mạnh Kiếm Khanh thì nghĩ thầm: đám này ở Giảng Võ Đường đã biết đủ cách mưu sinh, sau này ra trận chắc thành cao thủ đột nhập doanh trại, ném đâu cũng sống được…</p>
+        <p>Đêm nào cũng lăn lộn vất vả khiến họ thiếu ngủ triền miên. May thay, khóa học mới về “Binh chế và Chiến tích lịch sử các triều đại” đã kịp thời mở ra.</p>
+        <p>Lần đầu gặp Quy giáo tập Quy Hữu Niên, cả giảng đường xôn xao tiếng hít hà. Bắt đầu hiểu cảm thán của học viên khóa hai: núi cao ngất trời...</p>
+        <p>Một núi thịt khổng lồ như vậy đứng trong giảng đường, không ngước nhìn cũng khó...</p>
+        <p>Nụ cười trên mặt Quy giáo tập cả ngày bất biến như Phật Di Lặc. Mỗi buổi học, ông đều giảng đi giảng lại đạo lý “thuộc ba trăm bài thơ Đường, không làm thơ cũng biết ngâm”, sau đó phát một tờ giấy đầy chữ bảo mọi người học thuộc, rồi ông thảnh thơi ngả lưng trên chiếc sập ba thành to đùng sau bục giảng, ngáy khò khò.</p>
+        <p>Đúng một canh giờ trước khi chuông cơm tối vang lên, ông chính xác tỉnh giấc, bắt mọi người lần lượt đọc thuộc lòng. Ai thuộc thì về trước, ai không thuộc phải ở lại.</p>
+        <p>Quy giáo tập chỉ thức đúng một canh giờ, qua thời gian đó lại ngủ mê mệt, hai canh giờ sau mới tỉnh, những học viên ở lại phải nhịn đói ngồi trong giảng đường hai canh giờ.</p>
+        <p>Mạnh Kiếm Khanh và Mạnh Kiếm Thần tranh thủ lúc Quy giáo tập ngủ say cũng chợp mắt một canh giờ, dùng một canh giờ còn lại học thuộc tờ giấy chi chít chữ, đúng là “một công đôi việc”. Bởi vậy mà trong lòng họ thật sự vô cùng biết ơn vị Quy giáo tập bị nghi ngờ “ngồi mát ăn bát vàng” này.</p>
+        <p>Học viên khóa hai vốn âm thầm đặt cho Quy giáo tập biệt danh “Quy Sơn” - ngụ ý một ngọn núi thịt.</p>
+        <p>Có tên học viên đọc nhiều sách hơn thì thầm cười: “Xưa Tô Đông Pha chế giễu một đồng liêu ngủ nhiều là rùa sáu mắt, một giấc ngủ dài bằng ba con rùa cộng lại, mà ông ấy còn họ Quy, chẳng phải đúng là “rùa sáu mắt” đó sao?”</p>
+        <p>Lời có hơi châm biếm, nhưng quá chuẩn xác, khiến mọi người phá lên cười, từ đó biệt danh “Rùa sáu mắt” bắt đầu lan truyền rộng rãi.</p>
+    </article>
+
+    <div class="reading-nav">
+        <a href="camyhanhq2-11.html" class="nav-btn">⬅️ Chương trước</a>
+        <a href="../mucluc/camyhanh.html" class="nav-btn">📋 Mục lục</a>
+        <a href="camyhanhq2-13.html" class="nav-btn">Chương sau ➡️</a>
+    </div>
+</main>
+
+<div class="chapter-discussion-box">
+    <div class="discussion-header">
+        <div class="discussion-header-left">
+            <span>🌿</span>
+            <h3>Thảo luận về chương này</h3>
+            <span>🌸</span>
+        </div>
+        <div class="discussion-actions">
+            <button class="action-btn" id="like-btn" onclick="toggleLike()" title="Thả tim chương này">
+                <span class="heart-icon">🤍</span>
+                <span id="like-count">0</span>
+            </button>
+            <button class="action-btn" onclick="openShareModal()" title="Chia sẻ chương này">
+                🔗 Chia sẻ
+            </button>
+        </div>
+    </div>
+    <div class="comment-section">
+        <script src="https://utteranc.es/client.js"
+                repo="gocnhocuakhiet/gocnhocuakhiet.github.io"
+                issue-term="pathname"
+                label="comment"
+                theme="github-light"
+                crossorigin="anonymous"
+                async>
+        </script>
+    </div>
+</div>
+
+<div class="share-modal-overlay" id="share-modal-overlay" onclick="handleOverlayClick(event)">
+    <div class="share-modal">
+        <h4>🔗 Chia sẻ chương này</h4>
+        <div class="share-link-row">
+            <input class="share-link-input" id="share-link-input" type="text" readonly>
+            <button class="copy-link-btn" id="copy-link-btn" onclick="copyLink()">Sao chép</button>
+        </div>
+        <button class="share-modal-close" onclick="closeShareModal()">Đóng</button>
+    </div>
+</div>
+
+<div id="comment-sidebar" class="comment-sidebar">
+    <div class="sidebar-header">
+        <h4 id="sidebar-paragraph-title">Bình luận đoạn văn</h4>
+        <button class="close-sidebar-btn" onclick="closeInlineComment()">✕</button>
+    </div>
+    <div class="quoted-paragraph-box" id="quoted-paragraph-box"></div>
+    <div class="sidebar-mention-hint">
+        💡 Dùng <code>@tên-người</code> để nhắc đến ai đó trong bình luận.
+    </div>
+    <div id="sidebar-utterances-mount"></div>
+</div>
+<div id="sidebar-overlay" class="sidebar-overlay" onclick="closeInlineComment()"></div>
+
+<script>
+var GH_REPO  = 'gocnhocuakhiet/gocnhocuakhiet.github.io';
+var GH_LABEL = 'comment';
+var ORIGINAL_TITLE = document.title;
+
+function paragraphTitle(paraNum) {
+    return ORIGINAL_TITLE + ' [Đoạn ' + paraNum + ']';
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+    var paragraphs = document.querySelectorAll('.story-content p');
+    paragraphs.forEach(function (p, index) {
+        var paraNum = index + 1;
+        var row = document.createElement('div');
+        row.className = 'comment-row';
+        p.parentNode.insertBefore(row, p);
+        row.appendChild(p);
+        var badge = document.createElement('span');
+        badge.className = 'comment-badge';
+        badge.title = 'Bình luận về đoạn này';
+        badge.textContent = '💬';
+        badge.onclick = function () {
+            openInlineComment(p.innerText.trim().substring(0, 120), paraNum);
+        };
+        row.appendChild(badge);
+    });
+    initLike();
+});
+
+var currentParaNum = null;
+
+function openInlineComment(previewText, paraNum) {
+    document.getElementById('sidebar-paragraph-title').innerText = 'Đoạn ' + paraNum;
+    document.getElementById('quoted-paragraph-box').innerText =
+        '"' + previewText + (previewText.length >= 120 ? '…' : '') + '"';
+    document.getElementById('comment-sidebar').classList.add('active');
+    document.getElementById('sidebar-overlay').classList.add('active');
+    if (currentParaNum === paraNum) return;
+    currentParaNum = paraNum;
+    var mount = document.getElementById('sidebar-utterances-mount');
+    mount.innerHTML = '<div class="sidebar-loading">Đang tải bình luận…</div>';
+    document.title = paragraphTitle(paraNum);
+    var s = document.createElement('script');
+    s.src = 'https://utteranc.es/client.js';
+    s.setAttribute('repo',         GH_REPO);
+    s.setAttribute('issue-term',   'title');
+    s.setAttribute('label',        GH_LABEL);
+    s.setAttribute('theme',        document.body.classList.contains('dark-mode') ? 'github-dark' : 'github-light');
+    s.setAttribute('crossorigin',  'anonymous');
+    s.async = true;
+    s.onload = function () {
+        var loading = mount.querySelector('.sidebar-loading');
+        if (loading) loading.remove();
+        document.title = ORIGINAL_TITLE;
+    };
+    mount.innerHTML = '';
+    mount.appendChild(s);
+}
+
+function closeInlineComment() {
+    document.getElementById('comment-sidebar').classList.remove('active');
+    document.getElementById('sidebar-overlay').classList.remove('active');
+    document.title = ORIGINAL_TITLE;
+}
+
+function initLike() {
+    var key      = 'like-'      + window.location.pathname;
+    var countKey = 'likecount-' + window.location.pathname;
+    var liked    = localStorage.getItem(key) === '1';
+    var count    = parseInt(localStorage.getItem(countKey) || '0', 10);
+    updateLikeUI(liked, count);
+}
+
+function toggleLike() {
+    var key      = 'like-'      + window.location.pathname;
+    var countKey = 'likecount-' + window.location.pathname;
+    var liked    = localStorage.getItem(key) === '1';
+    var count    = parseInt(localStorage.getItem(countKey) || '0', 10);
+    liked = !liked;
+    count = liked ? count + 1 : Math.max(0, count - 1);
+    localStorage.setItem(key,      liked ? '1' : '0');
+    localStorage.setItem(countKey, count);
+    updateLikeUI(liked, count);
+}
+
+function updateLikeUI(liked, count) {
+    var btn       = document.getElementById('like-btn');
+    var heartSpan = btn.querySelector('.heart-icon');
+    var countSpan = document.getElementById('like-count');
+    heartSpan.textContent = liked ? '❤️' : '🤍';
+    countSpan.textContent = count;
+    liked ? btn.classList.add('liked') : btn.classList.remove('liked');
+}
+
+function openShareModal() {
+    document.getElementById('share-link-input').value = window.location.href;
+    document.getElementById('copy-link-btn').textContent = 'Sao chép';
+    document.getElementById('copy-link-btn').classList.remove('copied');
+    document.getElementById('share-modal-overlay').classList.add('active');
+}
+function closeShareModal() {
+    document.getElementById('share-modal-overlay').classList.remove('active');
+}
+function handleOverlayClick(e) {
+    if (e.target === document.getElementById('share-modal-overlay')) closeShareModal();
+}
+function copyLink() {
+    var input = document.getElementById('share-link-input');
+    var btn   = document.getElementById('copy-link-btn');
+    navigator.clipboard.writeText(input.value).then(function () {
+        btn.textContent = '✓ Đã sao chép';
+        btn.classList.add('copied');
+        setTimeout(function () { btn.textContent = 'Sao chép'; btn.classList.remove('copied'); }, 2000);
+    }).catch(function () {
+        input.select(); document.execCommand('copy');
+        btn.textContent = '✓ Đã sao chép'; btn.classList.add('copied');
+        setTimeout(function () { btn.textContent = 'Sao chép'; btn.classList.remove('copied'); }, 2000);
+    });
+}
+
+function syncUtterancesTheme(isDark) {
+    var theme = isDark ? 'github-dark' : 'github-light';
+    document.querySelectorAll('.utterances-frame').forEach(function (f) {
+        f.contentWindow.postMessage({ type: 'set-theme', theme: theme }, 'https://utteranc.es');
+    });
+}
+</script>
+
+</body>
+</html>

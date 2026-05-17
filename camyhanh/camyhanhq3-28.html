@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <link rel="stylesheet" href="../style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cẩm Y Hành - Chương 28: Mị Hồng (2)</title>
+    
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f1f7f4;
+            color: #2d3a34;
+            line-height: 1.8;
+        }
+
+        .navbar {
+            background-color: #ffffff;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 10%;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        .navbar .logo { font-size: 1.2rem; font-weight: bold; color: #4a6b5d; text-decoration: none; }
+        .nav-links a { color: #555; text-decoration: none; font-size: 0.95rem; transition: color 0.3s; }
+        .nav-links a:hover { color: #4a6b5d; }
+
+        .story-container {
+            max-width: 700px;
+            margin: 40px auto;
+            padding: 30px;
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.02);
+        }
+
+        .story-header {
+            text-align: center;
+            margin-bottom: 35px;
+            border-bottom: 1px dashed #8fae9f;
+            padding-bottom: 20px;
+        }
+        .story-header .novel-name {
+            font-size: 0.95rem; color: #777;
+            text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px;
+        }
+        .story-header .chapter-title { color: #4a6b5d; font-size: 1.6rem; font-weight: 600; }
+
+        .story-content { font-size: 1.15rem; color: #333333; text-align: justify; }
+        .story-content p { margin-bottom: 22px; text-indent: 25px; }
+
+        .reading-nav {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-top: 50px; padding-top: 25px; border-top: 1px dashed #8fae9f;
+        }
+        .nav-btn {
+            display: inline-block; padding: 10px 20px;
+            background-color: #ffffff; color: #4a6b5d;
+            text-decoration: none; border: 1px solid #8fae9f;
+            border-radius: 20px; font-size: 0.9rem; font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        .nav-btn:hover { background-color: #4a6b5d; color: #ffffff; border-color: #4a6b5d; box-shadow: 0 4px 8px rgba(74,107,93,0.2); }
+        .nav-btn.disabled { color: #bbb; border-color: #e0e0e0; background-color: #fafafa; pointer-events: none; box-shadow: none; }
+
+        @media (max-width: 480px) {
+            .story-container { padding: 15px; margin: 20px auto; }
+            .nav-btn { padding: 8px 14px; font-size: 0.8rem; }
+            .comment-sidebar { width: 100%; right: -100%; }
+        }
+
+        body.dark-mode { background-color: #131a17; color: #dae5e0; }
+        body.dark-mode .navbar { background-color: #1b2420; box-shadow: 0 2px 5px rgba(0,0,0,0.3); }
+        body.dark-mode .navbar .logo { color: #8fae9f; }
+        body.dark-mode .nav-links a { color: #aaa; }
+        body.dark-mode .story-container { background-color: #1b2420; box-shadow: 0 2px 10px rgba(0,0,0,0.2); }
+        body.dark-mode .story-header .novel-name { color: #8fae9f; }
+        body.dark-mode .story-header .chapter-title { color: #8fae9f; }
+        body.dark-mode .story-content { color: #dae5e0; }
+        body.dark-mode .nav-btn { background-color: #1b2420; color: #8fae9f; border-color: #4a6b5d; }
+        body.dark-mode .nav-btn:hover { background-color: #4a6b5d; color: #ffffff; }
+        body.dark-mode .nav-btn.disabled { color: #444; border-color: #2e3d36; background-color: #161e1b; }
+
+        .reader-controls-wrapper {
+            position: fixed; bottom: 30px; right: 30px;
+            z-index: 10000;
+            display: flex; flex-direction: column; align-items: flex-end; gap: 10px;
+        }
+        .reader-toggle-btn {
+            width: 48px; height: 48px; border-radius: 50%;
+            border: 2px solid #8fae9f; background: white; color: #4a6b5d;
+            font-size: 18px; cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15); transition: all 0.3s;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .reader-toggle-btn:hover { background: #4a6b5d; color: white; transform: scale(1.1); }
+        .reader-controls-group {
+            display: flex; flex-direction: column; gap: 10px;
+            overflow: hidden; max-height: 0; opacity: 0;
+            transition: max-height 0.35s ease, opacity 0.3s ease;
+        }
+        .reader-controls-group.open { max-height: 200px; opacity: 1; }
+        .reader-controls-group button {
+            width: 48px; height: 48px; border-radius: 50%;
+            border: 2px solid #8fae9f; background: white; color: #4a6b5d;
+            font-size: 15px; font-weight: bold; cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15); transition: all 0.3s;
+        }
+        .reader-controls-group button:hover { background: #4a6b5d; color: white; transform: scale(1.1); }
+        body.dark-mode .reader-toggle-btn,
+        body.dark-mode .reader-controls-group button { background: #1b2420; color: #8fae9f; border-color: #4a6b5d; }
+        body.dark-mode .reader-toggle-btn:hover,
+        body.dark-mode .reader-controls-group button:hover { background: #4a6b5d; color: white; }
+
+        .comment-row {
+            display: flex; justify-content: space-between;
+            align-items: flex-start; gap: 15px;
+            margin-bottom: 22px; width: 100%;
+        }
+        .comment-row p { flex: 1; margin-bottom: 0 !important; }
+
+        .comment-badge {
+            cursor: pointer; flex-shrink: 0; margin-top: 6px;
+            width: 30px; height: 30px; border-radius: 50%;
+            background-color: #eaf2ee; color: #4a6b5d;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.9rem; line-height: 1;
+            transition: all 0.2s ease; user-select: none; border: none;
+        }
+        .comment-badge:hover { background-color: #4a6b5d; color: #ffffff; transform: scale(1.12); }
+        body.dark-mode .comment-badge { background-color: #25332c; color: #8fae9f; }
+        body.dark-mode .comment-badge:hover { background-color: #4a6b5d; color: #ffffff; }
+
+        .comment-sidebar {
+            position: fixed; top: 0; right: -420px; width: 400px; height: 100%;
+            background: #ffffff;
+            box-shadow: -5px 0 15px rgba(0,0,0,0.05);
+            z-index: 100000;
+            transition: right 0.4s cubic-bezier(0.25,0.8,0.25,1);
+            padding: 24px; overflow-y: auto; box-sizing: border-box;
+        }
+        .comment-sidebar.active { right: 0; }
+        .sidebar-header {
+            display: flex; justify-content: space-between; align-items: center;
+            border-bottom: 1px solid #dae5e0; padding-bottom: 12px; margin-bottom: 16px;
+        }
+        .sidebar-header h4 { color: #4a6b5d; margin: 0; }
+        .close-sidebar-btn { background: none; border: none; font-size: 1.2rem; color: #999; cursor: pointer; }
+        .quoted-paragraph-box {
+            background: #f0f7f4; border-left: 3px solid #8fae9f;
+            border-radius: 4px; padding: 10px 14px;
+            font-size: 0.88rem; color: #4a6b5d; font-style: italic;
+            line-height: 1.5; margin-bottom: 12px;
+        }
+        .sidebar-mention-hint {
+            font-size: 0.8rem; color: #888;
+            background: #f8faf9; border: 1px dashed #c8ddd5;
+            border-radius: 6px; padding: 8px 12px; margin-bottom: 14px; line-height: 1.5;
+        }
+        .sidebar-mention-hint code { background: #e4efe9; color: #4a6b5d; padding: 1px 5px; border-radius: 4px; font-size: 0.78rem; }
+        body.dark-mode .sidebar-mention-hint { background: #1e2b24; border-color: #2e3d36; color: #7a9a8a; }
+        body.dark-mode .sidebar-mention-hint code { background: #2a3830; color: #8fae9f; }
+        .sidebar-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.2); z-index: 99999; display: none;
+        }
+        .sidebar-overlay.active { display: block; }
+        .sidebar-loading {
+            text-align: center; padding: 30px 0;
+            color: #aaa; font-size: 0.9rem; font-style: italic;
+        }
+
+        .chapter-discussion-box {
+            max-width: 700px; margin: 30px auto 50px auto;
+            padding: 25px; background-color: #ffffff;
+            border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.02);
+        }
+        .discussion-header {
+            display: flex; justify-content: space-between; align-items: center;
+            gap: 10px; margin-bottom: 25px;
+            border-bottom: 1px dashed #dae5e0; padding-bottom: 15px;
+        }
+        .discussion-header-left { display: flex; align-items: center; gap: 10px; }
+        .discussion-header h3 { color: #4a6b5d; font-size: 1.2rem; margin: 0; }
+        .discussion-actions { display: flex; align-items: center; gap: 10px; }
+        .action-btn {
+            display: flex; align-items: center; gap: 6px;
+            padding: 7px 14px; border-radius: 20px; border: 1px solid #8fae9f;
+            background: #ffffff; color: #4a6b5d;
+            font-size: 0.85rem; font-weight: 500; cursor: pointer;
+            transition: all 0.25s ease; user-select: none;
+        }
+        .action-btn:hover { background-color: #f0f7f4; box-shadow: 0 3px 8px rgba(74,107,93,0.15); }
+        .action-btn.liked { background-color: #fff0f3; border-color: #e8a0b0; color: #c0556a; }
+        .action-btn.liked .heart-icon { animation: heartPop 0.35s ease; }
+        @keyframes heartPop {
+            0% { transform: scale(1); } 40% { transform: scale(1.45); }
+            70% { transform: scale(0.9); } 100% { transform: scale(1); }
+        }
+        body.dark-mode .action-btn { background: #1b2420; color: #8fae9f; border-color: #4a6b5d; }
+        body.dark-mode .action-btn:hover { background-color: #232e29; }
+        body.dark-mode .action-btn.liked { background-color: #2a1e22; border-color: #7a3a4a; color: #e08090; }
+        .comment-section { width: 100%; min-height: 150px; }
+
+        body.dark-mode .chapter-discussion-box,
+        body.dark-mode .comment-sidebar { background-color: #1b2420 !important; }
+        body.dark-mode .discussion-header,
+        body.dark-mode .sidebar-header { border-bottom-color: #2e3d36 !important; }
+        body.dark-mode .discussion-header h3,
+        body.dark-mode .sidebar-header h4 { color: #8fae9f !important; }
+        body.dark-mode .quoted-paragraph-box { background: #232e29; border-left-color: #4a6b5d; color: #8fae9f; }
+
+        .share-modal-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.35);
+            z-index: 200000; display: none; align-items: center; justify-content: center;
+        }
+        .share-modal-overlay.active { display: flex; }
+        .share-modal {
+            background: #ffffff; border-radius: 12px;
+            padding: 28px 24px 22px; width: 380px; max-width: 92vw;
+            box-shadow: 0 12px 40px rgba(0,0,0,0.18);
+            animation: slideUp 0.25s ease;
+        }
+        @keyframes slideUp {
+            from { transform: translateY(20px); opacity: 0; }
+            to   { transform: translateY(0); opacity: 1; }
+        }
+        .share-modal h4 { color: #4a6b5d; font-size: 1.05rem; margin-bottom: 16px; text-align: center; }
+        .share-link-row { display: flex; gap: 8px; align-items: center; }
+        .share-link-input {
+            flex: 1; padding: 9px 12px; border: 1px solid #c8ddd5; border-radius: 8px;
+            font-size: 0.85rem; color: #444; background: #f8faf9;
+            outline: none; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
+        }
+        .copy-link-btn {
+            padding: 9px 16px; border-radius: 8px;
+            background: #4a6b5d; color: #ffffff; border: none;
+            font-size: 0.85rem; font-weight: 600; cursor: pointer;
+            transition: all 0.2s; white-space: nowrap;
+        }
+        .copy-link-btn:hover { background: #3a5a4d; }
+        .copy-link-btn.copied { background: #6aaa88; }
+        .share-modal-close {
+            display: block; width: 100%; margin-top: 14px;
+            padding: 8px; background: none; border: none;
+            color: #999; font-size: 0.85rem; cursor: pointer; text-align: center;
+        }
+        .share-modal-close:hover { color: #555; }
+        body.dark-mode .share-modal { background: #1b2420; }
+        body.dark-mode .share-modal h4 { color: #8fae9f; }
+        body.dark-mode .share-link-input { background: #232e29; border-color: #3a5040; color: #dae5e0; }
+        body.dark-mode .share-modal-close { color: #6a8a7a; }
+    </style>
+</head>
+<body>
+
+<div class="reader-controls-wrapper">
+    <div class="reader-controls-group" id="reader-group">
+        <button onclick="changeFontSize(1)" title="Phóng to chữ">A+</button>
+        <button onclick="changeFontSize(-1)" title="Thu nhỏ chữ">A-</button>
+        <button onclick="toggleDarkMode()" id="dark-mode-btn" title="Đổi màu nền">🌙</button>
+    </div>
+    <button class="reader-toggle-btn" id="reader-toggle" onclick="toggleReaderControls()" title="Tuỳ chỉnh đọc">⚙️</button>
+</div>
+
+<script>
+function toggleReaderControls() {
+    var group = document.getElementById('reader-group');
+    var btn   = document.getElementById('reader-toggle');
+    var isOpen = group.classList.toggle('open');
+    btn.style.background = isOpen ? '#4a6b5d' : '';
+    btn.style.color      = isOpen ? '#ffffff'  : '';
+}
+function toggleDarkMode() {
+    document.body.classList.toggle('dark-mode');
+    var isDark = document.body.classList.contains('dark-mode');
+    localStorage.setItem('night-mode', isDark ? 'on' : 'off');
+    document.getElementById('dark-mode-btn').innerText = isDark ? '☀️' : '🌙';
+    syncUtterancesTheme(isDark);
+}
+function changeFontSize(delta) {
+    var content = document.querySelector('.story-content') || document.body;
+    var cur = parseFloat(window.getComputedStyle(content).fontSize);
+    content.style.fontSize = (cur + delta) + 'px';
+}
+function syncUtterancesTheme(isDark) {
+    var theme = isDark ? 'github-dark' : 'github-light';
+    document.querySelectorAll('.utterances-frame').forEach(function(f) {
+        f.contentWindow.postMessage({ type: 'set-theme', theme: theme }, 'https://utteranc.es');
+    });
+}
+(function() {
+    if (localStorage.getItem('night-mode') === 'on') {
+        document.body.classList.add('dark-mode');
+        setTimeout(function() {
+            var b = document.getElementById('dark-mode-btn');
+            if (b) b.innerText = '☀️';
+        }, 80);
+    }
+})();
+</script>
+
+<header class="navbar">
+    <a href="../index.html" class="logo">🌿 Góc nhỏ của Khiết</a>
+    <nav class="nav-links"><a href="../index.html">Trang Chủ</a></nav>
+</header>
+
+<main class="story-container">
+    <div class="story-header">
+        <p class="novel-name">Cẩm Y Hành - Quyển 3</p>
+        <h1 class="chapter-title">Chương 28: Mị Hồng (2)</h1>
+    </div>
+
+    <article class="story-content">
+        <p>“Mị Hồng” - cái tên tuy phô trương sặc sỡ, nhưng dưới ánh đèn, nàng tựa đóa hoa rực rỡ nhất trên cành. Ấy chính vì quá rực rỡ, rực đến độ sắp tàn phai, lại thêm men rượu nồng nàn, đong đưa chênh vênh giữa lúc tàn tạ, toát lên vẻ đẹp não lòng đầy bi thương.</p>
+        <p>Mạnh Kiếm Khanh không khỏi thất thần trong thoáng chốc.</p>
+        <p>Dẫu trong lòng đã nghi ngờ Mị Hồng chẳng phải ả đò tầm thường, nhưng khi đối diện nàng thật, bức họa kia bỗng trở nên thô thiển. Nét cọ chẳng tài nào lột tả được vẻ kiều diễm rực rỡ, lại càng không giữ được cái duyên say đắm lòng người. Khoảng cách giữa tranh và người xa vời vợi, khiến hắn bàng hoàng nhận ra mình đã lầm to.</p>
+        <p>Mị Hồng thoáng giật mình khi thấy bọn họ bước lên thuyền. Ánh mắt giao nhau, Mạnh Kiếm Khanh gần như thấy được sự chấn động trong lòng nàng.</p>
+        <p>Chỉ trong chớp mắt, Mị Hồng đã lấy lại bình tĩnh. Nụ cười nở trên môi che giấu nỗi bất an trong lòng, nàng uyển chuyển bước tới, giọng ngọt ngào: “Mạnh Hiệu úy đến chơi, thiếp không ra nghênh tiếp, mong ngài chớ trách!”</p>
+        <p>Nàng vừa sai nha hoàn rót trà, vừa sai tú bà tiễn khách về, để nàng có thể tập trung tiếp đãi Mạnh Kiếm Khanh.</p>
+        <p>Việc nàng biết tên hắn khiến hắn thoáng ngạc nhiên, nhưng chợt hiểu ra. Buổi sáng khi hắn bắn con cá sấu đầu tiên trên sông, có rất nhiều dân chúng vây xem, hẳn Mị Hồng cũng trong số đó. Nhưng cũng không loại trừ khả năng khác...</p>
+        <p>Vị khách đang được Mị Hồng tiếp đãi vội vàng cáo từ, nhưng bị hai lính vệ chặn lại. Mạnh Kiếm Khanh bảo một bổ khoái ghi lại tên tuổi, quê quán và nơi ở của tay thương nhân Tô Châu này, rồi nhờ vị bộ khoái am hiểu địa lý Hàng Châu đi xác minh lại với láng giềng. Sau khi xác thực không có sai sót, Mạnh Kiếm Khanh ra lệnh cho tên thương nhân này trong vòng mười ngày không được rời khỏi nhà, phải luôn sẵn sàng chờ triệu hỏi.</p>
+        <p>Khi tay thương nhân run rẩy bước lên tấm ván nối thuyền, chợt cảm thấy một luồng gió lướt qua sau lưng, đầu gối như mềm nhũn, suýt nữa thì rơi tõm xuống sông. May thay tên đầy tớ bên cạnh nhanh tay đỡ lấy.</p>
+        <p>Trong lúc ông ta chưa hết hoảng hốt, trên thuyền đã vang lên tiếng cười khanh khách của Mị Hồng: “Mạnh Hiệu úy à, thử thách kiểu này dễ mất mạng lắm đấy!”</p>
+        <p>Tên thương nhân gầy gò ốm yếu kia, nếu ngã xuống dòng nước xiết, chắc chẳng kịp cứu đã mất mạng.</p>
+        <p>Mị Hồng thẳng thừng phanh phui ý đồ của Mạnh Kiếm Khanh khiến hai bổ khoái vừa kinh ngạc vừa lo lắng. Hắn mỉm cười: “Vì hắn là người Tô Châu, còn cô lại họ Kha, ta đương nhiên phải thử một chút.”</p>
+        <p>Mị Hồng “ái chà” một tiếng, tay ôm lấy ngực: “Ôi, Mạnh Hiệu úy, đội cho thiếp cái mũ to thế này, sợ chết khiếp được!”</p>
+        <p>Lời nàng như đùa, nhưng dù rượu nhuộm má hồng, Mạnh Kiếm Khanh vẫn thấy sắc mặt nàng đã biến đổi. Hai bổ khoái càng thêm run sợ.</p>
+        <p>Những nhà thuyền họ Kha trên sông Tiền Đường đều là thuộc hạ cũ của Trần Hữu Lượng. Sau khi Trần Hữu Lượng bại vong, Hồng Vũ Đế đã lệnh đày những người này đi khắp nơi, bắt làm tiện dân, đời đời không được lên bờ. Quan địa phương vừa phải an ủi, vừa phải giám sát chặt.</p>
+        <p>Còn Tô Châu vốn là kinh đô cũ của Trương Sĩ Thành. Hồng Vũ Đế hận người Tô Châu vì trung thành với họ Trương đến cùng, sau khi thành bị công phá thì tăng thuế lên gấp ba nơi khác. Đến nay, người Tô Châu vẫn âm thầm tưởng nhớ Trương Sĩ Thành, mỗi dịp giỗ chạp đều thắp hương cúng bái, ngoài mặt thì gọi là “lễ Phật”, đời sau gọi là “đốt hương Cửu Tứ”, ám chỉ biệt danh “Cửu Tứ”của Trương Sĩ Thành.</p>
+        <p>Quan trường Chiết Giang cũng nghe qua chuyện này, nhưng không dám đá động. Quan lại Tô Châu sợ vạ lây nên làm ngơ. Địa phương không truy cứu, kẻ khác đâu dại gì xía vào.</p>
+        <p>Mạnh Kiếm Khanh vô cớ ghép hai chuyện này vào, rốt cuộc muốn gì?</p>
+        <p>Chẳng lẽ Cẩm Y Vệ phá xong mấy vụ án lớn rồi vẫn chưa thỏa, lại muốn châm ngòi cho vụ án động trời khác?</p>
+        <p>Buổi đầu triều Minh, tàn dư các thế lực Trương Sĩ Thành, Trần Hữu Lượng, Phương Quốc Trân, Minh Ngọc Trân nhiều không kể xiết, lại thêm tín đồ Minh Giáo... nếu Cẩm Y Vệ muốn đào tận gốc rễ, chỉ sợ máu chảy thành sông cũng không đủ tả…</p>
+        <p>E rằng quan lại Hàng Châu và cả Chiết Giang sẽ là nạn nhân đầu tiên…</p>
+        <p>Không khí trong khoang thuyền bỗng ngột ngạt.</p>
+        <p>Mị Hồng lấy lại bình tĩnh, liếc nhìn hai bổ khoái rồi cười nói: “Mạnh đại nhân vừa có thủ đoạn sắt đá, lại có lòng từ bi, nói vậy ắt có dụng ý sâu xa, đâu như các người nghĩ. Mạnh đại nhân, có gì cứ nói thẳng, bọn thiếp quê mùa chưa từng trải, nghe câu đùa cũng tưởng thật đấy!”</p>
+        <p>Lời nàng vừa tâng bốc vừa châm chọc. Mạnh Kiếm Khanh cười: “Không dám nhận hai chữ đại nhân. Nếu cô muốn nói thẳng, vậy càng tốt.”</p>
+        <p>Hắn phất tay cho hai bổ khoái và lính vệ lên bờ trước, giao danh sách cho một lính vệ, bảo họ đi tra những người khác, còn mình thì ngồi xuống.</p>
+        <p>Rõ ràng là muốn nói chuyện kỹ càng.</p>
+        <p>Mị Hồng khẽ đảo mắt, thong thả nói: “Mạnh Hiệu úy, chỗ này ồn ào, muốn nói chuyện kỹ thì nên dời thuyền ra giữa dòng cho yên tĩnh được không?”</p>
+        <p>Mạnh Kiếm Khanh gật đầu: “Khách theo chủ, mời.”</p>
+        <p>Hắn muốn xem Mị Hồng định làm gì mình.</p>
+        <p>Hai người ngồi đối diện. Mị Hồng không ép rượu, mà tự mình uống thêm vài chén. Mạnh Kiếm Khanh mỉm cười: “Mị Hồng cô nương, chẳng lẽ định uống say để trốn tránh?”</p>
+        <p>Mị Hồng liếc hắn một cái: “Thiếp chỉ mượn rượu để lấy can đảm thôi, ai mà chẳng sợ khi gặp các ngài? Ban ngày thiếp còn nghĩ, vị Mạnh Hiệu úy này quả thật khác hẳn người khác, vừa dũng cảm lại có trách nhiệm, thật khiến người ta kính yêu khâm phục. Còn bây giờ... thiếp chỉ sợ mình như nhưng con cá sấu kia, sớm muộn cũng bị ngài xử lý thôi.”</p>
+        <p>Giọng nàng vừa trách móc vừa quyến luyến, như sợi tơ mảnh vương vào lòng người.</p>
+        <p>Mạnh Kiếm Khanh hiểu rõ giọng điệu vừa giận dỗi vừa oán trách, từng chút mê hoặc lòng người này của nàng đều là ngón nghề quen thuộc, vốn không đáng tin; nhưng có lẽ Mị Hồng ngày thường vốn đã sống trong vở kịch ấy quá lâu, thật giả lẫn lộn, đến bản thân cũng khó phân biệt. Chính sự tự nhiên ấy lại khiến hắn chợt có cảm giác không biết là thật hay mơ.</p>
+        <p>Dưới ánh đèn lay động, Mị Hồng rôm rả nói chuyện phiếm, hỏi han phong cảnh kinh thành, lại hỏi cảnh đẹp Hàng Châu, bỗng thở dài nói: “Thiếp nghĩ cả đời này thiếp không thể lên bờ, không thể ngắm cảnh trên bờ được rồi. Kiếp sau nhất định phải đầu thai đến nơi thật xa xôi, cách xa sông nước... Ôi, không được, nếu Diêm Vương nghe được lời này, đày thiếp đến vùng hoang mạc ngàn dặm không một giọt nước, thì chẳng phải càng khổ hơn sao!”</p>
+        <p>Giọng nàng vừa oán than lại vừa nhẹ nhàng uyển chuyển, như đang tự trào phúng để giải tỏa lòng mình.</p>
+        <p>Trong lòng Mạnh Kiếm Khanh chợt xao động.</p>
+        <p>Mị Hồng nói cười tưởng như vu vơ, nhưng lại toát ra vẻ thoải mái dễ chịu khiến người ta như được tắm trong gió xuân, dường như trước mặt nàng, bất kỳ ai cũng có thể cởi mở thật lòng mà không chút e dè.</p>
+        <p>Mạnh Kiếm Khanh nhớ đến Lật Mộc. Lật Mộc đã gần trung niên, dung mạo tầm thường, ít nói lầm lì, lại thêm thân thể chất chứa ám khí cùng độc dược, dường như chưa từng có ai dám thân cận với hắn.</p>
+        <p>Nhưng trước một Mị Hồng như thế này, ngay cả hắn từng tu thiền định ở chùa Thiên Đài cũng cảm thấy lòng mình dao động, huống chi là Lật Mộc?</p>
+        <p>Hắn gạt bỏ suy nghĩ, lấy lại tinh thần, nói: “Giờ chúng ta có thể nói chuyện nghiêm túc được chưa?”</p>
+        <p>Mị Hồng hơi ngạc nhiên: “Không đợi thuyền ra giữa sông nữa sao? Thôi cũng được, tùy ngài vậy. Ngài muốn gì? Chỉ cần thiếp có, thiếp nhất định không tiếc.”</p>
+        <p>Câu cuối, nàng nói với ánh mắt ý nhị, như thách thức.</p>
+        <p>Khi nói câu cuối, Mị Hồng cười như có như không liếc nhìn Mạnh Kiếm Khanh, ánh mắt như muốn nói: Xem này, thiếp đang rất nghiêm túc nghe lời ngài đấy.</p>
+        <p>Mạnh Kiếm Khanh nhìn thẳng vào nàng: “Ta muốn cô đến gặp Âu Dương Bất Tu ở Tiểu Tây Thiên, chứng minh rằng Lật Mộc muốn giết đệ tử của ông ta là vì cô.”</p>
+        <p>Mị Hồng sửng sốt, quay đầu nhìn hắn chằm chằm.</p>
+        <p>Mạnh Kiếm Khanh tiếp tục nói: “Lật Mộc muốn giết đệ tử Âu Dương Bất Tu, rồi đổ tội cho Cẩm Y Vệ, kích động Tiểu Tây Thiên chống lại triều đình, tạo cơ hội cho thuộc hạ cũ của Trần Hữu Lượng nổi dậy. Ta nói rõ đến vậy, hy vọng cô đừng giả vờ không hiểu.”</p>
+        <p>Mị Hồng ngẩn người hồi lâu mới thở dài: “Thật khó tin ngài lại nghĩ như vậy. Không nói những chuyện khác, giả sử ngài nói đúng hết đi, ngài nghĩ thiếp có ngốc đến mức đi làm nhân chứng kiểu ấy trước Tiểu Tây Thiên không? Thiếp còn muốn sống hay không? Lão ma đầu Âu Dương Bất Tu ấy không bẻ cổ thiếp mới lạ! Huống chi, thiếp chỉ là ả đò nhỏ bé, nói gì chẳng phải theo ý khách, Âu Dương Bất Tu mà tin thì mặt trời mọc đằng tây!”</p>
+        <p>Mạnh Kiếm Khanh bình thản đáp: “Ông ta tin hay không là việc của ta. Cô đi hay không mới là việc của cô.”</p>
+        <p>Mị Hồng thở dài: “Thiếp sợ chết.”</p>
+        <p>Mạnh Kiếm Khanh lạnh lùng: “Cô không đi cũng sẽ chết.”</p>
+        <p>Nói xong, khóe miệng hắn thoáng nụ cười.</p>
+        <p>Cách Mị Hồng thổ lộ thẳng thắn khiến lời có kinh khủng đến đâu, qua giọng nàng cũng trở nên du dương dịu ngọt, đáng lắng nghe.</p>
+        <p>Mị Hồng lại thở dài: “Thiếp tin chứ. Cẩm Y Vệ muốn gán tội giết người cho ai thì dễ như trở bàn tay. Lúc nãy lên thuyền, ngài chẳng phải đã dùng tên thương nhân Tô Châu kia làm gương để cảnh cáo thiếp rồi sao?”</p>
+        <p>Nàng chợt ngẩng đầu: “Nếu ngài không giải quyết được vụ này, hậu quả sẽ thế nào? Nghe nói Thẩm đại nhân của các ngài rất tàn nhẫn, có phải sẽ chém đầu ngài để giao nộp cho Tiểu Tây Thiên không?”</p>
+        <p>Mạnh Kiếm Khanh tránh né: “Đó là chuyện của Thẩm đại nhân.”</p>
+        <p>Mị Hồng suy nghĩ giây lát, chợt nở nụ cười rạng rỡ, nghiêng người lại gần: “Đằng nào cũng chết, nếu có thể kéo theo Mạnh Hiệu úy cùng đi, thì đường xuống suối vàng cũng đỡ cô đơn! Nếu thiếp thật sự lôi được ngài đi, vậy có gọi là uyên ương chung số phận không? Có cô gái nào sẽ thương tiếc ngài suốt đời không? À, thiếp đoán chắc có, mà còn không chỉ một, phải không?”</p>
+        <p>Mạnh Kiếm Khanh không biết nên khóc hay cười. Nhưng trong lòng hắn không khỏi dâng lên một nỗi xúc động khó tả. Có phải Mị Hồng đã nhìn thấu hắn không còn đường nào khác để chọn? Bởi vậy nàng mới dám buông lời trêu đùa về chuyện hệ trọng này một cách phóng túng đến thế?</p>
+        <p>Trăng tròn treo lơ lửng giữa không trung, thủy triều đã lên, những con thuyền trên sông chao đảo theo từng đợt sóng, khi ẩn khi hiện. Đột nhiên một con sóng lớn ập tới, Mị Hồng đang dựa nghiêng người trên bàn trà loạng choạng ngã vào người Mạnh Kiếm Khanh.</p>
+        <p>Vốn dĩ Mạnh Kiếm Khanh có thể dễ dàng tránh được, nhưng khi Mị Hồng ngã vào, một mùi hương ngọt ngào quyến rũ bỗng nhiên xộc thẳng vào tận tim gan. Chỉ một thoáng giây ngẩn ngơ, thân hình ấm áp thơm phức của nàng đã đổ gục vào ngực hắn.</p>
+        <p>Hắn định ngay lập tức đẩy nàng ra, nhưng Mị Hồng thì thầm bên tai: “Vị Thẩm đại nhân của các ngài, có vẻ như muốn mượn tay người khác để giết ngài đấy, sao ngài cứ phải tự làm khổ mình? Đã đến đây rồi, sao không buông lỏng tâm hồn tận hưởng đêm nay? Chuyện ngày mai, để mai hãy tính, được không?”</p>
+        <p>Mạnh Kiếm Khanh đờ người tại chỗ.</p>
+        <p>Con thuyền khẽ rung, có lẽ là cánh buồm đã được giương lên.</p>
+        <p>Buồm căng phồng, con thuyền lao thẳng vào đầu sóng, tưởng chừng sẽ bị nuốt chửng bởi đợt sóng dữ, nhưng bỗng nhiên chuyển hướng, lợi dụng sức gió để vượt lên đỉnh sóng, rồi lại tiếp tục đón đầu đợt sóng kế tiếp.</p>
+        <p>Hơi rượu phảng phất từ hơi thở Mị Hồng hòa lẫn mùi phấn son cứ thế ùa vào khứu giác hắn. Khuôn mặt ửng hồng của nàng giờ đây chỉ cách hắn gang tấc, mùi hương ngọt ngào kia tựa như sợi tơ vô hình quấn chặt lấy tâm can Mạnh Kiếm Khanh.</p>
+        <p>Giọng nàng khẽ như tiếng muỗi vo ve: “Ngài có biết không, từ khoảnh khắc ngài bước lên thuyền, thiếp đã biết ngài chính là kiếp nạn của đời thiếp!”</p>
+        <p>Nàng thở dài như tiếng than: “Kiếp nạn, ngài có hiểu không?”</p>
+        <p>Có lẽ từ lúc ban ngày, khi nhìn thấy vị Hiệu úy trẻ tuổi mạnh mẽ kia giương cung bắn chết năm con cá sấu, Mị Hồng đã nhìn thấy kiếp nạn của đời mình.</p>
+        <p>Mà khi người ấy ở gần trong tầm mắt, bên cạnh mình, thì sức sống mãnh liệt tiềm ẩn sau vẻ ngoài điềm tĩnh từng trải ấy lại khiến trong lòng Mị Hồng bỗng bùng lên một ngọn lửa nhỏ nhoi nhưng không thể dập tắt.</p>
+        <p>Trải qua bao nhiêu sóng gió, hóa ra điều nàng khao khát lại giản đơn đến thế.</p>
+        <p>Chẳng qua chỉ là giấc mơ chung của bao thiếu nữ xuân thì mà thôi.</p>
+        <p>Một chàng trai trẻ, tuấn tú, mạnh mẽ, biết thưởng thức vẻ đẹp của nàng, ôm nàng vào lòng mà nâng niu âu yếm.</p>
+        <p>Có lẽ Mạnh Kiếm Khanh chỉ là người tình cờ xuất hiện đúng lúc mà thôi.</p>
+        <p>Nhưng Mị Hồng không muốn nghĩ nhiều.</p>
+        <p>Nàng chỉ muốn tận hưởng khoảnh khắc này.</p>
+        <p>Mạnh Kiếm Khanh cảm thấy trong người như có hai luồng sức mạnh đang vật lộn dữ dội. Một phần con người hắn đang tham lam đắm chìm trong thân thể mềm mại đang dần trở nên nóng bỏng của Mị Hồng, trong khi phần khác lại đang sốt ruột muốn thoát khỏi tình thế như cơn mê này.</p>
+        <p>Trán hắn đã lấm tấm mồ hôi.</p>
+        <p>Trước Mị Hồng, hắn đã đánh giá quá cao khả năng thiền định non nớt của mình.</p>
+        <p>Làn hương ngọt ngào mỏng manh kia chẳng biết từ lúc nào đã khiến cơ thể hắn bừng cháy như lửa đốt.</p>
+        <p>Mạnh Kiếm Khanh bỗng giật mình, đây là loại hương gì?</p>
+        <p>Hắn gần như đã hít một hơi chuẩn bị đẩy thân thể trong lòng mình ra.</p>
+        <p>Nhưng Mị Hồng đột nhiên hé môi cắn nhẹ vào môi hắn, cắt đứt hơi thở vừa gượng gạo lấy lại kia.</p>
+    </article>
+
+    <div class="reading-nav">
+        <a href="camyhanhq3-27.html" class="nav-btn">⬅️ Chương trước</a>
+        <a href="../mucluc/camyhanh.html" class="nav-btn">📋 Mục lục</a>
+        <a href="camyhanhq3-29.html" class="nav-btn">Chương sau ➡️</a>
+    </div>
+</main>
+
+<div class="chapter-discussion-box">
+    <div class="discussion-header">
+        <div class="discussion-header-left">
+            <span>🌿</span>
+            <h3>Thảo luận về chương này</h3>
+            <span>🌸</span>
+        </div>
+        <div class="discussion-actions">
+            <button class="action-btn" id="like-btn" onclick="toggleLike()" title="Thả tim chương này">
+                <span class="heart-icon">🤍</span>
+                <span id="like-count">0</span>
+            </button>
+            <button class="action-btn" onclick="openShareModal()" title="Chia sẻ chương này">
+                🔗 Chia sẻ
+            </button>
+        </div>
+    </div>
+    <div class="comment-section">
+        <script src="https://utteranc.es/client.js"
+                repo="gocnhocuakhiet/gocnhocuakhiet.github.io"
+                issue-term="pathname"
+                label="comment"
+                theme="github-light"
+                crossorigin="anonymous"
+                async>
+        </script>
+    </div>
+</div>
+
+<div class="share-modal-overlay" id="share-modal-overlay" onclick="handleOverlayClick(event)">
+    <div class="share-modal">
+        <h4>🔗 Chia sẻ chương này</h4>
+        <div class="share-link-row">
+            <input class="share-link-input" id="share-link-input" type="text" readonly>
+            <button class="copy-link-btn" id="copy-link-btn" onclick="copyLink()">Sao chép</button>
+        </div>
+        <button class="share-modal-close" onclick="closeShareModal()">Đóng</button>
+    </div>
+</div>
+
+<div id="comment-sidebar" class="comment-sidebar">
+    <div class="sidebar-header">
+        <h4 id="sidebar-paragraph-title">Bình luận đoạn văn</h4>
+        <button class="close-sidebar-btn" onclick="closeInlineComment()">✕</button>
+    </div>
+    <div class="quoted-paragraph-box" id="quoted-paragraph-box"></div>
+    <div class="sidebar-mention-hint">
+        💡 Dùng <code>@tên-người</code> để nhắc đến ai đó trong bình luận.
+    </div>
+    <div id="sidebar-utterances-mount"></div>
+</div>
+<div id="sidebar-overlay" class="sidebar-overlay" onclick="closeInlineComment()"></div>
+
+<script>
+var GH_REPO  = 'gocnhocuakhiet/gocnhocuakhiet.github.io';
+var GH_LABEL = 'comment';
+var ORIGINAL_TITLE = document.title;
+
+function paragraphTitle(paraNum) {
+    return ORIGINAL_TITLE + ' [Đoạn ' + paraNum + ']';
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+    var paragraphs = document.querySelectorAll('.story-content p');
+    paragraphs.forEach(function (p, index) {
+        var paraNum = index + 1;
+        var row = document.createElement('div');
+        row.className = 'comment-row';
+        p.parentNode.insertBefore(row, p);
+        row.appendChild(p);
+        var badge = document.createElement('span');
+        badge.className = 'comment-badge';
+        badge.title = 'Bình luận về đoạn này';
+        badge.textContent = '💬';
+        badge.onclick = function () {
+            openInlineComment(p.innerText.trim().substring(0, 120), paraNum);
+        };
+        row.appendChild(badge);
+    });
+    initLike();
+});
+
+var currentParaNum = null;
+
+function openInlineComment(previewText, paraNum) {
+    document.getElementById('sidebar-paragraph-title').innerText = 'Đoạn ' + paraNum;
+    document.getElementById('quoted-paragraph-box').innerText =
+        '"' + previewText + (previewText.length >= 120 ? '…' : '') + '"';
+    document.getElementById('comment-sidebar').classList.add('active');
+    document.getElementById('sidebar-overlay').classList.add('active');
+    if (currentParaNum === paraNum) return;
+    currentParaNum = paraNum;
+    var mount = document.getElementById('sidebar-utterances-mount');
+    mount.innerHTML = '<div class="sidebar-loading">Đang tải bình luận…</div>';
+    document.title = paragraphTitle(paraNum);
+    var s = document.createElement('script');
+    s.src = 'https://utteranc.es/client.js';
+    s.setAttribute('repo',         GH_REPO);
+    s.setAttribute('issue-term',   'title');
+    s.setAttribute('label',        GH_LABEL);
+    s.setAttribute('theme',        document.body.classList.contains('dark-mode') ? 'github-dark' : 'github-light');
+    s.setAttribute('crossorigin',  'anonymous');
+    s.async = true;
+    s.onload = function () {
+        var loading = mount.querySelector('.sidebar-loading');
+        if (loading) loading.remove();
+        document.title = ORIGINAL_TITLE;
+    };
+    mount.innerHTML = '';
+    mount.appendChild(s);
+}
+
+function closeInlineComment() {
+    document.getElementById('comment-sidebar').classList.remove('active');
+    document.getElementById('sidebar-overlay').classList.remove('active');
+    document.title = ORIGINAL_TITLE;
+}
+
+function initLike() {
+    var key      = 'like-'      + window.location.pathname;
+    var countKey = 'likecount-' + window.location.pathname;
+    var liked    = localStorage.getItem(key) === '1';
+    var count    = parseInt(localStorage.getItem(countKey) || '0', 10);
+    updateLikeUI(liked, count);
+}
+
+function toggleLike() {
+    var key      = 'like-'      + window.location.pathname;
+    var countKey = 'likecount-' + window.location.pathname;
+    var liked    = localStorage.getItem(key) === '1';
+    var count    = parseInt(localStorage.getItem(countKey) || '0', 10);
+    liked = !liked;
+    count = liked ? count + 1 : Math.max(0, count - 1);
+    localStorage.setItem(key,      liked ? '1' : '0');
+    localStorage.setItem(countKey, count);
+    updateLikeUI(liked, count);
+}
+
+function updateLikeUI(liked, count) {
+    var btn       = document.getElementById('like-btn');
+    var heartSpan = btn.querySelector('.heart-icon');
+    var countSpan = document.getElementById('like-count');
+    heartSpan.textContent = liked ? '❤️' : '🤍';
+    countSpan.textContent = count;
+    liked ? btn.classList.add('liked') : btn.classList.remove('liked');
+}
+
+function openShareModal() {
+    document.getElementById('share-link-input').value = window.location.href;
+    document.getElementById('copy-link-btn').textContent = 'Sao chép';
+    document.getElementById('copy-link-btn').classList.remove('copied');
+    document.getElementById('share-modal-overlay').classList.add('active');
+}
+function closeShareModal() {
+    document.getElementById('share-modal-overlay').classList.remove('active');
+}
+function handleOverlayClick(e) {
+    if (e.target === document.getElementById('share-modal-overlay')) closeShareModal();
+}
+function copyLink() {
+    var input = document.getElementById('share-link-input');
+    var btn   = document.getElementById('copy-link-btn');
+    navigator.clipboard.writeText(input.value).then(function () {
+        btn.textContent = '✓ Đã sao chép';
+        btn.classList.add('copied');
+        setTimeout(function () { btn.textContent = 'Sao chép'; btn.classList.remove('copied'); }, 2000);
+    }).catch(function () {
+        input.select(); document.execCommand('copy');
+        btn.textContent = '✓ Đã sao chép'; btn.classList.add('copied');
+        setTimeout(function () { btn.textContent = 'Sao chép'; btn.classList.remove('copied'); }, 2000);
+    });
+}
+
+function syncUtterancesTheme(isDark) {
+    var theme = isDark ? 'github-dark' : 'github-light';
+    document.querySelectorAll('.utterances-frame').forEach(function (f) {
+        f.contentWindow.postMessage({ type: 'set-theme', theme: theme }, 'https://utteranc.es');
+    });
+}
+</script>
+
+</body>
+</html>
