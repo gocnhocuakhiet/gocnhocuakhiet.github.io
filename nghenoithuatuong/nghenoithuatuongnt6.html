@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <link rel="stylesheet" href="../style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nghe Nói Thừa Tướng Quyền Thế Muốn Hoàn Lương - Ngoại truyện 6</title>
+    
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f1f7f4;
+            color: #2d3a34;
+            line-height: 1.8;
+        }
+
+        .navbar {
+            background-color: #ffffff;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 10%;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        .navbar .logo { font-size: 1.2rem; font-weight: bold; color: #4a6b5d; text-decoration: none; }
+        .nav-links a { color: #555; text-decoration: none; font-size: 0.95rem; transition: color 0.3s; }
+        .nav-links a:hover { color: #4a6b5d; }
+
+        .story-container {
+            max-width: 700px;
+            margin: 40px auto;
+            padding: 30px;
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.02);
+        }
+
+        .story-header {
+            text-align: center;
+            margin-bottom: 35px;
+            border-bottom: 1px dashed #8fae9f;
+            padding-bottom: 20px;
+        }
+        .story-header .novel-name {
+            font-size: 0.95rem; color: #777;
+            text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px;
+        }
+        .story-header .chapter-title { color: #4a6b5d; font-size: 1.6rem; font-weight: 600; }
+
+        .story-content { font-size: 1.15rem; color: #333333; text-align: justify; }
+        .story-content p { margin-bottom: 22px; text-indent: 25px; }
+
+        .reading-nav {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-top: 50px; padding-top: 25px; border-top: 1px dashed #8fae9f;
+        }
+        .nav-btn {
+            display: inline-block; padding: 10px 20px;
+            background-color: #ffffff; color: #4a6b5d;
+            text-decoration: none; border: 1px solid #8fae9f;
+            border-radius: 20px; font-size: 0.9rem; font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        .nav-btn:hover { background-color: #4a6b5d; color: #ffffff; border-color: #4a6b5d; box-shadow: 0 4px 8px rgba(74,107,93,0.2); }
+        .nav-btn.disabled { color: #bbb; border-color: #e0e0e0; background-color: #fafafa; pointer-events: none; box-shadow: none; }
+
+        @media (max-width: 480px) {
+            .story-container { padding: 15px; margin: 20px auto; }
+            .nav-btn { padding: 8px 14px; font-size: 0.8rem; }
+            .comment-sidebar { width: 100%; right: -100%; }
+        }
+
+        body.dark-mode { background-color: #131a17; color: #dae5e0; }
+        body.dark-mode .navbar { background-color: #1b2420; box-shadow: 0 2px 5px rgba(0,0,0,0.3); }
+        body.dark-mode .navbar .logo { color: #8fae9f; }
+        body.dark-mode .nav-links a { color: #aaa; }
+        body.dark-mode .story-container { background-color: #1b2420; box-shadow: 0 2px 10px rgba(0,0,0,0.2); }
+        body.dark-mode .story-header .novel-name { color: #8fae9f; }
+        body.dark-mode .story-header .chapter-title { color: #8fae9f; }
+        body.dark-mode .story-content { color: #dae5e0; }
+        body.dark-mode .nav-btn { background-color: #1b2420; color: #8fae9f; border-color: #4a6b5d; }
+        body.dark-mode .nav-btn:hover { background-color: #4a6b5d; color: #ffffff; }
+        body.dark-mode .nav-btn.disabled { color: #444; border-color: #2e3d36; background-color: #161e1b; }
+
+        .reader-controls-wrapper {
+            position: fixed; bottom: 30px; right: 30px;
+            z-index: 10000;
+            display: flex; flex-direction: column; align-items: flex-end; gap: 10px;
+        }
+        .reader-toggle-btn {
+            width: 48px; height: 48px; border-radius: 50%;
+            border: 2px solid #8fae9f; background: white; color: #4a6b5d;
+            font-size: 18px; cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15); transition: all 0.3s;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .reader-toggle-btn:hover { background: #4a6b5d; color: white; transform: scale(1.1); }
+        .reader-controls-group {
+            display: flex; flex-direction: column; gap: 10px;
+            overflow: hidden; max-height: 0; opacity: 0;
+            transition: max-height 0.35s ease, opacity 0.3s ease;
+        }
+        .reader-controls-group.open { max-height: 200px; opacity: 1; }
+        .reader-controls-group button {
+            width: 48px; height: 48px; border-radius: 50%;
+            border: 2px solid #8fae9f; background: white; color: #4a6b5d;
+            font-size: 15px; font-weight: bold; cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15); transition: all 0.3s;
+        }
+        .reader-controls-group button:hover { background: #4a6b5d; color: white; transform: scale(1.1); }
+        body.dark-mode .reader-toggle-btn,
+        body.dark-mode .reader-controls-group button { background: #1b2420; color: #8fae9f; border-color: #4a6b5d; }
+        body.dark-mode .reader-toggle-btn:hover,
+        body.dark-mode .reader-controls-group button:hover { background: #4a6b5d; color: white; }
+
+        .comment-row {
+            display: flex; justify-content: space-between;
+            align-items: flex-start; gap: 15px;
+            margin-bottom: 22px; width: 100%;
+        }
+        .comment-row p { flex: 1; margin-bottom: 0 !important; }
+
+        .comment-badge {
+            cursor: pointer; flex-shrink: 0; margin-top: 6px;
+            width: 30px; height: 30px; border-radius: 50%;
+            background-color: #eaf2ee; color: #4a6b5d;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.9rem; line-height: 1;
+            transition: all 0.2s ease; user-select: none; border: none;
+        }
+        .comment-badge:hover { background-color: #4a6b5d; color: #ffffff; transform: scale(1.12); }
+        body.dark-mode .comment-badge { background-color: #25332c; color: #8fae9f; }
+        body.dark-mode .comment-badge:hover { background-color: #4a6b5d; color: #ffffff; }
+
+        .comment-sidebar {
+            position: fixed; top: 0; right: -420px; width: 400px; height: 100%;
+            background: #ffffff;
+            box-shadow: -5px 0 15px rgba(0,0,0,0.05);
+            z-index: 100000;
+            transition: right 0.4s cubic-bezier(0.25,0.8,0.25,1);
+            padding: 24px; overflow-y: auto; box-sizing: border-box;
+        }
+        .comment-sidebar.active { right: 0; }
+        .sidebar-header {
+            display: flex; justify-content: space-between; align-items: center;
+            border-bottom: 1px solid #dae5e0; padding-bottom: 12px; margin-bottom: 16px;
+        }
+        .sidebar-header h4 { color: #4a6b5d; margin: 0; }
+        .close-sidebar-btn { background: none; border: none; font-size: 1.2rem; color: #999; cursor: pointer; }
+        .quoted-paragraph-box {
+            background: #f0f7f4; border-left: 3px solid #8fae9f;
+            border-radius: 4px; padding: 10px 14px;
+            font-size: 0.88rem; color: #4a6b5d; font-style: italic;
+            line-height: 1.5; margin-bottom: 12px;
+        }
+        .sidebar-mention-hint {
+            font-size: 0.8rem; color: #888;
+            background: #f8faf9; border: 1px dashed #c8ddd5;
+            border-radius: 6px; padding: 8px 12px; margin-bottom: 14px; line-height: 1.5;
+        }
+        .sidebar-mention-hint code { background: #e4efe9; color: #4a6b5d; padding: 1px 5px; border-radius: 4px; font-size: 0.78rem; }
+        body.dark-mode .sidebar-mention-hint { background: #1e2b24; border-color: #2e3d36; color: #7a9a8a; }
+        body.dark-mode .sidebar-mention-hint code { background: #2a3830; color: #8fae9f; }
+        .sidebar-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.2); z-index: 99999; display: none;
+        }
+        .sidebar-overlay.active { display: block; }
+
+        .sidebar-loading {
+            text-align: center; padding: 30px 0;
+            color: #aaa; font-size: 0.9rem; font-style: italic;
+        }
+
+        .chapter-discussion-box {
+            max-width: 700px; margin: 30px auto 50px auto;
+            padding: 25px; background-color: #ffffff;
+            border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.02);
+        }
+        .discussion-header {
+            display: flex; justify-content: space-between; align-items: center;
+            gap: 10px; margin-bottom: 25px;
+            border-bottom: 1px dashed #dae5e0; padding-bottom: 15px;
+        }
+        .discussion-header-left { display: flex; align-items: center; gap: 10px; }
+        .discussion-header h3 { color: #4a6b5d; font-size: 1.2rem; margin: 0; }
+        .discussion-actions { display: flex; align-items: center; gap: 10px; }
+        .action-btn {
+            display: flex; align-items: center; gap: 6px;
+            padding: 7px 14px; border-radius: 20px; border: 1px solid #8fae9f;
+            background: #ffffff; color: #4a6b5d;
+            font-size: 0.85rem; font-weight: 500; cursor: pointer;
+            transition: all 0.25s ease; user-select: none;
+        }
+        .action-btn:hover { background-color: #f0f7f4; box-shadow: 0 3px 8px rgba(74,107,93,0.15); }
+        .action-btn.liked { background-color: #fff0f3; border-color: #e8a0b0; color: #c0556a; }
+        .action-btn.liked .heart-icon { animation: heartPop 0.35s ease; }
+        @keyframes heartPop {
+            0% { transform: scale(1); } 40% { transform: scale(1.45); }
+            70% { transform: scale(0.9); } 100% { transform: scale(1); }
+        }
+        body.dark-mode .action-btn { background: #1b2420; color: #8fae9f; border-color: #4a6b5d; }
+        body.dark-mode .action-btn:hover { background-color: #232e29; }
+        body.dark-mode .action-btn.liked { background-color: #2a1e22; border-color: #7a3a4a; color: #e08090; }
+        .comment-section { width: 100%; min-height: 150px; }
+
+        body.dark-mode .chapter-discussion-box,
+        body.dark-mode .comment-sidebar { background-color: #1b2420 !important; }
+        body.dark-mode .discussion-header,
+        body.dark-mode .sidebar-header { border-bottom-color: #2e3d36 !important; }
+        body.dark-mode .discussion-header h3,
+        body.dark-mode .sidebar-header h4 { color: #8fae9f !important; }
+        body.dark-mode .quoted-paragraph-box { background: #232e29; border-left-color: #4a6b5d; color: #8fae9f; }
+
+        .share-modal-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.35);
+            z-index: 200000; display: none; align-items: center; justify-content: center;
+        }
+        .share-modal-overlay.active { display: flex; }
+        .share-modal {
+            background: #ffffff; border-radius: 12px;
+            padding: 28px 24px 22px; width: 380px; max-width: 92vw;
+            box-shadow: 0 12px 40px rgba(0,0,0,0.18);
+            animation: slideUp 0.25s ease;
+        }
+        @keyframes slideUp {
+            from { transform: translateY(20px); opacity: 0; }
+            to   { transform: translateY(0); opacity: 1; }
+        }
+        .share-modal h4 { color: #4a6b5d; font-size: 1.05rem; margin-bottom: 16px; text-align: center; }
+        .share-link-row { display: flex; gap: 8px; align-items: center; }
+        .share-link-input {
+            flex: 1; padding: 9px 12px; border: 1px solid #c8ddd5; border-radius: 8px;
+            font-size: 0.85rem; color: #444; background: #f8faf9;
+            outline: none; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
+        }
+        .copy-link-btn {
+            padding: 9px 16px; border-radius: 8px;
+            background: #4a6b5d; color: #ffffff; border: none;
+            font-size: 0.85rem; font-weight: 600; cursor: pointer;
+            transition: all 0.2s; white-space: nowrap;
+        }
+        .copy-link-btn:hover { background: #3a5a4d; }
+        .copy-link-btn.copied { background: #6aaa88; }
+        .share-modal-close {
+            display: block; width: 100%; margin-top: 14px;
+            padding: 8px; background: none; border: none;
+            color: #999; font-size: 0.85rem; cursor: pointer; text-align: center;
+        }
+        .share-modal-close:hover { color: #555; }
+        body.dark-mode .share-modal { background: #1b2420; }
+        body.dark-mode .share-modal h4 { color: #8fae9f; }
+        body.dark-mode .share-link-input { background: #232e29; border-color: #3a5040; color: #dae5e0; }
+        body.dark-mode .share-modal-close { color: #6a8a7a; }
+    </style>
+</head>
+<body>
+
+<div class="reader-controls-wrapper">
+    <div class="reader-controls-group" id="reader-group">
+        <button onclick="changeFontSize(1)" title="Phóng to chữ">A+</button>
+        <button onclick="changeFontSize(-1)" title="Thu nhỏ chữ">A-</button>
+        <button onclick="toggleDarkMode()" id="dark-mode-btn" title="Đổi màu nền">🌙</button>
+    </div>
+    <button class="reader-toggle-btn" id="reader-toggle" onclick="toggleReaderControls()" title="Tuỳ chỉnh đọc">⚙️</button>
+</div>
+
+<script>
+function toggleReaderControls() {
+    var group = document.getElementById('reader-group');
+    var btn   = document.getElementById('reader-toggle');
+    var isOpen = group.classList.toggle('open');
+    btn.style.background = isOpen ? '#4a6b5d' : '';
+    btn.style.color      = isOpen ? '#ffffff'  : '';
+}
+function toggleDarkMode() {
+    document.body.classList.toggle('dark-mode');
+    var isDark = document.body.classList.contains('dark-mode');
+    localStorage.setItem('night-mode', isDark ? 'on' : 'off');
+    document.getElementById('dark-mode-btn').innerText = isDark ? '☀️' : '🌙';
+    syncUtterancesTheme(isDark);
+}
+function changeFontSize(delta) {
+    var content = document.querySelector('.story-content') || document.body;
+    var cur = parseFloat(window.getComputedStyle(content).fontSize);
+    content.style.fontSize = (cur + delta) + 'px';
+}
+function syncUtterancesTheme(isDark) {
+    var theme = isDark ? 'github-dark' : 'github-light';
+    document.querySelectorAll('.utterances-frame').forEach(function(f) {
+        f.contentWindow.postMessage({ type: 'set-theme', theme: theme }, 'https://utteranc.es');
+    });
+}
+(function() {
+    if (localStorage.getItem('night-mode') === 'on') {
+        document.body.classList.add('dark-mode');
+        setTimeout(function() {
+            var b = document.getElementById('dark-mode-btn');
+            if (b) b.innerText = '☀️';
+        }, 80);
+    }
+})();
+</script>
+
+<header class="navbar">
+    <a href="../index.html" class="logo">🌿 Góc nhỏ của Khiết</a>
+    <nav class="nav-links"><a href="../index.html">Trang Chủ</a></nav>
+</header>
+
+<main class="story-container">
+    <div class="story-header">
+        <p class="novel-name">Nghe Nói Thừa Tướng Quyền Thế Muốn Hoàn Lương</p>
+        <h1 class="chapter-title">Ngoại truyện 6</h1>
+    </div>
+
+    <article class="story-content">
+        <p>Đới Văn Lương đeo bội đao bên hông rời khỏi hoàng cung.</p>
+        <p>Hắn đứng trước cổng cung trầm tư một hồi, mới đi tới cạnh tiểu tư, đoạt dây cương trong tay đối phương rồi xoay người lên ngựa.</p>
+        <p>Hắn thầm nghĩ, vẫn còn nhiều chuyện chưa dặn dò.</p>
+        <p>Hắn làm thống lĩnh thị vệ hoàng cung đã gần ba năm, thân là võ tướng thì đây là một cách giết thời gian. Bây giờ cuối cùng cũng có cơ hội đến Lĩnh Nam dẹp loạn, hắn không chần chừ nữa, nên xung phong gánh vác việc cực nhọc này.</p>
+        <p>Hắn thầm nghĩ, nếu cứ tiếp tục làm thị vệ thế này, có lẽ sẽ phải sống cả đời trong thành Triệu Kinh.</p>
+        <p>Hắn sinh ra trong thành Triệu Kinh, nhưng lúc hắn được sinh ra chưa đến hai năm, phụ thân bị thương trên chiến trường, tàn phế một chân, trở về kinh nhận một chức quan nhàn tản. Sau đó huynh trưởng thay thế vị trí của phụ thân.</p>
+        <p>Hắn là đứa con trai khi phụ mẫu già rồi mới có được, nên ngày thường phụ mẫu hay bao dung với hắn. Mà hắn cũng lười biếng ở mãi trong kinh, lãng phí thời gian dài như vậy.</p>
+        <p>Hơn hai mươi năm hắn chưa từng rời kinh, bây giờ đột ngột muốn đi, hắn có hơi luống cuống.</p>
+        <p>Hơn chục con bồ câu nuôi trong viện của hắn nhất định phải dặn dò nô tài nuôi dưỡng. Rượu ngon ở lầu Thất Bảo, thịt bò ở Thuận Hi Trai, đến lúc đó chắc hẳn sẽ rất nhớ, phải mang theo một ít để ăn trên đường. Ngoài việc điểm binh, hắn thật sự không biết mình phải mang theo thứ gì, đành phải đi hỏi Sơ tam lang.</p>
+        <p>Hắn cần phải từ biệt với đám bằng hữu công tử thế gia trong kinh. Phủ Định Quốc tướng quân giống như ngôi nhà thứ hai của hắn, nhất định cũng phải gặp một lần. Tạ nhị tiểu thư sinh hạ đứa con thứ hai, Tạ gia đặc biệt gửi thiệp mời dự tiệc đầy tháng cho hắn, cũng không biết có nên đi không ...</p>
+        <p>Mà người đó — tất nhiên là không cần gặp nữa.</p>
+        <p>Hắn cưỡi ngựa, cố ý nghĩ này nghĩ nọ, không muốn nghĩ về người đó. Nhưng sau khi nghĩ hết mọi chuyện trong đầu, giống như một cơn sóng lớn cuộn vào bãi biển, sóng lớn rút đi thì không còn gì cả, chỉ còn lại một mình người đó trong đầu hắn.</p>
+        <p>Quả thật không thể quên được.</p>
+        <p>Trước kia, hắn từng nghĩ người này giống như Sơ tam lang, là một trong số ít người bạn có học thức của hắn. Nhưng đến khi mọi chuyện bại lộ, người đó biến mất tăm, hắn mới chợt nhận ra người và người không giống nhau.</p>
+        <p>Như gió mát ngày hè không ngừng thổi, khi nó vây quanh sẽ cảm thấy mát mẻ thoải mái, nhưng không ai chú ý đến sự tồn tại của nó. Sau khi gió thổi đi, mới chợt thấy ngột ngạt nóng bức, bắt đầu nhớ cơn gió ấy.</p>
+        <p>Sơ tam lang trước giờ luôn bận rộn, Đới Văn Lương cũng biết lòng y hướng về xã tắc, nên không thường đến làm phiền y. Những đồng liêu vây quanh hắn nói cười vui vẻ, chẳng qua chỉ vui vẻ một lúc rồi thôi, cũng không thể xem là bạn thân.</p>
+        <p>Nhưng công tử có cốt cách rắn rỏi, ăn mặc giản dị mà hắn gặp trước cổng phủ của Sơ tam lang thì lại khác.</p>
+        <p>Ngày thường, khi người đó làm việc với đống giấy tờ, có thể nói là tỉ mỉ cẩn thận không chê vào đâu được. Nếu trong quân doanh có vấn đề về lương thực và nhân sự, chỉ cần hỏi người đó thì chắc chắn sẽ biết. Đới Văn Lương không nhớ những trận đánh nhau hay các mối quan hệ, nhưng lại nhớ rõ người đó.</p>
+        <p>Trong cuộc sống, ngoài những lúc đi làm việc riêng, người đó luôn ở cùng mình. Người này tốt tính lại thích cười, đồng thời cũng rất quan tâm đến người bộc trực thẳng thắn như mình, ở chung rất hợp nhau.</p>
+        <p>Nhưng ... mãi sau này Đới Văn Lương mới nhận ra, người đó đi làm ‘việc riêng’ là làm việc gì.</p>
+        <p>Hắn không ngờ Triệu Lãng Chi vừa có thể cười nói vui vẻ với mình, vừa âm thầm bày mưu để hại Sơ Trường Dụ.</p>
+        <p>Hắn lờ mờ nhớ tới ngày Triệu Lãng Chi nói muốn ăn bồ câu, sau đó dặn dò rất nhiều điều, còn hỏi hắn, nếu Sơ tam lang xảy ra chuyện, thì hắn sẽ thế nào.</p>
+        <p>Hóa ra ... người đó đã tính sẵn rồi, từ lúc bắt đầu đã cố ý tiếp cận mình, chỉ vì Sơ Trường Dụ. Mấy năm qua làm bạn cũng chưa từng thật lòng.</p>
+        <p>Khi Sơ Trường Dụ bày tất cả sự thật trước mặt hắn, trong lòng Đới Văn Lương rất khó chịu. Hắn không biết khó chịu này là vì bạn bè phản bội hay là vì điều gì khác, nhưng hắn mơ hồ cảm thấy không thể giải thích đơn giản như vậy.</p>
+        <p>“Người này, ta nhất định phải giết.” lúc đó Sơ Trường Dụ đã nói với hắn như vậy: “Niệm tình gã làm thuộc hạ của huynh ba năm, nên ta báo huynh biết trước.”</p>
+        <p>Sơ Trường Dụ vừa nói ra chữ ‘giết’, Đới Văn Lương cảm thấy chấn động.</p>
+        <p>Tức thì, mọi chuyện trước kia của hai người hiện lên trong đầu hắn. Những chuyện mà hắn quên đi, giờ lại lần lượt hiện ra rõ ràng.</p>
+        <p>Đới Văn Lương tự hỏi, sao người đó có thể là loại người như vậy?</p>
+        <p>Tuy người đó làm nhiều chuyện sai trái, nhưng trước khi chuyện xảy ra, người đó đều nói hết với hắn, rõ ràng là muốn hậu quả giảm đến mức thấp nhất, người đó một lòng muốn hại Sơ Trường Dụ, nhưng ... không có lý do gì cả?</p>
+        <p>Cứ thế, một mặt người đó làm bạn với mình, một mặt lén lút làm mọi chuyện ác. Đầu óc Đới Văn Lương quay cuồng, giống như đang mơ.</p>
+        <p>Triệu Lãng Chi … phải chết sao?</p>
+        <p>Dù người đó lừa dối hắn nhiều như vậy, nhưng Đới Văn Lương cũng không muốn đối phương chết. Chỉ là người đó muốn hại Sơ Trường Dụ, bây giờ Sơ Trường Dụ muốn giết đối phương, hắn không có tư cách để bắt Sơ Trường Dụ tha cho người muốn giết y.</p>
+        <p>... Triệu Lãng Chi sắp chết.</p>
+        <p>“… Văn Lương? Huynh sao vậy?”</p>
+        <p>Lúc này, hắn nghe Sơ Trường Dụ gọi. Hắn ngẩng đầu nhìn sang, lại không thấy rõ khuôn mặt y. Không biết từ lúc nào, tầm nhìn của hắn đã bị nước mắt làm nhòe đi.</p>
+        <p>Sơ Trường Dụ đưa tay lau nước mắt cho hắn, lo lắng cau mày.</p>
+        <p>“Quang Đình … không giống loại người đó.” giọng Đới Văn Lương gần như không thể nghe được.</p>
+        <p>“... Quang Đình là ai?”</p>
+        <p>“... Triệu Lãng Chi.”</p>
+        <p>Sơ Trường Dụ cau mày nói: “Ân oán giữa bọn ta, huynh không biết.”</p>
+        <p>Đầu óc Đới Văn Lương lúc này rất hỗn loạn, hắn chỉ biết Triệu Lãng Chi sắp chết rồi.</p>
+        <p>Hắn đường đường là nam nhi cao lớn, ngượng ngùng rơi lệ, lúc này môi run run không nói nên lời. Hắn nắm chặt tay đứng trước mặt Sơ Trường Dụ, nghiến răng không thể lên tiếng.</p>
+        <p>Người đó sắp chết, mà chứng cứ bày trước mặt nói với hắn - người đó đáng chết.</p>
+        <p>Sơ Trường Dụ thở dài, nói: “Đệ sớm đã bảo huynh giúp đệ để mắt tới gã, sao còn nảy sinh tình cảm sâu đậm với gã chứ? Lần đầu tiên thấy gã, đệ đã nghi ngờ, rõ ràng gã …” nói đến đây, Sơ Trường Dụ dừng lại.</p>
+        <p>Mấy chuyện như sống lại này, y không thể nói với Đới Văn Lương.</p>
+        <p>Y nhìn Đới Văn Lương im lặng hồi lâu, cuối cùng môi run run hỏi y: “Có ân oán gì mà khiến người đó nhất quyết muốn giết đệ?”</p>
+        <p>Đới Văn Lương không nói, nhưng Sơ Trường Dụ có thể nhận ra, hắn không muốn Triệu Lãng Chi chết.</p>
+        <p>Vừa nãy Sơ Trường Dụ kể sự thật với Đới Văn Lương, y đã thấy vẻ mặt Đới Văn Lương ngày càng kỳ lạ. Nghe đến lúc mình muốn giết gã, hai mắt Đới Văn Lương càng đỏ hơn.</p>
+        <p>Sơ Trường Dụ thầm thở dài, Triệu Lãng Chi không vô tội, nhưng dù sao Đới Văn Lương cũng vô tội.</p>
+        <p>Suy cho cùng đều là ân oán từ kiếp trước. Triệu Lãng Chi làm những chuyện đó cũng là nhân quả kiếp trước.</p>
+        <p>Sơ Trường Dụ đã hạ quyết tâm, nhưng thấy bộ dạng của Đới Văn Lương, y lại do dự.</p>
+        <p>Từ nhỏ đến lớn, y hiếm khi thấy Đới Văn Lương khóc. Lần cuối cùng hắn rơi nước mắt là năm sáu tuổi, khi hắn chọc tức tiên sinh ở viện Hàn Lâm, bị phụ thân treo trong phòng đánh cho một trận.</p>
+        <p>Lúc này, y nghe Đới Văn Lương run giọng hỏi: “Kính Thần … ta biết ta không nên cầu xin đệ như vậy, nhưng đừng để người đó chết, được không?”</p>
+        <p>Sơ Trường Dụ: “……”</p>
+        <p>Được rồi, không còn cách nào. Dù sao người này cũng xem như là một nửa ca ca của mình, dù Triệu Lãng Chi có bản lĩnh to bằng trời cũng không thể làm gì dưới tay hắn, cứ thế đi.</p>
+        <p>Từ lần trước Sơ Trường Dụ nói với hắn, có thể tha cho Triệu Lãng Chi, nhưng Triệu Lãng Chi không được phép xuất hiện trước mặt y nữa, Đới Văn Lương cũng chưa từng gặp lại Triệu Lãng Chi.</p>
+        <p>Hôm đó, lúc hắn đến quân doanh đón Triệu Lãng Chi, thì đã không thấy người đâu.</p>
+        <p>Đới Văn Lương nhớ đến cảnh tượng ngày hôm đó, cảm giác như có kim đâm vào tim, khó chịu vô cùng.</p>
+        <p>Quả nhiên. Làm xong việc cần làm, đến cả người bạn này cũng không cần nữa.</p>
+        <p>Đới Văn Lương vừa đi vừa nghĩ, vô tình bước đến thanh lâu ở ngõ Xuân Thủy. Rượu Phần ở thanh lâu này uống ngon nhất, ba năm trước hắn và Sơ Trường Dụ từng đến đây một lần.</p>
+        <p>Lúc đó hắn còn để ý cô nương Tạ gia nên không dám vào. Hiện tại, Tạ nhị cô nương đã có hai con, còn hắn lại một mình đứng trước thanh lâu này.</p>
+        <p>Tuy nhiên, lúc này người hắn nhớ không phải cô nương Tạ gia, mà là Triệu Lãng Chi.</p>
+        <p>Đới Văn Lương bị suy nghĩ trong đầu làm giật mình. Hắn sửng sốt một lát, tâm trạng vốn đang buồn phiền vì chuyện của Triệu Lãng Chi càng trở nên u ám.</p>
+        <p>Bây giờ hắn muốn say.</p>
+        <p>Đới Văn Lương dứt khoát đi vào thanh lâu, ngồi trong phòng riêng mà Sơ Trường Dụ và hắn đến lần trước. Hắn thậm chí còn không cần ca kỹ đàn hát, thấy tú bà có vẻ không vui, bèn gọi thêm mấy vò rượu, đưa thêm chút tiền thưởng cho tú bà.</p>
+        <p>Lúc này, tú bà mới hài lòng rời đi, để lại một vò rượu.</p>
+        <p>Tiếng đàn ca nô đùa bên ngoài truyền qua cửa sổ, nghe thật quyến rũ sống động. Nhưng Đới Văn Lương chỉ ngồi một mình, đến cả một người đối bóng trăng cũng không có.</p>
+        <p>Hắn thầm nghĩ, nếu có Triệu Lãng Chi ở đây, tình cảnh dĩ nhiên sẽ khác. Nếu hắn đề nghị đến thanh lâu uống rượu, dù Triệu Lãng Chi không vui lầm bầm với hắn vài câu, nhưng nhất định sẽ ...</p>
+        <p>Sao lại nghĩ đến người đó nữa rồi.</p>
+        <p>Đới Văn Lương không vui mím môi, sau đó mở nắp vò rượu, rót một ly đầy.</p>
+        <p>Quả nhiên, sau đó Đới Văn Lương mang theo tích tụ trong lòng uống say khướt.</p>
+        <p>Hắn say nên đương nhiên không nghe thấy tiếng xì xào ngoài cửa.</p>
+        <p>“Vị thiếu gia này đi một mình, chi tiền rất hào phóng, bây giờ uống rượu một mình, sao có thể không có ai ngồi cùng?”</p>
+        <p>“Ma ma nói đúng. Nam nhân mà, miệng thì nói không muốn có người ngồi cùng, nhưng nếu có người ngồi cùng thật thì lại là chuyện khác.”</p>
+        <p>“Con biết thì tốt, vị thiếu gia này anh tuấn trẻ tuổi, ăn mặc sang trọng, con phải hầu hạ thật tốt, nhất định sẽ được lợi.”</p>
+        <p>“Ma ma yên tâm đi … ấy!”</p>
+        <p>Đúng lúc này, cô nương ngoài cửa bị người khác kéo sang một bên. Tú bà nhìn kỹ lại, người kéo kia lại là một công tử cao lớn bận áo xanh.</p>
+        <p>Sau khi vị thiếu gia kia đến không lâu thì vị công tử này cũng đến, nhưng không vào phòng riêng mà ngồi ngoài sảnh, đối diện với căn phòng này. Vị công tử này cũng uống rượu Phần, không gọi cô nương, chỉ nói đợi một chút.</p>
+        <p>Bây giờ xem ra … vị công tử này lại tới đây chờ người?</p>
+        <p>Tuy thanh lâu của bọn họ không lớn, ít thấy quan lớn quý tộc, nhưng rượu Phần với cách ủ bí truyền luôn thu hút rất nhiều người. Những người đến uống rượu, tú bà sẽ chú ý, không dám chọc vào họ.</p>
+        <p>Bà chỉ đành thưa dạ hành lễ, rồi kéo cô nương ra ngoài.</p>
+        <p>Người này sắc mặt lãnh đạm, cụp mắt nhìn hai người ra ngoài, rồi mới đẩy cửa đi vào.</p>
+        <p>Khuôn mặt dáng người này chính là Triệu Lãng Chi đã biến mất vài tháng.</p>
+        <p>Gã mở cửa bước vào, đón làn gió nhẹ từ ngoài cửa sổ, bao trùm trong mùi hoa quế ngọt ngào đã ủ lên mùi rượu. Đới Văn Lương say khướt, cầm ly rượu ngồi bên bàn, nhưng cả người lảo đảo ngã xuống.</p>
+        <p>Quen nhau ba năm, Triệu Lãng Chi đương nhiên biết thói quen của hắn. Bình thường tuy nghiện rượu nhưng không ham uống, nhiều lúc chỉ uống thêm vài ly cho đến khi hơi say. Nhưng khi tâm trạng không tốt, hắn thường uống rượu giải sầu, không ai có thể ngăn được.</p>
+        <p>Lúc này, cả người hắn gần như bất tỉnh.</p>
+        <p>Triệu Lãng Chi không biết tại sao hắn lại buồn.</p>
+        <p>Ban đầu gã hứa sẽ không bao giờ xuất hiện trước mặt Sơ Trường Dụ. Nhưng tình cảm thầm kín và cảm giác tội lỗi nặng nề với Đới Văn Lương, làm gã không dám gặp lại hắn. Đới Văn Lương là người trong sạch và vô tội nhất, khi việc gã làm bị Sơ Trường Dụ vạch trần, trong tiềm thức gã không muốn Đới Văn Lương gặp lại mình.</p>
+        <p>Lần đầu tiên gã biết sợ, sợ thấy nét mặt thất vọng của Đới Văn Lương.</p>
+        <p>Và câu nói: “nể mặt Đới Văn Lương” của Sơ Trường Dụ càng đả kích gã hơn.</p>
+        <p>Nể mặt Đới Văn Lương ... gã có tài đức gì mà có thể dựa vào mặt mũi của Đới Văn Lương để nhặt lại một mạng?</p>
+        <p>Gã vốn không muốn sống nữa, tham sống sợ chết càng không muốn đối mặt với Đới Văn Lương. Vì vậy, lúc đó Sơ Trường Dụ vừa đi, gã cũng rời khỏi.</p>
+        <p>Gã không đi xa, sống ẩn dật trong thành Triệu Kinh. Triệu Lãng Chi vẫn luôn nghe ngóng tin tức từ tướng lĩnh thủ thành, nhưng chưa từng nghe ngóng được tin gì của hắn.</p>
+        <p>Cứ vậy, Triệu Lãng Chi âm thầm theo dõi động tĩnh và cuộc sống của Đới Văn Lương. Gã vẫn còn vài tai mắt trong thành, hiện giờ được sử dụng trên người hắn.</p>
+        <p>Gã cũng không biết tại sao mình lại làm vậy.</p>
+        <p>Mà sau khi Đới Văn Lương biết sự thật, ngoài căn dặn tướng lĩnh thủ thành để mắt đến những người ra vào thành, thì cuộc sống không có gì khác biệt. Hắn nuôi chim bồ câu, uống rượu ăn thịt với người khác, đến phủ tướng quân thăm hỏi.</p>
+        <p>Còn gã đến rồi đi như không để lại dấu vết gì.</p>
+        <p>Trong lòng Triệu Lãng Chi thấy đau âm ỉ, cảm thấy chỉ do gã đơn phương tình nguyện. Hoặc là, hắn không có cách nào bù đắp được những lỗi lầm mình đã làm, giờ đây, là do gã tự chuốc lấy.</p>
+        <p>Gã đương nhiên không biết, đây là sau khi trải qua nỗi đau khôn tả, Đới Văn Lương đã cẩn thận che giấu cảm xúc của mình.</p>
+        <p>Gã biết mình không nên như vậy, như cái bóng rình mò Đới Văn Lương, nhưng hôm nay lại theo thói quen đến ngõ Xuân Thủy, nhìn chằm chằm cánh cửa đóng chặt đó.</p>
+        <p>Cũng chính vì vậy, gã mới kịp thời ngăn cản tú bà đang có ý xấu.</p>
+        <p>Bây giờ nhìn Đới Văn Lương say khướt trên bàn, trong lòng thở dài — hắn buồn gì chứ?</p>
+        <p>Bây giờ mọi chuyện đã lắng xuống, hắn sắp dẫn quân xuất chinh, tương lai tươi sáng. Chắc hắn đang lo … cho lồng bồ câu quý giá đó.</p>
+        <p>Đúng lúc này, gã nghe thấy Đới Văn Lương nói mớ.</p>
+        <p>“Triệu Quang Đình … khốn kiếp!”</p>
+        <p>Đồng tử Triệu Lãng Chi chợt co rút, nhất thời gã còn tưởng Đới Văn Lượng đã phát hiện ra mình. Kế đó, gã nhận ra Đới Văn Lương chỉ đang nói mớ.</p>
+        <p>Tim gã thắt lại.</p>
+        <p>“... Văn Lương?” gã biết mình không nên, nhưng không kiềm được mà gọi.</p>
+        <p>Đới Văn Lương mơ hồ nghe thấy có người gọi mình, lờ mờ mở mắt nhìn Triệu Lãng Chi.</p>
+        <p>Triệu Lãng Chi chợt hoảng sợ, đang định tránh đi thì gặp phải ánh mắt của Đới Văn Lương.</p>
+        <p>Không có ghê tởm, chất vấn mà gã tưởng tượng, ngược lại đầy ấm ức và mệt mỏi.</p>
+        <p>Mấy tháng qua, gã chỉ thấy bóng lưng cao thẳng và khuôn mặt tươi cười của Đới Văn Lương từ xa, chứ chưa từng nhìn vào mắt hắn.</p>
+        <p>Hắn lại ...</p>
+        <p>“Triệu Lãng Chi?!” Đới Văn Lương bỗng giật mình, định đứng dậy. Hắn uống nhiều đến mức chân hơi nhũn ra, vừa đứng dậy đã vấp bàn rồi ngã sang một bên —</p>
+        <p>Triệu Lãng Chi lao tới đỡ được hắn.</p>
+        <p>Khoảnh khắc gã ôm Đới Văn Lương vào lòng, những cảm xúc rối rắm trong lòng Triệu Lãng Chi bấy lâu bỗng trở nên rõ ràng.</p>
+        <p>Do dự trước kia, thỏa hiệp sau đó, đến né tránh sau này đều là vì — không biết từ khi nào gã đã nảy sinh tình cảm không phải bạn bè, không phải huynh đệ với người trước mặt.</p>
+        <p>Gã đang yêu đối phương.</p>
+        <p>“Triệu Lãng Chi …” Đới Văn Lương nhìn chăm chú, giọng mũi say khướt: “Ngươi đi đâu vậy? Sao lại cứ đi mất tăm như thế?” nói đến đây, hắn sụt sịt.</p>
+        <p>“Ta …”</p>
+        <p>“Ba năm qua ngươi xem ta là gì!” Đới Văn Lương mắt say lờ đờ, to giọng nói: “Ngươi làm xong chuyện cần làm thì bỏ đi, một câu cũng không để lại cho ta! Triệu Lãng Chi, ngươi … khốn kiếp.”</p>
+        <p>Nói đến đây, hắn ấm ức bĩu môi: “Nếu lợi dụng ta thật, thì cứ nói với ta một tiếng, để ta khỏi … khỏi …” mắt hắn lại đỏ hoe vì cơn say.</p>
+        <p>Võ tướng không giỏi ăn nói, trước kia không nói được thì dùng nắm đấm. Lúc này không thể dùng nắm đấm, võ tướng nói không rõ cảm xúc trong lòng, chỉ cảm thấy tủi thân, thậm chí còn nghẹn ngào rơi nước mắt.</p>
+        <p>Triệu Lãng Chi nhịn không được nhẹ giọng nói: “Không phải ... ta không có đi mất tăm, ta chỉ sợ ngươi ghét bỏ ta.”</p>
+        <p>Đới Văn Lương chỉ nghe rõ nửa câu đầu, vội nói: “Nếu ngươi không muốn đi, vậy thì ở lại cho ta.”</p>
+        <p>Triệu Lãng Chi ôm hắn, ở khoảng cách gần nhìn kỹ hắn, nhất thời không nói nên lời.</p>
+        <p>“Nghe thấy chưa!” Đới Văn Lương gấp gáp nói: “Ngươi đã nói không muốn đi, thì không được lừa ta.”</p>
+        <p>“Được. Nhưng mà ... Văn Lương, nếu lần này ta ở lại, sẽ không thể chung sống như trước kia.”</p>
+        <p>“Mặc kệ ngươi chung sống thế nào, tóm lại, không được đi nữa.”</p>
+        <p>“... được.”</p>
+        <p>Trong ý say mơ màng, khóe môi Đới Văn Lương mềm mại ẩm ướt, nhất thời như rơi vào cõi mộng đầy hoa hạnh nở rộ.</p>
+    </article>
+
+    <div class="reading-nav">
+        <a href="nghenoithuatuongnt5.html" class="nav-btn">⬅️ Chương trước</a>
+        <a href="../mucluc/nghenoithuatuong.html" class="nav-btn">📋 Mục lục</a>
+        <a href="nghenoithuatuongnt7.html" class="nav-btn">Chương sau ➡️</a>
+    </div>
+</main>
+
+<div class="chapter-discussion-box">
+    <div class="discussion-header">
+        <div class="discussion-header-left">
+            <span>🌿</span>
+            <h3>Thảo luận về chương này</h3>
+            <span>🌸</span>
+        </div>
+        <div class="discussion-actions">
+            <button class="action-btn" id="like-btn" onclick="toggleLike()" title="Thả tim chương này">
+                <span class="heart-icon">🤍</span>
+                <span id="like-count">0</span>
+            </button>
+            <button class="action-btn" onclick="openShareModal()" title="Chia sẻ chương này">
+                🔗 Chia sẻ
+            </button>
+        </div>
+    </div>
+    <div class="comment-section">
+        <script src="https://utteranc.es/client.js"
+                repo="gocnhocuakhiet/gocnhocuakhiet.github.io"
+                issue-term="pathname"
+                label="comment"
+                theme="github-light"
+                crossorigin="anonymous"
+                async>
+        </script>
+    </div>
+</div>
+
+<div class="share-modal-overlay" id="share-modal-overlay" onclick="handleOverlayClick(event)">
+    <div class="share-modal">
+        <h4>🔗 Chia sẻ chương này</h4>
+        <div class="share-link-row">
+            <input class="share-link-input" id="share-link-input" type="text" readonly>
+            <button class="copy-link-btn" id="copy-link-btn" onclick="copyLink()">Sao chép</button>
+        </div>
+        <button class="share-modal-close" onclick="closeShareModal()">Đóng</button>
+    </div>
+</div>
+
+<div id="comment-sidebar" class="comment-sidebar">
+    <div class="sidebar-header">
+        <h4 id="sidebar-paragraph-title">Bình luận đoạn văn</h4>
+        <button class="close-sidebar-btn" onclick="closeInlineComment()">✕</button>
+    </div>
+    <div class="quoted-paragraph-box" id="quoted-paragraph-box"></div>
+    <div class="sidebar-mention-hint">
+        💡 Dùng <code>@tên-người</code> để nhắc đến ai đó trong bình luận.
+    </div>
+    <div id="sidebar-utterances-mount"></div>
+</div>
+<div id="sidebar-overlay" class="sidebar-overlay" onclick="closeInlineComment()"></div>
+
+<script>
+var GH_REPO  = 'gocnhocuakhiet/gocnhocuakhiet.github.io';
+var GH_LABEL = 'comment';
+var ORIGINAL_TITLE = document.title;
+
+function paragraphTitle(paraNum) {
+    return ORIGINAL_TITLE + ' [Đoạn ' + paraNum + ']';
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+    var paragraphs = document.querySelectorAll('.story-content p');
+    paragraphs.forEach(function (p, index) {
+        var paraNum = index + 1;
+        var row = document.createElement('div');
+        row.className = 'comment-row';
+        p.parentNode.insertBefore(row, p);
+        row.appendChild(p);
+        var badge = document.createElement('span');
+        badge.className = 'comment-badge';
+        badge.title = 'Bình luận về đoạn này';
+        badge.textContent = '💬';
+        badge.onclick = function () {
+            openInlineComment(p.innerText.trim().substring(0, 120), paraNum);
+        };
+        row.appendChild(badge);
+    });
+    initLike();
+});
+
+var currentParaNum = null;
+
+function openInlineComment(previewText, paraNum) {
+    document.getElementById('sidebar-paragraph-title').innerText = 'Đoạn ' + paraNum;
+    document.getElementById('quoted-paragraph-box').innerText =
+        '"' + previewText + (previewText.length >= 120 ? '…' : '') + '"';
+    document.getElementById('comment-sidebar').classList.add('active');
+    document.getElementById('sidebar-overlay').classList.add('active');
+    if (currentParaNum === paraNum) return;
+    currentParaNum = paraNum;
+    var mount = document.getElementById('sidebar-utterances-mount');
+    mount.innerHTML = '<div class="sidebar-loading">Đang tải bình luận…</div>';
+    document.title = paragraphTitle(paraNum);
+    var s = document.createElement('script');
+    s.src = 'https://utteranc.es/client.js';
+    s.setAttribute('repo',         GH_REPO);
+    s.setAttribute('issue-term',   'title');
+    s.setAttribute('label',        GH_LABEL);
+    s.setAttribute('theme',        document.body.classList.contains('dark-mode') ? 'github-dark' : 'github-light');
+    s.setAttribute('crossorigin',  'anonymous');
+    s.async = true;
+    s.onload = function () {
+        var loading = mount.querySelector('.sidebar-loading');
+        if (loading) loading.remove();
+        document.title = ORIGINAL_TITLE;
+    };
+    mount.innerHTML = '';
+    mount.appendChild(s);
+}
+
+function closeInlineComment() {
+    document.getElementById('comment-sidebar').classList.remove('active');
+    document.getElementById('sidebar-overlay').classList.remove('active');
+    document.title = ORIGINAL_TITLE;
+}
+
+function initLike() {
+    var key      = 'like-'      + window.location.pathname;
+    var countKey = 'likecount-' + window.location.pathname;
+    var liked    = localStorage.getItem(key) === '1';
+    var count    = parseInt(localStorage.getItem(countKey) || '0', 10);
+    updateLikeUI(liked, count);
+}
+
+function toggleLike() {
+    var key      = 'like-'      + window.location.pathname;
+    var countKey = 'likecount-' + window.location.pathname;
+    var liked    = localStorage.getItem(key) === '1';
+    var count    = parseInt(localStorage.getItem(countKey) || '0', 10);
+    liked = !liked;
+    count = liked ? count + 1 : Math.max(0, count - 1);
+    localStorage.setItem(key,      liked ? '1' : '0');
+    localStorage.setItem(countKey, count);
+    updateLikeUI(liked, count);
+}
+
+function updateLikeUI(liked, count) {
+    var btn       = document.getElementById('like-btn');
+    var heartSpan = btn.querySelector('.heart-icon');
+    var countSpan = document.getElementById('like-count');
+    heartSpan.textContent = liked ? '❤️' : '🤍';
+    countSpan.textContent = count;
+    liked ? btn.classList.add('liked') : btn.classList.remove('liked');
+}
+
+function openShareModal() {
+    document.getElementById('share-link-input').value = window.location.href;
+    document.getElementById('copy-link-btn').textContent = 'Sao chép';
+    document.getElementById('copy-link-btn').classList.remove('copied');
+    document.getElementById('share-modal-overlay').classList.add('active');
+}
+function closeShareModal() {
+    document.getElementById('share-modal-overlay').classList.remove('active');
+}
+function handleOverlayClick(e) {
+    if (e.target === document.getElementById('share-modal-overlay')) closeShareModal();
+}
+function copyLink() {
+    var input = document.getElementById('share-link-input');
+    var btn   = document.getElementById('copy-link-btn');
+    navigator.clipboard.writeText(input.value).then(function () {
+        btn.textContent = '✓ Đã sao chép';
+        btn.classList.add('copied');
+        setTimeout(function () { btn.textContent = 'Sao chép'; btn.classList.remove('copied'); }, 2000);
+    }).catch(function () {
+        input.select(); document.execCommand('copy');
+        btn.textContent = '✓ Đã sao chép'; btn.classList.add('copied');
+        setTimeout(function () { btn.textContent = 'Sao chép'; btn.classList.remove('copied'); }, 2000);
+    });
+}
+
+function syncUtterancesTheme(isDark) {
+    var theme = isDark ? 'github-dark' : 'github-light';
+    document.querySelectorAll('.utterances-frame').forEach(function (f) {
+        f.contentWindow.postMessage({ type: 'set-theme', theme: theme }, 'https://utteranc.es');
+    });
+}
+</script>
+
+</body>
+</html>
