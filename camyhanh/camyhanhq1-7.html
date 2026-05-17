@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <link rel="stylesheet" href="../style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cẩm Y Hành - Chương 7: Nam Hương Bá</title>
+    
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f1f7f4;
+            color: #2d3a34;
+            line-height: 1.8;
+        }
+
+        .navbar {
+            background-color: #ffffff;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 10%;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        .navbar .logo { font-size: 1.2rem; font-weight: bold; color: #4a6b5d; text-decoration: none; }
+        .nav-links a { color: #555; text-decoration: none; font-size: 0.95rem; transition: color 0.3s; }
+        .nav-links a:hover { color: #4a6b5d; }
+
+        .story-container {
+            max-width: 700px;
+            margin: 40px auto;
+            padding: 30px;
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.02);
+        }
+
+        .story-header {
+            text-align: center;
+            margin-bottom: 35px;
+            border-bottom: 1px dashed #8fae9f;
+            padding-bottom: 20px;
+        }
+        .story-header .novel-name {
+            font-size: 0.95rem; color: #777;
+            text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px;
+        }
+        .story-header .chapter-title { color: #4a6b5d; font-size: 1.6rem; font-weight: 600; }
+
+        .story-content { font-size: 1.15rem; color: #333333; text-align: justify; }
+        .story-content p { margin-bottom: 22px; text-indent: 25px; }
+
+        .reading-nav {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-top: 50px; padding-top: 25px; border-top: 1px dashed #8fae9f;
+        }
+        .nav-btn {
+            display: inline-block; padding: 10px 20px;
+            background-color: #ffffff; color: #4a6b5d;
+            text-decoration: none; border: 1px solid #8fae9f;
+            border-radius: 20px; font-size: 0.9rem; font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        .nav-btn:hover { background-color: #4a6b5d; color: #ffffff; border-color: #4a6b5d; box-shadow: 0 4px 8px rgba(74,107,93,0.2); }
+        .nav-btn.disabled { color: #bbb; border-color: #e0e0e0; background-color: #fafafa; pointer-events: none; box-shadow: none; }
+
+        @media (max-width: 480px) {
+            .story-container { padding: 15px; margin: 20px auto; }
+            .nav-btn { padding: 8px 14px; font-size: 0.8rem; }
+            .comment-sidebar { width: 100%; right: -100%; }
+        }
+
+        body.dark-mode { background-color: #131a17; color: #dae5e0; }
+        body.dark-mode .navbar { background-color: #1b2420; box-shadow: 0 2px 5px rgba(0,0,0,0.3); }
+        body.dark-mode .navbar .logo { color: #8fae9f; }
+        body.dark-mode .nav-links a { color: #aaa; }
+        body.dark-mode .story-container { background-color: #1b2420; box-shadow: 0 2px 10px rgba(0,0,0,0.2); }
+        body.dark-mode .story-header .novel-name { color: #8fae9f; }
+        body.dark-mode .story-header .chapter-title { color: #8fae9f; }
+        body.dark-mode .story-content { color: #dae5e0; }
+        body.dark-mode .nav-btn { background-color: #1b2420; color: #8fae9f; border-color: #4a6b5d; }
+        body.dark-mode .nav-btn:hover { background-color: #4a6b5d; color: #ffffff; }
+        body.dark-mode .nav-btn.disabled { color: #444; border-color: #2e3d36; background-color: #161e1b; }
+
+        .reader-controls-wrapper {
+            position: fixed; bottom: 30px; right: 30px;
+            z-index: 10000;
+            display: flex; flex-direction: column; align-items: flex-end; gap: 10px;
+        }
+        .reader-toggle-btn {
+            width: 48px; height: 48px; border-radius: 50%;
+            border: 2px solid #8fae9f; background: white; color: #4a6b5d;
+            font-size: 18px; cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15); transition: all 0.3s;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .reader-toggle-btn:hover { background: #4a6b5d; color: white; transform: scale(1.1); }
+        .reader-controls-group {
+            display: flex; flex-direction: column; gap: 10px;
+            overflow: hidden; max-height: 0; opacity: 0;
+            transition: max-height 0.35s ease, opacity 0.3s ease;
+        }
+        .reader-controls-group.open { max-height: 200px; opacity: 1; }
+        .reader-controls-group button {
+            width: 48px; height: 48px; border-radius: 50%;
+            border: 2px solid #8fae9f; background: white; color: #4a6b5d;
+            font-size: 15px; font-weight: bold; cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15); transition: all 0.3s;
+        }
+        .reader-controls-group button:hover { background: #4a6b5d; color: white; transform: scale(1.1); }
+        body.dark-mode .reader-toggle-btn,
+        body.dark-mode .reader-controls-group button { background: #1b2420; color: #8fae9f; border-color: #4a6b5d; }
+        body.dark-mode .reader-toggle-btn:hover,
+        body.dark-mode .reader-controls-group button:hover { background: #4a6b5d; color: white; }
+
+        .comment-row {
+            display: flex; justify-content: space-between;
+            align-items: flex-start; gap: 15px;
+            margin-bottom: 22px; width: 100%;
+        }
+        .comment-row p { flex: 1; margin-bottom: 0 !important; }
+
+        .comment-badge {
+            cursor: pointer; flex-shrink: 0; margin-top: 6px;
+            width: 30px; height: 30px; border-radius: 50%;
+            background-color: #eaf2ee; color: #4a6b5d;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.9rem; line-height: 1;
+            transition: all 0.2s ease; user-select: none; border: none;
+        }
+        .comment-badge:hover { background-color: #4a6b5d; color: #ffffff; transform: scale(1.12); }
+        body.dark-mode .comment-badge { background-color: #25332c; color: #8fae9f; }
+        body.dark-mode .comment-badge:hover { background-color: #4a6b5d; color: #ffffff; }
+
+        .comment-sidebar {
+            position: fixed; top: 0; right: -420px; width: 400px; height: 100%;
+            background: #ffffff;
+            box-shadow: -5px 0 15px rgba(0,0,0,0.05);
+            z-index: 100000;
+            transition: right 0.4s cubic-bezier(0.25,0.8,0.25,1);
+            padding: 24px; overflow-y: auto; box-sizing: border-box;
+        }
+        .comment-sidebar.active { right: 0; }
+        .sidebar-header {
+            display: flex; justify-content: space-between; align-items: center;
+            border-bottom: 1px solid #dae5e0; padding-bottom: 12px; margin-bottom: 16px;
+        }
+        .sidebar-header h4 { color: #4a6b5d; margin: 0; }
+        .close-sidebar-btn { background: none; border: none; font-size: 1.2rem; color: #999; cursor: pointer; }
+        .quoted-paragraph-box {
+            background: #f0f7f4; border-left: 3px solid #8fae9f;
+            border-radius: 4px; padding: 10px 14px;
+            font-size: 0.88rem; color: #4a6b5d; font-style: italic;
+            line-height: 1.5; margin-bottom: 12px;
+        }
+        .sidebar-mention-hint {
+            font-size: 0.8rem; color: #888;
+            background: #f8faf9; border: 1px dashed #c8ddd5;
+            border-radius: 6px; padding: 8px 12px; margin-bottom: 14px; line-height: 1.5;
+        }
+        .sidebar-mention-hint code { background: #e4efe9; color: #4a6b5d; padding: 1px 5px; border-radius: 4px; font-size: 0.78rem; }
+        body.dark-mode .sidebar-mention-hint { background: #1e2b24; border-color: #2e3d36; color: #7a9a8a; }
+        body.dark-mode .sidebar-mention-hint code { background: #2a3830; color: #8fae9f; }
+        .sidebar-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.2); z-index: 99999; display: none;
+        }
+        .sidebar-overlay.active { display: block; }
+        .sidebar-loading {
+            text-align: center; padding: 30px 0;
+            color: #aaa; font-size: 0.9rem; font-style: italic;
+        }
+
+        .chapter-discussion-box {
+            max-width: 700px; margin: 30px auto 50px auto;
+            padding: 25px; background-color: #ffffff;
+            border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.02);
+        }
+        .discussion-header {
+            display: flex; justify-content: space-between; align-items: center;
+            gap: 10px; margin-bottom: 25px;
+            border-bottom: 1px dashed #dae5e0; padding-bottom: 15px;
+        }
+        .discussion-header-left { display: flex; align-items: center; gap: 10px; }
+        .discussion-header h3 { color: #4a6b5d; font-size: 1.2rem; margin: 0; }
+        .discussion-actions { display: flex; align-items: center; gap: 10px; }
+        .action-btn {
+            display: flex; align-items: center; gap: 6px;
+            padding: 7px 14px; border-radius: 20px; border: 1px solid #8fae9f;
+            background: #ffffff; color: #4a6b5d;
+            font-size: 0.85rem; font-weight: 500; cursor: pointer;
+            transition: all 0.25s ease; user-select: none;
+        }
+        .action-btn:hover { background-color: #f0f7f4; box-shadow: 0 3px 8px rgba(74,107,93,0.15); }
+        .action-btn.liked { background-color: #fff0f3; border-color: #e8a0b0; color: #c0556a; }
+        .action-btn.liked .heart-icon { animation: heartPop 0.35s ease; }
+        @keyframes heartPop {
+            0% { transform: scale(1); } 40% { transform: scale(1.45); }
+            70% { transform: scale(0.9); } 100% { transform: scale(1); }
+        }
+        body.dark-mode .action-btn { background: #1b2420; color: #8fae9f; border-color: #4a6b5d; }
+        body.dark-mode .action-btn:hover { background-color: #232e29; }
+        body.dark-mode .action-btn.liked { background-color: #2a1e22; border-color: #7a3a4a; color: #e08090; }
+        .comment-section { width: 100%; min-height: 150px; }
+
+        body.dark-mode .chapter-discussion-box,
+        body.dark-mode .comment-sidebar { background-color: #1b2420 !important; }
+        body.dark-mode .discussion-header,
+        body.dark-mode .sidebar-header { border-bottom-color: #2e3d36 !important; }
+        body.dark-mode .discussion-header h3,
+        body.dark-mode .sidebar-header h4 { color: #8fae9f !important; }
+        body.dark-mode .quoted-paragraph-box { background: #232e29; border-left-color: #4a6b5d; color: #8fae9f; }
+
+        .share-modal-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.35);
+            z-index: 200000; display: none; align-items: center; justify-content: center;
+        }
+        .share-modal-overlay.active { display: flex; }
+        .share-modal {
+            background: #ffffff; border-radius: 12px;
+            padding: 28px 24px 22px; width: 380px; max-width: 92vw;
+            box-shadow: 0 12px 40px rgba(0,0,0,0.18);
+            animation: slideUp 0.25s ease;
+        }
+        @keyframes slideUp {
+            from { transform: translateY(20px); opacity: 0; }
+            to   { transform: translateY(0); opacity: 1; }
+        }
+        .share-modal h4 { color: #4a6b5d; font-size: 1.05rem; margin-bottom: 16px; text-align: center; }
+        .share-link-row { display: flex; gap: 8px; align-items: center; }
+        .share-link-input {
+            flex: 1; padding: 9px 12px; border: 1px solid #c8ddd5; border-radius: 8px;
+            font-size: 0.85rem; color: #444; background: #f8faf9;
+            outline: none; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
+        }
+        .copy-link-btn {
+            padding: 9px 16px; border-radius: 8px;
+            background: #4a6b5d; color: #ffffff; border: none;
+            font-size: 0.85rem; font-weight: 600; cursor: pointer;
+            transition: all 0.2s; white-space: nowrap;
+        }
+        .copy-link-btn:hover { background: #3a5a4d; }
+        .copy-link-btn.copied { background: #6aaa88; }
+        .share-modal-close {
+            display: block; width: 100%; margin-top: 14px;
+            padding: 8px; background: none; border: none;
+            color: #999; font-size: 0.85rem; cursor: pointer; text-align: center;
+        }
+        .share-modal-close:hover { color: #555; }
+        body.dark-mode .share-modal { background: #1b2420; }
+        body.dark-mode .share-modal h4 { color: #8fae9f; }
+        body.dark-mode .share-link-input { background: #232e29; border-color: #3a5040; color: #dae5e0; }
+        body.dark-mode .share-modal-close { color: #6a8a7a; }
+    </style>
+</head>
+<body>
+
+<div class="reader-controls-wrapper">
+    <div class="reader-controls-group" id="reader-group">
+        <button onclick="changeFontSize(1)" title="Phóng to chữ">A+</button>
+        <button onclick="changeFontSize(-1)" title="Thu nhỏ chữ">A-</button>
+        <button onclick="toggleDarkMode()" id="dark-mode-btn" title="Đổi màu nền">🌙</button>
+    </div>
+    <button class="reader-toggle-btn" id="reader-toggle" onclick="toggleReaderControls()" title="Tuỳ chỉnh đọc">⚙️</button>
+</div>
+
+<script>
+function toggleReaderControls() {
+    var group = document.getElementById('reader-group');
+    var btn   = document.getElementById('reader-toggle');
+    var isOpen = group.classList.toggle('open');
+    btn.style.background = isOpen ? '#4a6b5d' : '';
+    btn.style.color      = isOpen ? '#ffffff'  : '';
+}
+function toggleDarkMode() {
+    document.body.classList.toggle('dark-mode');
+    var isDark = document.body.classList.contains('dark-mode');
+    localStorage.setItem('night-mode', isDark ? 'on' : 'off');
+    document.getElementById('dark-mode-btn').innerText = isDark ? '☀️' : '🌙';
+    syncUtterancesTheme(isDark);
+}
+function changeFontSize(delta) {
+    var content = document.querySelector('.story-content') || document.body;
+    var cur = parseFloat(window.getComputedStyle(content).fontSize);
+    content.style.fontSize = (cur + delta) + 'px';
+}
+function syncUtterancesTheme(isDark) {
+    var theme = isDark ? 'github-dark' : 'github-light';
+    document.querySelectorAll('.utterances-frame').forEach(function(f) {
+        f.contentWindow.postMessage({ type: 'set-theme', theme: theme }, 'https://utteranc.es');
+    });
+}
+(function() {
+    if (localStorage.getItem('night-mode') === 'on') {
+        document.body.classList.add('dark-mode');
+        setTimeout(function() {
+            var b = document.getElementById('dark-mode-btn');
+            if (b) b.innerText = '☀️';
+        }, 80);
+    }
+})();
+</script>
+
+<header class="navbar">
+    <a href="../index.html" class="logo">🌿 Góc nhỏ của Khiết</a>
+    <nav class="nav-links"><a href="../index.html">Trang Chủ</a></nav>
+</header>
+
+<main class="story-container">
+    <div class="story-header">
+        <p class="novel-name">Cẩm Y Hành - Quyển 1: Thiếu niên kiệt xuất</p>
+        <h1 class="chapter-title">Chương 7: Nam Hương Bá</h1>
+    </div>
+
+    <article class="story-content">
+        <p>Giữa tiết đông giá rét, tuyết lớn bay mù mịt ngoài sân, hơi thở phả ra cũng gần như đóng băng, thế mà trên trán Đô chỉ huy sứ Hồ Dụ của Chỉ huy ty Hàng Châu đã lấm tấm mồ hôi. Ông hơi khom lưng, chắp tay đứng nghiêm, nét mặt cười niềm nở nhìn vị quan lớn Đặng Nam Đình là Đồng tri Đô đốc Tả quân phủ Ứng Thiên, tước Nam Hương Bá đang chậm rãi lật xem danh sách trước mặt.</p>
+        <p>Một lúc lâu sau, Nam Hương Bá gập danh sách lại, khẽ ừ một tiếng nói: “Xem ra lần này các ứng viên đều là thiếu niên kiệt xuất, có gia thế trong sạch, tỉnh Chiết Giang chắc không còn chuyện con cháu tàn dư của Phương Quốc Trân được tiến cử vào Giảng Võ Đường nữa chứ?”</p>
+        <p>Hồ Đô ty vội đáp: “Dạ vâng, dạ vâng.”</p>
+        <p>Nam Hương Bá trầm ngâm giây lát, lại nói: “Nếu vậy, ngày mai có thể bắt đầu tuyển chọn.”</p>
+        <p>Hồ Đô ty vội nói: “Vậy hạ quan lập tức đi bố trí. Kính xin đại nhân chỉ thị, ngày mai sẽ tổ chức tỷ thí như thế nào.”</p>
+        <p>Nam Hương Bá nhìn chằm chằm vào ông: “Việc này bổn quan tự có sắp xếp, Hồ đại nhân cứ làm theo lệnh là được.”</p>
+        <p>Hồ Đô ty không dám hỏi thêm, khom người lui ra ngoài, mãi đến khi lui tới tận cửa thứ hai mới dám đứng thẳng lưng. Tuyết bay tạt vào, cảm thấy sau lưng lạnh buốt, ông mới biết mình đã toát hết cả mồ hôi.</p>
+        <p>Hồ Đô ty tự hỏi năm ngoái trong kỳ tuyển chọn ở Chiết Giang, ông không dám thiên vị hay gian lận, dù có vài sơ sót cũng không thực sự để con cháu tàn dư của Phương Quốc Trân lọt vào Giảng Võ Đường khiến Hồng Vũ Đế phật lòng; nhưng đối diện với khuôn mặt đen như Bao Công của Nam Hương Bá, dù trong lòng không có quỷ cũng bị ông ta nhìn chằm chằm như bắt gian mà sợ đến run người, không trách người trong quân ngầm gọi Nam Hương Bá là “Diêm Vương phương Nam”.</p>
+        <p>Lúc này, các tướng sĩ thuộc vệ sở Hàng Châu dưới quyền Hồ Đô ty đều đang chờ ở đại sảnh. Ai nấy sớm đã nghe danh uy nghiêm của Nam Hương Bá, nên đều hết sức thận trọng, trong lòng lo lắng cả buổi trời.</p>
+        <p>Hồ Đô ty hắng giọng, lấy hết can đảm nói: “Đặng đại nhân đích thân đến Hàng Châu chủ trì việc tuyển chọn, năm nay trên dưới đều phải cẩn thận. Các vị nhất định phải giữ vững tinh thần, không sợ giá lạnh, làm tốt chuyện lớn lần này, cũng là giành thể diện cho các vệ sở Chiết Giang ta.”</p>
+        <p>Một tham tướng thận trọng hỏi: “Xin hỏi Hồ đại nhân, ngày mai bắt đầu tuyển chọn, chúng hạ quan nên chuẩn bị những gì?”</p>
+        <p>Câu hỏi này làm Hồ Đô ty đứng hình. Ông chỉ có thể ho khan vài tiếng, trả lời mập mờ: “Việc đó… Đặng đại nhân tự có chỉ thị, chúng ta chỉ cần làm theo quy chế là được.”</p>
+        <p>Mọi người nhìn nhau ngơ ngác, chẳng ai biết Nam Hương Bá sẽ tổ chức cuộc tuyển chọn như thế nào, trong lòng khó tránh khỏi bồn chồn lo lắng.</p>
+        <p>Tuyết rơi suốt đêm, đến sáng hôm sau thì trời quang mây tạnh, một vầng mặt trời đỏ rực treo cao giữa bầu trời trong xanh, ánh nắng chiếu rọi lên những dãy nhà, núi rừng quanh sân diễn võ, khiến cảnh vật tuyết phủ trắng xóa trông thật đẹp mắt, khiến người ta sảng khoái lòng.</p>
+        <p>Tuyết trên sân diễn võ đã được quét sạch.</p>
+        <p>Nam Hương Bá bước lên đài điểm tướng, nghe quan phụ trách xướng danh, các thanh niên ưu tú được các phủ, các vệ sở Chiết Giang tiến cử lần lượt đi qua dưới đài, cúi mình hành lễ với ông.</p>
+        <p>Tỉnh Chiết Giang có tất cả mười một phủ, trừ Hàng Châu là thủ phủ, được thiết lập sáu vệ sở, các phủ còn lại mỗi nơi đều có hai vệ sở, hai Thiên hộ, tổng cộng hai mươi sáu vệ sở, quân đồn trú có hai mưới sáu ngàn người, thêm vào đó còn có hơn một trăm ba mươi ngàn hộ lính, ngày thường vừa cày ruộng vừa luyện binh, tất cả đều do Chỉ huy ty Hàng Châu quản lý.</p>
+        <p>Hai mươi sáu vệ sở, mỗi nơi chọn năm người, cộng thêm năm người do Đô ty Hàng Châu đề cử riêng, tổng cộng là một trăm ba mươi lăm người. Nam Hương Bá chưa tiết lộ năm nay Chiết Giang có bao nhiêu chỉ tiêu, nhưng xem tình hình năm ngoái, số người trúng tuyển sẽ không vượt quá mười người.</p>
+        <p>Các tướng sĩ và lính già từ các vệ sở đưa con cháu đến dự thi đều đứng vây quanh bên ngoài sân diễn võ,trong lòng căng thẳng, nhưng vì e sợ uy danh của Nam Hương Bá nên không ai dám thì thầm bàn tán.</p>
+        <p>Xướng danh xong, một trăm ba mươi lăm người xếp hàng dưới đài điểm tướng, yên lặng chờ Nam Hương Bá công bố nội dung bài thi đầu tiên.</p>
+        <p>Nam Hương Bá đảo mắt nhìn những gương mặt trẻ trung đầy phấn khích và căng thẳng dưới đài, chậm rãi nói: “Hôm nay bổn quan thay mặt triều đình tuyển chọn tướng tài, phải công bằng chọn được nhân tài xuất chúng để gánh vác trọng trách; trời đất quỷ thần có thể làm chứng!”</p>
+        <p>Thân hình Nam Hương Bá không mấy cao lớn, nhưng giọng nói vang như chuông đồng, làm tuyết rơi trên cây cũng rơi rụng theo, mọi người trong và ngoài trường diễn võ đều chấn động, nghiêm trang kính cẩn.</p>
+        <p>Nam Hương Bá vẫy tay nói: “Bài thi đầu tiên hôm nay: chép thuộc lòng mười ba chương của binh pháp Tôn Tử, thời gian giới hạn trong một canh giờ!”</p>
+        <p>Binh pháp Tôn Tử vốn là sách nhập môn của nhà binh, nghe nội dung thi đầu tiên dễ như vậy, ai nấy đều thở phào nhẹ nhõm.</p>
+        <p>Nhưng Nam Hương Bá lại tiếp tục: “Trường thi không ở đây, mà ở ngoài miếu Thành Hoàng!”</p>
+        <p>Mọi người xôn xao. Hôm nay đúng là ngày sinh của Thành Hoàng phủ Hàng Châu; thiện nam tín nữ từ các nơi xa xôi đổ về chúc thọ Thành Hoàng, nhân tiện mua sắm hàng Tết, nên ngày này đã trở thành một phiên chợ nhỏ. Ngay cả ở trường diễn võ cũng có thể nghe thấp thoáng tiếng trống kèn từ phía miếu Thành Hoàng vọng tới.</p>
+        <p>Trong lúc mọi người còn đang hoang mang, một thí sinh bước ra khỏi hàng, quỳ một gối trước Nam Hương Bá, hành lễ xong đứng dậy nói to: “Đại nhân, bên ngoài miếu Thành Hoàng dân chúng tụ tập đông đúc, dùng làm trường thi e rằng sẽ quấy rối dân chúng; hơn nữa, dù việc dẹp đám đông không khó, nhưng cũng mất không ít thời gian, e làm chậm trễ tiến trình.”</p>
+        <p>Mọi người thầm tán đồng, chỉ là không dám mạnh miệng nói ra mà thôi.</p>
+        <p>Nam Hương Bá nhìn chằm chằm vào thí sinh trẻ tuổi tuấn tú, khí phách hiên ngang này: “Ngươi là thí sinh phủ nào?”</p>
+        <p>Thí sinh trẻ ngẩng cao đầu đáp: “Mạnh Kiếm Thần đến từ phủ Đài Châu.”</p>
+        <p>Một thân binh đã lật danh sách đến trang đó đưa tới. Nam Hương Bá liếc nhanh qua.</p>
+        <p>Mạnh Kiếm Thần, con trai dòng chính của Bách hộ Mạnh Tri Viễn thuộc vệ sở Ninh Hải ở phủ Đài Châu.</p>
+        <p>Nam Hương Bá chú ý thấy, trước tên Mạnh Kiếm Thần còn có một thí sinh tên Mạnh Kiếm Khanh, con trưởng dòng thứ của Bách hộ Mạnh Tri Viễn vệ sở Ninh Hải. Vị Bách hộ họ Mạnh này quả không đơn giản, có thể đưa cả hai con trai đến Hàng Châu dự tuyển.</p>
+        <p>Thân binh thu lại danh sách.</p>
+        <p>Trên khuôn mặt đen sạm của Nam Hương Bá không lộ chút biểu cảm nào, khiến người ta không đoán được ông vui hay giận trước lời nói thẳng của Mạnh Kiếm Thần.</p>
+        <p>Hồ Đô ty thầm toát mồ hôi lạnh, đang nghĩ cách xoay xở thì Nam Hương Bá đã lên tiếng: “Chàng trai trẻ, hẳn là ngươi đang nghĩ, làm như vậy bổn quan sẽ ghi nhớ ngươi, có ấn tượng đặc biệt với ngươi đúng không?”</p>
+        <p>Mạnh Kiếm Thần giật mình, buột miệng đáp: “Thuộc hạ không dám có ý nghĩ như vậy.”</p>
+        <p>Nam Hương Bá sầm mặt lại, quát: “Làm trái lệnh quân, là đại kỵ trong quân doanh! Lôi ra ngoài!”</p>
+        <p>Sắc mặt Mạnh Kiếm Thần biến đổi, nhất thời không biết phải biện hộ thế nào,  thì ngay lúc đó đã có một người khác bước ra khỏi hàng, lớn tiếng nói: “Xin đại nhân khoan xử phạt! Thuộc hạ có điều muốn nói!”</p>
+        <p>Sắc mặt Mạnh Kiếm Thần càng biến đổi rõ rệt, khóe miệng nhếch lên nụ cười mỉa mai kín đáo.</p>
+        <p>Thí sinh đó đã quỳ một gối bên cạnh hắn, chắp tay nói: “Đặng đại nhân, thuộc hạ cho rằng, tuy đệ đệ thần có chỗ nóng nảy hấp tấp, nhưng nghi hoặc về quân lệnh thì không thể xem là trái lệnh. Thuộc hạ đọc “Hoàng Cáo”, trong đó Thánh thượng hồi tưởng lại các trận đánh lớn nhỏ thời khai quốc, nhiều lần nhắc đến việc các tướng sĩ trước trận nếu có chỗ không rõ hay nghi hoặc với mệnh lệnh, đều là chuyện thường tình. Chỉ khi giải thích rõ ràng trước trận, mới tránh được tình huống hiểu nhầm lệnh giữa trận mà sinh sai sót.”</p>
+        <p>Trường diễn võ trường im phăng phắc. Thí sinh này dám lấy “Hoàng Cáo” do chính Hồng Vũ Đế soạn ra để phản bác lệnh của Nam Hương Bá?</p>
+        <p>Nam Hương Bá chăm chú quan sát Mạnh Kiếm Khanh.</p>
+        <p>Mạnh Kiếm Khanh ngẩng đầu đối diện với ánh mắt của ông.</p>
+        <p>Hai huynh đệ này, có lẽ do khác mẹ nên không mấy giống nhau. Mạnh Kiếm Khanh không tuấn tú bằng đệ đệ, nhưng trông trầm ổn, chững chạc hơn, dáng vẻ già dặn hơn cái tuổi mười tám được ghi trong danh sách.</p>
+        <p>Nam Hương Bá nhận ra, dù trong lòng Mạnh Kiếm Khanh căng thẳng, nhưng vẫn cố gắng giữ được bình tĩnh.</p>
+        <p>Ban đầu ông tưởng hai huynh đệ này đang diễn trò cho mình xem, nhưng biểu hiện của Mạnh Kiếm Thần bên cạnh rất đáng suy ngẫm.</p>
+        <p>Qua hồi lâu, Nam Hương Bá mới chậm rãi nói: “Nói vậy thì người không có nghi vấn gì với quân lệnh này?”</p>
+        <p>Mạnh Kiếm Khanh đáp: “Thuộc hạ cho rằng đại nhân đã suy tính chu toàn cho việc tuyển chọn; dời trường thi đến miếu Thành Hoàng chắc chắn là có dụng ý.”</p>
+        <p>Nam Hương Bá nhìn chằm chằm hắn hỏi: “Ngươi cho rằng bổn quan có dụng ý gì?”</p>
+        <p>Nếu hắn không trả lời được, chắc chắn sẽ bị coi là kẻ ba phải.</p>
+        <p>Mạnh Kiếm Khanh trấn tĩnh tinh thần, đáp: “Thuộc hạ cho rằng, đại nhân muốn ở chốn đông người náo nhiệt như miếu Thành Hoàng này, thử thách sự điềm tĩnh của chúng tôi.”</p>
+        <p>Trầm mặc hồi lâu, đường nét nghiêm khác ở khóe miệng Nam Hương Bá mới giãn ra một chút, coi như nở một nụ cười công nhận, rồi phất tay một cái, Mạnh Kiếm Khanh hiểu ý đứng dậy, quay đầu nhìn bên cạnh, Mạnh Kiếm Thần hằn học lườm hắn, dẫn đầu quay về hàng, Mạnh Kiếm Khanh cũng không biểu lộ gì, lặng lẽ bước theo sau.</p>
+        <p>Mọi người đều thở phào nhẹ nhõm.</p>
+        <p>Nam Hương Bá tuyên bố: “Trường thi đã bố trí xong bên ngoài miếu Thành Hoàng. Sau tiếng pháo nổ trên đài điểm tướng, trường thi ở miếu Thành Hoàng sẽ bắt đầu tính giờ; trong thời gian một nén hương, ai không kịp đi bộ đến nơi, coi như bỏ cuộc!”</p>
+        <p>Trên đường lớn từ trường diễn võ dẫn đến miếu Thành Hoàng, đám đông như thủy triều dạt sang hai bên, lập tức mở ra một con đường.</p>
+        <p>Một tiếng pháo nổ, vòng thi đầu tiên chính thức bắt đầu.</p>
+    </article>
+
+    <div class="reading-nav">
+        <a href="camyhanhq1-6.html" class="nav-btn">⬅️ Chương trước</a>
+        <a href="../mucluc/camyhanh.html" class="nav-btn">📋 Mục lục</a>
+        <a href="camyhanhq1-8.html" class="nav-btn">Chương sau ➡️</a>
+    </div>
+</main>
+
+<div class="chapter-discussion-box">
+    <div class="discussion-header">
+        <div class="discussion-header-left">
+            <span>🌿</span>
+            <h3>Thảo luận về chương này</h3>
+            <span>🌸</span>
+        </div>
+        <div class="discussion-actions">
+            <button class="action-btn" id="like-btn" onclick="toggleLike()" title="Thả tim chương này">
+                <span class="heart-icon">🤍</span>
+                <span id="like-count">0</span>
+            </button>
+            <button class="action-btn" onclick="openShareModal()" title="Chia sẻ chương này">
+                🔗 Chia sẻ
+            </button>
+        </div>
+    </div>
+    <div class="comment-section">
+        <script src="https://utteranc.es/client.js"
+                repo="gocnhocuakhiet/gocnhocuakhiet.github.io"
+                issue-term="pathname"
+                label="comment"
+                theme="github-light"
+                crossorigin="anonymous"
+                async>
+        </script>
+    </div>
+</div>
+
+<div class="share-modal-overlay" id="share-modal-overlay" onclick="handleOverlayClick(event)">
+    <div class="share-modal">
+        <h4>🔗 Chia sẻ chương này</h4>
+        <div class="share-link-row">
+            <input class="share-link-input" id="share-link-input" type="text" readonly>
+            <button class="copy-link-btn" id="copy-link-btn" onclick="copyLink()">Sao chép</button>
+        </div>
+        <button class="share-modal-close" onclick="closeShareModal()">Đóng</button>
+    </div>
+</div>
+
+<div id="comment-sidebar" class="comment-sidebar">
+    <div class="sidebar-header">
+        <h4 id="sidebar-paragraph-title">Bình luận đoạn văn</h4>
+        <button class="close-sidebar-btn" onclick="closeInlineComment()">✕</button>
+    </div>
+    <div class="quoted-paragraph-box" id="quoted-paragraph-box"></div>
+    <div class="sidebar-mention-hint">
+        💡 Dùng <code>@tên-người</code> để nhắc đến ai đó trong bình luận.
+    </div>
+    <div id="sidebar-utterances-mount"></div>
+</div>
+<div id="sidebar-overlay" class="sidebar-overlay" onclick="closeInlineComment()"></div>
+
+<script>
+var GH_REPO  = 'gocnhocuakhiet/gocnhocuakhiet.github.io';
+var GH_LABEL = 'comment';
+var ORIGINAL_TITLE = document.title;
+
+function paragraphTitle(paraNum) {
+    return ORIGINAL_TITLE + ' [Đoạn ' + paraNum + ']';
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+    var paragraphs = document.querySelectorAll('.story-content p');
+    paragraphs.forEach(function (p, index) {
+        var paraNum = index + 1;
+        var row = document.createElement('div');
+        row.className = 'comment-row';
+        p.parentNode.insertBefore(row, p);
+        row.appendChild(p);
+        var badge = document.createElement('span');
+        badge.className = 'comment-badge';
+        badge.title = 'Bình luận về đoạn này';
+        badge.textContent = '💬';
+        badge.onclick = function () {
+            openInlineComment(p.innerText.trim().substring(0, 120), paraNum);
+        };
+        row.appendChild(badge);
+    });
+    initLike();
+});
+
+var currentParaNum = null;
+
+function openInlineComment(previewText, paraNum) {
+    document.getElementById('sidebar-paragraph-title').innerText = 'Đoạn ' + paraNum;
+    document.getElementById('quoted-paragraph-box').innerText =
+        '"' + previewText + (previewText.length >= 120 ? '…' : '') + '"';
+    document.getElementById('comment-sidebar').classList.add('active');
+    document.getElementById('sidebar-overlay').classList.add('active');
+    if (currentParaNum === paraNum) return;
+    currentParaNum = paraNum;
+    var mount = document.getElementById('sidebar-utterances-mount');
+    mount.innerHTML = '<div class="sidebar-loading">Đang tải bình luận…</div>';
+    document.title = paragraphTitle(paraNum);
+    var s = document.createElement('script');
+    s.src = 'https://utteranc.es/client.js';
+    s.setAttribute('repo',         GH_REPO);
+    s.setAttribute('issue-term',   'title');
+    s.setAttribute('label',        GH_LABEL);
+    s.setAttribute('theme',        document.body.classList.contains('dark-mode') ? 'github-dark' : 'github-light');
+    s.setAttribute('crossorigin',  'anonymous');
+    s.async = true;
+    s.onload = function () {
+        var loading = mount.querySelector('.sidebar-loading');
+        if (loading) loading.remove();
+        document.title = ORIGINAL_TITLE;
+    };
+    mount.innerHTML = '';
+    mount.appendChild(s);
+}
+
+function closeInlineComment() {
+    document.getElementById('comment-sidebar').classList.remove('active');
+    document.getElementById('sidebar-overlay').classList.remove('active');
+    document.title = ORIGINAL_TITLE;
+}
+
+function initLike() {
+    var key      = 'like-'      + window.location.pathname;
+    var countKey = 'likecount-' + window.location.pathname;
+    var liked    = localStorage.getItem(key) === '1';
+    var count    = parseInt(localStorage.getItem(countKey) || '0', 10);
+    updateLikeUI(liked, count);
+}
+
+function toggleLike() {
+    var key      = 'like-'      + window.location.pathname;
+    var countKey = 'likecount-' + window.location.pathname;
+    var liked    = localStorage.getItem(key) === '1';
+    var count    = parseInt(localStorage.getItem(countKey) || '0', 10);
+    liked = !liked;
+    count = liked ? count + 1 : Math.max(0, count - 1);
+    localStorage.setItem(key,      liked ? '1' : '0');
+    localStorage.setItem(countKey, count);
+    updateLikeUI(liked, count);
+}
+
+function updateLikeUI(liked, count) {
+    var btn       = document.getElementById('like-btn');
+    var heartSpan = btn.querySelector('.heart-icon');
+    var countSpan = document.getElementById('like-count');
+    heartSpan.textContent = liked ? '❤️' : '🤍';
+    countSpan.textContent = count;
+    liked ? btn.classList.add('liked') : btn.classList.remove('liked');
+}
+
+function openShareModal() {
+    document.getElementById('share-link-input').value = window.location.href;
+    document.getElementById('copy-link-btn').textContent = 'Sao chép';
+    document.getElementById('copy-link-btn').classList.remove('copied');
+    document.getElementById('share-modal-overlay').classList.add('active');
+}
+function closeShareModal() {
+    document.getElementById('share-modal-overlay').classList.remove('active');
+}
+function handleOverlayClick(e) {
+    if (e.target === document.getElementById('share-modal-overlay')) closeShareModal();
+}
+function copyLink() {
+    var input = document.getElementById('share-link-input');
+    var btn   = document.getElementById('copy-link-btn');
+    navigator.clipboard.writeText(input.value).then(function () {
+        btn.textContent = '✓ Đã sao chép';
+        btn.classList.add('copied');
+        setTimeout(function () { btn.textContent = 'Sao chép'; btn.classList.remove('copied'); }, 2000);
+    }).catch(function () {
+        input.select(); document.execCommand('copy');
+        btn.textContent = '✓ Đã sao chép'; btn.classList.add('copied');
+        setTimeout(function () { btn.textContent = 'Sao chép'; btn.classList.remove('copied'); }, 2000);
+    });
+}
+
+function syncUtterancesTheme(isDark) {
+    var theme = isDark ? 'github-dark' : 'github-light';
+    document.querySelectorAll('.utterances-frame').forEach(function (f) {
+        f.contentWindow.postMessage({ type: 'set-theme', theme: theme }, 'https://utteranc.es');
+    });
+}
+</script>
+
+</body>
+</html>

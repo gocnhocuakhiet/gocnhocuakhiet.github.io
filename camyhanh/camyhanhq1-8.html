@@ -1,0 +1,602 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <link rel="stylesheet" href="../style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cẩm Y Hành - Chương 8: Trường thi</title>
+    
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f1f7f4;
+            color: #2d3a34;
+            line-height: 1.8;
+        }
+
+        .navbar {
+            background-color: #ffffff;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 10%;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        .navbar .logo { font-size: 1.2rem; font-weight: bold; color: #4a6b5d; text-decoration: none; }
+        .nav-links a { color: #555; text-decoration: none; font-size: 0.95rem; transition: color 0.3s; }
+        .nav-links a:hover { color: #4a6b5d; }
+
+        .story-container {
+            max-width: 700px;
+            margin: 40px auto;
+            padding: 30px;
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.02);
+        }
+
+        .story-header {
+            text-align: center;
+            margin-bottom: 35px;
+            border-bottom: 1px dashed #8fae9f;
+            padding-bottom: 20px;
+        }
+        .story-header .novel-name {
+            font-size: 0.95rem; color: #777;
+            text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px;
+        }
+        .story-header .chapter-title { color: #4a6b5d; font-size: 1.6rem; font-weight: 600; }
+
+        .story-content { font-size: 1.15rem; color: #333333; text-align: justify; }
+        .story-content p { margin-bottom: 22px; text-indent: 25px; }
+
+        .reading-nav {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-top: 50px; padding-top: 25px; border-top: 1px dashed #8fae9f;
+        }
+        .nav-btn {
+            display: inline-block; padding: 10px 20px;
+            background-color: #ffffff; color: #4a6b5d;
+            text-decoration: none; border: 1px solid #8fae9f;
+            border-radius: 20px; font-size: 0.9rem; font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        .nav-btn:hover { background-color: #4a6b5d; color: #ffffff; border-color: #4a6b5d; box-shadow: 0 4px 8px rgba(74,107,93,0.2); }
+        .nav-btn.disabled { color: #bbb; border-color: #e0e0e0; background-color: #fafafa; pointer-events: none; box-shadow: none; }
+
+        @media (max-width: 480px) {
+            .story-container { padding: 15px; margin: 20px auto; }
+            .nav-btn { padding: 8px 14px; font-size: 0.8rem; }
+            .comment-sidebar { width: 100%; right: -100%; }
+        }
+
+        body.dark-mode { background-color: #131a17; color: #dae5e0; }
+        body.dark-mode .navbar { background-color: #1b2420; box-shadow: 0 2px 5px rgba(0,0,0,0.3); }
+        body.dark-mode .navbar .logo { color: #8fae9f; }
+        body.dark-mode .nav-links a { color: #aaa; }
+        body.dark-mode .story-container { background-color: #1b2420; box-shadow: 0 2px 10px rgba(0,0,0,0.2); }
+        body.dark-mode .story-header .novel-name { color: #8fae9f; }
+        body.dark-mode .story-header .chapter-title { color: #8fae9f; }
+        body.dark-mode .story-content { color: #dae5e0; }
+        body.dark-mode .nav-btn { background-color: #1b2420; color: #8fae9f; border-color: #4a6b5d; }
+        body.dark-mode .nav-btn:hover { background-color: #4a6b5d; color: #ffffff; }
+        body.dark-mode .nav-btn.disabled { color: #444; border-color: #2e3d36; background-color: #161e1b; }
+
+        .reader-controls-wrapper {
+            position: fixed; bottom: 30px; right: 30px;
+            z-index: 10000;
+            display: flex; flex-direction: column; align-items: flex-end; gap: 10px;
+        }
+        .reader-toggle-btn {
+            width: 48px; height: 48px; border-radius: 50%;
+            border: 2px solid #8fae9f; background: white; color: #4a6b5d;
+            font-size: 18px; cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15); transition: all 0.3s;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .reader-toggle-btn:hover { background: #4a6b5d; color: white; transform: scale(1.1); }
+        .reader-controls-group {
+            display: flex; flex-direction: column; gap: 10px;
+            overflow: hidden; max-height: 0; opacity: 0;
+            transition: max-height 0.35s ease, opacity 0.3s ease;
+        }
+        .reader-controls-group.open { max-height: 200px; opacity: 1; }
+        .reader-controls-group button {
+            width: 48px; height: 48px; border-radius: 50%;
+            border: 2px solid #8fae9f; background: white; color: #4a6b5d;
+            font-size: 15px; font-weight: bold; cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15); transition: all 0.3s;
+        }
+        .reader-controls-group button:hover { background: #4a6b5d; color: white; transform: scale(1.1); }
+        body.dark-mode .reader-toggle-btn,
+        body.dark-mode .reader-controls-group button { background: #1b2420; color: #8fae9f; border-color: #4a6b5d; }
+        body.dark-mode .reader-toggle-btn:hover,
+        body.dark-mode .reader-controls-group button:hover { background: #4a6b5d; color: white; }
+
+        .comment-row {
+            display: flex; justify-content: space-between;
+            align-items: flex-start; gap: 15px;
+            margin-bottom: 22px; width: 100%;
+        }
+        .comment-row p { flex: 1; margin-bottom: 0 !important; }
+
+        .comment-badge {
+            cursor: pointer; flex-shrink: 0; margin-top: 6px;
+            width: 30px; height: 30px; border-radius: 50%;
+            background-color: #eaf2ee; color: #4a6b5d;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.9rem; line-height: 1;
+            transition: all 0.2s ease; user-select: none; border: none;
+        }
+        .comment-badge:hover { background-color: #4a6b5d; color: #ffffff; transform: scale(1.12); }
+        body.dark-mode .comment-badge { background-color: #25332c; color: #8fae9f; }
+        body.dark-mode .comment-badge:hover { background-color: #4a6b5d; color: #ffffff; }
+
+        .comment-sidebar {
+            position: fixed; top: 0; right: -420px; width: 400px; height: 100%;
+            background: #ffffff;
+            box-shadow: -5px 0 15px rgba(0,0,0,0.05);
+            z-index: 100000;
+            transition: right 0.4s cubic-bezier(0.25,0.8,0.25,1);
+            padding: 24px; overflow-y: auto; box-sizing: border-box;
+        }
+        .comment-sidebar.active { right: 0; }
+        .sidebar-header {
+            display: flex; justify-content: space-between; align-items: center;
+            border-bottom: 1px solid #dae5e0; padding-bottom: 12px; margin-bottom: 16px;
+        }
+        .sidebar-header h4 { color: #4a6b5d; margin: 0; }
+        .close-sidebar-btn { background: none; border: none; font-size: 1.2rem; color: #999; cursor: pointer; }
+        .quoted-paragraph-box {
+            background: #f0f7f4; border-left: 3px solid #8fae9f;
+            border-radius: 4px; padding: 10px 14px;
+            font-size: 0.88rem; color: #4a6b5d; font-style: italic;
+            line-height: 1.5; margin-bottom: 12px;
+        }
+        .sidebar-mention-hint {
+            font-size: 0.8rem; color: #888;
+            background: #f8faf9; border: 1px dashed #c8ddd5;
+            border-radius: 6px; padding: 8px 12px; margin-bottom: 14px; line-height: 1.5;
+        }
+        .sidebar-mention-hint code { background: #e4efe9; color: #4a6b5d; padding: 1px 5px; border-radius: 4px; font-size: 0.78rem; }
+        body.dark-mode .sidebar-mention-hint { background: #1e2b24; border-color: #2e3d36; color: #7a9a8a; }
+        body.dark-mode .sidebar-mention-hint code { background: #2a3830; color: #8fae9f; }
+        .sidebar-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.2); z-index: 99999; display: none;
+        }
+        .sidebar-overlay.active { display: block; }
+        .sidebar-loading {
+            text-align: center; padding: 30px 0;
+            color: #aaa; font-size: 0.9rem; font-style: italic;
+        }
+
+        .chapter-discussion-box {
+            max-width: 700px; margin: 30px auto 50px auto;
+            padding: 25px; background-color: #ffffff;
+            border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.02);
+        }
+        .discussion-header {
+            display: flex; justify-content: space-between; align-items: center;
+            gap: 10px; margin-bottom: 25px;
+            border-bottom: 1px dashed #dae5e0; padding-bottom: 15px;
+        }
+        .discussion-header-left { display: flex; align-items: center; gap: 10px; }
+        .discussion-header h3 { color: #4a6b5d; font-size: 1.2rem; margin: 0; }
+        .discussion-actions { display: flex; align-items: center; gap: 10px; }
+        .action-btn {
+            display: flex; align-items: center; gap: 6px;
+            padding: 7px 14px; border-radius: 20px; border: 1px solid #8fae9f;
+            background: #ffffff; color: #4a6b5d;
+            font-size: 0.85rem; font-weight: 500; cursor: pointer;
+            transition: all 0.25s ease; user-select: none;
+        }
+        .action-btn:hover { background-color: #f0f7f4; box-shadow: 0 3px 8px rgba(74,107,93,0.15); }
+        .action-btn.liked { background-color: #fff0f3; border-color: #e8a0b0; color: #c0556a; }
+        .action-btn.liked .heart-icon { animation: heartPop 0.35s ease; }
+        @keyframes heartPop {
+            0% { transform: scale(1); } 40% { transform: scale(1.45); }
+            70% { transform: scale(0.9); } 100% { transform: scale(1); }
+        }
+        body.dark-mode .action-btn { background: #1b2420; color: #8fae9f; border-color: #4a6b5d; }
+        body.dark-mode .action-btn:hover { background-color: #232e29; }
+        body.dark-mode .action-btn.liked { background-color: #2a1e22; border-color: #7a3a4a; color: #e08090; }
+        .comment-section { width: 100%; min-height: 150px; }
+
+        body.dark-mode .chapter-discussion-box,
+        body.dark-mode .comment-sidebar { background-color: #1b2420 !important; }
+        body.dark-mode .discussion-header,
+        body.dark-mode .sidebar-header { border-bottom-color: #2e3d36 !important; }
+        body.dark-mode .discussion-header h3,
+        body.dark-mode .sidebar-header h4 { color: #8fae9f !important; }
+        body.dark-mode .quoted-paragraph-box { background: #232e29; border-left-color: #4a6b5d; color: #8fae9f; }
+
+        .share-modal-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.35);
+            z-index: 200000; display: none; align-items: center; justify-content: center;
+        }
+        .share-modal-overlay.active { display: flex; }
+        .share-modal {
+            background: #ffffff; border-radius: 12px;
+            padding: 28px 24px 22px; width: 380px; max-width: 92vw;
+            box-shadow: 0 12px 40px rgba(0,0,0,0.18);
+            animation: slideUp 0.25s ease;
+        }
+        @keyframes slideUp {
+            from { transform: translateY(20px); opacity: 0; }
+            to   { transform: translateY(0); opacity: 1; }
+        }
+        .share-modal h4 { color: #4a6b5d; font-size: 1.05rem; margin-bottom: 16px; text-align: center; }
+        .share-link-row { display: flex; gap: 8px; align-items: center; }
+        .share-link-input {
+            flex: 1; padding: 9px 12px; border: 1px solid #c8ddd5; border-radius: 8px;
+            font-size: 0.85rem; color: #444; background: #f8faf9;
+            outline: none; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
+        }
+        .copy-link-btn {
+            padding: 9px 16px; border-radius: 8px;
+            background: #4a6b5d; color: #ffffff; border: none;
+            font-size: 0.85rem; font-weight: 600; cursor: pointer;
+            transition: all 0.2s; white-space: nowrap;
+        }
+        .copy-link-btn:hover { background: #3a5a4d; }
+        .copy-link-btn.copied { background: #6aaa88; }
+        .share-modal-close {
+            display: block; width: 100%; margin-top: 14px;
+            padding: 8px; background: none; border: none;
+            color: #999; font-size: 0.85rem; cursor: pointer; text-align: center;
+        }
+        .share-modal-close:hover { color: #555; }
+        body.dark-mode .share-modal { background: #1b2420; }
+        body.dark-mode .share-modal h4 { color: #8fae9f; }
+        body.dark-mode .share-link-input { background: #232e29; border-color: #3a5040; color: #dae5e0; }
+        body.dark-mode .share-modal-close { color: #6a8a7a; }
+    </style>
+</head>
+<body>
+
+<div class="reader-controls-wrapper">
+    <div class="reader-controls-group" id="reader-group">
+        <button onclick="changeFontSize(1)" title="Phóng to chữ">A+</button>
+        <button onclick="changeFontSize(-1)" title="Thu nhỏ chữ">A-</button>
+        <button onclick="toggleDarkMode()" id="dark-mode-btn" title="Đổi màu nền">🌙</button>
+    </div>
+    <button class="reader-toggle-btn" id="reader-toggle" onclick="toggleReaderControls()" title="Tuỳ chỉnh đọc">⚙️</button>
+</div>
+
+<script>
+function toggleReaderControls() {
+    var group = document.getElementById('reader-group');
+    var btn   = document.getElementById('reader-toggle');
+    var isOpen = group.classList.toggle('open');
+    btn.style.background = isOpen ? '#4a6b5d' : '';
+    btn.style.color      = isOpen ? '#ffffff'  : '';
+}
+function toggleDarkMode() {
+    document.body.classList.toggle('dark-mode');
+    var isDark = document.body.classList.contains('dark-mode');
+    localStorage.setItem('night-mode', isDark ? 'on' : 'off');
+    document.getElementById('dark-mode-btn').innerText = isDark ? '☀️' : '🌙';
+    syncUtterancesTheme(isDark);
+}
+function changeFontSize(delta) {
+    var content = document.querySelector('.story-content') || document.body;
+    var cur = parseFloat(window.getComputedStyle(content).fontSize);
+    content.style.fontSize = (cur + delta) + 'px';
+}
+function syncUtterancesTheme(isDark) {
+    var theme = isDark ? 'github-dark' : 'github-light';
+    document.querySelectorAll('.utterances-frame').forEach(function(f) {
+        f.contentWindow.postMessage({ type: 'set-theme', theme: theme }, 'https://utteranc.es');
+    });
+}
+(function() {
+    if (localStorage.getItem('night-mode') === 'on') {
+        document.body.classList.add('dark-mode');
+        setTimeout(function() {
+            var b = document.getElementById('dark-mode-btn');
+            if (b) b.innerText = '☀️';
+        }, 80);
+    }
+})();
+</script>
+
+<header class="navbar">
+    <a href="../index.html" class="logo">🌿 Góc nhỏ của Khiết</a>
+    <nav class="nav-links"><a href="../index.html">Trang Chủ</a></nav>
+</header>
+
+<main class="story-container">
+    <div class="story-header">
+        <p class="novel-name">Cẩm Y Hành - Quyển 1: Thiếu niên kiệt xuất</p>
+        <h1 class="chapter-title">Chương 8: Trường thi</h1>
+    </div>
+
+    <article class="story-content">
+        <p>Con đường lớn bằng phẳng trong chớp mắt đã bị tuyết và bùn đất vàng phủ kín. Những thí sinh tụt lại phía sau bị bùn tuyết bắn đầy người đầy mặt, nhưng không dám dừng lại để lau chùi.</p>
+        <p>Đám đông phía trước đột nhiên giảm tốc độ.</p>
+        <p>Trước cây cầu đá lớn bắc ngang sông Tây Thủy bên ngoài miếu Thành Hoàng, hai mươi tám quân sĩ cầm gậy đứng sẵn. Bất kỳ ai xông tới đều bị vài cây gậy cùng lúc đánh trúng, đã có hơn mười người bị hất xuống sông. Dù là giữa mùa đông giá rét, nước sông không sâu lắm nhưng lạnh buốt xương, đáy sông lại nhiều bùn lầy, nhất thời khó lòng trèo lên được, ai nấy đều thảm hại vô cùng.</p>
+        <p>Các thí sinh thuộc vệ sở Hàng Châu quen thuộc địa hình, thấy tình thế này, đoán chừng không thể phá vỡ trận gậy của hai mươi tám quân sĩ trong chốc lát, hơn nữa cũng không muốn đánh nhau với những quân sĩ do Nam Hương Bá phái ra thử thách, bàn bạc qua loa rồi lập tức đổi hướng, men theo bờ sông chạy về phía thượng nguồn, hướng tới cầu Hồng Ảnh cách đó hơn ba dặm.</p>
+        <p>Dù nơi đó cũng có người canh giữ, nhưng khúc sông hẹp hơn nhiều, may ra có thể tìm cách khác qua sông.</p>
+        <p>Mạnh Kiếm Khanh dừng bước, quan sát hai mươi tám quân sĩ cùng đám đông hỗn loạn.</p>
+        <p>Một thí sinh khác đến từ Đài Châu, con thứ của Thiên hộ Đài Châu Công Tôn Nghĩa, thở hổn hển hỏi: “Kiếm Khanh, làm thế nào bây giờ?”</p>
+        <p>Hai thí sinh Đài Châu khác vừa chạy tới đầu cầu, vừa dùng tay áo lau những vết bùn trên mặt, chờ Mạnh Kiếm Khanh lên tiếng.</p>
+        <p>Xét về tuổi tác, Mạnh Kiếm Khanh không lớn hơn họ là bao; nhưng trong ba tháng huấn luyện tại Đài Châu, ba người này đã vô thức coi Mạnh Kiếm Khanh là người có thể đưa ra quyết định.</p>
+        <p>Mạnh Kiếm Thần lạnh lùng liếc nhìn họ: “Các người từ từ bàn bạc đi.”</p>
+        <p>Hắn đã định xông thẳng qua trận gậy.</p>
+        <p>Mạnh Kiếm Khanh quát: “Khoan! Chỉ năm người chúng ta thì không thể phá nổi đâu!”</p>
+        <p>Hắn quay sang đám đông đang hỗn loạn bắt đầu đổ về phía thượng nguồn, lớn tiếng kêu: “Nếu chúng ta không đánh mà chạy, chắc chắn sẽ bị Đặng đại nhân khinh thường!”</p>
+        <p>Câu nói này được hắn hét lên bằng hết sức lực, đánh trúng tâm lý mà ai cũng đang lo lắng nhất. Ý định rút lui trong nháy mắt liền tan biến.</p>
+        <p>Mạnh Kiếm Thần lập tức cởi áo ngoài, không nói lời nào xông thẳng vào trận gậy, ba cây gậy lập tức từ ba phía trên, giữa, dưới đồng loạt quét tới.</p>
+        <p>Mạnh Kiếm Thần vung áo ngoài bọc lấy cây gậy tấn công phía trên, tay trái với xuống nắm chặt cây gậy ở giữa, nhờ đà quét mạnh của gậy, nhún người nhảy lên, tránh được cây gậy quét vào đầu gối, sau đó lao vào giữa trận gậy.</p>
+        <p>Mạnh Kiếm Khanh cùng ba thí sinh Đài Châu khác theo sát hắn xông vào trận gậy.</p>
+        <p>Hành động dẫn đầu của họ nhanh chóng khiến đám đông đổi hướng.</p>
+        <p>Liên tục có thí sinh bị cuốn vào trận gậy rồi bị hất xuống sông, nhưng thế hỗn chiến đã hình thành, hai mươi tám quân sĩ rốt cuộc không thể ngăn được đám đông này.</p>
+        <p>Mạnh Kiếm Khanh vừa ngồi xuống chỗ của mình, còn chưa kịp thở thì đã nghe một tiếng chiêng vang, cổng trường thi lập tức đóng lại, những thí sinh đến muộn bị mực tạt vào mặt, muốn lẻn vào cũng không được nữa.</p>
+        <p>Hắn quay đầu nhìn xung quanh.</p>
+        <p>Năm thí sinh Đài Châu đều đã vượt qua.</p>
+        <p>Mạnh Kiếm Khanh thở phào, xoa xoa tay và mặt, lấy lại tinh thần chuẩn bị bước vào cuộc thi.</p>
+        <p>Vòng thi đầu tiên, có hai mươi ba người không kịp đến trường thi; mười tám người bị loại do chép thiếu chép sai binh pháp Tôn Tử. Đến chiều, đứng dưới đài điểm tướng chỉ còn chín mươi bốn người. Quan phụ trách điểm danh xong, lệnh cho những người mang số lẻ bước sang trái một bước ra khỏi hàng.</p>
+        <p>Nam Hương Bá nhìn quanh nói: “Vòng thi thứ hai này, chính là xem bản lĩnh quyền cước và đao thương của các ngươi!”</p>
+        <p>Quan phụ trách tuyên bố quy tắc trận này, hai người thành một nhóm bộ chiến, tỷ thí ngay tại chỗ, trong thời gian một nén hương, ai bị đánh ra khỏi vòng tròn trắng vẽ sẵn là thua; nếu trong một nén hương không ai bị đánh ra ngoài, cả hai đều bị loại.</p>
+        <p>Quy tắc này vừa công bố, các thí sinh đều thầm lo sợ.</p>
+        <p>Ra sân đầu tiên là năm đội của vệ sở Hàng Châu.</p>
+        <p>Mạnh Kiếm Khanh và Mạnh Kiếm Thần lần lượt đứng ở hai đầu trong năm người vệ sở Đài Châu, đối thủ của Mạnh Kiếm Khanh là thí sinh ở vệ sở Ninh Ba.</p>
+        <p>Cả hai người họ, cùng với con thứ của Thiên hộ Đài Châu Công Tôn Nghĩa, đều dễ dàng giành chiến thắng.</p>
+        <p>Trên trường diễn võ chỉ còn lại bốn mươi mốt người. Giữa Mạnh Kiếm Khanh và Mạnh Kiếm Thần chỉ cách một Công Tôn Nghĩa.</p>
+        <p>Sắc mặt Công Tôn Nghĩa hơi khó coi, âm thầm đếm số, muốn biết tiếp theo mình sẽ đối đầu với Mạnh Kiếm Khanh hay Mạnh Kiếm Thần. Nhưng hàng trước đầu người lắc lư, đâu dễ gì mà đếm rõ?</p>
+        <p>Nhưng đến vòng hai, quan phụ trách không điểm số chẵn lẻ chia nhóm nữa, mà truyền lệnh họ đến dưới đài điểm tướng bốc thăm.</p>
+        <p>Công Tôn Nghĩa bốc được số bốn mươi mốt, được miễn thi.</p>
+        <p>Công Tôn Nghĩa thở phào nhẹ nhõm, không nhịn được mỉm cười thầm, vận may như vậy không phải ai cũng gặp được.</p>
+        <p>Đối thủ Mạnh Kiếm Thần bốc được là con trai Thiên hộ Nghiêm Châu. Mạnh Kiếm Khanh bốc được đối thủ là cháu trai của Hồ Đô ty, Hồ Tiến Dũng.</p>
+        <p>Hai người nhìn nhau.</p>
+        <p>Khóe miệng Mạnh Kiếm Thần nở nụ cười mỉa mai: “Đại ca, chúc may mắn, biết đâu có thể nịnh nọt được Hồ Đô ty đấy.”</p>
+        <p>Mạnh Kiếm Khanh bình thản đáp: “Như nhau cả thôi.”</p>
+        <p>Mạnh Kiếm Thần nói: “Với ta, chiến trường không có cha con; nhưng với huynh thì khác. Trong lòng huynh lúc này chắc đang giằng xé lắm, vừa muốn thắng trận này, vừa muốn thắng, lại vừa lo thắng rồi đắc tội với Hồ Đô ty. Dù sao mười năm nữa, huynh đệ ta cũng khó mà leo lên tới chức quan như ông ấy, sớm muộn gì cũng có lúc phải dựa vào người ta. Biết đâu năm nay huynh biết thời thế, sang năm Hồ Đô ty sẽ cho huynh một cơ hội tốt hơn thì sao.”</p>
+        <p>Mạnh Kiếm Khanh mỉm cười: “Hồ Đô ty không phải loại người đó.”</p>
+        <p>Mạnh Kiếm Thần nhìn Hồ Đô ty đang cung kính đứng sau lưng Nam Hương Bá, tặc lưỡi than: “Đại ca quả nhiên rất ngưỡng mộ Hồ Đô ty, mong rằng câu nói này có thể truyền đến tai ông ấy.”</p>
+        <p>Mạnh Kiếm Khanh mỉm cười không đáp.</p>
+        <p>Mặt trời đã xế bóng.</p>
+        <p>Vòng hai là mã chiến, ai ngã ngựa hoặc rơi vũ khí là thua. Hai con ngựa phi nước đại, toàn bộ trường diễn võ cũng chỉ vừa đủ dùng, nên mỗi lần chỉ có một nhóm lên sân.</p>
+        <p>Đối thủ Mạnh Kiếm Thần dùng lưu tinh chùy, Mạnh Kiếm Thần chọn thương móc câu. Nén hương chỉ cháy được một phần nhỏ, Mạnh Kiếm Thần đã móc được lưu tinh chùy, hét một tiếng, gọn ghẽ kéo đối thủ ngã khỏi ngựa.</p>
+        <p>Trường diễn võ vang lên tiếng hoan hô.</p>
+        <p>Đối phương xấu hổ đứng dậy. Mạnh Kiếm Thần không trả lại vũ khí, mà trong tiếng hoan hô, vung tay ném mạnh, ngọn thương cùng lưu tinh chùy cắm vào giá vũ khí, khiến giá rung rinh sắp đổ.</p>
+        <p>Mạnh Kiếm Khanh thầm nhíu mày.</p>
+        <p>Chẳng mấy chốc đã đến lượt hắn lên sân.</p>
+        <p>Hồ Tiến Dũng cao lớn, sức mạnh kinh người, nên chọn đại đao Cửu Hoàn.</p>
+        <p>Mạnh Kiếm Khanh suy nghĩ chốc lát, chọn một cây thương dài.</p>
+        <p>Hoàng hôn buông xuống, xung quanh trường diễn võ đã thắp lên mấy chục ngọn đuốc, ánh sáng phản chiếu trên tuyết, chiếu sáng cả trường diễn võ.</p>
+        <p>Hồ Tiến Dũng thúc ngựa, hò hét xông tới.</p>
+        <p>Mạnh Kiếm Khanhcũng phi ngựa xông lên, khi hai bên sắp giáp mặt, hắn bất ngờ rẽ sang phải. Dù là tránh né, nhưng thân pháp quá linh hoạt, khiến khán giả không khỏi reo hò.</p>
+        <p>Lưỡi đao Cửu Hoàn suýt soát lướt qua bên trái hắn</p>
+        <p>Khi hai ngựa lướt qua nhau, Mạnh Kiếm Khanh xoay người trên ngựa, mũi thương đâm ngược về phía sau.</p>
+        <p>Hồ Tiến Dũng vội vàng đưa đao đỡ, do lực chưa kịp tập trung, liền bị thế thương của đối phương áp đảo.</p>
+        <p>Hồ Tiến Dũng quay ngựa trở lại, Mạnh Kiếm Khanh cũng thúc ngựa quay đầu.</p>
+        <p>Lần này Hồ Tiến Dũng cẩn thận gấp bội, không để Mạnh Kiếm Khanh tấn công từ bên sườn nữa, đao Cửu Hoàn chém xuống đầu, buộc Mạnh Kiếm Khanh phải đỡ một đao này, cả người lẫn ngựa lùi lại hơn mười bước mới đứng vững.</p>
+        <p>Công Tôn Nghĩa lo lắng nói: “Kiếm Thần, đại ca của huynh có thua không? Hồ Tiến Dũng là dũng sĩ nổi tiếng của vệ sở Hàng Châu đấy.”</p>
+        <p>Mạnh Kiếm Thần lạnh lùng đáp: “Yên tâm đi, tên cáo già đó có đủ cách để thắng.”</p>
+        <p>Hồ Tiến Dũng thúc ngựa phi nước đại tới, mang theo một thế đao định thắng bại.</p>
+        <p>Mạnh Kiếm Khanh cũng thúc ngựa lao tới.</p>
+        <p>Mọi người trong và ngoài trường diễn võ không khỏi thở dài.</p>
+        <p>Hồ Tiến Dũng gào thét, đao Cửu Hoàn vung lên.</p>
+        <p>Ngay lúc đó, Mạnh Kiếm Khanh bật nhảy khỏi lưng ngựa, ngọn thương chạm nhẹ vào lưỡi đao, mượn lực lộn sang bên phải Hồ Tiến Dũng, giữa không trung đá liên tục vào nách đối phương.</p>
+        <p>Hồ Tiến Dũng đang dồn toàn lực xông tới, bị Mạnh Kiếm Khanh đá vào nách, lập tức mất thăng bằng, ngã khỏi ngựa.</p>
+        <p>Mạnh Kiếm Khanh dùng ngọn thương chống xuống đất, đỡ lấy thân hình đang rơi, bật lên lần nữa, lộn trở lại lưng ngựa.</p>
+        <p>Hồ Tiến Dũng bật dậy, mặt đỏ bừng, gào lên: “Ngươi giở trò! Đặng đại nhân quy định trận này là mã chiến, cách đánh của ngươi không phải mã chiến!”</p>
+        <p>Mạnh Kiếm Khanh thu thương lại, bình tĩnh đáp: “Binh là đạo dối trá. Sao lại nói không phải mã chiến, ta có chạm đất lúc nào đâu?”</p>
+        <p>Trên đài điểm tướng, Hồ Đô ty bồn chồn bất an, quay sang Nam Hương Bá, ấp úng nói: “Chuyện này… đại nhân, ý ngài thế nào?”</p>
+        <p>Gương mặt Nam Hương Bá vẫn như thường, chỉ ừ một tiếng không rõ ý. Quan phụ trách không nhận được chỉ thị, đành căn cứ quy tắc tuyên bố Hồ Tiến Dũng ngã ngựa là thua.</p>
+        <p>Các thí sinh vệ sở Hàng Châu xôn xao, nếu không vì nể sợ thanh danh Nam Hương Bá, e rằng đã om sòm lên rồi.</p>
+        <p>Mạnh Kiếm Thần khoanh tay trước ngực, lạnh lùng nhìn cảnh này, lẩm bẩm: “Nếu đã được Nam Hương Bá đánh giá cao, quả thật chẳng cần quan tâm Hồ Đô ty nghĩ gì nữa.”</p>
+        <p>Mạnh Kiếm Khanh hẳn đã tính kỹ từ trước. Thảo nào không hề nương tay với Hồ Tiến Dũng.</p>
+        <p>Nhưng trong lòng Mạnh Kiếm Thần vẫn thấy có điều gì đó không ổn.</p>
+        <p>Điều này có chút không giống phong cách thường ngày của Mạnh Kiếm Khanh. Hắn ta làm người làm việc, luôn khéo léo toàn vẹn, dù nắm chắc thái độ Nam Hương Bá, cũng không đến mức không chút nể mặt làm mất lòng Hồ Đô ty. Phải biết cha của họ hiện vẫn là một Bách hộ dưới quyền Hồ Đô ty.</p>
+        <p>Hành động lần này của Mạnh Kiếm Khanh rất khác thường. Xưa nay, hắn là người khéo léo, việc gì cũng chu toàn, dù nắm chắc thái độ của Nam Hương Bá, thì cũng không đến mức công khai đắc tội với Hồ Đô ty. Phải biết là cha của họ vẫn chỉ là một Bách hộ dưới quyền Hồ Đô ty mà thôi.</p>
+        <p>Mãi đến nửa đêm, đám đông trên trường diễn võ mới dần tản đi.</p>
+        <p>Những thí sinh vượt qua vòng thi còn lại hai mươi mốt người. Trong đó vệ sở Đài Châu có ba người, vệ sở Hàng Châu cũng chỉ còn ba. Mấy vệ sở bị loại sạch sẽ tỏ ra không phục, trên đường về thành, thấy ánh mắt Diêm Vương của Nam Hương Bá không còn dõi theo họ nữa, thí sinh vệ sở Nghiêm Châu bắt đầu lớn tiếng xúi giục, đòi Mạnh Kiếm Khanh phải thi đấu lại với Hồ Tiến Dũng để chứng minh thực lực, khiến mọi người tâm phục khẩu phục, nếu không sẽ tố cáo đến tận Hồng Vũ Đế để đòi công bằng.</p>
+        <p>Hồ Tiến Dũng vốn đã bực bội, bị mấy thí sinh Nghiêm Châu xúi giục, lập tức nổi giận.</p>
+        <p>Mạnh Kiếm Khanh đứng cách xa đám đông, bình thản nghe tiếng chửi mắng từ phía bên kia, Mạnh Kiếm Thần cười lạnh nói: “Đại ca, giờ huynh có thấy hối hận không?”</p>
+        <p>Mạnh Kiếm Khanh liếc nhìn hắn: “Cho ta thêm một cơ hội nữa, ta cũng chỉ có thể cố gắng hết sức. Đệ nhường một bước, còn có đường lui; ta nhường một bước, là không còn đường lui.”</p>
+        <p>Cha của họ, dù chỉ là một Bách hộ nhỏ, nhưng cũng là chức vị có thể truyền lại cho con cháu.</p>
+        <p>Mạnh Kiếm Thần khinh bỉ: “Cái chức đó, ăn thì nhạt, bỏ thì tiếc, ai muốn cả đời ru rú ở vùng núi hoang ấy? Nếu huynh thích, ta sẵn sàng nhường lại cho—”</p>
+        <p>Chưa dứt lời, phía bên kia đã bắt đầu lôi cả cha mẹ họ ra mà chửi, Mạnh Kiếm Thần mặt xám xịt, nghiến răng nói: “Lũ khốn này, chửi quá đáng! Để ta dạy dỗ chúng!”</p>
+        <p>Tay hắn vừa rút đao đã bị Mạnh Kiếm Khanh giữ lại, Mạnh Kiếm Khanh nhìn mấy thí sinh Nghiêm Châu đang trốn trong đám đông chửi bới nói: “Nếu chúng ta đánh nhau với Hồ Tiến Dũng, đó là đánn nhau vì thù riêng, chắc chắn sẽ bị Đặng đại nhân loại tên.”</p>
+        <p>Mạnh Kiếm Thần bực bội gạt tay hắn ra: “Cái này không được, cái kia không xong, rốt cuộc huynh muốn thế nào?”</p>
+        <p>Mạnh Kiếm Khanh không trả lời, quay sang Hồ Tiến Dũng và đám thí sinh Hàng Châu đang phụ họa phía sau, lớn tiếng nói: “Thi đấu trên võ trường, cũng là để chọn ra những người có thể thắng địch ngoài chiến trường. Trong quân cấm đánh nhau vì thù riêng; nếu Hồ huynh nhất định muốn phân thắng bại, có hứng thú đánh cược với ta không?”</p>
+        <p>Hồ Tiến Dũng lập tức gào lên: “Cược thì cược, ai sợ ai?”</p>
+        <p>Mạnh Kiếm Khanh nói: “Từ đây đến Nghiêm Châu, cưỡi ngựa đi về chỉ mất ba canh giờ. Giặc Nghiêm Châu rút về núi Đồng Lư đã hơn một tháng. Tết sắp đến, quân đồn trú Nghiêm Châu vây núi Đồng Lư đều dừng tấn công chuẩn bị đón năm mới, lũ giặc trong núi ắt phòng bị lỏng lẻo. Hồ huynh mượn hai con ngựa tốt từ Đô ty Hàng Châu được không? Sáng mai trước khi Đặng đại nhân mở vòng thi cuối cùng, ai mang về nhiều đầu giặc từ núi Đồng Lư nhất, người đó thắng; nếu ta thắng, không còn gì để nói; nếu ta thua, suất này ta xin nhường lại Hồ huynh!”</p>
+        <p>Đám thiếu niên trẻ tuổi này, ai mà chẳng háo hức thích gây chuyện? Nghe Mạnh Kiếm Khanh nói vậy, đều reo hò tán thưởng. Trong lúc Hồ Tiến Dũng đi mượn ngựa, Mạnh Kiếm Khanh lại phân công các thí sinh vệ sở canh giữ các ngả đường, để phòng có người đi báo tin cho giặc Nghiêm Châu, hoặc phá rối tỷ thí giữa hai người.</p>
+    </article>
+
+    <div class="reading-nav">
+        <a href="camyhanhq1-7.html" class="nav-btn">⬅️ Chương trước</a>
+        <a href="../mucluc/camyhanh.html" class="nav-btn">📋 Mục lục</a>
+        <a href="camyhanhq1-9.html" class="nav-btn">Chương sau ➡️</a>
+    </div>
+</main>
+
+<div class="chapter-discussion-box">
+    <div class="discussion-header">
+        <div class="discussion-header-left">
+            <span>🌿</span>
+            <h3>Thảo luận về chương này</h3>
+            <span>🌸</span>
+        </div>
+        <div class="discussion-actions">
+            <button class="action-btn" id="like-btn" onclick="toggleLike()" title="Thả tim chương này">
+                <span class="heart-icon">🤍</span>
+                <span id="like-count">0</span>
+            </button>
+            <button class="action-btn" onclick="openShareModal()" title="Chia sẻ chương này">
+                🔗 Chia sẻ
+            </button>
+        </div>
+    </div>
+    <div class="comment-section">
+        <script src="https://utteranc.es/client.js"
+                repo="gocnhocuakhiet/gocnhocuakhiet.github.io"
+                issue-term="pathname"
+                label="comment"
+                theme="github-light"
+                crossorigin="anonymous"
+                async>
+        </script>
+    </div>
+</div>
+
+<div class="share-modal-overlay" id="share-modal-overlay" onclick="handleOverlayClick(event)">
+    <div class="share-modal">
+        <h4>🔗 Chia sẻ chương này</h4>
+        <div class="share-link-row">
+            <input class="share-link-input" id="share-link-input" type="text" readonly>
+            <button class="copy-link-btn" id="copy-link-btn" onclick="copyLink()">Sao chép</button>
+        </div>
+        <button class="share-modal-close" onclick="closeShareModal()">Đóng</button>
+    </div>
+</div>
+
+<div id="comment-sidebar" class="comment-sidebar">
+    <div class="sidebar-header">
+        <h4 id="sidebar-paragraph-title">Bình luận đoạn văn</h4>
+        <button class="close-sidebar-btn" onclick="closeInlineComment()">✕</button>
+    </div>
+    <div class="quoted-paragraph-box" id="quoted-paragraph-box"></div>
+    <div class="sidebar-mention-hint">
+        💡 Dùng <code>@tên-người</code> để nhắc đến ai đó trong bình luận.
+    </div>
+    <div id="sidebar-utterances-mount"></div>
+</div>
+<div id="sidebar-overlay" class="sidebar-overlay" onclick="closeInlineComment()"></div>
+
+<script>
+var GH_REPO  = 'gocnhocuakhiet/gocnhocuakhiet.github.io';
+var GH_LABEL = 'comment';
+var ORIGINAL_TITLE = document.title;
+
+function paragraphTitle(paraNum) {
+    return ORIGINAL_TITLE + ' [Đoạn ' + paraNum + ']';
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+    var paragraphs = document.querySelectorAll('.story-content p');
+    paragraphs.forEach(function (p, index) {
+        var paraNum = index + 1;
+        var row = document.createElement('div');
+        row.className = 'comment-row';
+        p.parentNode.insertBefore(row, p);
+        row.appendChild(p);
+        var badge = document.createElement('span');
+        badge.className = 'comment-badge';
+        badge.title = 'Bình luận về đoạn này';
+        badge.textContent = '💬';
+        badge.onclick = function () {
+            openInlineComment(p.innerText.trim().substring(0, 120), paraNum);
+        };
+        row.appendChild(badge);
+    });
+    initLike();
+});
+
+var currentParaNum = null;
+
+function openInlineComment(previewText, paraNum) {
+    document.getElementById('sidebar-paragraph-title').innerText = 'Đoạn ' + paraNum;
+    document.getElementById('quoted-paragraph-box').innerText =
+        '"' + previewText + (previewText.length >= 120 ? '…' : '') + '"';
+    document.getElementById('comment-sidebar').classList.add('active');
+    document.getElementById('sidebar-overlay').classList.add('active');
+    if (currentParaNum === paraNum) return;
+    currentParaNum = paraNum;
+    var mount = document.getElementById('sidebar-utterances-mount');
+    mount.innerHTML = '<div class="sidebar-loading">Đang tải bình luận…</div>';
+    document.title = paragraphTitle(paraNum);
+    var s = document.createElement('script');
+    s.src = 'https://utteranc.es/client.js';
+    s.setAttribute('repo',         GH_REPO);
+    s.setAttribute('issue-term',   'title');
+    s.setAttribute('label',        GH_LABEL);
+    s.setAttribute('theme',        document.body.classList.contains('dark-mode') ? 'github-dark' : 'github-light');
+    s.setAttribute('crossorigin',  'anonymous');
+    s.async = true;
+    s.onload = function () {
+        var loading = mount.querySelector('.sidebar-loading');
+        if (loading) loading.remove();
+        document.title = ORIGINAL_TITLE;
+    };
+    mount.innerHTML = '';
+    mount.appendChild(s);
+}
+
+function closeInlineComment() {
+    document.getElementById('comment-sidebar').classList.remove('active');
+    document.getElementById('sidebar-overlay').classList.remove('active');
+    document.title = ORIGINAL_TITLE;
+}
+
+function initLike() {
+    var key      = 'like-'      + window.location.pathname;
+    var countKey = 'likecount-' + window.location.pathname;
+    var liked    = localStorage.getItem(key) === '1';
+    var count    = parseInt(localStorage.getItem(countKey) || '0', 10);
+    updateLikeUI(liked, count);
+}
+
+function toggleLike() {
+    var key      = 'like-'      + window.location.pathname;
+    var countKey = 'likecount-' + window.location.pathname;
+    var liked    = localStorage.getItem(key) === '1';
+    var count    = parseInt(localStorage.getItem(countKey) || '0', 10);
+    liked = !liked;
+    count = liked ? count + 1 : Math.max(0, count - 1);
+    localStorage.setItem(key,      liked ? '1' : '0');
+    localStorage.setItem(countKey, count);
+    updateLikeUI(liked, count);
+}
+
+function updateLikeUI(liked, count) {
+    var btn       = document.getElementById('like-btn');
+    var heartSpan = btn.querySelector('.heart-icon');
+    var countSpan = document.getElementById('like-count');
+    heartSpan.textContent = liked ? '❤️' : '🤍';
+    countSpan.textContent = count;
+    liked ? btn.classList.add('liked') : btn.classList.remove('liked');
+}
+
+function openShareModal() {
+    document.getElementById('share-link-input').value = window.location.href;
+    document.getElementById('copy-link-btn').textContent = 'Sao chép';
+    document.getElementById('copy-link-btn').classList.remove('copied');
+    document.getElementById('share-modal-overlay').classList.add('active');
+}
+function closeShareModal() {
+    document.getElementById('share-modal-overlay').classList.remove('active');
+}
+function handleOverlayClick(e) {
+    if (e.target === document.getElementById('share-modal-overlay')) closeShareModal();
+}
+function copyLink() {
+    var input = document.getElementById('share-link-input');
+    var btn   = document.getElementById('copy-link-btn');
+    navigator.clipboard.writeText(input.value).then(function () {
+        btn.textContent = '✓ Đã sao chép';
+        btn.classList.add('copied');
+        setTimeout(function () { btn.textContent = 'Sao chép'; btn.classList.remove('copied'); }, 2000);
+    }).catch(function () {
+        input.select(); document.execCommand('copy');
+        btn.textContent = '✓ Đã sao chép'; btn.classList.add('copied');
+        setTimeout(function () { btn.textContent = 'Sao chép'; btn.classList.remove('copied'); }, 2000);
+    });
+}
+
+function syncUtterancesTheme(isDark) {
+    var theme = isDark ? 'github-dark' : 'github-light';
+    document.querySelectorAll('.utterances-frame').forEach(function (f) {
+        f.contentWindow.postMessage({ type: 'set-theme', theme: theme }, 'https://utteranc.es');
+    });
+}
+</script>
+
+</body>
+</html>
