@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <link rel="stylesheet" href="../style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cẩm Y Hành - Chương 51: Gốm biển quý hiếm</title>
+    
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f1f7f4;
+            color: #2d3a34;
+            line-height: 1.8;
+        }
+
+        .navbar {
+            background-color: #ffffff;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 10%;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        .navbar .logo { font-size: 1.2rem; font-weight: bold; color: #4a6b5d; text-decoration: none; }
+        .nav-links a { color: #555; text-decoration: none; font-size: 0.95rem; transition: color 0.3s; }
+        .nav-links a:hover { color: #4a6b5d; }
+
+        .story-container {
+            max-width: 700px;
+            margin: 40px auto;
+            padding: 30px;
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.02);
+        }
+
+        .story-header {
+            text-align: center;
+            margin-bottom: 35px;
+            border-bottom: 1px dashed #8fae9f;
+            padding-bottom: 20px;
+        }
+        .story-header .novel-name {
+            font-size: 0.95rem; color: #777;
+            text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px;
+        }
+        .story-header .chapter-title { color: #4a6b5d; font-size: 1.6rem; font-weight: 600; }
+
+        .story-content { font-size: 1.15rem; color: #333333; text-align: justify; }
+        .story-content p { margin-bottom: 22px; text-indent: 25px; }
+
+        .reading-nav {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-top: 50px; padding-top: 25px; border-top: 1px dashed #8fae9f;
+        }
+        .nav-btn {
+            display: inline-block; padding: 10px 20px;
+            background-color: #ffffff; color: #4a6b5d;
+            text-decoration: none; border: 1px solid #8fae9f;
+            border-radius: 20px; font-size: 0.9rem; font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        .nav-btn:hover { background-color: #4a6b5d; color: #ffffff; border-color: #4a6b5d; box-shadow: 0 4px 8px rgba(74,107,93,0.2); }
+        .nav-btn.disabled { color: #bbb; border-color: #e0e0e0; background-color: #fafafa; pointer-events: none; box-shadow: none; }
+
+        @media (max-width: 480px) {
+            .story-container { padding: 15px; margin: 20px auto; }
+            .nav-btn { padding: 8px 14px; font-size: 0.8rem; }
+            .comment-sidebar { width: 100%; right: -100%; }
+        }
+
+        body.dark-mode { background-color: #131a17; color: #dae5e0; }
+        body.dark-mode .navbar { background-color: #1b2420; box-shadow: 0 2px 5px rgba(0,0,0,0.3); }
+        body.dark-mode .navbar .logo { color: #8fae9f; }
+        body.dark-mode .nav-links a { color: #aaa; }
+        body.dark-mode .story-container { background-color: #1b2420; box-shadow: 0 2px 10px rgba(0,0,0,0.2); }
+        body.dark-mode .story-header .novel-name { color: #8fae9f; }
+        body.dark-mode .story-header .chapter-title { color: #8fae9f; }
+        body.dark-mode .story-content { color: #dae5e0; }
+        body.dark-mode .nav-btn { background-color: #1b2420; color: #8fae9f; border-color: #4a6b5d; }
+        body.dark-mode .nav-btn:hover { background-color: #4a6b5d; color: #ffffff; }
+        body.dark-mode .nav-btn.disabled { color: #444; border-color: #2e3d36; background-color: #161e1b; }
+
+        .reader-controls-wrapper {
+            position: fixed; bottom: 30px; right: 30px;
+            z-index: 10000;
+            display: flex; flex-direction: column; align-items: flex-end; gap: 10px;
+        }
+        .reader-toggle-btn {
+            width: 48px; height: 48px; border-radius: 50%;
+            border: 2px solid #8fae9f; background: white; color: #4a6b5d;
+            font-size: 18px; cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15); transition: all 0.3s;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .reader-toggle-btn:hover { background: #4a6b5d; color: white; transform: scale(1.1); }
+        .reader-controls-group {
+            display: flex; flex-direction: column; gap: 10px;
+            overflow: hidden; max-height: 0; opacity: 0;
+            transition: max-height 0.35s ease, opacity 0.3s ease;
+        }
+        .reader-controls-group.open { max-height: 200px; opacity: 1; }
+        .reader-controls-group button {
+            width: 48px; height: 48px; border-radius: 50%;
+            border: 2px solid #8fae9f; background: white; color: #4a6b5d;
+            font-size: 15px; font-weight: bold; cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15); transition: all 0.3s;
+        }
+        .reader-controls-group button:hover { background: #4a6b5d; color: white; transform: scale(1.1); }
+        body.dark-mode .reader-toggle-btn,
+        body.dark-mode .reader-controls-group button { background: #1b2420; color: #8fae9f; border-color: #4a6b5d; }
+        body.dark-mode .reader-toggle-btn:hover,
+        body.dark-mode .reader-controls-group button:hover { background: #4a6b5d; color: white; }
+
+        .comment-row {
+            display: flex; justify-content: space-between;
+            align-items: flex-start; gap: 15px;
+            margin-bottom: 22px; width: 100%;
+        }
+        .comment-row p { flex: 1; margin-bottom: 0 !important; }
+
+        .comment-badge {
+            cursor: pointer; flex-shrink: 0; margin-top: 6px;
+            width: 30px; height: 30px; border-radius: 50%;
+            background-color: #eaf2ee; color: #4a6b5d;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.9rem; line-height: 1;
+            transition: all 0.2s ease; user-select: none; border: none;
+        }
+        .comment-badge:hover { background-color: #4a6b5d; color: #ffffff; transform: scale(1.12); }
+        body.dark-mode .comment-badge { background-color: #25332c; color: #8fae9f; }
+        body.dark-mode .comment-badge:hover { background-color: #4a6b5d; color: #ffffff; }
+
+        .comment-sidebar {
+            position: fixed; top: 0; right: -420px; width: 400px; height: 100%;
+            background: #ffffff;
+            box-shadow: -5px 0 15px rgba(0,0,0,0.05);
+            z-index: 100000;
+            transition: right 0.4s cubic-bezier(0.25,0.8,0.25,1);
+            padding: 24px; overflow-y: auto; box-sizing: border-box;
+        }
+        .comment-sidebar.active { right: 0; }
+        .sidebar-header {
+            display: flex; justify-content: space-between; align-items: center;
+            border-bottom: 1px solid #dae5e0; padding-bottom: 12px; margin-bottom: 16px;
+        }
+        .sidebar-header h4 { color: #4a6b5d; margin: 0; }
+        .close-sidebar-btn { background: none; border: none; font-size: 1.2rem; color: #999; cursor: pointer; }
+        .quoted-paragraph-box {
+            background: #f0f7f4; border-left: 3px solid #8fae9f;
+            border-radius: 4px; padding: 10px 14px;
+            font-size: 0.88rem; color: #4a6b5d; font-style: italic;
+            line-height: 1.5; margin-bottom: 12px;
+        }
+        .sidebar-mention-hint {
+            font-size: 0.8rem; color: #888;
+            background: #f8faf9; border: 1px dashed #c8ddd5;
+            border-radius: 6px; padding: 8px 12px; margin-bottom: 14px; line-height: 1.5;
+        }
+        .sidebar-mention-hint code { background: #e4efe9; color: #4a6b5d; padding: 1px 5px; border-radius: 4px; font-size: 0.78rem; }
+        body.dark-mode .sidebar-mention-hint { background: #1e2b24; border-color: #2e3d36; color: #7a9a8a; }
+        body.dark-mode .sidebar-mention-hint code { background: #2a3830; color: #8fae9f; }
+        .sidebar-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.2); z-index: 99999; display: none;
+        }
+        .sidebar-overlay.active { display: block; }
+        .sidebar-loading {
+            text-align: center; padding: 30px 0;
+            color: #aaa; font-size: 0.9rem; font-style: italic;
+        }
+
+        .chapter-discussion-box {
+            max-width: 700px; margin: 30px auto 50px auto;
+            padding: 25px; background-color: #ffffff;
+            border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.02);
+        }
+        .discussion-header {
+            display: flex; justify-content: space-between; align-items: center;
+            gap: 10px; margin-bottom: 25px;
+            border-bottom: 1px dashed #dae5e0; padding-bottom: 15px;
+        }
+        .discussion-header-left { display: flex; align-items: center; gap: 10px; }
+        .discussion-header h3 { color: #4a6b5d; font-size: 1.2rem; margin: 0; }
+        .discussion-actions { display: flex; align-items: center; gap: 10px; }
+        .action-btn {
+            display: flex; align-items: center; gap: 6px;
+            padding: 7px 14px; border-radius: 20px; border: 1px solid #8fae9f;
+            background: #ffffff; color: #4a6b5d;
+            font-size: 0.85rem; font-weight: 500; cursor: pointer;
+            transition: all 0.25s ease; user-select: none;
+        }
+        .action-btn:hover { background-color: #f0f7f4; box-shadow: 0 3px 8px rgba(74,107,93,0.15); }
+        .action-btn.liked { background-color: #fff0f3; border-color: #e8a0b0; color: #c0556a; }
+        .action-btn.liked .heart-icon { animation: heartPop 0.35s ease; }
+        @keyframes heartPop {
+            0% { transform: scale(1); } 40% { transform: scale(1.45); }
+            70% { transform: scale(0.9); } 100% { transform: scale(1); }
+        }
+        body.dark-mode .action-btn { background: #1b2420; color: #8fae9f; border-color: #4a6b5d; }
+        body.dark-mode .action-btn:hover { background-color: #232e29; }
+        body.dark-mode .action-btn.liked { background-color: #2a1e22; border-color: #7a3a4a; color: #e08090; }
+        .comment-section { width: 100%; min-height: 150px; }
+
+        body.dark-mode .chapter-discussion-box,
+        body.dark-mode .comment-sidebar { background-color: #1b2420 !important; }
+        body.dark-mode .discussion-header,
+        body.dark-mode .sidebar-header { border-bottom-color: #2e3d36 !important; }
+        body.dark-mode .discussion-header h3,
+        body.dark-mode .sidebar-header h4 { color: #8fae9f !important; }
+        body.dark-mode .quoted-paragraph-box { background: #232e29; border-left-color: #4a6b5d; color: #8fae9f; }
+
+        .share-modal-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.35);
+            z-index: 200000; display: none; align-items: center; justify-content: center;
+        }
+        .share-modal-overlay.active { display: flex; }
+        .share-modal {
+            background: #ffffff; border-radius: 12px;
+            padding: 28px 24px 22px; width: 380px; max-width: 92vw;
+            box-shadow: 0 12px 40px rgba(0,0,0,0.18);
+            animation: slideUp 0.25s ease;
+        }
+        @keyframes slideUp {
+            from { transform: translateY(20px); opacity: 0; }
+            to   { transform: translateY(0); opacity: 1; }
+        }
+        .share-modal h4 { color: #4a6b5d; font-size: 1.05rem; margin-bottom: 16px; text-align: center; }
+        .share-link-row { display: flex; gap: 8px; align-items: center; }
+        .share-link-input {
+            flex: 1; padding: 9px 12px; border: 1px solid #c8ddd5; border-radius: 8px;
+            font-size: 0.85rem; color: #444; background: #f8faf9;
+            outline: none; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
+        }
+        .copy-link-btn {
+            padding: 9px 16px; border-radius: 8px;
+            background: #4a6b5d; color: #ffffff; border: none;
+            font-size: 0.85rem; font-weight: 600; cursor: pointer;
+            transition: all 0.2s; white-space: nowrap;
+        }
+        .copy-link-btn:hover { background: #3a5a4d; }
+        .copy-link-btn.copied { background: #6aaa88; }
+        .share-modal-close {
+            display: block; width: 100%; margin-top: 14px;
+            padding: 8px; background: none; border: none;
+            color: #999; font-size: 0.85rem; cursor: pointer; text-align: center;
+        }
+        .share-modal-close:hover { color: #555; }
+        body.dark-mode .share-modal { background: #1b2420; }
+        body.dark-mode .share-modal h4 { color: #8fae9f; }
+        body.dark-mode .share-link-input { background: #232e29; border-color: #3a5040; color: #dae5e0; }
+        body.dark-mode .share-modal-close { color: #6a8a7a; }
+    </style>
+</head>
+<body>
+
+<div class="reader-controls-wrapper">
+    <div class="reader-controls-group" id="reader-group">
+        <button onclick="changeFontSize(1)" title="Phóng to chữ">A+</button>
+        <button onclick="changeFontSize(-1)" title="Thu nhỏ chữ">A-</button>
+        <button onclick="toggleDarkMode()" id="dark-mode-btn" title="Đổi màu nền">🌙</button>
+    </div>
+    <button class="reader-toggle-btn" id="reader-toggle" onclick="toggleReaderControls()" title="Tuỳ chỉnh đọc">⚙️</button>
+</div>
+
+<script>
+function toggleReaderControls() {
+    var group = document.getElementById('reader-group');
+    var btn   = document.getElementById('reader-toggle');
+    var isOpen = group.classList.toggle('open');
+    btn.style.background = isOpen ? '#4a6b5d' : '';
+    btn.style.color      = isOpen ? '#ffffff'  : '';
+}
+function toggleDarkMode() {
+    document.body.classList.toggle('dark-mode');
+    var isDark = document.body.classList.contains('dark-mode');
+    localStorage.setItem('night-mode', isDark ? 'on' : 'off');
+    document.getElementById('dark-mode-btn').innerText = isDark ? '☀️' : '🌙';
+    syncUtterancesTheme(isDark);
+}
+function changeFontSize(delta) {
+    var content = document.querySelector('.story-content') || document.body;
+    var cur = parseFloat(window.getComputedStyle(content).fontSize);
+    content.style.fontSize = (cur + delta) + 'px';
+}
+function syncUtterancesTheme(isDark) {
+    var theme = isDark ? 'github-dark' : 'github-light';
+    document.querySelectorAll('.utterances-frame').forEach(function(f) {
+        f.contentWindow.postMessage({ type: 'set-theme', theme: theme }, 'https://utteranc.es');
+    });
+}
+(function() {
+    if (localStorage.getItem('night-mode') === 'on') {
+        document.body.classList.add('dark-mode');
+        setTimeout(function() {
+            var b = document.getElementById('dark-mode-btn');
+            if (b) b.innerText = '☀️';
+        }, 80);
+    }
+})();
+</script>
+
+<header class="navbar">
+    <a href="../index.html" class="logo">🌿 Góc nhỏ của Khiết</a>
+    <nav class="nav-links"><a href="../index.html">Trang Chủ</a></nav>
+</header>
+
+<main class="story-container">
+    <div class="story-header">
+        <p class="novel-name">Cẩm Y Hành - Quyển 5</p>
+        <h1 class="chapter-title">Chương 51: Gốm biển quý hiếm</h1>
+    </div>
+
+    <article class="story-content">
+        <p>Mặt trời rực rỡ, biển xanh như ngọc, hoa lá ven bờ khoe sắc thắm tươi xanh, cảnh vật hiện ra sống động như bức tranh trước mắt.</p>
+        <p>Chiến thuyền Ngũ Nha chở Văn Nho Hải và Mạnh Kiếm Khanh nhẹ nhàng vượt qua dải núi dài uốn lượn đâm ra biển. Đột nhiên, trước mắt hiện ra cảnh tượng hàng chục chiếc thuyền lớn nhỏ tấp nập, tiếng người ồn ào náo nhiệt. Trên bờ, rừng cây cũng chật kín người đứng xem. Xa xa, những chiếc lọng lụa sặc sỡ giương cao phấp phới.</p>
+        <p>Văn Nho Hải ngơ ngác đảo mắt nhìn quanh. Đây thực là cảng Tuyền Châu sao? Sao chẳng thấy bóng dáng cây cầu đá nổi tiếng bắc qua biển? Phố xá phồn hoa cũng không thấy đâu?</p>
+        <p>Mạnh Kiếm Khanh chợt cất tiếng: “Đây là vịnh Nguyệt Nha, nơi thương nhân Tuyền Châu thả gốm xuống biển. Hôm nay chắc là ngày trục vớt.”</p>
+        <p>Hắn đưa cho Văn Nho Hải chiếc ống nhòm đã chỉnh tiêu cự.</p>
+        <p>Biết tính Văn Nho Hải vốn say mê sưu tầm chuyện lạ khắp thiên hạ, ắt hẳn đã nghe về tục thả gốm - vớt gốm này, nên hắn chẳng cần giải thích thêm.</p>
+        <p>Quả nhiên, Văn Nho Hải chỉ ồ một tiếng ngắn ngủi, không hỏi han gì thêm.</p>
+        <p>Những mẻ gốm nằm lại dưới đáy biển, ngày này qua tháng nọ, năm này tiếp năm kia, bị sóng xô, rong bám, cát mài. Mấy năm sau, mười phần may ra còn một. Thế nhưng những món đồ nguyên vẹn được đưa lên, mang theo dấu vết của biển cả, thường toát lên vẻ đẹp kỳ ảo và ma mị không tay nghề nhân gian nào bắt chước được. Những tuyệt phẩm trong số ấy, giá trị ngang vàng ròng.</p>
+        <p>Văn Nho Hải nghe danh đã lâu nhưng chưa từng thấy tận mắt, lúc này lòng hiếu kỳ trỗi dậy, quyết tâm bằng mọi giá phải thỏa mãn ước nguyện này mới không uổng chuyến đi.</p>
+        <p>Mạnh Kiếm Khanh quét mắt nhìn đám thuyền bè, đột nhiên khẽ nhíu mày.</p>
+        <p>Hắn nhận ra con tàu Thiên Lý của Hải Thượng Tiên Sơn.</p>
+        <p>Hắn không ngờ con tàu này lại xuất hiện ở đây.</p>
+        <p>Hắn đã sơ suất bỏ qua, hay con thuyền này thực sự lọt qua được mạng lưới giám sát dày đặc của Cẩm Y Vệ?</p>
+        <p>Văn Nho Hải hào hứng đặt ống nhòm xuống: “Chúng ta cũng sang xem thử đi.”</p>
+        <p>Nhưng thứ Mạnh Kiếm Khanh muốn nhìn lại là tàu Thiên Lý kia.</p>
+        <p>Đúng như dự đoán, hai huynh muội Vân gia đang đứng ở mũi tàu, chăm chú quan sát những thợ lặn đang mò gốm dưới biển.</p>
+        <p>Mạnh Kiếm Khanh thầm cười. Hắn biết rõ hai huynh muội Vân gia hứng thú không phải với đồ gốm, mà là những tay lặn cừ khôi này.</p>
+        <p>Sóng từ tàu Ngũ Nha khiến tàu Thiên Lý chao đảo. Hai huynh muội Vân gia lập tức nhận ra tốc độ khác thường và kích thước lớn của chiến hạm, quay đầu lại và nhìn thấy Mạnh Kiếm Khanh. Hắn mỉm cười, chắp tay chào.</p>
+        <p>Vân Yên Nhiên cũng khẽ chắp tay đáp lễ, đồng thời để ý vị Giám sinh Quốc Tử Giám có chút quen mặt đứng bên cạnh, Vân Yên Kiều đã khẽ nói: “Đó là Văn Nho Hải, người được phái đến tế lễ Mẫu Tổ.”</p>
+        <p>Họ đều có thiện cảm với Văn Nho Hải, nhưng chỉ chú ý đến hắn một chút rồi lại quay sang theo dõi những thợ lặn đang ngoi lên từ mặt nước.</p>
+        <p>Mỗi khi một món đồ gốm được vớt lên, tiếng reo hò lại vang lên.</p>
+        <p>Mạnh Kiếm Khanh để ý thấy trên đầu các thợ lặn đều buộc một dải lụa màu sắc khác nhau. Những thợ lặn buộc cùng màu lụa sẽ mang đồ gốm về cùng một chiếc thuyền có cờ hiệu cùng màu. Hắn âm thầm đếm nhẩm, nhóm thợ lặn buộc lụa trắng có thành tích tốt nhất, với những món đồ gốm được chuyển lên một chiếc lâu thuyền ba tầng treo cờ hiệu màu trắng có chữ “Bồ”.</p>
+        <p>Văn Nho Hải cũng đã để ý tới chiếc thuyền lớn đó: “Gia tộc họ Bồ này, phải chăng là hậu duệ của Bồ Thọ Canh?”</p>
+        <p>Mạnh Kiếm Khanh đáp: “Đúng vậy.”</p>
+        <p>Bồ gia vốn gốc Ba Tư, đã định cư ở Trung Hoa từ thời nhà Tống, nhanh chóng trở thành một trong những gia đình giàu có bậc nhất. Quyền thế của họ cũng theo đó mà ngày càng lớn mạnh.</p>
+        <p>Bồ Thọ Canh làm quan quản lý hải cảng Tuyền Châu mấy chục năm. Đến khi nhà Tống diệt vong, kinh đô Lâm An thất thủ, vua tôi bị bắt về phương Bắc, toàn bộ tỉnh Phúc Kiến đã đầu hàng không kháng cự, và Bồ Thọ Canh chính là kẻ đứng ra dàn xếp chuyện này.</p>
+        <p>Nhờ vậy, suốt thời Nguyên Mông, Bồ gia vẫn giữ được địa vị vững chắc. Mãi đến khi Minh Thái Tổ lập quốc, bình định Phúc Kiến, dù Bồ gia tự nhận có công bảo vệ bách tính toàn tỉnh, nhưng vị Hoàng đế mới vẫn vô cùng ghét bỏ họ. Hai mươi năm qua, thế lực Bồ gia đã suy yếu rõ rệt.</p>
+        <p>Dù vậy, nhìn cảnh tượng trước mắt thì rõ ràng họ vẫn là một gia tộc giàu có vượt xa tầm với của người thường.</p>
+        <p>Văn Nho Hải trầm ngâm giây lát rồi gạt ngay chuyện ấy sang một bên, chuyên tâm ngắm nhìn những món đồ gốm vừa được vớt lên từ lòng biển. Xem qua độ mươi món, hắn bỗng thất vọng thốt lên: “Chẳng biết tục lệ này khởi nguồn từ đâu, thật hao người tốn của.”</p>
+        <p>Mạnh Kiếm Khanh khẽ nhếch cằm chỉ về phía trước bên trái: “Nghe đồn bắt nguồn từ gia tộc Long gia, được mệnh danh là Thẩm Vạn Tam đất Tuyền Châu.”</p>
+        <p>Văn Nho Hải trông thấy lá cờ lớn màu vàng tươi và lầu thuyền hai tầng của Long gia, không khỏi kinh ngạc: “Long gia sao dám dùng màu vàng tươi thế này?!”</p>
+        <p>Mạnh Kiếm Khanh mỉm cười: “Long gia vốn là hậu duệ hoàng tộc nhà Tống kết hôn với vương thất ở vùng biển phía nam, tự xưng dòng dõi rồng phượng. Thời Nguyên Mông, để tránh họa diệt môn, họ đổi sang họ Long, được xem như nửa ngoại bang. Lễ bộ cũng đành làm ngơ cho qua chuyện.</p>
+        <p>Huống hồ, cả thiên hạ nào ai chẳng biết thói xa xỉ của thương nhân Tuyền Châu. Nếu cứ khư khư theo điển lễ mà xét, e rằng ngay đến ngòi bút của Văn huynh cũng chẳng ghi xuể đâu.”</p>
+        <p>Hắn biết rõ chuyến đi này của Văn Nho Hải không đơn thuần chỉ để cúng tế Mẫu Tổ. Phúc Kiến vốn là đất cũ của Trần Hữu Định. Vị tướng kiên trung khi bị bắt đã thà chết chứ không hàng, để lại sau lưng cả một lực lượng tùy tùng và thân tộc đông đảo. Hai mươi năm trôi qua, tình hình cụ thể ra sao, có lẽ Hồng Vũ Đế vẫn chưa thực sự yên lòng.</p>
+        <p>Trong khi đó, tên cướp biển khét tiếng Trần Tổ Nghĩa đang hoành hành dữ dội nơi biển Nam. Có tin đồn hắn vốn là người Quảng Đông, nhưng cũng không ít kẻ khẳng định hắn thuộc dòng tộc Trần Hữu Lượng hoặc Trần Hữu Định. Điều đáng nói là rất nhiều thuộc hạ cũ cùng thân thuộc của hai họ Trần này đã bí mật vượt biển theo Trần Tổ Nghĩa. Tình hình thực hư thế nào, nhất định phải làm rõ cho bằng được.</p>
+        <p>Văn Nho Hải không để ý đến hàm ý trong lời Mạnh Kiếm Khanh, chỉ thắc mắc: “Sao không thấy thợ lặn của họ Long đâu nhỉ?”</p>
+        <p>Quả thật, không một thợ lặn nào buộc khăn vàng tươi, cũng chẳng có món đồ gốm nào được chuyển lên thuyền họ Long.</p>
+        <p>Mạnh Kiếm Khanh cũng nghi ngờ. Long gia đang tính toán gì đây?</p>
+        <p>Mặt trời đã xế bóng. Những thợ lặn dần đuối sức, lần lượt trở về thuyền nghỉ ngơi.</p>
+        <p>Bỗng mặt biển xôn xao. Tiếng reo hò vang lên, Văn Nho Hải lắng tai nghe, dường như họ hô: “Sát Tử, Sát Tử!”</p>
+        <p>Hắn giật mình. Dân tình nơi đây sao lại hung bạo đến thế?</p>
+        <p>Trong tiếng hò reo, một thiếu niên gầy guộc, da ngăm đen, đầu buộc khăn vàng tươi xuất hiện ở mũi thuyền Long gia. Cậu ta cởi trần, trên ngực lưng xăm đầy hình rồng xanh đỏ, dưới ánh mặt trời trông càng thêm dữ tợn.</p>
+        <p>Thiếu niên đó đứng trên khoang thuyền, toát ra khí thế khinh thường thiên hạ.</p>
+        <p>Mạnh Kiếm Khanh bỗng tỉnh táo hẳn. Liếc nhìn huynh muội Vân gia, họ cũng đang chăm chú quan sát thiếu niên kia.</p>
+        <p>Văn Nho Hải giờ mới hiểu ra, cái tên mà đám đông reo hò chính là tên cậu thiếu niên ấy.</p>
+        <p>Mạnh Kiếm Khanh bên cạnh khẽ nói: “Đây hẳn là Trần Sa. Nghe nói từ nhỏ cậu ta đã bơi lặn cừ khôi đến mức có thể đùa giỡn cùng cá mập, nên dân Tuyền Châu gọi là Sa Tử (cá mập con). Long gia quả là có máu mặt, thuê được Trần Sa mò đồ gốm, chắc chắn sẽ vớt được những bảo vật mà người khác cả đời không với tới.”</p>
+        <p>Trong tiếng reo hò cổ vũ, Trần Sa phóng mình lao xuống biển, khéo léo đến mức không một giọt nước bắn lên, khiến tứ phía lại vang lên tràng pháo tay tán thưởng.</p>
+        <p>Khi tiếng hoan hô dần lắng xuống, mặt biển trở nên tĩnh lặng khác thường. Mọi người nín thở chờ đợi Trần Sa trồi lên.</p>
+        <p>Mạnh Kiếm Khanh thầm đếm thời gian, đã vượt xa khả năng nhịn thở của người thường mà vẫn chưa thấy bóng dáng Trần Sa, trong lòng không khỏi kinh ngạc.</p>
+        <p>Trần Sa xuất thân từ tộc Trần Hữu Định. Khả năng bơi lặn siêu phàm, khí phách ngút trời, lại được dân chúng Tuyền Châu sùng bái như thế…</p>
+        <p>Đột nhiên hắn chợt nghĩ tới điều gì, ngẩng lên đúng lúc bắt gặp ánh mắt Vân Yên Nhiên.</p>
+        <p>Chỉ một cái nhìn, hắn đã hiểu: Vân Yên Nhiên không những đoán được ý nghĩ vừa thoáng qua trong đầu hắn, mà còn biết hắn đã nhận ra điều đó. Đặc biệt, Vân Yên Nhiên chẳng hề che giấu, ngược lại còn làm điệu bộ “mời” rất tự nhiên.</p>
+        <p>Mạnh Kiếm Khanh khẽ gật đầu.</p>
+        <p>Vì cả hai đều đang ở Tuyền Châu, ắt sẽ có dịp gặp Vân Yên Nhiên để bàn kỹ về Trần Sa.</p>
+        <p>Bỗng Văn Nho Hải ồ lên một tiếng, vô thức nghiêng người về phía trước.</p>
+        <p>Trần Sa bất ngờ trồi lên mặt nước, tay trái giơ cao chiếc bình “vai giai nhân”, tay phải vẫy chào đám đông đang reo hò, nhẹ nhàng bơi về phía chiếc thuyền nhỏ của Long gia đang chờ sẵn. Dưới ánh nắng rực rỡ, những đường vân rong biển uốn lượn như những con rắn biển quấn quanh thân bình, đẹp đến nghẹt thở. Trên miệng bình lấp lánh một hạt chu sa nhỏ, tựa như nốt ruồi duyên dáng trên gương mặt giai nhân.</p>
+        <p>Khi chiếc bình quý được cẩn trọng đưa vào khoang thuyền của Long gia và khuất khỏi tầm mắt, Văn Nho Hải bất giác thở dài.</p>
+        <p>Giờ hắn đã hiểu vì sao thương nhân Tuyền Châu sẵn sàng bỏ ra bao công sức cho tục lệ thả gốm - vớt gốm này.</p>
+        <p>Người nghĩ ra trò này quả thực là thiên tài.</p>
+    </article>
+
+    <div class="reading-nav">
+        <a href="camyhanhq4-50.html" class="nav-btn">⬅️ Chương trước</a>
+        <a href="../mucluc/camyhanh.html" class="nav-btn">📋 Mục lục</a>
+        <a href="camyhanhq5-52.html" class="nav-btn">Chương sau ➡️</a>
+    </div>
+</main>
+
+<div class="chapter-discussion-box">
+    <div class="discussion-header">
+        <div class="discussion-header-left">
+            <span>🌿</span>
+            <h3>Thảo luận về chương này</h3>
+            <span>🌸</span>
+        </div>
+        <div class="discussion-actions">
+            <button class="action-btn" id="like-btn" onclick="toggleLike()" title="Thả tim chương này">
+                <span class="heart-icon">🤍</span>
+                <span id="like-count">0</span>
+            </button>
+            <button class="action-btn" onclick="openShareModal()" title="Chia sẻ chương này">
+                🔗 Chia sẻ
+            </button>
+        </div>
+    </div>
+    <div class="comment-section">
+        <script src="https://utteranc.es/client.js"
+                repo="gocnhocuakhiet/gocnhocuakhiet.github.io"
+                issue-term="pathname"
+                label="comment"
+                theme="github-light"
+                crossorigin="anonymous"
+                async>
+        </script>
+    </div>
+</div>
+
+<div class="share-modal-overlay" id="share-modal-overlay" onclick="handleOverlayClick(event)">
+    <div class="share-modal">
+        <h4>🔗 Chia sẻ chương này</h4>
+        <div class="share-link-row">
+            <input class="share-link-input" id="share-link-input" type="text" readonly>
+            <button class="copy-link-btn" id="copy-link-btn" onclick="copyLink()">Sao chép</button>
+        </div>
+        <button class="share-modal-close" onclick="closeShareModal()">Đóng</button>
+    </div>
+</div>
+
+<div id="comment-sidebar" class="comment-sidebar">
+    <div class="sidebar-header">
+        <h4 id="sidebar-paragraph-title">Bình luận đoạn văn</h4>
+        <button class="close-sidebar-btn" onclick="closeInlineComment()">✕</button>
+    </div>
+    <div class="quoted-paragraph-box" id="quoted-paragraph-box"></div>
+    <div class="sidebar-mention-hint">
+        💡 Dùng <code>@tên-người</code> để nhắc đến ai đó trong bình luận.
+    </div>
+    <div id="sidebar-utterances-mount"></div>
+</div>
+<div id="sidebar-overlay" class="sidebar-overlay" onclick="closeInlineComment()"></div>
+
+<script>
+var GH_REPO  = 'gocnhocuakhiet/gocnhocuakhiet.github.io';
+var GH_LABEL = 'comment';
+var ORIGINAL_TITLE = document.title;
+
+function paragraphTitle(paraNum) {
+    return ORIGINAL_TITLE + ' [Đoạn ' + paraNum + ']';
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+    var paragraphs = document.querySelectorAll('.story-content p');
+    paragraphs.forEach(function (p, index) {
+        var paraNum = index + 1;
+        var row = document.createElement('div');
+        row.className = 'comment-row';
+        p.parentNode.insertBefore(row, p);
+        row.appendChild(p);
+        var badge = document.createElement('span');
+        badge.className = 'comment-badge';
+        badge.title = 'Bình luận về đoạn này';
+        badge.textContent = '💬';
+        badge.onclick = function () {
+            openInlineComment(p.innerText.trim().substring(0, 120), paraNum);
+        };
+        row.appendChild(badge);
+    });
+    initLike();
+});
+
+var currentParaNum = null;
+
+function openInlineComment(previewText, paraNum) {
+    document.getElementById('sidebar-paragraph-title').innerText = 'Đoạn ' + paraNum;
+    document.getElementById('quoted-paragraph-box').innerText =
+        '"' + previewText + (previewText.length >= 120 ? '…' : '') + '"';
+    document.getElementById('comment-sidebar').classList.add('active');
+    document.getElementById('sidebar-overlay').classList.add('active');
+    if (currentParaNum === paraNum) return;
+    currentParaNum = paraNum;
+    var mount = document.getElementById('sidebar-utterances-mount');
+    mount.innerHTML = '<div class="sidebar-loading">Đang tải bình luận…</div>';
+    document.title = paragraphTitle(paraNum);
+    var s = document.createElement('script');
+    s.src = 'https://utteranc.es/client.js';
+    s.setAttribute('repo',         GH_REPO);
+    s.setAttribute('issue-term',   'title');
+    s.setAttribute('label',        GH_LABEL);
+    s.setAttribute('theme',        document.body.classList.contains('dark-mode') ? 'github-dark' : 'github-light');
+    s.setAttribute('crossorigin',  'anonymous');
+    s.async = true;
+    s.onload = function () {
+        var loading = mount.querySelector('.sidebar-loading');
+        if (loading) loading.remove();
+        document.title = ORIGINAL_TITLE;
+    };
+    mount.innerHTML = '';
+    mount.appendChild(s);
+}
+
+function closeInlineComment() {
+    document.getElementById('comment-sidebar').classList.remove('active');
+    document.getElementById('sidebar-overlay').classList.remove('active');
+    document.title = ORIGINAL_TITLE;
+}
+
+function initLike() {
+    var key      = 'like-'      + window.location.pathname;
+    var countKey = 'likecount-' + window.location.pathname;
+    var liked    = localStorage.getItem(key) === '1';
+    var count    = parseInt(localStorage.getItem(countKey) || '0', 10);
+    updateLikeUI(liked, count);
+}
+
+function toggleLike() {
+    var key      = 'like-'      + window.location.pathname;
+    var countKey = 'likecount-' + window.location.pathname;
+    var liked    = localStorage.getItem(key) === '1';
+    var count    = parseInt(localStorage.getItem(countKey) || '0', 10);
+    liked = !liked;
+    count = liked ? count + 1 : Math.max(0, count - 1);
+    localStorage.setItem(key,      liked ? '1' : '0');
+    localStorage.setItem(countKey, count);
+    updateLikeUI(liked, count);
+}
+
+function updateLikeUI(liked, count) {
+    var btn       = document.getElementById('like-btn');
+    var heartSpan = btn.querySelector('.heart-icon');
+    var countSpan = document.getElementById('like-count');
+    heartSpan.textContent = liked ? '❤️' : '🤍';
+    countSpan.textContent = count;
+    liked ? btn.classList.add('liked') : btn.classList.remove('liked');
+}
+
+function openShareModal() {
+    document.getElementById('share-link-input').value = window.location.href;
+    document.getElementById('copy-link-btn').textContent = 'Sao chép';
+    document.getElementById('copy-link-btn').classList.remove('copied');
+    document.getElementById('share-modal-overlay').classList.add('active');
+}
+function closeShareModal() {
+    document.getElementById('share-modal-overlay').classList.remove('active');
+}
+function handleOverlayClick(e) {
+    if (e.target === document.getElementById('share-modal-overlay')) closeShareModal();
+}
+function copyLink() {
+    var input = document.getElementById('share-link-input');
+    var btn   = document.getElementById('copy-link-btn');
+    navigator.clipboard.writeText(input.value).then(function () {
+        btn.textContent = '✓ Đã sao chép';
+        btn.classList.add('copied');
+        setTimeout(function () { btn.textContent = 'Sao chép'; btn.classList.remove('copied'); }, 2000);
+    }).catch(function () {
+        input.select(); document.execCommand('copy');
+        btn.textContent = '✓ Đã sao chép'; btn.classList.add('copied');
+        setTimeout(function () { btn.textContent = 'Sao chép'; btn.classList.remove('copied'); }, 2000);
+    });
+}
+
+function syncUtterancesTheme(isDark) {
+    var theme = isDark ? 'github-dark' : 'github-light';
+    document.querySelectorAll('.utterances-frame').forEach(function (f) {
+        f.contentWindow.postMessage({ type: 'set-theme', theme: theme }, 'https://utteranc.es');
+    });
+}
+</script>
+
+</body>
+</html>
