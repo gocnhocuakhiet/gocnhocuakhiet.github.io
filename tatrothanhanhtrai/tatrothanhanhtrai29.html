@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <link rel="stylesheet" href="../style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ta trở thành anh trai của nữ chính ngược văn - Chương 29</title>
+    
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f1f7f4;
+            color: #2d3a34;
+            line-height: 1.8;
+        }
+
+        .navbar {
+            background-color: #ffffff;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 10%;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        .navbar .logo { font-size: 1.2rem; font-weight: bold; color: #4a6b5d; text-decoration: none; }
+        .nav-links a { color: #555; text-decoration: none; font-size: 0.95rem; transition: color 0.3s; }
+        .nav-links a:hover { color: #4a6b5d; }
+
+        .story-container {
+            max-width: 700px;
+            margin: 40px auto;
+            padding: 30px;
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.02);
+        }
+
+        .story-header {
+            text-align: center;
+            margin-bottom: 35px;
+            border-bottom: 1px dashed #8fae9f;
+            padding-bottom: 20px;
+        }
+        .story-header .novel-name {
+            font-size: 0.95rem; color: #777;
+            text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px;
+        }
+        .story-header .chapter-title { color: #4a6b5d; font-size: 1.6rem; font-weight: 600; }
+
+        .story-content { font-size: 1.15rem; color: #333333; text-align: justify; }
+        .story-content p { margin-bottom: 22px; text-indent: 25px; }
+
+        .reading-nav {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-top: 50px; padding-top: 25px; border-top: 1px dashed #8fae9f;
+        }
+        .nav-btn {
+            display: inline-block; padding: 10px 20px;
+            background-color: #ffffff; color: #4a6b5d;
+            text-decoration: none; border: 1px solid #8fae9f;
+            border-radius: 20px; font-size: 0.9rem; font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        .nav-btn:hover { background-color: #4a6b5d; color: #ffffff; border-color: #4a6b5d; box-shadow: 0 4px 8px rgba(74,107,93,0.2); }
+        .nav-btn.disabled { color: #bbb; border-color: #e0e0e0; background-color: #fafafa; pointer-events: none; box-shadow: none; }
+
+        @media (max-width: 480px) {
+            .story-container { padding: 15px; margin: 20px auto; }
+            .nav-btn { padding: 8px 14px; font-size: 0.8rem; }
+            .comment-sidebar { width: 100%; right: -100%; }
+        }
+
+        body.dark-mode { background-color: #131a17; color: #dae5e0; }
+        body.dark-mode .navbar { background-color: #1b2420; box-shadow: 0 2px 5px rgba(0,0,0,0.3); }
+        body.dark-mode .navbar .logo { color: #8fae9f; }
+        body.dark-mode .nav-links a { color: #aaa; }
+        body.dark-mode .story-container { background-color: #1b2420; box-shadow: 0 2px 10px rgba(0,0,0,0.2); }
+        body.dark-mode .story-header .novel-name { color: #8fae9f; }
+        body.dark-mode .story-header .chapter-title { color: #8fae9f; }
+        body.dark-mode .story-content { color: #dae5e0; }
+        body.dark-mode .nav-btn { background-color: #1b2420; color: #8fae9f; border-color: #4a6b5d; }
+        body.dark-mode .nav-btn:hover { background-color: #4a6b5d; color: #ffffff; }
+        body.dark-mode .nav-btn.disabled { color: #444; border-color: #2e3d36; background-color: #161e1b; }
+
+        .reader-controls-wrapper {
+            position: fixed; bottom: 30px; right: 30px;
+            z-index: 10000;
+            display: flex; flex-direction: column; align-items: flex-end; gap: 10px;
+        }
+        .reader-toggle-btn {
+            width: 48px; height: 48px; border-radius: 50%;
+            border: 2px solid #8fae9f; background: white; color: #4a6b5d;
+            font-size: 18px; cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15); transition: all 0.3s;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .reader-toggle-btn:hover { background: #4a6b5d; color: white; transform: scale(1.1); }
+        .reader-controls-group {
+            display: flex; flex-direction: column; gap: 10px;
+            overflow: hidden; max-height: 0; opacity: 0;
+            transition: max-height 0.35s ease, opacity 0.3s ease;
+        }
+        .reader-controls-group.open { max-height: 200px; opacity: 1; }
+        .reader-controls-group button {
+            width: 48px; height: 48px; border-radius: 50%;
+            border: 2px solid #8fae9f; background: white; color: #4a6b5d;
+            font-size: 15px; font-weight: bold; cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15); transition: all 0.3s;
+        }
+        .reader-controls-group button:hover { background: #4a6b5d; color: white; transform: scale(1.1); }
+        body.dark-mode .reader-toggle-btn,
+        body.dark-mode .reader-controls-group button { background: #1b2420; color: #8fae9f; border-color: #4a6b5d; }
+        body.dark-mode .reader-toggle-btn:hover,
+        body.dark-mode .reader-controls-group button:hover { background: #4a6b5d; color: white; }
+
+        .comment-row {
+            display: flex; justify-content: space-between;
+            align-items: flex-start; gap: 15px;
+            margin-bottom: 22px; width: 100%;
+        }
+        .comment-row p { flex: 1; margin-bottom: 0 !important; }
+
+        .comment-badge {
+            cursor: pointer; flex-shrink: 0; margin-top: 6px;
+            width: 30px; height: 30px; border-radius: 50%;
+            background-color: #eaf2ee; color: #4a6b5d;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.9rem; line-height: 1;
+            transition: all 0.2s ease; user-select: none; border: none;
+        }
+        .comment-badge:hover { background-color: #4a6b5d; color: #ffffff; transform: scale(1.12); }
+        body.dark-mode .comment-badge { background-color: #25332c; color: #8fae9f; }
+        body.dark-mode .comment-badge:hover { background-color: #4a6b5d; color: #ffffff; }
+
+        .comment-sidebar {
+            position: fixed; top: 0; right: -420px; width: 400px; height: 100%;
+            background: #ffffff;
+            box-shadow: -5px 0 15px rgba(0,0,0,0.05);
+            z-index: 100000;
+            transition: right 0.4s cubic-bezier(0.25,0.8,0.25,1);
+            padding: 24px; overflow-y: auto; box-sizing: border-box;
+        }
+        .comment-sidebar.active { right: 0; }
+        .sidebar-header {
+            display: flex; justify-content: space-between; align-items: center;
+            border-bottom: 1px solid #dae5e0; padding-bottom: 12px; margin-bottom: 16px;
+        }
+        .sidebar-header h4 { color: #4a6b5d; margin: 0; }
+        .close-sidebar-btn { background: none; border: none; font-size: 1.2rem; color: #999; cursor: pointer; }
+        .quoted-paragraph-box {
+            background: #f0f7f4; border-left: 3px solid #8fae9f;
+            border-radius: 4px; padding: 10px 14px;
+            font-size: 0.88rem; color: #4a6b5d; font-style: italic;
+            line-height: 1.5; margin-bottom: 12px;
+        }
+        .sidebar-mention-hint {
+            font-size: 0.8rem; color: #888;
+            background: #f8faf9; border: 1px dashed #c8ddd5;
+            border-radius: 6px; padding: 8px 12px; margin-bottom: 14px; line-height: 1.5;
+        }
+        .sidebar-mention-hint code { background: #e4efe9; color: #4a6b5d; padding: 1px 5px; border-radius: 4px; font-size: 0.78rem; }
+        body.dark-mode .sidebar-mention-hint { background: #1e2b24; border-color: #2e3d36; color: #7a9a8a; }
+        body.dark-mode .sidebar-mention-hint code { background: #2a3830; color: #8fae9f; }
+        .sidebar-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.2); z-index: 99999; display: none;
+        }
+        .sidebar-overlay.active { display: block; }
+        .sidebar-loading {
+            text-align: center; padding: 30px 0;
+            color: #aaa; font-size: 0.9rem; font-style: italic;
+        }
+
+        .chapter-discussion-box {
+            max-width: 700px; margin: 30px auto 50px auto;
+            padding: 25px; background-color: #ffffff;
+            border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.02);
+        }
+        .discussion-header {
+            display: flex; justify-content: space-between; align-items: center;
+            gap: 10px; margin-bottom: 25px;
+            border-bottom: 1px dashed #dae5e0; padding-bottom: 15px;
+        }
+        .discussion-header-left { display: flex; align-items: center; gap: 10px; }
+        .discussion-header h3 { color: #4a6b5d; font-size: 1.2rem; margin: 0; }
+        .discussion-actions { display: flex; align-items: center; gap: 10px; }
+        .action-btn {
+            display: flex; align-items: center; gap: 6px;
+            padding: 7px 14px; border-radius: 20px; border: 1px solid #8fae9f;
+            background: #ffffff; color: #4a6b5d;
+            font-size: 0.85rem; font-weight: 500; cursor: pointer;
+            transition: all 0.25s ease; user-select: none;
+        }
+        .action-btn:hover { background-color: #f0f7f4; box-shadow: 0 3px 8px rgba(74,107,93,0.15); }
+        .action-btn.liked { background-color: #fff0f3; border-color: #e8a0b0; color: #c0556a; }
+        .action-btn.liked .heart-icon { animation: heartPop 0.35s ease; }
+        @keyframes heartPop {
+            0% { transform: scale(1); } 40% { transform: scale(1.45); }
+            70% { transform: scale(0.9); } 100% { transform: scale(1); }
+        }
+        body.dark-mode .action-btn { background: #1b2420; color: #8fae9f; border-color: #4a6b5d; }
+        body.dark-mode .action-btn:hover { background-color: #232e29; }
+        body.dark-mode .action-btn.liked { background-color: #2a1e22; border-color: #7a3a4a; color: #e08090; }
+        .comment-section { width: 100%; min-height: 150px; }
+
+        body.dark-mode .chapter-discussion-box,
+        body.dark-mode .comment-sidebar { background-color: #1b2420 !important; }
+        body.dark-mode .discussion-header,
+        body.dark-mode .sidebar-header { border-bottom-color: #2e3d36 !important; }
+        body.dark-mode .discussion-header h3,
+        body.dark-mode .sidebar-header h4 { color: #8fae9f !important; }
+        body.dark-mode .quoted-paragraph-box { background: #232e29; border-left-color: #4a6b5d; color: #8fae9f; }
+
+        .share-modal-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.35);
+            z-index: 200000; display: none; align-items: center; justify-content: center;
+        }
+        .share-modal-overlay.active { display: flex; }
+        .share-modal {
+            background: #ffffff; border-radius: 12px;
+            padding: 28px 24px 22px; width: 380px; max-width: 92vw;
+            box-shadow: 0 12px 40px rgba(0,0,0,0.18);
+            animation: slideUp 0.25s ease;
+        }
+        @keyframes slideUp {
+            from { transform: translateY(20px); opacity: 0; }
+            to   { transform: translateY(0); opacity: 1; }
+        }
+        .share-modal h4 { color: #4a6b5d; font-size: 1.05rem; margin-bottom: 16px; text-align: center; }
+        .share-link-row { display: flex; gap: 8px; align-items: center; }
+        .share-link-input {
+            flex: 1; padding: 9px 12px; border: 1px solid #c8ddd5; border-radius: 8px;
+            font-size: 0.85rem; color: #444; background: #f8faf9;
+            outline: none; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
+        }
+        .copy-link-btn {
+            padding: 9px 16px; border-radius: 8px;
+            background: #4a6b5d; color: #ffffff; border: none;
+            font-size: 0.85rem; font-weight: 600; cursor: pointer;
+            transition: all 0.2s; white-space: nowrap;
+        }
+        .copy-link-btn:hover { background: #3a5a4d; }
+        .copy-link-btn.copied { background: #6aaa88; }
+        .share-modal-close {
+            display: block; width: 100%; margin-top: 14px;
+            padding: 8px; background: none; border: none;
+            color: #999; font-size: 0.85rem; cursor: pointer; text-align: center;
+        }
+        .share-modal-close:hover { color: #555; }
+        body.dark-mode .share-modal { background: #1b2420; }
+        body.dark-mode .share-modal h4 { color: #8fae9f; }
+        body.dark-mode .share-link-input { background: #232e29; border-color: #3a5040; color: #dae5e0; }
+        body.dark-mode .share-modal-close { color: #6a8a7a; }
+    </style>
+</head>
+<body>
+
+<div class="reader-controls-wrapper">
+    <div class="reader-controls-group" id="reader-group">
+        <button onclick="changeFontSize(1)" title="Phóng to chữ">A+</button>
+        <button onclick="changeFontSize(-1)" title="Thu nhỏ chữ">A-</button>
+        <button onclick="toggleDarkMode()" id="dark-mode-btn" title="Đổi màu nền">🌙</button>
+    </div>
+    <button class="reader-toggle-btn" id="reader-toggle" onclick="toggleReaderControls()" title="Tuỳ chỉnh đọc">⚙️</button>
+</div>
+
+<script>
+function toggleReaderControls() {
+    var group = document.getElementById('reader-group');
+    var btn   = document.getElementById('reader-toggle');
+    var isOpen = group.classList.toggle('open');
+    btn.style.background = isOpen ? '#4a6b5d' : '';
+    btn.style.color      = isOpen ? '#ffffff'  : '';
+}
+function toggleDarkMode() {
+    document.body.classList.toggle('dark-mode');
+    var isDark = document.body.classList.contains('dark-mode');
+    localStorage.setItem('night-mode', isDark ? 'on' : 'off');
+    document.getElementById('dark-mode-btn').innerText = isDark ? '☀️' : '🌙';
+    syncUtterancesTheme(isDark);
+}
+function changeFontSize(delta) {
+    var content = document.querySelector('.story-content') || document.body;
+    var cur = parseFloat(window.getComputedStyle(content).fontSize);
+    content.style.fontSize = (cur + delta) + 'px';
+}
+function syncUtterancesTheme(isDark) {
+    var theme = isDark ? 'github-dark' : 'github-light';
+    document.querySelectorAll('.utterances-frame').forEach(function(f) {
+        f.contentWindow.postMessage({ type: 'set-theme', theme: theme }, 'https://utteranc.es');
+    });
+}
+(function() {
+    if (localStorage.getItem('night-mode') === 'on') {
+        document.body.classList.add('dark-mode');
+        setTimeout(function() {
+            var b = document.getElementById('dark-mode-btn');
+            if (b) b.innerText = '☀️';
+        }, 80);
+    }
+})();
+</script>
+
+<header class="navbar">
+    <a href="../index.html" class="logo">🌿 Góc nhỏ của Khiết</a>
+    <nav class="nav-links"><a href="../index.html">Trang Chủ</a></nav>
+</header>
+
+<main class="story-container">
+    <div class="story-header">
+        <p class="novel-name">Ta trở thành anh trai của nữ chính ngược văn</p>
+        <h1 class="chapter-title">Chương 29</h1>
+    </div>
+
+    <article class="story-content">
+        <p>Quân Hoài Lang lần đầu thấy Tiết Yến như thế này.</p>
+        <p>Hắn hơi nhướng mày, liếc nhìn sư phó dạy võ, đôi mắt nhạt màu mang vài phần giễu cợt, thế nhưng toát lên sức sống hừng hực và cao ngạo bất cần hiếm thấy.</p>
+        <p>Đây là khí phách thiếu niên hiếm thấy trên người hắn, như chồi non mọc lên từ cành khô, là một vẻ hoàn toàn khác trên gương mặt hờ hững, xa cách của hắn.</p>
+        <p>Y thầm nghĩ, đây có thể là dáng vẻ vốn có của Tiết Yến lúc còn ở đất Yến. Chỉ là trong suốt những năm ở Trường An, dáng vẻ đó bị mọi người giết chết, cuối cùng trở thành người mà y thấy ở kiếp trước.</p>
+        <p>Mọi thứ đang diễn ra theo chiều hướng tốt. Khóe môi Quân Hoài Lang không khỏi cong lên.</p>
+        <p>Bên kia, gã sư phó xấu hổ tránh xa, xem như vừa nãy không có gì xảy ra. Những người xung quanh xem trò vui cũng rối rít ngoảnh mặt đi, vẫn đang xì xào bàn tán vừa rồi Tiết Yến làm sao mà dùng mũi tên này chẻ đôi mũi tên khác.</p>
+        <p>Quân Hoài Lang thu ánh mắt về, muốn rút một mũi tên thử lần nữa.</p>
+        <p>Đúng lúc này, y thấy ánh mắt Tiết Duẫn Hoán hệt như bản chất, nhiệt tình hưng phấn dán mắt vào Tiết Yến, tuy cố gắng duy trì vẻ cao ngạo, khóe miệng vất vả mím chặt, nhưng lại không thể che giấu ánh sáng trong đôi mắt.</p>
+        <p>Quân Hoài Lang sửng sốt: Đây là …</p>
+        <p>Kế đó, y thấy Tiết Duẫn Hoán kiềm chế bước tới trước mặt Tiết Yến, hắng giọng, vẻ mặt kiêu ngạo, bày ra bộ dạng như đã hạ thấp địa vị, nói: “Ngươi giúp ta xem xem, kỹ thuật bắn của ta có vấn đề gì? Cứ mãi không chính xác, thật phiền quá.”</p>
+        <p>Quân Hoài Lang cảm thấy, tuy cả người Tiết Duẫn Hoán căng thẳng lại dè dặt, nhưng nếu mà có đuôi thì lúc này cũng đã vẫy vẫy vài vòng.</p>
+        <p>Y đứng bên cạnh, không khỏi lắc đầu cười.</p>
+        <p>Vừa rồi còn khoe khoang thể hiện tài bắn cung với mình, vậy mà giờ đã quên sạch, chỉ chăm chăm tìm Tiết Yến xin chỉ dạy.</p>
+        <p>Lại thấy Tiết Yến nhìn Tiết Duẫn Hoán rồi gõ gõ lên cây cung trong tay hắn, ý bảo hắn lắp tên kéo cung.</p>
+        <p>Tiết Duẫn Hoán làm theo, lưng eo thẳng tắp, dáng vẻ cao quý lại kiêu ngạo.</p>
+        <p>“Sao hả, tư thế bắn tên của ta mà còn cần dạy à?” hắn cao ngạo nói: “Kỹ thuật bắn tên của ta là học từ ... ai da!”</p>
+        <p>Còn chưa nói xong, Tiết Yến cũng chưa nâng mí mắt, đá hai chân hắn ra ngang bằng vai, một cái quét chân đơn giản đã uốn thẳng tư thế đứng của hắn.</p>
+        <p>“Nghiêng người, đứng vững.” Tiết Yến lời ít ý nhiều. Trước khi Tiết Duẫn Hoán hồi phục tinh thần, hắn đã bị một bàn tay nắm vai, bẻ về sau.</p>
+        <p>“Giữ thăng bằng.” Tiết Yến nói: “Cánh tay còn thiếu chút lực, luyện quá ít. Thân dưới không ổn định, sau này mỗi ngày đứng tấn một canh giờ.”</p>
+        <p>Nói xong lại vỗ vỗ lên lưng đang căng cứng của Tiết Duẫn Hoán: “Thả lỏng, đừng phí sức vào nơi vô dụng.”</p>
+        <p>Một loạt động tác của ngắn gọn linh hoạt, không hề nể mặt, xuống tay cũng không nể tình, bị chỉnh liên tục, Tiết Duẫn Hoán chỉ cảm thấy vai lưng đau nhức, nhất thời chưa thể hồi phục tinh thần.</p>
+        <p>Hắn ngẩng đầu thì thấy Tiết Yến khoanh tay, dễ dàng nhìn ra vẻ ghét bỏ trên mặt: “Vừa rồi ngươi nói, học từ ai?”</p>
+        <p>Vẻ mặt của Tiết Yến làm Tiết Duẫn Hoán cảm thấy mình còn không bằng tên lính bình thường ở đất Yến.</p>
+        <p>--- dù trong lòng Tiết Yến chắc chắn cũng đang nghĩ như vậy.</p>
+        <p>Trong lòng Tiết Duẫn Hoán thấy xấu hổ và buồn bực, không bắn tên nữa, tư thế vừa bày ra đã thu lại, tức giận nói: “Có nói thì ngươi cũng không biết, nói với ngươi làm gì!”</p>
+        <p>Dứt lời, hắn xoay người, hùng hổ trở về vị trí của mình. Sùng bái ước ao vừa rồi đều bị biểu cảm của Tiết Yến đánh tan thành mây khói.</p>
+        <p>Hắn đường đường là đích tử duy nhất của Đại Ung, có khi nào phải chịu sự phân biệt đối xử như vậy, có khi nào phải chịu uất ức như vậy!</p>
+        <p>Tên nhãi Tiết Yến, vừa rồi còn nhỏ nhẹ cẩn thận chỉ Quân Hoài Lang, giúp y kéo cung, dắt y bắn tên, tới lượt mình thì sỉ nhục không chút nể nang.</p>
+        <p>Không phải người, tên sát tinh này quả thật không phải người!</p>
+        <p>---------</p>
+        <p>Ngày hôm đó trở về cung Minh Loan, Quân Hoài Lang được Thục phi gọi đến chính điện.</p>
+        <p>Chi tiêu ăn mặc của Thục phi xưa nay luôn ở mức tốt nhất, nàng lại thương con cháu, mỗi lần phòng bếp nổi lửa nấu ăn, đều không thiếu phần của huynh muội Quân Hoài Lang.</p>
+        <p>Lúc này cũng đã muộn, Thục phi đang dựa vào ghế mỹ nhân trước cửa sổ, thấy Quân Hoài Lang bước vào, bèn gọi y bước tới ăn điểm tâm.</p>
+        <p>“Nghe nói buổi chiều bọn con luyện bắn tên?” Thục phi nói: “Luyện cái thứ bỏ đi kia làm gì không biết, tay có bị thương không?”</p>
+        <p>Quân Hoài Lang cười cười: “Không bị thương, chỉ hơi đỏ một chút. Hôm nay may nhờ có Ngũ điện hạ chỉ bảo, con mới đỡ chịu nỗi đau da thịt.”</p>
+        <p>Thục phi thờ ơ hừ một tiếng, nói: “Đúng là đứa trẻ ngoan, chỉ tiếc ông trời không muốn hắn sống tốt, có số bạc mệnh.”</p>
+        <p>Quân Hoài Lang cười dỗ dành nàng: “Nơi này là cung Minh Loan của cô mẫu, ý trời thì có là gì? Không phải đều nghe cô mẫu hết sao.”</p>
+        <p>Từ lúc vào đây, y đã chú ý Điểm Thúy không ở trong cung Thục phi. Nhưng Quân Hoài Lang cũng biết cô mẫu y không có ẩn giấu lòng dạ gì, dù bản thân phát hiện, nhưng có đôi lời nói cũng cần thận trọng nói với cô mẫu.</p>
+        <p>Thục phi bị y chọc cười, ngón tay sơn đỏ chỉ chỉ trán y: “Học ở đâu ra miệng lưỡi trơn tru như vậy?”</p>
+        <p>Quân Hoài Lang cười đáp: “Không phải miệng lưỡi trơn tru. Ngũ điện hạ sống thế nào đều phải nhờ vào cô mẫu dặn dò Điểm Thúy cô cô ra sao.”</p>
+        <p>Quả nhiên, Thục phi cười nói: “Bổn cung có gì cần dặn dò? Con còn không hiểu Điểm Thuý sao, nàng và bổn cung cùng nhau lớn lên, trước giờ tốt bụng lại hiểu chuyện, mọi chuyện trong cung, có chuyện nào nàng làm không tốt, để bổn cung phải bận lòng?”</p>
+        <p>Quân Hoài Lang dừng một chút, sau đó lại cười nói: “Đúng là như vậy. Nhưng mà hiện giờ, Ngũ điện hạ dù gì cũng xem như là con của cô mẫu, phải gọi người một tiếng mẫu phi, nếu người còn lười nhác như vậy, thì không thể nào nói nổi.”</p>
+        <p>Thục phi ngồi dậy bày dáng vẻ muốn đánh y, vừa đánh vừa nói: “Hóa ra là đến làm thuyết khách cho Tiết Yến, chỉ biết nghĩ cho hắn, sợ bổn cung đối xử tệ với hắn sao?”</p>
+        <p>Quân Hoài Lang cũng nở nụ cười. Ngoài mặt cười nhưng trong lòng Quân Hoài Lang lại bắt đầu suy nghĩ.</p>
+        <p>Cô mẫu của y, y hiểu rõ nhất. Trong nhà, phụ thân có mấy huynh đệ, chỉ có cô mẫu là đích nữ, được các huynh trưởng cưng chiều từ nhỏ, mới dưỡng ra tính cách kiêu ngạo, không rành chuyện thế sự.</p>
+        <p>Mà Điểm Thúy đã hầu hạ bên cạnh từ lúc cô mẫu sáu bảy tuổi, theo cô mẫu từ phủ Quốc Công đến trong cung, đáng lẽ nên là người trung thành nhất.</p>
+        <p>Vì thế, nếu không có bằng chứng gì mà nói với cô mẫu, cô mẫu tất nhiên sẽ không tin. Dù cô mẫu nửa tin nửa ngờ, với tính cách của cô mẫu, nghĩ một hồi cũng sẽ nói với Điểm Thúy.</p>
+        <p>Y phải tự mình tìm nhược điểm của Điểm Thúy. Loại chuyện này quyết không thể dựa vào cô mẫu.</p>
+        <p>Hai người ồn ào một hồi. Thục phi hơi mệt, ngả người về lại ghế mỹ nhân. Nàng cầm lò sưởi dát vàng khảm ngọc, vừa ngắm nghía, vừa nói: “Còn một chuyện nữa, thọ yến mấy ngày trước, mẫu thân con hỏi ta, khi nào hai đứa mới về phủ.”</p>
+        <p>Nói rồi, nàng lại cười cười: “Bổn cung dĩ nhiên từ chối rồi, nói muốn giữ hai con lại một thời gian. Trời lạnh như vậy, dọn đến chuyển đi có bao nhiêu phiền phức? Hơn nữa, con và Lệnh Hoan bầu bạn với bổn cung trong cung này mới được bao lâu chứ, cung Minh Loan không dễ gì mới nhộn nhịp được mấy ngày, bổn cung còn chưa hưởng thụ đủ.”</p>
+        <p>Quân Hoài Lang bất đắc dĩ cười nói: “Đều nghe cô mẫu hết.”</p>
+        <p>Quả thật, y cũng chưa định đi vào lúc này. Điểm Thúy còn ở trong cung cô mẫu, lòng y vẫn luôn bất an, tóm lại cần phải giải quyết thành phần bất ổn trước, y mới có thể an tâm về nhà.</p>
+        <p>“Nhưng mà, mẫu thân con cũng nói, ít ngày nữa phụ thân con sẽ được phái ra ngoài làm việc. Tỷ ấy muốn con về sớm một chút, nói lời chào với phụ thân con.” Thục phi nói.</p>
+        <p>Quân Hoài Lang khựng lại, tay đặt trên đầu gối khẽ siết chặt.</p>
+        <p>Trong khoảng thời gian này, y dồn hết tâm trí vào chuyện kiếp trước của muội muội, nhưng y vẫn chưa từng quên cái chết của phụ thân.</p>
+        <p>Tuy phụ thân tước vị vô cùng cao, nhưng lại đặc biệt chú ý tránh mũi nhọn của quân vương, cũng không chạm vào những chuyện công cao lấn chủ. Năm đó tuy ông là Trạng Nguyên danh tiếng lẫy lừng khắp kinh thành, hiện giờ cũng chỉ làm chức quan tứ phẩm ở Quốc Tử Giám.</p>
+        <p>Nhưng cũng mùa xuân năm đó, phụ thân nhận chức Tế tửu ở Quốc Tử Giám, đến Giang Nam sớm một năm để sắp xếp chuyện khoa cử cho năm sau. Giang Nam xưa nay là khu vực khoa cử quan trọng của Đại Ung, phái ông đến đó cũng xem như là Hoàng thượng ưu ái.</p>
+        <p>Nhưng Quân Hoài Lang biết, vì Quân gia xưa nay cẩn trọng, không kết bè kết phái, Hoàng thượng yên tâm với nhà y, mới tạm thời giao phó chuyện quan trọng này cho phụ thân.</p>
+        <p>Mà năm thứ hai vừa vào đầu hạ, còn chưa đến kì thi Hương, Giang Nam đã gặp lũ lụt, vây toàn bộ đoàn người Vĩnh Ninh Công ở đó. Hoàng thượng tạm thời bổ nhiệm Vĩnh Ninh Công kiêm chức Công bộ Thị lang, phó thác cho ông việc trị thuỷ ở Giang Nam.</p>
+        <p>Nhưng kế đó, bất ngờ nghe tin Vĩnh Ninh Công tham ô thuế ruộng trị thủy khiến lũ lụt Giang Nam càng thêm trầm trọng, khó bề khống chế, nạn dân kích động tụ tập khởi nghĩa, nhiễu loạn quận huyện xung quanh, dân chúng thương vong vô số.</p>
+        <p>Khoản tiền tham ô vô cùng lớn, Hoàng đế lập tức hạ chỉ chém đầu Vĩnh Ninh Công ngay tại chỗ.</p>
+        <p>Từ đó, trong triều không còn ai đủ tín nhiệm để xử lý chuyện này, cuối cùng ở kiếp trước do Tiết Yến mười bảy tuổi dẫn binh, chỉ dùng hơn một ngàn binh lực mà bình định quân khởi nghĩa ở Giang Nam, còn tiện tay diệt một đám thổ phỉ ở Giang Tây. Chính trận chiến này làm nên tên tuổi Tiết Yến, dù là sát tinh có tiếng trong hậu cung, cũng có một chỗ đứng trên triều đình.</p>
+        <p>Nhưng phụ thân Quân Hoài Lang thì ở lại Giang Nam, hài cốt cũng không còn.</p>
+        <p>Quân Hoài Lang biết, phụ thân tuyệt đối sẽ không tham ô, nhận hối lộ.</p>
+        <p>Chức quan của phụ thân không cao, khi còn bé y không hiểu, chỉ nghĩ phụ thân là người giàu thích nhàn rỗi, không có chí lớn. Sau này, Quân Tiêu Ngô muốn luyện võ, phụ thân dù thế nào cũng không đồng ý, cuối cùng còn đánh đệ ấy. Quân Hoài Lang mới cầu ông thương tình, phụ thân không nói gì, chỉ bảo y trở về chép Trung Dung một trăm lần.</p>
+        <p>Sau đó, Quân Hoài Lang đã hiểu ý phụ thân.</p>
+        <p>Dung là thường, nghĩa dùng đạo trung làm đạo thường. Quân gia vốn là thế gia quyền thế lớn, là công thần khai quốc, vọng tộc trăm năm, danh vọng trong triều cũng vô cùng cao.</p>
+        <p>Thế gia như vậy, khi trong triều không còn người tín nhiệm, sẽ phân ưu nỗi lo, khó khăn vì Hoàng thượng, nhưng lúc thái bình thịnh thế, nhân tài đông đúc, quan trọng nhất là giấu tài, không được phô trương, không làm Hoàng thượng nghi kị.</p>
+        <p>Phụ thân cẩn thận dè dặt, phẩm hạnh đoan chính, trong thời khắc nguy cấp sao có thể tham ô?</p>
+        <p>Quân Hoài Lang từ kiếp trước đã biết bên trong có người động tay động chân. Nhưng lúc đó, đảng phái quan viên trong triều rõ ràng, quan hệ giữa bọn họ dây mơ rễ má, y chỉ cần khẽ gây tiếng động sẽ lập tức bị người phát hiện và phòng bị, khó khăn trùng trùng.</p>
+        <p>Cho nên kiếp này muốn cứu phụ thân, mình cần ở cạnh giúp đỡ nhắc nhở, sớm tìm ra người mưu hại phụ thân.</p>
+        <p>Nếu vậy, mùa xuân năm nay, y nhất định phải nghĩ cách cùng phụ thân đến Giang Nam.</p>
+        <p>Quân Hoài Lang suy tính rõ ràng, lại giả như không biết, hỏi Thục phi: “Phụ thân cần ra ngoài làm việc? Không biết là đi đâu?”</p>
+        <p>Thục phi chơi đùa với móng tay, không chút để ý nói: “Nghe mẫu thân con nói là đi Giang Nam.”</p>
+        <p>Quân Hoài Lang nở nụ cười: “Không biết phụ thân phải đi bao lâu? Từ khi sinh ra đến giờ, con còn chưa từng được đi Giang Nam, nghe nói ở đó có cầu nhỏ nước chảy, dương liễu thướt tha, rất là đẹp.”</p>
+        <p>Không ngoài dự đoán, nghe y nói vậy, Thục phi cười khúc khích nói: “Chuyện này có gì khó? Lát nữa bổn cung gửi thư cho phụ thân con, để ông ấy đưa con theo là được. Vừa hay, con ở cùng bổn cung đến mùa xuân, đỡ phải đi đi về về.”</p>
+        <p>Quân Hoài Lang giải quyết được một chuyện lớn trong lòng, nhẹ nhõm cười gật đầu đáp vâng.</p>
+    </article>
+
+    <div class="reading-nav">
+        <a href="tatrothanhanhtrai28.html" class="nav-btn">⬅️ Chương trước</a>
+        <a href="../mucluc/tatrothanhanhtrai.html" class="nav-btn">📋 Mục lục</a>
+        <a href="../mucluc/hoanquanquyenthe.html" class="nav-btn">🌸 Ngoại truyện về Đoạn Thập Tứ và Quân Lệnh Hoan</a>
+        <a href="tatrothanhanhtrai30.html" class="nav-btn">Chương sau ➡️</a>
+    </div>
+</main>
+
+<div class="chapter-discussion-box">
+    <div class="discussion-header">
+        <div class="discussion-header-left">
+            <span>🌿</span>
+            <h3>Thảo luận về chương này</h3>
+            <span>🌸</span>
+        </div>
+        <div class="discussion-actions">
+            <button class="action-btn" id="like-btn" onclick="toggleLike()" title="Thả tim chương này">
+                <span class="heart-icon">🤍</span>
+                <span id="like-count">0</span>
+            </button>
+            <button class="action-btn" onclick="openShareModal()" title="Chia sẻ chương này">
+                🔗 Chia sẻ
+            </button>
+        </div>
+    </div>
+    <div class="comment-section">
+        <script src="https://utteranc.es/client.js"
+                repo="gocnhocuakhiet/gocnhocuakhiet.github.io"
+                issue-term="pathname"
+                label="comment"
+                theme="github-light"
+                crossorigin="anonymous"
+                async>
+        </script>
+    </div>
+</div>
+
+<div class="share-modal-overlay" id="share-modal-overlay" onclick="handleOverlayClick(event)">
+    <div class="share-modal">
+        <h4>🔗 Chia sẻ chương này</h4>
+        <div class="share-link-row">
+            <input class="share-link-input" id="share-link-input" type="text" readonly>
+            <button class="copy-link-btn" id="copy-link-btn" onclick="copyLink()">Sao chép</button>
+        </div>
+        <button class="share-modal-close" onclick="closeShareModal()">Đóng</button>
+    </div>
+</div>
+
+<div id="comment-sidebar" class="comment-sidebar">
+    <div class="sidebar-header">
+        <h4 id="sidebar-paragraph-title">Bình luận đoạn văn</h4>
+        <button class="close-sidebar-btn" onclick="closeInlineComment()">✕</button>
+    </div>
+    <div class="quoted-paragraph-box" id="quoted-paragraph-box"></div>
+    <div class="sidebar-mention-hint">
+        💡 Dùng <code>@tên-người</code> để nhắc đến ai đó trong bình luận.
+    </div>
+    <div id="sidebar-utterances-mount"></div>
+</div>
+<div id="sidebar-overlay" class="sidebar-overlay" onclick="closeInlineComment()"></div>
+
+<script>
+var GH_REPO  = 'gocnhocuakhiet/gocnhocuakhiet.github.io';
+var GH_LABEL = 'comment';
+var ORIGINAL_TITLE = document.title;
+
+function paragraphTitle(paraNum) {
+    return ORIGINAL_TITLE + ' [Đoạn ' + paraNum + ']';
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+    var paragraphs = document.querySelectorAll('.story-content p');
+    paragraphs.forEach(function (p, index) {
+        var paraNum = index + 1;
+        var row = document.createElement('div');
+        row.className = 'comment-row';
+        p.parentNode.insertBefore(row, p);
+        row.appendChild(p);
+        var badge = document.createElement('span');
+        badge.className = 'comment-badge';
+        badge.title = 'Bình luận về đoạn này';
+        badge.textContent = '💬';
+        badge.onclick = function () {
+            openInlineComment(p.innerText.trim().substring(0, 120), paraNum);
+        };
+        row.appendChild(badge);
+    });
+    initLike();
+});
+
+var currentParaNum = null;
+
+function openInlineComment(previewText, paraNum) {
+    document.getElementById('sidebar-paragraph-title').innerText = 'Đoạn ' + paraNum;
+    document.getElementById('quoted-paragraph-box').innerText =
+        '"' + previewText + (previewText.length >= 120 ? '…' : '') + '"';
+    document.getElementById('comment-sidebar').classList.add('active');
+    document.getElementById('sidebar-overlay').classList.add('active');
+    if (currentParaNum === paraNum) return;
+    currentParaNum = paraNum;
+    var mount = document.getElementById('sidebar-utterances-mount');
+    mount.innerHTML = '<div class="sidebar-loading">Đang tải bình luận…</div>';
+    document.title = paragraphTitle(paraNum);
+    var s = document.createElement('script');
+    s.src = 'https://utteranc.es/client.js';
+    s.setAttribute('repo',         GH_REPO);
+    s.setAttribute('issue-term',   'title');
+    s.setAttribute('label',        GH_LABEL);
+    s.setAttribute('theme',        document.body.classList.contains('dark-mode') ? 'github-dark' : 'github-light');
+    s.setAttribute('crossorigin',  'anonymous');
+    s.async = true;
+    s.onload = function () {
+        var loading = mount.querySelector('.sidebar-loading');
+        if (loading) loading.remove();
+        document.title = ORIGINAL_TITLE;
+    };
+    mount.innerHTML = '';
+    mount.appendChild(s);
+}
+
+function closeInlineComment() {
+    document.getElementById('comment-sidebar').classList.remove('active');
+    document.getElementById('sidebar-overlay').classList.remove('active');
+    document.title = ORIGINAL_TITLE;
+}
+
+function initLike() {
+    var key      = 'like-'      + window.location.pathname;
+    var countKey = 'likecount-' + window.location.pathname;
+    var liked    = localStorage.getItem(key) === '1';
+    var count    = parseInt(localStorage.getItem(countKey) || '0', 10);
+    updateLikeUI(liked, count);
+}
+
+function toggleLike() {
+    var key      = 'like-'      + window.location.pathname;
+    var countKey = 'likecount-' + window.location.pathname;
+    var liked    = localStorage.getItem(key) === '1';
+    var count    = parseInt(localStorage.getItem(countKey) || '0', 10);
+    liked = !liked;
+    count = liked ? count + 1 : Math.max(0, count - 1);
+    localStorage.setItem(key,      liked ? '1' : '0');
+    localStorage.setItem(countKey, count);
+    updateLikeUI(liked, count);
+}
+
+function updateLikeUI(liked, count) {
+    var btn       = document.getElementById('like-btn');
+    var heartSpan = btn.querySelector('.heart-icon');
+    var countSpan = document.getElementById('like-count');
+    heartSpan.textContent = liked ? '❤️' : '🤍';
+    countSpan.textContent = count;
+    liked ? btn.classList.add('liked') : btn.classList.remove('liked');
+}
+
+function openShareModal() {
+    document.getElementById('share-link-input').value = window.location.href;
+    document.getElementById('copy-link-btn').textContent = 'Sao chép';
+    document.getElementById('copy-link-btn').classList.remove('copied');
+    document.getElementById('share-modal-overlay').classList.add('active');
+}
+function closeShareModal() {
+    document.getElementById('share-modal-overlay').classList.remove('active');
+}
+function handleOverlayClick(e) {
+    if (e.target === document.getElementById('share-modal-overlay')) closeShareModal();
+}
+function copyLink() {
+    var input = document.getElementById('share-link-input');
+    var btn   = document.getElementById('copy-link-btn');
+    navigator.clipboard.writeText(input.value).then(function () {
+        btn.textContent = '✓ Đã sao chép';
+        btn.classList.add('copied');
+        setTimeout(function () { btn.textContent = 'Sao chép'; btn.classList.remove('copied'); }, 2000);
+    }).catch(function () {
+        input.select(); document.execCommand('copy');
+        btn.textContent = '✓ Đã sao chép'; btn.classList.add('copied');
+        setTimeout(function () { btn.textContent = 'Sao chép'; btn.classList.remove('copied'); }, 2000);
+    });
+}
+
+function syncUtterancesTheme(isDark) {
+    var theme = isDark ? 'github-dark' : 'github-light';
+    document.querySelectorAll('.utterances-frame').forEach(function (f) {
+        f.contentWindow.postMessage({ type: 'set-theme', theme: theme }, 'https://utteranc.es');
+    });
+}
+</script>
+
+</body>
+</html>

@@ -1,0 +1,803 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <link rel="stylesheet" href="../style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ta trở thành anh trai của nữ chính ngược văn - Chương 24</title>
+    
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f1f7f4;
+            color: #2d3a34;
+            line-height: 1.8;
+        }
+
+        .navbar {
+            background-color: #ffffff;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 10%;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        .navbar .logo { font-size: 1.2rem; font-weight: bold; color: #4a6b5d; text-decoration: none; }
+        .nav-links a { color: #555; text-decoration: none; font-size: 0.95rem; transition: color 0.3s; }
+        .nav-links a:hover { color: #4a6b5d; }
+
+        .story-container {
+            max-width: 700px;
+            margin: 40px auto;
+            padding: 30px;
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.02);
+        }
+
+        .story-header {
+            text-align: center;
+            margin-bottom: 35px;
+            border-bottom: 1px dashed #8fae9f;
+            padding-bottom: 20px;
+        }
+        .story-header .novel-name {
+            font-size: 0.95rem; color: #777;
+            text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px;
+        }
+        .story-header .chapter-title { color: #4a6b5d; font-size: 1.6rem; font-weight: 600; }
+
+        .story-content { font-size: 1.15rem; color: #333333; text-align: justify; }
+        .story-content p { margin-bottom: 22px; text-indent: 25px; }
+
+        .reading-nav {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-top: 50px; padding-top: 25px; border-top: 1px dashed #8fae9f;
+        }
+        .nav-btn {
+            display: inline-block; padding: 10px 20px;
+            background-color: #ffffff; color: #4a6b5d;
+            text-decoration: none; border: 1px solid #8fae9f;
+            border-radius: 20px; font-size: 0.9rem; font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        .nav-btn:hover { background-color: #4a6b5d; color: #ffffff; border-color: #4a6b5d; box-shadow: 0 4px 8px rgba(74,107,93,0.2); }
+        .nav-btn.disabled { color: #bbb; border-color: #e0e0e0; background-color: #fafafa; pointer-events: none; box-shadow: none; }
+
+        @media (max-width: 480px) {
+            .story-container { padding: 15px; margin: 20px auto; }
+            .nav-btn { padding: 8px 14px; font-size: 0.8rem; }
+            .comment-sidebar { width: 100%; right: -100%; }
+        }
+
+        body.dark-mode { background-color: #131a17; color: #dae5e0; }
+        body.dark-mode .navbar { background-color: #1b2420; box-shadow: 0 2px 5px rgba(0,0,0,0.3); }
+        body.dark-mode .navbar .logo { color: #8fae9f; }
+        body.dark-mode .nav-links a { color: #aaa; }
+        body.dark-mode .story-container { background-color: #1b2420; box-shadow: 0 2px 10px rgba(0,0,0,0.2); }
+        body.dark-mode .story-header .novel-name { color: #8fae9f; }
+        body.dark-mode .story-header .chapter-title { color: #8fae9f; }
+        body.dark-mode .story-content { color: #dae5e0; }
+        body.dark-mode .nav-btn { background-color: #1b2420; color: #8fae9f; border-color: #4a6b5d; }
+        body.dark-mode .nav-btn:hover { background-color: #4a6b5d; color: #ffffff; }
+        body.dark-mode .nav-btn.disabled { color: #444; border-color: #2e3d36; background-color: #161e1b; }
+
+        .reader-controls-wrapper {
+            position: fixed; bottom: 30px; right: 30px;
+            z-index: 10000;
+            display: flex; flex-direction: column; align-items: flex-end; gap: 10px;
+        }
+        .reader-toggle-btn {
+            width: 48px; height: 48px; border-radius: 50%;
+            border: 2px solid #8fae9f; background: white; color: #4a6b5d;
+            font-size: 18px; cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15); transition: all 0.3s;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .reader-toggle-btn:hover { background: #4a6b5d; color: white; transform: scale(1.1); }
+        .reader-controls-group {
+            display: flex; flex-direction: column; gap: 10px;
+            overflow: hidden; max-height: 0; opacity: 0;
+            transition: max-height 0.35s ease, opacity 0.3s ease;
+        }
+        .reader-controls-group.open { max-height: 200px; opacity: 1; }
+        .reader-controls-group button {
+            width: 48px; height: 48px; border-radius: 50%;
+            border: 2px solid #8fae9f; background: white; color: #4a6b5d;
+            font-size: 15px; font-weight: bold; cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15); transition: all 0.3s;
+        }
+        .reader-controls-group button:hover { background: #4a6b5d; color: white; transform: scale(1.1); }
+        body.dark-mode .reader-toggle-btn,
+        body.dark-mode .reader-controls-group button { background: #1b2420; color: #8fae9f; border-color: #4a6b5d; }
+        body.dark-mode .reader-toggle-btn:hover,
+        body.dark-mode .reader-controls-group button:hover { background: #4a6b5d; color: white; }
+
+        .comment-row {
+            display: flex; justify-content: space-between;
+            align-items: flex-start; gap: 15px;
+            margin-bottom: 22px; width: 100%;
+        }
+        .comment-row p { flex: 1; margin-bottom: 0 !important; }
+
+        .comment-badge {
+            cursor: pointer; flex-shrink: 0; margin-top: 6px;
+            width: 30px; height: 30px; border-radius: 50%;
+            background-color: #eaf2ee; color: #4a6b5d;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.9rem; line-height: 1;
+            transition: all 0.2s ease; user-select: none; border: none;
+        }
+        .comment-badge:hover { background-color: #4a6b5d; color: #ffffff; transform: scale(1.12); }
+        body.dark-mode .comment-badge { background-color: #25332c; color: #8fae9f; }
+        body.dark-mode .comment-badge:hover { background-color: #4a6b5d; color: #ffffff; }
+
+        .comment-sidebar {
+            position: fixed; top: 0; right: -420px; width: 400px; height: 100%;
+            background: #ffffff;
+            box-shadow: -5px 0 15px rgba(0,0,0,0.05);
+            z-index: 100000;
+            transition: right 0.4s cubic-bezier(0.25,0.8,0.25,1);
+            padding: 24px; overflow-y: auto; box-sizing: border-box;
+        }
+        .comment-sidebar.active { right: 0; }
+        .sidebar-header {
+            display: flex; justify-content: space-between; align-items: center;
+            border-bottom: 1px solid #dae5e0; padding-bottom: 12px; margin-bottom: 16px;
+        }
+        .sidebar-header h4 { color: #4a6b5d; margin: 0; }
+        .close-sidebar-btn { background: none; border: none; font-size: 1.2rem; color: #999; cursor: pointer; }
+        .quoted-paragraph-box {
+            background: #f0f7f4; border-left: 3px solid #8fae9f;
+            border-radius: 4px; padding: 10px 14px;
+            font-size: 0.88rem; color: #4a6b5d; font-style: italic;
+            line-height: 1.5; margin-bottom: 12px;
+        }
+        .sidebar-mention-hint {
+            font-size: 0.8rem; color: #888;
+            background: #f8faf9; border: 1px dashed #c8ddd5;
+            border-radius: 6px; padding: 8px 12px; margin-bottom: 14px; line-height: 1.5;
+        }
+        .sidebar-mention-hint code { background: #e4efe9; color: #4a6b5d; padding: 1px 5px; border-radius: 4px; font-size: 0.78rem; }
+        body.dark-mode .sidebar-mention-hint { background: #1e2b24; border-color: #2e3d36; color: #7a9a8a; }
+        body.dark-mode .sidebar-mention-hint code { background: #2a3830; color: #8fae9f; }
+        .sidebar-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.2); z-index: 99999; display: none;
+        }
+        .sidebar-overlay.active { display: block; }
+        .sidebar-loading {
+            text-align: center; padding: 30px 0;
+            color: #aaa; font-size: 0.9rem; font-style: italic;
+        }
+
+        .chapter-discussion-box {
+            max-width: 700px; margin: 30px auto 50px auto;
+            padding: 25px; background-color: #ffffff;
+            border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.02);
+        }
+        .discussion-header {
+            display: flex; justify-content: space-between; align-items: center;
+            gap: 10px; margin-bottom: 25px;
+            border-bottom: 1px dashed #dae5e0; padding-bottom: 15px;
+        }
+        .discussion-header-left { display: flex; align-items: center; gap: 10px; }
+        .discussion-header h3 { color: #4a6b5d; font-size: 1.2rem; margin: 0; }
+        .discussion-actions { display: flex; align-items: center; gap: 10px; }
+        .action-btn {
+            display: flex; align-items: center; gap: 6px;
+            padding: 7px 14px; border-radius: 20px; border: 1px solid #8fae9f;
+            background: #ffffff; color: #4a6b5d;
+            font-size: 0.85rem; font-weight: 500; cursor: pointer;
+            transition: all 0.25s ease; user-select: none;
+        }
+        .action-btn:hover { background-color: #f0f7f4; box-shadow: 0 3px 8px rgba(74,107,93,0.15); }
+        .action-btn.liked { background-color: #fff0f3; border-color: #e8a0b0; color: #c0556a; }
+        .action-btn.liked .heart-icon { animation: heartPop 0.35s ease; }
+        @keyframes heartPop {
+            0% { transform: scale(1); } 40% { transform: scale(1.45); }
+            70% { transform: scale(0.9); } 100% { transform: scale(1); }
+        }
+        body.dark-mode .action-btn { background: #1b2420; color: #8fae9f; border-color: #4a6b5d; }
+        body.dark-mode .action-btn:hover { background-color: #232e29; }
+        body.dark-mode .action-btn.liked { background-color: #2a1e22; border-color: #7a3a4a; color: #e08090; }
+        .comment-section { width: 100%; min-height: 150px; }
+
+        body.dark-mode .chapter-discussion-box,
+        body.dark-mode .comment-sidebar { background-color: #1b2420 !important; }
+        body.dark-mode .discussion-header,
+        body.dark-mode .sidebar-header { border-bottom-color: #2e3d36 !important; }
+        body.dark-mode .discussion-header h3,
+        body.dark-mode .sidebar-header h4 { color: #8fae9f !important; }
+        body.dark-mode .quoted-paragraph-box { background: #232e29; border-left-color: #4a6b5d; color: #8fae9f; }
+
+        .share-modal-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.35);
+            z-index: 200000; display: none; align-items: center; justify-content: center;
+        }
+        .share-modal-overlay.active { display: flex; }
+        .share-modal {
+            background: #ffffff; border-radius: 12px;
+            padding: 28px 24px 22px; width: 380px; max-width: 92vw;
+            box-shadow: 0 12px 40px rgba(0,0,0,0.18);
+            animation: slideUp 0.25s ease;
+        }
+        @keyframes slideUp {
+            from { transform: translateY(20px); opacity: 0; }
+            to   { transform: translateY(0); opacity: 1; }
+        }
+        .share-modal h4 { color: #4a6b5d; font-size: 1.05rem; margin-bottom: 16px; text-align: center; }
+        .share-link-row { display: flex; gap: 8px; align-items: center; }
+        .share-link-input {
+            flex: 1; padding: 9px 12px; border: 1px solid #c8ddd5; border-radius: 8px;
+            font-size: 0.85rem; color: #444; background: #f8faf9;
+            outline: none; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
+        }
+        .copy-link-btn {
+            padding: 9px 16px; border-radius: 8px;
+            background: #4a6b5d; color: #ffffff; border: none;
+            font-size: 0.85rem; font-weight: 600; cursor: pointer;
+            transition: all 0.2s; white-space: nowrap;
+        }
+        .copy-link-btn:hover { background: #3a5a4d; }
+        .copy-link-btn.copied { background: #6aaa88; }
+        .share-modal-close {
+            display: block; width: 100%; margin-top: 14px;
+            padding: 8px; background: none; border: none;
+            color: #999; font-size: 0.85rem; cursor: pointer; text-align: center;
+        }
+        .share-modal-close:hover { color: #555; }
+        body.dark-mode .share-modal { background: #1b2420; }
+        body.dark-mode .share-modal h4 { color: #8fae9f; }
+        body.dark-mode .share-link-input { background: #232e29; border-color: #3a5040; color: #dae5e0; }
+        body.dark-mode .share-modal-close { color: #6a8a7a; }
+    </style>
+</head>
+<body>
+
+<div class="reader-controls-wrapper">
+    <div class="reader-controls-group" id="reader-group">
+        <button onclick="changeFontSize(1)" title="Phóng to chữ">A+</button>
+        <button onclick="changeFontSize(-1)" title="Thu nhỏ chữ">A-</button>
+        <button onclick="toggleDarkMode()" id="dark-mode-btn" title="Đổi màu nền">🌙</button>
+    </div>
+    <button class="reader-toggle-btn" id="reader-toggle" onclick="toggleReaderControls()" title="Tuỳ chỉnh đọc">⚙️</button>
+</div>
+
+<script>
+function toggleReaderControls() {
+    var group = document.getElementById('reader-group');
+    var btn   = document.getElementById('reader-toggle');
+    var isOpen = group.classList.toggle('open');
+    btn.style.background = isOpen ? '#4a6b5d' : '';
+    btn.style.color      = isOpen ? '#ffffff'  : '';
+}
+function toggleDarkMode() {
+    document.body.classList.toggle('dark-mode');
+    var isDark = document.body.classList.contains('dark-mode');
+    localStorage.setItem('night-mode', isDark ? 'on' : 'off');
+    document.getElementById('dark-mode-btn').innerText = isDark ? '☀️' : '🌙';
+    syncUtterancesTheme(isDark);
+}
+function changeFontSize(delta) {
+    var content = document.querySelector('.story-content') || document.body;
+    var cur = parseFloat(window.getComputedStyle(content).fontSize);
+    content.style.fontSize = (cur + delta) + 'px';
+}
+function syncUtterancesTheme(isDark) {
+    var theme = isDark ? 'github-dark' : 'github-light';
+    document.querySelectorAll('.utterances-frame').forEach(function(f) {
+        f.contentWindow.postMessage({ type: 'set-theme', theme: theme }, 'https://utteranc.es');
+    });
+}
+(function() {
+    if (localStorage.getItem('night-mode') === 'on') {
+        document.body.classList.add('dark-mode');
+        setTimeout(function() {
+            var b = document.getElementById('dark-mode-btn');
+            if (b) b.innerText = '☀️';
+        }, 80);
+    }
+})();
+</script>
+
+<header class="navbar">
+    <a href="../index.html" class="logo">🌿 Góc nhỏ của Khiết</a>
+    <nav class="nav-links"><a href="../index.html">Trang Chủ</a></nav>
+</header>
+
+<main class="story-container">
+    <div class="story-header">
+        <p class="novel-name">Ta trở thành anh trai của nữ chính ngược văn</p>
+        <h1 class="chapter-title">Chương 24</h1>
+    </div>
+
+    <article class="story-content">
+        <p>Y mơ thấy mình ngồi buồn xo một mình trong yến tiệc rất lâu, rồi định ra ngoài hít thở không khí. Vừa đứng dậy thì có cung nữ đến gọi y vào hậu điện. Gương mặt của cung nữ rõ ràng là Điểm Thúy cô cô mà y rất quen, nhưng nét mặt của nàng lại rất lạ.</p>
+        <p>Nhìn chằm chằm y với vẻ chán ghét lạnh lùng, chỉ là một ánh mắt lại làm y vô cùng khó chịu.</p>
+        <p>Y theo Điểm Thúy đến hậu điện, các phi tần nhìn y với ánh mắt dò xét đầy ẩn ý. Quân Hoài Lang giả như không biết, rồi nhận được mệnh lệnh hờ hững từ Thục phi.</p>
+        <p>“Đưa Lệnh Hoan ra ngoài hít thở không khí đi.” cô mẫu chỉ lạnh nhạt nói cũng không ngước mắt lên.</p>
+        <p>Quân Hoài Lang hơi nghi ngờ trong lòng, lại như được đại xá, muốn nắm tay Quân Lệnh Hoan, nhưng lại thấy Quân Lệnh Hoan đứng ngay ngắn bên cạnh, cùng y bước ra ngoài.</p>
+        <p>…... chuyện gì vậy, sao lại xa cách với mình như thế?</p>
+        <p>Mãi đến lúc rời khỏi đại điện, Quân Lệnh Hoan mới ngẩng đầu.</p>
+        <p>Vẫn may. Đôi mắt đó vẫn trong sáng sạch sẽ, không có ghê tởm và soi mói khiến Quân Hoài Lang ngộp thở.</p>
+        <p>“Cảm ơn ca ca!” cô bé cười nói.</p>
+        <p>Giọng điệu của cô bé dè dặt xa lạ, trước hai chữ ‘ca ca’ dường như còn có từ gì đó mà Quân Hoài Lang không nghe rõ.</p>
+        <p>Sau đó, y đè nén sự quái lạ trong lòng, dẫn muội muội đi chơi. Muội muội đến ngự hoa viên trước, sau đó vào rừng mai để ngắm đèn. Chiếc đèn giữa rừng mai là đẹp nhất, Quân Hoài Lang không nhịn được mà đi lấy nó cho Quân Lệnh Hoan.</p>
+        <p>Trong mộng, thân thể y nhẹ như chim yến xuyên qua con đường nhỏ hẹp của rừng mai, bay lên đá Thái Hồ giữa mặt nước, lấy xuống chiếc đèn cung đình kia.</p>
+        <p>Nhưng khi y quay lại, Quân Lệnh Hoan đã biến mất.</p>
+        <p>Y lo lắng phát điên, muốn nhanh chóng đi tìm Quân Lệnh Hoan. Nhưng ngay lập tức, y bị một nhóm người đè xuống, bắt quỳ trên nền đá xanh lạnh lẽo ngoài ngự hoa viên. Những lời trách mắng xung quanh làm y ù cả tai, nhưng y lại không thể giãy bày.</p>
+        <p>“Các ngươi bắt ta làm gì, sao không tìm người trước?” Quân Hoài Lang gấp gáp nói.</p>
+        <p>Nhưng thái giám và thị vệ xung quanh đều mặc kệ y.</p>
+        <p>Tiếp đó, y bị kéo đến giữa đại điện nguy nga lộng lẫy, mọi người đều đứng, chỉ có y quỳ.</p>
+        <p>“Bệ hạ, cầu xin người trước tiên cử người tìm Lệnh Hoan đã!” y vừa thấy Thanh Bình đế đã mặc kệ những chuyện khác, lo lắng nói: “Lệnh Hoan trước giờ không đi lung tung, sợ là đã xảy ra chuyện ngoài ý muốn!”</p>
+        <p>Nhưng Thanh Bình đế dường như không nghe thấy, giận tím mặt nhìn y, dáng vẻ đó làm Quân Hoài Lang cảm thấy vô cùng xa lạ. Còn những người quen thuộc xung quanh mang vẻ mặt khác nhau đồng loạt nhìn y, nhưng ánh mắt chỉ có xa lạ, ghê tởm và lạnh lùng.</p>
+        <p>Nhưng rất may, không qua bao lâu đã tìm được Quân Lệnh Hoan.</p>
+        <p>Quân Hoài Lang lo lắng, vội vã nhìn cô bé, nhưng bắt gặp ánh mắt hoảng loạn và sợ hãi của Quân Lệnh Hoan, như thể cô bé nhìn thấy một con quái vật.</p>
+        <p>Ngay cả khi đã chạm vào ánh mắt của Quân Hoài Lang, Quân Lệnh Hoan vẫn run rẩy toàn thân, trốn trong vòng tay của người phía sau cô bé.</p>
+        <p>Kế đó là ánh mắt chỉ trích của mọi người, mệnh lệnh trừng phạt của Hoàng đế dành cho y đều mơ hồ lướt qua trong tâm trí. Nhìn từng gương mặt quen thuộc lộ ra biểu cảm đáng sợ, y lạnh toát cả người, chìm trong nỗi đau đến không thở được.</p>
+        <p>Y bàng hoàng nhìn xung quanh, vội vã tìm thứ gì đó, nhưng không tìm được gì. Mà giấc mộng của y thường sẽ kết thúc ở đây.</p>
+        <p>Quân Hoài Lang đột nhiên hoàn hồn, nhìn về phía Tiết Yến.</p>
+        <p>Tiết Yến không nhìn y, nhưng Quân Hoài Lang vô cùng quen thuộc với cảnh tượng trước mắt. Cùng là một khung cảnh, chỉ là trong mộng, y quỳ gối tại vị trí của Tiết Yến.</p>
+        <p>Lẽ nào trong lúc Tiết Yến lấy đèn, Quân Lệnh Hoan một mình chạy đến lãnh cung, rồi bắt đầu sợ hãi Tiết Yến mà không rõ nguyên do? Giấc mơ mà y trải qua là chuyện mà Tiết Yến gặp phải hôm nay?</p>
+        <p>Vậy thì … trong chuyện này rõ ràng đã có người nhúng tay vào.</p>
+        <p>Cho nên kiếp trước, Tiết Yến và muội muội chính là vì người đó mà gây ra hiểu lầm.</p>
+        <p>Đúng lúc này, Kim Ngô Vệ đã nhận lệnh của Hoàng đế, tiến lên bắt lấy Tiết Yến, kéo ra ngoài chịu phạt.</p>
+        <p>Quân Hoài Lang không nghĩ được nhiều, tiến lên hai bước, chắn trước người Tiết Yến.</p>
+        <p>“Khoan đã.” y nói.</p>
+        <p>Kim Ngô Vệ không ngờ vị Thế tử Điện hạ này có gan kháng chỉ, đã vậy còn trong lúc Hoàng đế nổi cơn thịnh nộ, nhất thời đưa mắt nhìn nhau, đứng yên tại chỗ.</p>
+        <p>Quân Hoài Lang nhìn Tiết Yến thì bắt gặp đôi mắt đang ngước lên.</p>
+        <p>Màu mắt nhợt nhạt, mang theo lạnh lùng hờ hững đen thẳm như mực, ánh mắt dừng trên người Hoàng đế. Dù không phải hướng về Quân Hoài Lang, nhưng vẫn làm Quân Hoài Lang rét lạnh run rẩy sống lưng.</p>
+        <p>Y chợt nhận ra những chuyện mà y trải qua trong mộng chính là những gì Tiết Yến đang trải qua vào lúc này.</p>
+        <p>Quân Hoài Lang hơi di chuyển, ngăn chặn ánh mắt Tiết Yến, đứng giữa Thanh Bình đế và hắn, che chắn hắn ở sau lưng.</p>
+        <p>“Mong Bệ hạ bớt giận.” Quân Hoài Lang nói: “Lệnh Hoan đang hoảng sợ, còn chưa nói rõ nguyên nhân, mong Bệ hạ hãy tra rõ, rồi mới ra quyết định”</p>
+        <p>Hoàng hậu thoáng nhìn Hoàng đế đang phẫn nộ, lại nhìn bạn tốt của mình đang lau nước mắt bên cạnh, hơi trách cứ, nhắc nhở Quân Hoài Lang: “Hoài Lang, không thể nói bừa.”</p>
+        <p>Thanh Bình đế nén giận hỏi: “Chẳng lẽ trẫm chưa tra rõ sao? Cả cung này, Lệnh Hoan chỉ sợ mình hắn, còn bị hắn làm thất lạc, trẫm phải tra gì nữa?”</p>
+        <p>Quân Hoài Lang hít sâu một hơi, vững vàng đáp: “Thật ra, Ngũ điện hạ chưa từng có khúc mắc với huynh muội thần, nên thần cảm thấy việc này hơi kỳ lạ.”</p>
+        <p>Cũng may kiếp trước y làm quan vài năm, có thể đối đáp trôi chảy trên Kim Loan Điện, mới chống đỡ được cơn giận của Thanh Bình đế lúc này.</p>
+        <p>Thanh Bình đế nhíu mày, lại không tiện phát giận. Một lát sau, ông mới miễn cưỡng lên tiếng: “Vậy ngươi hỏi đi.”</p>
+        <p>Quân Hoài Lang nhận lệnh, đứng lên.</p>
+        <p>Khi xoay người lui về, y lại chạm phải ánh mắt của Tiết Yến. Ánh mắt đó còn chưa hồi phục, vẫn đang mơ màng trong những cảm xúc mà Quân Hoài Lang không hiểu, như xoáy nước cuộn trào dưới đáy biển.</p>
+        <p>Đôi mắt đó nhìn y không rời.</p>
+        <p>Quân Hoài Lang chỉ nhìn hắn một cái rồi dời ánh mắt. Y đến trước mặt Quân Tiêu Ngô, đón Quân Lệnh Hoan từ trong vòng tay đệ đệ.</p>
+        <p>Cảm xúc của Quân Lệnh Hoan đã dịu đi một chút, lúc này vẫn còn thút thít, nghẹn ngào gọi một tiếng ca ca.</p>
+        <p>“Lệnh Hoan nói ca ca biết, chuyện gì đã xảy ra?” Quân Hoài Lang quỳ một gối trên đất, ôm Quân Lệnh Hoan vào lòng, một tay vỗ về lưng cô bé, dịu dàng hỏi.</p>
+        <p>Y cố tình để Quân Lệnh Hoan quay lưng về phía Tiết Yến, mà vẻ mặt lúc đó của y cũng hoàn toàn rơi vào mắt Tiết Yến.</p>
+        <p>Quân Lệnh Hoan dụi mắt, thút thít hồi lâu mới nhỏ giọng nói: “Muốn ăn thịt người.”</p>
+        <p>Quân Hoài Lang sửng sốt: “Ăn người gì?”</p>
+        <p>Quân Lệnh Hoan trốn vào lòng y, lắp bắp nói: “Bọn họ nói … Ngũ hoàng tử ca ca, huynh ấy muốn ăn thịt người. Cho nên đưa Hoan nhi trốn ở nơi mà huynh ấy không tìm thấy … thế nhưng bọn họ đều bỏ đi, chỉ có Hoan nhi ở lại chỗ đó.”</p>
+        <p>Nói đến đây, Quân Lệnh Hoan lại nghẹn ngào, bắt đầu khóc thút thít.</p>
+        <p>Quân Hoài Lang ngạc nhiên, sau đó nghe rõ ý của cô bé. Nghe thấy tiếng cô bé nức nở như mèo con, y nhanh chóng cúi người, ôm cô bé vào lòng.</p>
+        <p>Ngoài đau lòng, Quân Hoài Lang còn hơi sợ trước sự thật mà y tìm ra.</p>
+        <p>Kiếp trước, chuyện này đã từng xảy ra, cũng vì Quân Lệnh Hoan xác nhận, Tiết Yến đã chịu trừng phạt ‘thích đáng’. Từ đó, Quân Lệnh Hoan tránh hắn như tránh rắn rết, suy cho cùng một cô bé sáu tuổi rất dễ bị hù dọa.</p>
+        <p>…... vậy có thể giải thích được câu nói trong sách kia của Tiết Yến.</p>
+        <p>Hoá ra, Quân Lệnh Hoan bị lừa gạt trêu đùa bởi ‘bọn họ’ trong lời cô bé vừa nói, do đó kết thù với Tiết Yến lúc niên thiếu? Trong những tháng năm đằng đẵng về sau, Quân Lệnh Hoan bị Tiết Yến ngày sau làm nhục một cách không rõ nguyên do cũng là vì trò đùa tuỳ tiện, bất chấp hậu quả của những người này?</p>
+        <p>Sau khi hết sợ hãi, Quân Hoài Lang mím chặt môi, ánh mắt toát lên lạnh lẽo thấu xương.</p>
+        <p>Mà người trong điện cũng nghe thấy những gì Quân Lệnh Hoan nói. Nhất thời, sắc mặt mọi người biến đổi khác nhau, ngay cả tức giận trên mặt Hoàng đế cũng cứng đờ.</p>
+        <p>Quân Tiêu Ngô phản ứng trước tiên, tức thì nổi giận. Hắn mặc kệ đạo quân thần, hỏi: “Lệnh Hoan, là ai nói bậy bạ hù doạ muội? Nói Nhị ca biết, Nhị ca sẽ đánh tên đó ba ngày không thể xuống giường.”</p>
+        <p>Quân Hoài Lang nhanh chóng đưa mắt lên ngăn cản, kẻo Quân Tiêu Ngô tức giận lại làm muội muội sợ hãi.</p>
+        <p>Quân Lệnh Hoan lại càng thêm nức nở. Quân Tiêu Ngô vội ngồi xổm xuống, một tay vuốt tóc nàng, dịu giọng hỏi: “Lệnh Hoan, nói Nhị ca biết, là ai nói?”</p>
+        <p>Quân Lệnh Hoan sụt sịt, suy nghĩ một chút.</p>
+        <p>“Ân Trạch ca ca.” cô bé nói: “Còn có Nhị hoàng tử ca ca … còn lại, Lệnh Hoan không biết ai hết.”</p>
+        <p>Quân Hoài Lang ngẩng đầu, nhìn Thanh Bình đế trên điện.</p>
+        <p>Thanh Bình đế hiển nhiên cũng nghe thấy lời Quân Lệnh Hoan nói. Ông không ngờ chuyện này còn liên quan đến một vị hoàng tử khác, lại nghe Nhị hoàng tử nói gì mà ‘ăn người’, càng thẹn quá hoá giận, tức giận nói: “Còn chưa đưa người tới, mau đưa hai người bọn chúng tới trước mặt trẫm!”</p>
+        <p>Linh Phúc nhận lệnh, bước nhanh ra ngoài, ra lệnh cho tiểu thái giám đi tìm người.</p>
+        <p>Chỉ trong chốc lát, cả hai đã được dẫn đến.</p>
+        <p>Quân Hoài Lang thấy Tiết Duẫn Tắc vẫn bình tĩnh, nhưng nếu nhìn kỹ thì bình tĩnh đó chỉ là giả vờ. Mà Quân Ân Trạch phía sau, đã sớm co ro bả vai, bước chân cũng run lẩy bẩy.</p>
+        <p>Nhà mình lại nuôi một kẻ vô ơn. Quân Hoài Lang lạnh lùng thầm nghĩ.</p>
+        <p>Chờ hai người bước vào, quỳ xuống trước mặt Thanh Bình đế, nghe chất vấn: “Lão Nhị, người đưa Đại tiểu thư Quân gia tới lãnh cung, có phải ngươi không?”</p>
+        <p>Trong lòng Tiết Duẫn Tắc lúc này vô cùng tức giận.</p>
+        <p>Ai biết mang theo một đứa nhóc lại phiền phức như thế? Đi đã không nhanh, mà gan cũng bé tẹo, đưa theo rõ ràng là cục nợ.</p>
+        <p>Gã vốn chỉ muốn khoe khoang với mấy tên công tử thế gia, nói mình sẽ dẫn bọn họ vào lãnh cung ma ám kia. Mấy tên công tử thế gia rất hưng phấn, gã cũng trở nên phấn khích, dắt bọn họ đi. Mà tiểu nha đầu này bị bọn họ kéo đi cả đường, tiện thể doạ dẫm vài câu, sợ đến mức không dám đi nữa.</p>
+        <p>Nhưng nếu thả con bé về thì thật uổng phí. Huống chi, mục đích gã đưa con nhóc này theo là để gây phiền phức cho Tiết Yến, lý nào lại thả về?</p>
+        <p>Đành phải miễn cưỡng dẫn theo.</p>
+        <p>Khi đến lãnh cung, một số phấn khích vì không khí âm u bên trong, bèn có người đề nghị muốn vào trong cung thất xem thử. Thế nhưng tiểu nha đầu này vừa nhát gan, vừa chậm chạp, đi theo ai cũng thành gánh nặng, cho nên không ai muốn dắt cô bé theo.</p>
+        <p>Tiết Duẫn Tắc dĩ nhiên cũng không muốn. Gã dứt khoát tìm cớ, tuỳ tiện để Quân Lệnh Hoan trên một toà vọng lâu. Để tránh cô bé chạy lung tung, Tiết Duẫn Tắc còn dọa cô bé, nói nếu tùy tiện rời đi, nhất định sẽ bị Tiết Yến hoá thành sói bắt được, vừa lúc đêm khuya là thời điểm hắn ăn thịt người.</p>
+        <p>Trong vọng lâu âm u ẩm thấp, Tiết Duẫn Tắc nói thêm vài câu hù dọa, khi thấy sắc mặt Quân Lệnh Hoan tái nhợt không dám nhúc nhích, gã mới yên tâm đi chơi.</p>
+        <p>Ai mà ngờ, bọn họ chơi quên lối về, cũng vứt cái vướng bận này ra sau đầu. Chờ đến khi bọn họ nhớ tới Quân Lệnh Hoan, việc cô bé mất tích đã truyền khắp cung.</p>
+        <p>May mà đám bọn họ lúc ấy ầm ĩ ồn ào, cũng không ai chú ý bọn họ đưa theo một bé gái. Huống chi, phạm vi vài chục trượng quanh lãnh cung không người trông coi, sẽ không ai biết bọn họ là người đưa Quân Lệnh Hoan vào lãnh cung.</p>
+        <p>Cho nên, lúc Tiết Duẫn Tắc biết tin Quân Lệnh Hoan mất tích, chuyện đầu tiên gã nghĩ đến là cảnh cáo những người có mặt.</p>
+        <p>“Giữ miệng cho kỹ một chút.” gã nói: “Hôm nay, chúng ta ai cũng chưa từng đến lãnh cung, nhớ kỹ chưa?”</p>
+        <p>Dù sao tiểu nha đầu kia cũng bị dọa ngốc rồi, trước sau chỉ sợ Tiết Yến, nhất định sẽ không nói lỡ miệng. Cô bé quá lắm là chịu chút sợ hãi, không nguy hiểm đến tính mạng, ngược lại còn học được bài học, sau này ít thương hại tên sát tinh kia lại.</p>
+        <p>Mà đám công tử thế gia đã gây họa, nhưng không ai dám gánh trách nhiệm. Hiện giờ, Nhị hoàng tử cầm đầu dặn bọn họ ngậm miệng, bọn họ tất nhiên không hé nửa lời.</p>
+        <p>Ai mà ngờ tiểu nha đầu lại biết tố cáo chứ?</p>
+        <p>Nghe Hoàng đế chất vấn, Tiết Duẫn Tắc dừng một chút, rồi bình tĩnh nói: “Phụ hoàng, nhi thần chưa từng đến lãnh cung, hôm nay sau yến hội cũng chưa gặp Lệnh Hoan muội muội.”</p>
+        <p>Nói xong, gã nhìn xung quanh giả vờ khó hiểu, hỏi: “Đã xảy ra chuyện gì? Có phải Lệnh Hoan muội muội nhận nhầm người không?”</p>
+        <p>Kỹ thuật diễn của gã hết sức vụng về, thoáng nhìn cũng biết gã đang nói dối. Sắc mặt Thanh Bình đế không vui, liếc nhìn Quân Ân Trạch bên cạnh, hỏi: “Hôm nay, Nhị hoàng tử có thật chưa từng đến lãnh cung?”</p>
+        <p>Dù Quân Ân Trạch đã được Tiết Duẫn Tắc nhắc nhở từ trước nhưng vẫn không đủ can đảm khi ở trước mặt Hoàng đế. Quân Ân Trách quỳ ở đó, hai chân không ngừng run rẩy, chỉ lắc đầu, tỏ vẻ không biết.</p>
+        <p>Thanh Bình đế sao không nhìn ra đứa trẻ này đang nói dối. Ngược lại, hai tên này còn cùng nói dối để gạt ông, càng khiến ông thêm tức giận.</p>
+        <p>“Còn không biết hối cải, vậy mà học được cách lừa gạt trẫm?” Thanh Bình đế tức giận nói: “Chẳng những không biết sai, còn muốn che giấu?”</p>
+        <p>Lúc này, Trương quý nhân ngồi bên dưới hơi thấp thỏm.</p>
+        <p>Tiết Duẫn Tắc là con ruột của nàng, Trương quý nhân từng vào lãnh cung, sợ nhất là thấy Hoàng đế nổi giận giáng tội. Thấy con mình gây ra hoạ lớn, Hoàng đế lại không tin nó, Trương quý nhân gấp rút đứng dậy, quỳ xuống trước mặt Thanh Bình đế.</p>
+        <p>“Hoàng thượng, Tắc nhi xưa nay vẫn luôn là đứa trẻ ngoan, cũng chưa từng lừa dối người! Xin Hoàng thượng minh xét!”</p>
+        <p>Thanh Bình đế giận dữ nói: “Nó ra vẻ ta đây như vậy, còn không phải đang lừa trẫm?”</p>
+        <p>Trương quý nhân vội nói: “Đứa nhỏ này nhát gan, lại tốt bụng, nhất định là bị dọa rồi nên mới thất lễ trước mặt Hoàng thượng! Hơn nữa, tiểu thư nhà Vĩnh Ninh Công là do Ngũ hoàng tử làm lạc mất, sao có thể trách mắng Tắc nhi …”</p>
+        <p>Lúc này, một giọng nói trong trẻo cắt ngang lời nàng.</p>
+        <p>“Nương nương.” Quân Hoài Lang lên tiếng: “Nếu Nhị điện hạ phạm lỗi, người thay ngài ấy lừa gạt Bệ hạ, đó là tội khi quân.”</p>
+        <p>Trương quý nhân quay đầu thấy Quân Hoài Lang đang lạnh lùng nhìn nàng.</p>
+        <p>“Nơi này làm gì có chỗ cho ngươi lên tiếng.” Trương quý nhân tức giận nói: “Nít ranh miệng còn hôi sữa, ngươi thì biết cái gì!”</p>
+        <p>Quân Hoài Lang chỉ nhìn nàng.</p>
+        <p>Đôi mắt đen sâu thẳm của y luôn lạnh lùng nhưng mang theo chút dịu dàng, tựa như tiên nhân ẩn cư rời xa trần thế. Nhưng lúc này, đôi mắt ấy vô cùng sắc bén, khí thế có thể lấn át cả sự nghi vấn của đối phương, không chút sợ hãi.</p>
+        <p>Quân Hoài Lang nhìn những người đang nói dối không chớp mắt trên điện, lửa giận bùng lên trong lòng.</p>
+        <p>Bọn họ còn biết sợ? Sao lúc làm ra những chuyện này thì không biết sợ?</p>
+        <p>Không chút sợ hãi khi bỏ mặc một cô bé còn nhỏ như vậy trên vọng lâu, còn đổ hết tội lỗi lên người Tiết Yến. Tới lúc bắt thừa nhận chuyện bọn họ làm, thì sao lại bắt đầu sợ rồi?</p>
+        <p>Kiếp trước, Quân Lệnh Hoan vì bọn họ mà phải gánh chịu những đau khổ khủng khiếp hơn gấp ngàn lần.</p>
+        <p>Càng tức giận, suy nghĩ của Quân Hoài Lang càng rõ ràng. Ánh mắt y lướt qua bọn họ, hiện lên ý cười mỉa mai.</p>
+        <p>“Nhị điện hạ, lần sau trước khi ngụy biện, nên nhớ sửa sang y phục trước, đỡ phải lộ ra dấu vết.” y nói.</p>
+        <p>Tiết Duẫn Tắc sững sờ, cúi đầu nhìn y phục trên người.</p>
+        <p>Quân Hoài Lang nói tiếp: “Vọng lâu ở lãnh cung đã lâu không được quét dọn, bụi bám dày đặc trên cầu thang, tay vịn gỗ lim cũng mục nát. Cầu thang lại vô cùng chật hẹp, lúc chúng ta đi tìm Lệnh Hoan, dù là người võ công cao cường như Tiêu Ngô cũng bị những mảnh vụn gỗ mục bám lên người, nói chi là Nhị điện hạ.”</p>
+        <p>Mọi người nhìn sang thấy vạt áo không dễ thấy của Tiết Duẫn Tắc dính bụi bẩn vô cùng rõ ràng, trên khuỷu tay và lưng cũng có dấu vết quẹt phải vụn gỗ, thậm chí ống tay áo còn bị rách do cọ xát với gỗ mục. Ban đêm bên ngoài ánh sáng yếu ớt không thể thấy rõ, nhưng hậu điện của điện Vĩnh Lạc đèn đuốc sáng rực, không thể che giấu được vết tích trên người gã.</p>
+        <p>Tiết Duẫn Tắc lập tức hoảng sợ, còn Quân Ân Trạch đã sợ hãi đến mức ngã ngồi xuống đất, nhỏ giọng khóc nức nở.</p>
+        <p>“Cái này … cái này thì nói được gì chứ! Có lẽ Tắc nhi nghịch ngợm, chạm phải ở đâu đó, cũng chưa biết được …” Trương quý nhân vẫn chưa từ bỏ ý định.</p>
+        <p>“Im miệng!” Thanh Bình đế ngắt lời nàng.</p>
+        <p>Trong cung tổ chức yến tiệc, có nơi nào mà không được lau chùi sạch sẽ không một hạt bụi, phải đi đâu để cả người bám đầy bụi đất như vậy? Thanh Bình đế chỉ cảm thấy mất hết thể diện, lửa giận càng dâng cao.</p>
+        <p>“Hôm nay là thọ yến của trẫm, các ngươi lại gây chuyện ầm ĩ náo loạn, đây là lễ vật tặng trẫm sao!” Thanh Bình đế lớn tiếng trách mắng.</p>
+        <p>Trương quý nhân không còn dám mở miệng.</p>
+        <p>Thanh Bình đế thở gấp vài hơi, mới hạ lệnh: “Đưa Nhị hoàng tử đi, đóng cửa ăn năn một tháng, chép trăm lần gia huấn của Thái tổ, khi nào chép xong thì khi đó được thả, ngay cả mẫu thân cũng không được vào thăm! Tiểu tử Quân gia này tâm tính không tốt, không cho phép tiếp tục làm thư đồng hoàng tử, chọn ngày đưa về bên phụ thân mà nuôi dạy! Còn những con cháu quan lại đi cùng, không biết khuyên can hoàng tử, ngược lại còn cùng càn quấy, điều tra là ai, phạt bổng lộc nửa năm của phụ thân huynh trưởng bọn họ!”</p>
+        <p>Cả điện yên tĩnh đến mức có thể nghe được tiếng kim rơi, ai cũng im như thóc. Trương quý nhân nghe xong nhất thời muốn ngất đi.</p>
+        <p>Quân Hoài Lang nghe thánh chỉ của ông lại ngây ngẩn một chút.</p>
+        <p>Lúc nãy khi người chịu tội là Tiết Yến, rõ là bị phạt gậy, rồi quỳ Phật đường. Nhưng đến phiên Nhị hoàng tử, chỉ nhẹ nhàng cấm túc, chép tổ huấn.</p>
+        <p>Còn mấy vị công tử thế gia, quả thật là phạt nặng. Chưa nói tới Quân Ân Trạch bị trục xuất khỏi kinh, chỉ bàn về các công tử thế gia khác, gây họa khiến phụ thân và huynh trưởng gánh phạt. Không những nam nhi trong nhà bị mất mặt trên triều, về nhà bọn họ cũng phải chịu một trận phạt thích đáng.</p>
+        <p>Nói đến cùng, phạt nặng bọn họ, cũng bởi vì bọn họ ‘dạy hư’ Nhị hoàng tử. Nhị hoàng tử và Thanh Bình đế vẫn là máu mủ ruột thịt. Tuy mặt ngoài là quân thần, trong xương cốt vẫn là phụ tử.</p>
+        <p>Mà Tiết Yến …</p>
+        <p>“Tiết Yến, hôm nay, tuy sai lầm không phải do ngươi, nếu đã được Thục phi dặn dò thì nên trông chừng kỹ muội muội, sao có thể làm lạc mất? Ngươi hôm nay không cần chịu đánh, nhưng vẫn phải quỳ ở Phật đường, quỳ đến trời sáng mới thôi.”</p>
+        <p>Thanh Bình đế nói tiếp.</p>
+        <p>Sau khi ông xử lý xong đám người kia, thấy Tiết Yến đang quỳ như bị đóng đinh dưới điện.</p>
+        <p>Tất cả đều bị phạt, chỉ có hắn dường như vô tội. Điều này ngược lại làm cho Thanh Bình đế cảm thấy khó chịu, cứ như bản thân đã vu oan cho hắn, làm hắn uất ức quỳ ở đây một hồi.</p>
+        <p>Cho nên Thanh Bình đế nhẹ nhàng nói, gán cho hắn một tội danh, cũng tìm cho mình một đường lui.</p>
+        <p>Dù sao cũng đã phạt hắn không ít lần, đây đâu phải lần một lần hai.</p>
+        <p>---------</p>
+        <p>Sau khi Quân Ân Trạch rời khỏi hậu điện của điện Vĩnh Lạc, Hoàng hậu giữ Vĩnh Ninh Công và Thẩm thị ở lại trò chuyện. Nhị hoàng tử sớm đã bị đưa đi, chỉ còn gã lẻ loi một mình, bên cạnh cả một hạ nhân cũng không có.</p>
+        <p>Chân Quân Ân Trạch mềm nhũn, đầu óc hỗn loạn.</p>
+        <p>Nơi phụ thân gã bị sung quân là Lĩnh Nam, nghe nói nơi đó toàn chướng khí, có thể độc chết người đang yên lành. Gã sống chết không muốn đi, phụ thân gã cũng không muốn gã chịu khổ, cầu xin Vĩnh Ninh Công, mới cho gã ở lại phủ Vĩnh Ninh Công.</p>
+        <p>Tuy ăn nhờ ở đậu, còn tốt hơn là đi Lĩnh Nam. Huống chi, gã còn là thư đồng của Nhị hoàng tử. Đó là người tâm phúc bên hoàng tử, quý không thể nói, ai cũng không dám xem thường gã, trong đám con cháu thế gia quyền quý, gã cũng xem như nổi bật.</p>
+        <p>Nhưng bây giờ, không còn gì nữa.</p>
+        <p>Chọc giận Hoàng đế, Nhị hoàng tử cũng không cứu nổi gã. Với Nhị hoàng tử mà nói, chẳng qua là tội danh trêu chọc quý nữ, nhưng với gã, đây chính là tội nặng xúi giục hoàng tử.</p>
+        <p>Quân Ân Trạch biết chuyện đến nước này, đã không thể cứu vãn. Không bao lâu nữa, gã phải bôn ba hơn vạn dặm, đến Lĩnh Nam đầy chướng khí.</p>
+        <p>Gã không còn tâm tình quay lại yến hội, đành ngồi ở một góc khuất bên hồ Thái Dịch. Trước mặt, hồ Thái Dịch kết một tầng băng vụn, sóng nước trong veo, hoa đăng bên hồ lấp lánh. Đối điện hồ, lớp lớp ngói xanh mái hiên cong vút của cung điện, rường cột chạm trổ, những ánh đèn rực rỡ phản chiếu xuống mặt hồ, giống như tiên cảnh Dao Trì.</p>
+        <p>Trước kia, gã vẫn có thể xem bản thân là một phần ở nơi này, nhưng bây giờ, gã bị tiên cảnh vứt xuống phàm trần, giống như một giấc mộng.</p>
+        <p>Lúc này, một tiếng thở dài hờ hững vang lên sau lưng gã.</p>
+        <p>“Tứ điện hạ?” Quân Ân Trạch ngạc nhiên xoay người, thấy Tứ hoàng tử Tiết Duẫn Hoằng đứng sau lưng mình.</p>
+        <p>Gã và Nhị hoàng tử luôn ở cùng nhau, còn vị Tứ điện hạ này thì ôn nhu như ngọc, kiệm lời ít nói, trước nay chưa từng kiếm chuyện với bọn họ. Vừa rồi cũng là ngài ấy tinh mắt thấy được Quân Lệnh Hoan ở đó.</p>
+        <p>“Nếu Ngũ đệ làm lạc mất đứa bé này, e là phụ hoàng lại nghiêm khắc trách phạt hắn.” lúc ấy, Tiết Duẫn Hoằng cười nói như vậy.</p>
+        <p>Tiết Duẫn Tắc kinh ngạc: “Tiết Yến dẫn con bé ra ngoài à? Sao ngươi biết?”</p>
+        <p>“Hình như có thấy, có lẽ là ta nhìn nhầm.” Tiết Duẫn Hoằng cười cười lắc đầu: “Nếu Nhị ca hiếu kì, có thể đi hỏi. Ta uống hơi nhiều, sợ là cảm gió lạnh, bây giờ có hơi đau đầu, cáo từ trước.”</p>
+        <p>Quân Ân Trạch có chút nghi ngờ.</p>
+        <p>Lúc đó, Tứ điện hạ đã về nghỉ ngơi, sao bây giờ đã tỉnh rượu rồi?</p>
+        <p>Thấy gã lộ vẻ nghi ngờ, Tiết Duẫn Hoằng cười cười, hờ hững nói: “Vừa rồi ta đang nghỉ ngơi, nghe bên ngoài ầm ĩ, nên ra xem một chút. Nghe nói ngươi và Nhị ca gặp rắc rối, ta hơi lo lắng, nên đến đây thăm ngươi.”</p>
+        <p>Quân Ân Trạch cảm kích, đồng thời rớt nước mắt: “Đa tạ Tứ điện hạ quan tâm. Chỉ là từ nay về sau, không còn cơ hội gặp mặt.”</p>
+        <p>“Sao lại không còn cơ hội gặp mặt?” Tiết Duẫn Hoằng ngạc nhiên nói.</p>
+        <p>Quân Ân Trạch nói: “Lĩnh Nam xa xôi, ta nào còn cơ hội trở về.”</p>
+        <p>Tiết Duẫn Hoằng lại cười lắc đầu.</p>
+        <p>“Chỉ cần Nhị hoàng huynh không nỡ bỏ ngươi, nơi xa mấy thì đã sao?” Tiết Duẫn Hoằng nói.</p>
+        <p>Quân Ân Trạch sửng sốt: “Ý người là …”</p>
+        <p>Tiết Duẫn Hoằng ôn hòa nói: “Ngươi từ nhỏ làm bạn bên cạnh Nhị hoàng huynh, ai so được tình nghĩa này? Chờ đến lúc ngươi đi, tìm cớ gặp mặt Nhị hoàng huynh một lần, nói lời từ biệt, Hoàng thượng sẽ không từ chối. Đến lúc đó, ngươi khóc lóc với huynh ấy một chút, Nhị hoàng huynh nhẹ dạ như vậy, nhất định sẽ nhớ ngươi, sẽ không để ngươi chịu khổ ở Lĩnh Nam quá lâu.”</p>
+        <p>Nét mặt Quân Ân Trạch dần trở nên vui vẻ.</p>
+        <p>Đúng vậy! Gã sao có thể quên! Mình không thể khống chế vận mệnh bản thân, nhưng quý nhân trong cung thì lại khác!</p>
+        <p>Tiết Duẫn Hoằng thấy gã nghe lọt tai, không khỏi lại cười một tiếng, dặn dò: “Lúc đó, ngươi chỉ nói không nỡ xa Nhị hoàng huynh, lại nói Tiết Yến hại ngươi. Nhị hoàng huynh chán ghét Tiết Yến như vậy, nhất định sẽ làm chủ cho ngươi, nghĩ cách giúp ngươi trở về.”</p>
+        <p>Quân Ân Trạch vội ghi nhớ từng câu từng chữ, liên tục cảm tạ Tiết Duẫn Hoằng nhắc nhở.</p>
+        <p>“Nhắc nhở gì chứ.” Tiết Duẫn Hoằng cười nói: “Ta cũng chỉ là không muốn để ngươi rời đi như thế này, cho nên nghĩ cách thay ngươi thôi.”</p>
+        <p>Nhị hoàng tử và mình bạn bè tình thâm, Tứ hoàng tử Điện hạ cũng không nỡ bỏ mình! Quân Ân Trạch lập tức tươi tắn trở lại.</p>
+        <p>Quả nhiên, không uổng bao nhiêu năm gã nịnh nọt.</p>
+        <p>“Đã nghĩ thông rồi thì quay về yến hội thôi.” Tiết Duẫn Hoằng cười gật đầu, nói: “Bên hồ gió lớn, ngươi ăn mặc mỏng manh, đừng để bị lạnh.”</p>
+        <p>Quân Ân Trạch đương nhiên không nghi ngờ gì, hành lễ cáo từ.</p>
+        <p>Nếu đã có cơ hội trở về, vậy gã cũng không cần lo âu. Trong các công tử thế gia, gã còn có vài bằng hữu tốt, mình còn phải trở về, cần phải qua lại, bồi dưỡng tình cảm hơn nữa.</p>
+        <p>Tiết Duẫn Hoằng cười, đưa mắt tiễn gã đi.</p>
+        <p>“Người thông minh dùng mưu, kẻ ngu ngốc dùng sức.” Tiết Duẫn Hoằng cười khẽ, lẩm bẩm: “Người xưa đúng là không lừa ta.”</p>
+        <p>Lấy chút bản lĩnh của Nhị hoàng tử, lại không có thế lực nhà mẹ, thì sao có thể cứu được Quân Ân Trạch? Tiết Duẫn Hoằng bảo Quân Ân Trạch cầu xin Nhị hoàng tử, chẳng qua tận dụng chút hữu dụng cuối cùng của tên phế vật kia để làm mâu thuẫn giữa Nhị hoàng tử và Tiết Yến càng thêm gay gắt thôi.</p>
+        <p>Tiết Duẫn Hoằng khoanh tay, nhìn mặt hồ được ánh đèn chiếu sáng. Những vảy sáng phản chiếu trong mắt lại không soi được chút độ ấm nào.</p>
+        <p>Tiết Duẫn Hoằng muốn trừng trị ai, bản thân chưa từng động tay. Mượn sức kẻ khác, là mẫu phi dạy cho gã, là bài học đầu tiên của đạo làm vua.</p>
+        <p>Giống như năm đó, gã và Tiết Yến một trước một sau được sinh ra. Mẫu phi gã khi đó chỉ là phi tần vô danh, không được sủng ái, mẫu thân Dung phi của Tiết Yến lại là sủng phi xinh đẹp yêu kiều nhất hậu cung. Lúc ấy, Trung cung Hoàng hậu nhiều năm không con, ai nấy đều nhìn chằm chằm bụng Dung phi. Mẫu phi gã mượn sức từ nhiều phía, mới có thể khiến Dung phi chết bất đắc kỳ tử, Tiết Yến thất sủng, đặt những ánh mắt đáng lẽ dành cho Tiết Yến lên người của gã.</p>
+        <p>Hiện tại, gã cũng có bản lĩnh này, mượn tay những kẻ ngu xuẩn không đầu óc giành lấy thắng lợi về cho bản thân, có thể càng làm Tiết Yến thất sủng, cả đời không vùng dậy được.</p>
+        <p>Suy cho cùng, mẫu phi gã từng nói, người có thù cũ cần chém cùng giết tận, mới tránh được mầm tai họa về sau.</p>
+        <p>Chỉ là bọn ngu xuẩn đó thật kém cỏi, như thanh kiếm kém chất lượng, chưa chém chết người, lưỡi kiếm đã bị uốn cong.</p>
+        <p>Tiết Duẫn Hoằng thất vọng thở dài nhìn mặt hồ sáng rực ánh đèn.</p>
+        <p>---------</p>
+        <p>Ngay giữa phía Đông và phía Tây lục cung của hoàng thành xây một bảo tháp Phật cao bảy tầng. Trước bảo tháp có đại điện tráng lệ, dâng cúng thờ Phật. Phật đường ngày đêm không dứt hương khói, mỗi tối vẫn có hòa thượng gác đêm gõ mõ bên trắc điện, vang vọng từng tiếng trong đêm.</p>
+        <p>Đêm đã về khuya, từ nơi xa vắng truyền đến tiếng điểm canh.</p>
+        <p>Tiết Yến quỳ giữa Phật đường, ngẩng đầu là tượng Phật bằng vàng cao mấy trượng. Đức Phật có gương mặt nhân hậu từ bi, hơi cụp mắt, nhìn xuống phía trước. Xung quanh đức Phật có một trăm lẻ tám tượng vị La Hán, mỗi vị đều mang dáng vẻ khác nhau, mắt mở to, đứng lặng lẽ dưới ánh nến lay động.</p>
+        <p>Tiết Yến ngẩng đầu, là có thể đối diện với hai mắt của tượng Phật.</p>
+        <p>Hắn lặng lẽ quan sát một lúc, đột nhiên bật cười.</p>
+        <p>“Có ngốc không chứ.” hắn lẩm bẩm tự nói, giọng nhẹ đến mức chỉ có hắn nghe thấy: “Loại người như ta, có gì đáng đâu.”</p>
+        <p>Hắn thừa nhận hôm nay hắn nhất thời nông nổi, làm chuyện không lý trí nên tất cả mới đi theo chiều hướng xấu. Chuyện này trước đây chưa từng xảy ra, vì trước đây, số phận của hắn vẫn luôn như vậy, chưa từng gặp người nào như Quân Hoài Lang.</p>
+        <p>Nhưng mà, cũng coi như chó ngáp phải ruồi. Đông Xưởng đang đợi một ngày hắn trở thành kẻ sa cơ thất thế, hắn cũng đang chờ cơ hội hành động, làm Đông Xưởng hoàn toàn tín nhiệm hắn.</p>
+        <p>Lý trí nói hắn biết, cơ hội đã đến.</p>
+        <p>Hắn chỉ cần yên lặng chờ mọi người phán xét hắn. Cách trừng phạt thường không có gì mới mẻ, hắn cũng chưa từng có thói quen giải thích, chỉ đợi hình phạt kết thúc, dựa vào mùi máu tanh trên người để thu hút bầy sói ở Đông Xưởng.</p>
+        <p>Nhưng lần này lại khác.</p>
+        <p>Lúc Quân Lệnh Hoan thất lạc, trong lòng hắn sinh ra cảm xúc hỗn loạn, đầu óc nhất thời trống rỗng, chỉ còn lại dáng vẻ của Quân Hoài Lang.</p>
+        <p>Hắn đoán được Quân Hoài Lang sẽ phản ứng thế nào, nên điều đầu tiên hắn nghĩ tới không phải là lợi dụng chuyện này, mà là lần theo dấu vết để tìm Quân Lệnh Hoan trở về. Nhưng đúng lúc này, Thục phi phái người đến tìm Quân Lệnh Hoan về ăn điểm tâm, tình cờ chạm mặt, bắt hắn ngay tại chỗ.</p>
+        <p>Sau đó, là một đám người vội chạy tới hỏi tội, Kim Ngô Vệ vây kín không lọt được một luồng gió, Thanh Bình đế tức giận.</p>
+        <p>Tình cảnh này với Tiết Yến mà nói không xa lạ gì, thậm chí có thể nói đã rất quen thuộc.</p>
+        <p>Nhưng lần này khác ở chỗ, không lâu sau, hắn thấy Quân Hoài Lang lo lắng chạy đến. Cũng chính vào lúc ấy, ngực Tiết Yến như bị siết chặt, làm hắn không thở nổi.</p>
+        <p>Lần đầu tiên, hắn muốn giải thích.</p>
+        <p>Đây là điều mà hắn từ khi còn nhỏ cũng chưa từng nghĩ đến. Tất cả mọi người chỉ muốn trừng phạt hắn, không ai muốn nghe hắn giải thích, hắn cũng không thích phí lời. Nhưng lần này, hắn muốn nói với Quân Hoài Lang rằng hắn không cố ý.</p>
+        <p>Nhưng, Tiết Yến lại không nói ra.</p>
+        <p>Dù y có biết hay không, cũng đều là sơ xuất của hắn mới làm muội muội Quân Hoài Lang không rõ tung tích. Nhìn thấy dáng vẻ lo lắng của Quân Hoài Lang, hắn chỉ muốn để đối phương trách móc, chửi rủa, hoặc tìm cách để trừng phạt mình, để xoá đi khổ sở mà mình mang đến cho y.</p>
+        <p>Nhưng mà Quân Hoài Lang … vẫn không làm vậy.</p>
+        <p>Tiết Yến đứng ngoài quan sát, hắn thấy Quân Hoài Lang từng bước thay hắn minh oan, tìm ra người lừa Quân Lệnh Hoan đi, trả lại trong sạch cho hắn.</p>
+        <p>Trong sạch, từ này với hắn mà nói, lạ lẫm đến mức buồn cười.</p>
+        <p>Tiết Yến luôn cho rằng thứ gọi là trong sạch đó, với hắn chẳng quan trọng gì. Hắn có làm hay không cũng không quan trọng, khái niệm quan trọng của hắn chính là kết quả cuối cùng có giá trị sử dụng với hắn hay không.</p>
+        <p>Chỉ là hắn chưa từng biết bản chất con người luôn hướng về ánh sáng. Trước đây, hắn không quan tâm đến trong sạch của mình, chẳng qua vì trước nay, hắn không có người quan tâm mà thôi.</p>
+        <p>Đông Xưởng nhận được tin Tiết Yến lại bị phạt oan, ngay lập tức phái Tiểu Ngụy Tử tới. Dù có hơi khác với tin tình báo, Tiết Yến không bị đánh, chỉ phạt quỳ ở Phật đường, nhưng Tiểu Ngụy Tử vẫn truyền lại lời của Ngô Thuận Hải, nói đau lòng cho hắn bị phạt vô cớ, Ngô công công sẽ chọn ngày gặp hắn.</p>
+        <p>“Công công đừng trách, tuy Ngũ hoàng tử chịu phạt không nặng, nhưng nô tài thấy vẻ mặt của hắn không đúng.” lúc Tiểu Ngụy Tử trở về bẩm lại với Ngô Thuận Hải thì nói như thế.</p>
+        <p>Ngô Thuận Hải nghe vậy hỏi: “Không đúng chỗ nào?”</p>
+        <p>Tiểu Ngụy Tử suy nghĩ rất lâu, cũng không thể nói rõ.</p>
+        <p>“Nói chung là cứ không đúng lắm, ánh mắt trống rỗng, lại như đang suy nghĩ gì đó.” sau đó nói: “Giống như một nửa linh hồn nhỏ bé bị yêu tinh câu mất.”</p>
+        <p>Ngô Thuận Hải nghe xong bật cười.</p>
+        <p>“Chắc là con thỏ bị ép đến mức gấp rồi, đang nghĩ cắn người thế nào đây mà.” gã chẳng để ý nói: “Gì mà bị yêu tinh câu hồn đi mất? Đọc sách nhiều một chút, cứ nói mấy chuyện vớ vẩn, đừng làm trò cười cho Đông Xưởng, để người khác nói người Đông Xưởng đều ăn nói hàm hồ, có mắt như mù.”</p>
+        <p>Tiểu Ngụy Tử gãi gãi sau đầu, không dám phản bác lời Ngô công công, liên tục vâng vâng dạ dạ rồi lui ra ngoài.</p>
+        <p>Nhưng mà … vẫn cảm thấy đánh giá của Ngô công công không đúng lắm.</p>
+        <p>Vẻ mặt đó của Ngũ hoàng tử giống có đại thù khó báo, hận thấu xương tủy chỗ nào chứ, chỉ có trống rỗng, chính xác là như linh hồn nhỏ bé bị câu mất mà.</p>
+        <p>Nhưng cũng đúng, yêu ma phương nào có gan lớn như vậy, dám bắt người trước mặt Phật Tổ.</p>
+        <p>---------</p>
+        <p>Khi Quân Hoài Lang về cung Minh Loan, đêm đã về khuya. Quân Lệnh Hoan bị hoảng sợ, sớm đã được ru ngủ. Quân Hoài Lang lại ngủ không được, thậm chí có hơi bồn chồn.</p>
+        <p>Y không ngờ mối bất hòa giữa Quân Lệnh Hoan và Tiết Yến tưởng như khó hiểu ở kiếp trước lại thật sự là do chuyện này gây ra.</p>
+        <p>Sống một lần dưới thân phận của Tiết Yến, y mới cảm nhận được tình cảnh mà mỗi ngày Tiết Yến trải qua là thế nào. Cho nên, người từng cho hắn một chút ấm áp, lúc sau lại tự tay phá hủy, Quân Lệnh Hoan mới thành đối tượng trả thù kiếp trước của hắn.</p>
+        <p>Quân Hoài Lang cảm thấy mình nên hận hắn. Từ đầu đến cuối, Quân Lệnh Hoan vô tội, nhưng lại gặp tai bay vạ gió. Không cần biết thủ phạm là ai, Tiết Yến mới là người gây ra tất cả.</p>
+        <p>Nhưng mà Quân Hoài Lang lại hận không nổi.</p>
+        <p>Chính vì từng trải qua nên Quân Hoài Lang mới có thể cảm nhận được loại cô lập này phải chịu bao nhiêu khổ sở, giống như một con dao cùn lạnh lẽo cứ cứa liên tục những vết thương rỉ máu.</p>
+        <p>Thế nên khoảnh khắc ấm áp đó vô cùng quý giá. Mất đi còn đau khổ hơn là chưa từng có được, sau khi có được hơi ấm, người đã từng cho ấm áp lại tránh né, sợ hãi mình bằng ánh mắt hoảng sợ, điều đó còn khó chấp nhận hơn cả ác ý từ người khác.</p>
+        <p>So với Tiết Yến, Quân Hoài Lang biết y nên ghét những người đã bức hại Tiết Yến đến bước đường này, còn trêu đùa Quân Lệnh Hoan, khiến con bé làm Tiết Yến chịu phạt, tạo thành mối thù của hai người.</p>
+        <p>Tiết Yến là hố lửa, chạm vào sẽ chết, chính đám người đó đã đẩy Quân Lệnh Hoan vào.</p>
+        <p>Nhưng sau lưng đám người này lại là một tổ chức khổng lồ. Chuyện hôm nay, ngoài mặt là Nhị hoàng tử hãm hại Quân Lệnh Hoan, nhưng thực tế, là những người trong cung lặng lẽ dung túng sau lưng và Thanh Bình đế không phân rõ đúng sai.</p>
+        <p>Dù hôm nay Tiết Yến đã rũ bỏ mọi liên can đến chuyện Quân Lệnh Hoan lạc đường, chẳng phải Thanh Bình đế vẫn tìm lý do trách phạt hắn hay sao?</p>
+        <p>Quân Hoài Lang ngẩng đầu nhìn màn đêm bên ngoài.</p>
+        <p>Ngoài ánh đèn lay động, chỉ là khung cảnh một màu đen như mực.</p>
+        <p>Đúng lúc này, Phất Y đẩy cửa bước vào.</p>
+        <p>“Đại thiếu gia?” Phất Y một tay cầm đèn, cẩn thận nhìn vào trong.</p>
+        <p>“Hửm?” Quân Hoài Lang nhìn sang.</p>
+        <p>Phất Y thấy y thì cười rộ lên, sau đó mở cửa, lệnh cho cung nữ phía sau tiến vào: “Nô tài thấy đèn trong phòng người chưa tắt, đoán rằng người chưa ngủ. Hôm nay trên cung yến ăn không bao nhiêu, nô tài thấy phòng bếp nhỏ trong cung làm bữa khuya cho nương nương, nên cũng bảo làm cho người một phần.”</p>
+        <p>Các cung nữ bưng mâm ngọc, nhanh nhẹn bước vào, lấp đầy chiếc bàn nhỏ trước mặt Quân Hoài Lang trong chốc lát.</p>
+        <p>Bảy tám loại điểm tâm để ăn nhẹ, tuy không nhiều nhưng rất tinh xảo, đều hợp với khẩu vị của Quân Hoài Lang. Quân Hoài Lang nhìn cung nữ phân thức ăn một lúc rồi mới định thần lại, quả thật cảm thấy bụng hơi trống rỗng.</p>
+        <p>Yến hội trong cung chiêu đãi rất nhiều quý nhân, món ăn lại yêu cầu phải tinh xảo mà chỉ có một ngự thiện phòng thường xuyên bận tới bận lui. Cho nên phân lượng đồ ăn trong cung thường không đủ, chỉ đủ lót dạ.</p>
+        <p>Chờ bày thức ăn xong, Phất Y lại chuẩn bị cho y dụng cụ ăn uống, đặt đũa ngà voi bên tay y.</p>
+        <p>Quân Hoài Lang đột nhiên hỏi: “Phật đường cách nơi này xa không?”</p>
+        <p>Phất Y ngẩn ra, bản thân cũng không biết, nhìn các cung nữ phía sau.</p>
+        <p>Một người trong đó nói: “Bẩm Thế tử Điện hạ, không xa. Ra khỏi cổng lớn phía Đông lục cung, đi khoảng chừng một nén nhang là tới.”</p>
+        <p>Quân Hoài Lang lại hỏi: “Có người trông coi không?”</p>
+        <p>Cung nữ kia che miệng cười nói: “Phật đường là nơi ai cũng có thể đến, ngoại trừ có thị vệ tuần tra canh gác, cũng chỉ có tăng sư.”</p>
+        <p>Quân Hoài Lang ừ một tiếng, không nói gì nữa.</p>
+        <p>Vừa rồi nhìn thấy những món điểm tâm này, y chợt lại nghĩ đến Tiết Yến.</p>
+        <p>Yến hội đêm nay, hắn nhất định cũng không ăn được bao nhiêu, còn phải quỳ cả đêm trong Phật đường tới sáng mới thôi.</p>
+        <p>Trong lòng Quân Hoài Lang nảy ra một ý tưởng táo bạo.</p>
+        <p>Sau một lúc, Quân Hoài Lang nhận thấy y không thể kìm nén được suy nghĩ đó. Y mím môi, hiếm khi tuỳ hứng mà nói: “Phất Y, dọn tất cả đồ ăn vào hộp, ta muốn ra ngoài một chuyến, không cần đi theo.”</p>
+        <p>Phất Y khó hiểu: “Người muốn …?”</p>
+        <p>Quân Hoài Lang nói: “Không cần hỏi, cũng đừng kinh động cô mẫu, mau dọn đi.”</p>
+        <p>Y thầm nghĩ, dù sao thì Hoàng thượng chỉ ra lệnh bắt Tiết Yến phải quỳ cả đêm, chứ không nói không cho phép ăn, không cho ai đến thăm.</p>
+        <p>Dù gì nhân quả kiếp trước đã rõ, kiếp này, Tiết Yến hẳn sẽ không diệt cả Quân gia nữa, cũng không xuống tay với muội muội y. Như thế, hiểu lầm đã dứt, ân oán cũng miễn cưỡng tính xong, Tiết Yến nếu đã là con thừa tự của cô mẫu, cũng đại khái là một nửa người Quân gia, nói không chừng ngày sau còn có thể bảo vệ cô mẫu, đệ đệ muội muội của y.</p>
+        <p>Quân Hoài Lang tự nhủ với lòng như vậy.</p>
+        <p>Dù không muốn thừa nhận, nhưng chỉ cần nghĩ đến chuyện Tiết Yến một mình quỳ cả đêm trong Phật đường, y có hơi không đành, hơi tức giận trong lòng.</p>
+        <p>Cuối cùng hắn đâu có lỗi gì, sao lại phải tự kiểm điểm trước mặt Phật Tổ?</p>
+        <p>Bên kia, Phất Y ngoan ngoãn thu dọn hộp đồ ăn giúp y rồi đặt lên bàn. Quân Hoài Lang mặc áo ngoài, cung nữ khoác thêm áo choàng cho y, mang theo hộp đồ ăn rồi mở cửa bước ra ngoài.</p>
+        <p>Đây là lần đầu tiên trong đời Quân Hoài Lang lén lút làm chuyện thế này. Y liếc nhìn sang phòng Thục phi, cảm thấy hơi căng thẳng, nhưng vẫn giả vờ bình tĩnh, ra lệnh cho Phất Y: “Nhớ kỹ, đừng để cô mẫu biết.”</p>
+        <p>“Đừng để ta biết cái gì?”</p>
+        <p>Đúng lúc này, một giọng nói quyến rũ kiều diễm vang lên bên cạnh.</p>
+        <p>Quân Hoài Lang vừa ngẩng đầu, đã thấy Thục phi không biết đến lúc nào, lặng lẽ đứng dưới cửa sổ, cũng không biết đã đứng bao lâu.</p>
+        <p>“... Cô mẫu?” Quân Hoài Lang hoảng hốt trong lòng.</p>
+        <p>Không ngờ, ra trận chưa thắng đã bị bóp chết, việc vụng trộm còn chưa kịp làm đã bị bắt quả tang.</p>
+        <p>“Vốn còn muốn để con đi một chuyến.” đối diện với ánh mắt của y, Thục phi hơi mất tự nhiên quay sang chỗ khác, gương mặt lạnh lùng hơi kỳ lạ: “Nếu để hạ nhân đi, ngược lại giống như ý của bổn cung, chuyện này vẫn nên để đứa trẻ như con làm thì tốt hơn.”</p>
+        <p>Quân Hoài Lang cảm thấy khó hiểu, tiếp đó, Thục phi giơ tay, đưa đồ đang cầm cho y.</p>
+        <p>Quân Hoài Lang nhìn xuống, thì thấy trong tay cô mẫu là một chiếc áo choàng.</p>
+        <p>“Ban đêm Phật đường lạnh giá, con mang đến cho hắn đi.” Thục phi lúng túng dời ánh mắt, bày ra dáng vẻ thờ ơ nói: “Chuyện hôm nay, là bổn cung đã trách oan hắn.”</p>
+        <p>---------</p>
+        <p>Sông Ngân bên kia trời Nam, có một thần thụ sinh ra từ giữa biển mây, cao một trăm hai mươi trượng, cành lá tươi tốt, đào hoa đơm đầy, khi gió thổi qua, tiếng chuông ngân vang như tiếng châu ngọc chạm vào nhau.</p>
+        <p>Dưới gốc cây có hai người đang chơi cờ. Trong đó có một vị ông lão râu tóc bạc phơ, trầm tư nhìn bàn cờ hồi lâu, thẳng tay vứt quân cờ lên bàn, phá hỏng cả ván cờ.</p>
+        <p>“Cả thiên đình ai mà không biết bổn Tinh Quân là cả một sọt cờ dở? Ngay cả Ngọc đế, cũng phải nhường ta vài bước, chỉ có kẻ đến từ Địa phủ không biết điều như ngươi, lần nào cũng giết ta tơi bời hoa lá!”</p>
+        <p>Ông lão nọ còn chưa hết giận, lại giơ tay đẩy bàn cờ rối tung lên mới chịu bỏ qua.</p>
+        <p>“Được rồi, ta hôm nay đến thiên đình, cũng không phải tìm lão già ông đánh cờ.” ngồi đối diện, chính là Phủ Quân Địa Phủ: “Ta muốn hỏi ông, ông đã xử lý xong hồn phách ngày đó Hắc Bạch Vô Thường bất cẩn triệu sai chưa?”</p>
+        <p>Mệnh Cách Tinh Quân vuốt vuốt chòm râu, nói: “Cũng gần xong rồi. Bổn Tinh Quân báo mộng cho y vài lần, nhưng tiểu tử này cứ như thần tiên đầu thai, bản tính quá cứng rắn, hết thảy không nhập vào thần trí của y được. Nhưng gần đây, cuối cùng cũng thành công.”</p>
+        <p>“Báo mộng?” Phủ Quân nhíu mày: “Chẳng lẽ ông không mau mau triệu hồn phách kia quay lại sao?”</p>
+        <p>Mệnh Cách Tinh Quân liếc xéo hắn: “Ngươi nghĩ dễ triệu lắm à? Mệnh cách của y bị trói với sát tinh kìa, cần phải sống lại một lần. Ngươi cho rằng lúc ấy sát tinh giáng thế lịch kiếp, gây hoạ khiến nhân gian máu chảy thành sông là vì sao? Là vì Nguyệt Lão không buộc dây tơ hồng cho bọn họ đấy. Người này được chuyên phái đi trấn sát, không trói chặt bọn họ bên nhau, thì trấn kiểu gì?”</p>
+        <p>Phủ Quân nói: “Nhưng, y đã xem truyện người viết …”</p>
+        <p>Mệnh Cách Tinh Quân lúng túng ho khan một tiếng.</p>
+        <p>“Cho nên ta mới báo mộng cho y.” ông nói: “Việc ta báo mộng cho y là nguyên do lúc trước ta viết truyện đó.”</p>
+        <p>Phủ Quân hỏi: “Có tác dụng thật sao?”</p>
+        <p>Mệnh Cách Tinh Quân thấy hắn liên tục nghi ngờ chất vấn mình, tức giận nói: “Sách do lão già này viết còn dày hơn sổ Sinh Tử của Địa Phủ các ngươi, ngươi hiểu hơn ta sao?”</p>
+        <p>Phủ Quân biết ông bướng bỉnh, nghe vậy cũng không nói gì nữa. Mệnh Cách Tinh Quân nếu đã dốc sức giải quyết, hắn cũng yên tâm.</p>
+        <p>Mệnh Cách Tinh Quân làm như vậy, ngược lại có thể giải quyết không ít phiền phức giúp hắn. Thất sát cô tinh tọa cao trên trời Nam, cứ cách ngàn năm sẽ hạ phàm lịch kiếp một lần, lịch đủ trăm lần, mới có thể tu thành Chân tiên*. Mỗi lần hạ phàm, hậu quả đều là máu chảy thành sông, Địa Phủ bọn họ lại phải vất vả lao lực. Hắn đã vì chuyện này đã bận tối mắt tối mũi chín mươi chín lần, lần cuối cùng này, nên để hắn nghỉ ngơi một chút.</p>
+        <p>*Trong Thái chân khoa nói tiên có 9 cấp, tức Thượng tiên, Cao tiên, Đại tiên, Thần tiên, Huyền tiên, Chân tiên, Thiên tiên, Linh tiên, Chí tiên.</p>
+        <p>Vì thế, Phủ Quân liền đứng dậy cáo từ.</p>
+        <p>Hắn đang chuẩn bị đi, Mệnh Cách Tinh Quân lại gọi hắn.</p>
+        <p>“Đợi đã, ta cũng có một chuyện hỏi ngươi.”</p>
+        <p>Hắn xoay người thấy ông ngồi ở chỗ cũ, hai tay đan nhau, nét mặt hơi ngại ngùng.</p>
+        <p>“... Không biết tiểu cô nương ở Địa Phủ các ngươi, có xem đam mỹ không?”</p>
+        <p>“... Đam gì cơ?” Phủ Quân khó hiểu.</p>
+        <p>Mệnh Cách Tinh Quân hắng giọng, khoát tay nói: “Không có gì, đi đi, mau về đi.”</p>
+        <p>Mệnh Cách Tinh Quân hiểu rõ nhất. Dù là cô nương trên trời hay dưới đất, chỉ cần câu chuyện trong sách thú vị, còn gò bó giới tính gì chứ?</p>
+        <p>Mấy ngày nay, ông đang lo lắng chuyện của sát tinh kia, ngày ngày nhìn chằm chằm nhân gian, xem nhiều rồi, trái lại cảm thấy hai người bọn họ vô cùng thú vị, rất đáng để viết thêm một quyển khác.</p>
+        <p>Mệnh Cách Tinh Quân lại ngứa tay rồi.</p>
+    </article>
+
+    <div class="reading-nav">
+        <a href="tatrothanhanhtrai23.html" class="nav-btn">⬅️ Chương trước</a>
+        <a href="../mucluc/tatrothanhanhtrai.html" class="nav-btn">📋 Mục lục</a>
+        <a href="../mucluc/hoanquanquyenthe.html" class="nav-btn">🌸 Ngoại truyện về Đoạn Thập Tứ và Quân Lệnh Hoan</a>
+        <a href="tatrothanhanhtrai25.html" class="nav-btn">Chương sau ➡️</a>
+    </div>
+</main>
+
+<div class="chapter-discussion-box">
+    <div class="discussion-header">
+        <div class="discussion-header-left">
+            <span>🌿</span>
+            <h3>Thảo luận về chương này</h3>
+            <span>🌸</span>
+        </div>
+        <div class="discussion-actions">
+            <button class="action-btn" id="like-btn" onclick="toggleLike()" title="Thả tim chương này">
+                <span class="heart-icon">🤍</span>
+                <span id="like-count">0</span>
+            </button>
+            <button class="action-btn" onclick="openShareModal()" title="Chia sẻ chương này">
+                🔗 Chia sẻ
+            </button>
+        </div>
+    </div>
+    <div class="comment-section">
+        <script src="https://utteranc.es/client.js"
+                repo="gocnhocuakhiet/gocnhocuakhiet.github.io"
+                issue-term="pathname"
+                label="comment"
+                theme="github-light"
+                crossorigin="anonymous"
+                async>
+        </script>
+    </div>
+</div>
+
+<div class="share-modal-overlay" id="share-modal-overlay" onclick="handleOverlayClick(event)">
+    <div class="share-modal">
+        <h4>🔗 Chia sẻ chương này</h4>
+        <div class="share-link-row">
+            <input class="share-link-input" id="share-link-input" type="text" readonly>
+            <button class="copy-link-btn" id="copy-link-btn" onclick="copyLink()">Sao chép</button>
+        </div>
+        <button class="share-modal-close" onclick="closeShareModal()">Đóng</button>
+    </div>
+</div>
+
+<div id="comment-sidebar" class="comment-sidebar">
+    <div class="sidebar-header">
+        <h4 id="sidebar-paragraph-title">Bình luận đoạn văn</h4>
+        <button class="close-sidebar-btn" onclick="closeInlineComment()">✕</button>
+    </div>
+    <div class="quoted-paragraph-box" id="quoted-paragraph-box"></div>
+    <div class="sidebar-mention-hint">
+        💡 Dùng <code>@tên-người</code> để nhắc đến ai đó trong bình luận.
+    </div>
+    <div id="sidebar-utterances-mount"></div>
+</div>
+<div id="sidebar-overlay" class="sidebar-overlay" onclick="closeInlineComment()"></div>
+
+<script>
+var GH_REPO  = 'gocnhocuakhiet/gocnhocuakhiet.github.io';
+var GH_LABEL = 'comment';
+var ORIGINAL_TITLE = document.title;
+
+function paragraphTitle(paraNum) {
+    return ORIGINAL_TITLE + ' [Đoạn ' + paraNum + ']';
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+    var paragraphs = document.querySelectorAll('.story-content p');
+    paragraphs.forEach(function (p, index) {
+        var paraNum = index + 1;
+        var row = document.createElement('div');
+        row.className = 'comment-row';
+        p.parentNode.insertBefore(row, p);
+        row.appendChild(p);
+        var badge = document.createElement('span');
+        badge.className = 'comment-badge';
+        badge.title = 'Bình luận về đoạn này';
+        badge.textContent = '💬';
+        badge.onclick = function () {
+            openInlineComment(p.innerText.trim().substring(0, 120), paraNum);
+        };
+        row.appendChild(badge);
+    });
+    initLike();
+});
+
+var currentParaNum = null;
+
+function openInlineComment(previewText, paraNum) {
+    document.getElementById('sidebar-paragraph-title').innerText = 'Đoạn ' + paraNum;
+    document.getElementById('quoted-paragraph-box').innerText =
+        '"' + previewText + (previewText.length >= 120 ? '…' : '') + '"';
+    document.getElementById('comment-sidebar').classList.add('active');
+    document.getElementById('sidebar-overlay').classList.add('active');
+    if (currentParaNum === paraNum) return;
+    currentParaNum = paraNum;
+    var mount = document.getElementById('sidebar-utterances-mount');
+    mount.innerHTML = '<div class="sidebar-loading">Đang tải bình luận…</div>';
+    document.title = paragraphTitle(paraNum);
+    var s = document.createElement('script');
+    s.src = 'https://utteranc.es/client.js';
+    s.setAttribute('repo',         GH_REPO);
+    s.setAttribute('issue-term',   'title');
+    s.setAttribute('label',        GH_LABEL);
+    s.setAttribute('theme',        document.body.classList.contains('dark-mode') ? 'github-dark' : 'github-light');
+    s.setAttribute('crossorigin',  'anonymous');
+    s.async = true;
+    s.onload = function () {
+        var loading = mount.querySelector('.sidebar-loading');
+        if (loading) loading.remove();
+        document.title = ORIGINAL_TITLE;
+    };
+    mount.innerHTML = '';
+    mount.appendChild(s);
+}
+
+function closeInlineComment() {
+    document.getElementById('comment-sidebar').classList.remove('active');
+    document.getElementById('sidebar-overlay').classList.remove('active');
+    document.title = ORIGINAL_TITLE;
+}
+
+function initLike() {
+    var key      = 'like-'      + window.location.pathname;
+    var countKey = 'likecount-' + window.location.pathname;
+    var liked    = localStorage.getItem(key) === '1';
+    var count    = parseInt(localStorage.getItem(countKey) || '0', 10);
+    updateLikeUI(liked, count);
+}
+
+function toggleLike() {
+    var key      = 'like-'      + window.location.pathname;
+    var countKey = 'likecount-' + window.location.pathname;
+    var liked    = localStorage.getItem(key) === '1';
+    var count    = parseInt(localStorage.getItem(countKey) || '0', 10);
+    liked = !liked;
+    count = liked ? count + 1 : Math.max(0, count - 1);
+    localStorage.setItem(key,      liked ? '1' : '0');
+    localStorage.setItem(countKey, count);
+    updateLikeUI(liked, count);
+}
+
+function updateLikeUI(liked, count) {
+    var btn       = document.getElementById('like-btn');
+    var heartSpan = btn.querySelector('.heart-icon');
+    var countSpan = document.getElementById('like-count');
+    heartSpan.textContent = liked ? '❤️' : '🤍';
+    countSpan.textContent = count;
+    liked ? btn.classList.add('liked') : btn.classList.remove('liked');
+}
+
+function openShareModal() {
+    document.getElementById('share-link-input').value = window.location.href;
+    document.getElementById('copy-link-btn').textContent = 'Sao chép';
+    document.getElementById('copy-link-btn').classList.remove('copied');
+    document.getElementById('share-modal-overlay').classList.add('active');
+}
+function closeShareModal() {
+    document.getElementById('share-modal-overlay').classList.remove('active');
+}
+function handleOverlayClick(e) {
+    if (e.target === document.getElementById('share-modal-overlay')) closeShareModal();
+}
+function copyLink() {
+    var input = document.getElementById('share-link-input');
+    var btn   = document.getElementById('copy-link-btn');
+    navigator.clipboard.writeText(input.value).then(function () {
+        btn.textContent = '✓ Đã sao chép';
+        btn.classList.add('copied');
+        setTimeout(function () { btn.textContent = 'Sao chép'; btn.classList.remove('copied'); }, 2000);
+    }).catch(function () {
+        input.select(); document.execCommand('copy');
+        btn.textContent = '✓ Đã sao chép'; btn.classList.add('copied');
+        setTimeout(function () { btn.textContent = 'Sao chép'; btn.classList.remove('copied'); }, 2000);
+    });
+}
+
+function syncUtterancesTheme(isDark) {
+    var theme = isDark ? 'github-dark' : 'github-light';
+    document.querySelectorAll('.utterances-frame').forEach(function (f) {
+        f.contentWindow.postMessage({ type: 'set-theme', theme: theme }, 'https://utteranc.es');
+    });
+}
+</script>
+
+</body>
+</html>
