@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <link rel="stylesheet" href="../style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cẩm Y Hành - Chương 72: Hổ mạnh ra khỏi lồng</title>
+    
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f1f7f4;
+            color: #2d3a34;
+            line-height: 1.8;
+        }
+
+        .navbar {
+            background-color: #ffffff;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 10%;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        .navbar .logo { font-size: 1.2rem; font-weight: bold; color: #4a6b5d; text-decoration: none; }
+        .nav-links a { color: #555; text-decoration: none; font-size: 0.95rem; transition: color 0.3s; }
+        .nav-links a:hover { color: #4a6b5d; }
+
+        .story-container {
+            max-width: 700px;
+            margin: 40px auto;
+            padding: 30px;
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.02);
+        }
+
+        .story-header {
+            text-align: center;
+            margin-bottom: 35px;
+            border-bottom: 1px dashed #8fae9f;
+            padding-bottom: 20px;
+        }
+        .story-header .novel-name {
+            font-size: 0.95rem; color: #777;
+            text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px;
+        }
+        .story-header .chapter-title { color: #4a6b5d; font-size: 1.6rem; font-weight: 600; }
+
+        .story-content { font-size: 1.15rem; color: #333333; text-align: justify; }
+        .story-content p { margin-bottom: 22px; text-indent: 25px; }
+
+        .reading-nav {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-top: 50px; padding-top: 25px; border-top: 1px dashed #8fae9f;
+        }
+        .nav-btn {
+            display: inline-block; padding: 10px 20px;
+            background-color: #ffffff; color: #4a6b5d;
+            text-decoration: none; border: 1px solid #8fae9f;
+            border-radius: 20px; font-size: 0.9rem; font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        .nav-btn:hover { background-color: #4a6b5d; color: #ffffff; border-color: #4a6b5d; box-shadow: 0 4px 8px rgba(74,107,93,0.2); }
+        .nav-btn.disabled { color: #bbb; border-color: #e0e0e0; background-color: #fafafa; pointer-events: none; box-shadow: none; }
+
+        @media (max-width: 480px) {
+            .story-container { padding: 15px; margin: 20px auto; }
+            .nav-btn { padding: 8px 14px; font-size: 0.8rem; }
+            .comment-sidebar { width: 100%; right: -100%; }
+        }
+
+        body.dark-mode { background-color: #131a17; color: #dae5e0; }
+        body.dark-mode .navbar { background-color: #1b2420; box-shadow: 0 2px 5px rgba(0,0,0,0.3); }
+        body.dark-mode .navbar .logo { color: #8fae9f; }
+        body.dark-mode .nav-links a { color: #aaa; }
+        body.dark-mode .story-container { background-color: #1b2420; box-shadow: 0 2px 10px rgba(0,0,0,0.2); }
+        body.dark-mode .story-header .novel-name { color: #8fae9f; }
+        body.dark-mode .story-header .chapter-title { color: #8fae9f; }
+        body.dark-mode .story-content { color: #dae5e0; }
+        body.dark-mode .nav-btn { background-color: #1b2420; color: #8fae9f; border-color: #4a6b5d; }
+        body.dark-mode .nav-btn:hover { background-color: #4a6b5d; color: #ffffff; }
+        body.dark-mode .nav-btn.disabled { color: #444; border-color: #2e3d36; background-color: #161e1b; }
+
+        .reader-controls-wrapper {
+            position: fixed; bottom: 30px; right: 30px;
+            z-index: 10000;
+            display: flex; flex-direction: column; align-items: flex-end; gap: 10px;
+        }
+        .reader-toggle-btn {
+            width: 48px; height: 48px; border-radius: 50%;
+            border: 2px solid #8fae9f; background: white; color: #4a6b5d;
+            font-size: 18px; cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15); transition: all 0.3s;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .reader-toggle-btn:hover { background: #4a6b5d; color: white; transform: scale(1.1); }
+        .reader-controls-group {
+            display: flex; flex-direction: column; gap: 10px;
+            overflow: hidden; max-height: 0; opacity: 0;
+            transition: max-height 0.35s ease, opacity 0.3s ease;
+        }
+        .reader-controls-group.open { max-height: 200px; opacity: 1; }
+        .reader-controls-group button {
+            width: 48px; height: 48px; border-radius: 50%;
+            border: 2px solid #8fae9f; background: white; color: #4a6b5d;
+            font-size: 15px; font-weight: bold; cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15); transition: all 0.3s;
+        }
+        .reader-controls-group button:hover { background: #4a6b5d; color: white; transform: scale(1.1); }
+        body.dark-mode .reader-toggle-btn,
+        body.dark-mode .reader-controls-group button { background: #1b2420; color: #8fae9f; border-color: #4a6b5d; }
+        body.dark-mode .reader-toggle-btn:hover,
+        body.dark-mode .reader-controls-group button:hover { background: #4a6b5d; color: white; }
+
+        .comment-row {
+            display: flex; justify-content: space-between;
+            align-items: flex-start; gap: 15px;
+            margin-bottom: 22px; width: 100%;
+        }
+        .comment-row p { flex: 1; margin-bottom: 0 !important; }
+
+        .comment-badge {
+            cursor: pointer; flex-shrink: 0; margin-top: 6px;
+            width: 30px; height: 30px; border-radius: 50%;
+            background-color: #eaf2ee; color: #4a6b5d;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.9rem; line-height: 1;
+            transition: all 0.2s ease; user-select: none; border: none;
+        }
+        .comment-badge:hover { background-color: #4a6b5d; color: #ffffff; transform: scale(1.12); }
+        body.dark-mode .comment-badge { background-color: #25332c; color: #8fae9f; }
+        body.dark-mode .comment-badge:hover { background-color: #4a6b5d; color: #ffffff; }
+
+        .comment-sidebar {
+            position: fixed; top: 0; right: -420px; width: 400px; height: 100%;
+            background: #ffffff;
+            box-shadow: -5px 0 15px rgba(0,0,0,0.05);
+            z-index: 100000;
+            transition: right 0.4s cubic-bezier(0.25,0.8,0.25,1);
+            padding: 24px; overflow-y: auto; box-sizing: border-box;
+        }
+        .comment-sidebar.active { right: 0; }
+        .sidebar-header {
+            display: flex; justify-content: space-between; align-items: center;
+            border-bottom: 1px solid #dae5e0; padding-bottom: 12px; margin-bottom: 16px;
+        }
+        .sidebar-header h4 { color: #4a6b5d; margin: 0; }
+        .close-sidebar-btn { background: none; border: none; font-size: 1.2rem; color: #999; cursor: pointer; }
+        .quoted-paragraph-box {
+            background: #f0f7f4; border-left: 3px solid #8fae9f;
+            border-radius: 4px; padding: 10px 14px;
+            font-size: 0.88rem; color: #4a6b5d; font-style: italic;
+            line-height: 1.5; margin-bottom: 12px;
+        }
+        .sidebar-mention-hint {
+            font-size: 0.8rem; color: #888;
+            background: #f8faf9; border: 1px dashed #c8ddd5;
+            border-radius: 6px; padding: 8px 12px; margin-bottom: 14px; line-height: 1.5;
+        }
+        .sidebar-mention-hint code { background: #e4efe9; color: #4a6b5d; padding: 1px 5px; border-radius: 4px; font-size: 0.78rem; }
+        body.dark-mode .sidebar-mention-hint { background: #1e2b24; border-color: #2e3d36; color: #7a9a8a; }
+        body.dark-mode .sidebar-mention-hint code { background: #2a3830; color: #8fae9f; }
+        .sidebar-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.2); z-index: 99999; display: none;
+        }
+        .sidebar-overlay.active { display: block; }
+        .sidebar-loading {
+            text-align: center; padding: 30px 0;
+            color: #aaa; font-size: 0.9rem; font-style: italic;
+        }
+
+        .chapter-discussion-box {
+            max-width: 700px; margin: 30px auto 50px auto;
+            padding: 25px; background-color: #ffffff;
+            border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.02);
+        }
+        .discussion-header {
+            display: flex; justify-content: space-between; align-items: center;
+            gap: 10px; margin-bottom: 25px;
+            border-bottom: 1px dashed #dae5e0; padding-bottom: 15px;
+        }
+        .discussion-header-left { display: flex; align-items: center; gap: 10px; }
+        .discussion-header h3 { color: #4a6b5d; font-size: 1.2rem; margin: 0; }
+        .discussion-actions { display: flex; align-items: center; gap: 10px; }
+        .action-btn {
+            display: flex; align-items: center; gap: 6px;
+            padding: 7px 14px; border-radius: 20px; border: 1px solid #8fae9f;
+            background: #ffffff; color: #4a6b5d;
+            font-size: 0.85rem; font-weight: 500; cursor: pointer;
+            transition: all 0.25s ease; user-select: none;
+        }
+        .action-btn:hover { background-color: #f0f7f4; box-shadow: 0 3px 8px rgba(74,107,93,0.15); }
+        .action-btn.liked { background-color: #fff0f3; border-color: #e8a0b0; color: #c0556a; }
+        .action-btn.liked .heart-icon { animation: heartPop 0.35s ease; }
+        @keyframes heartPop {
+            0% { transform: scale(1); } 40% { transform: scale(1.45); }
+            70% { transform: scale(0.9); } 100% { transform: scale(1); }
+        }
+        body.dark-mode .action-btn { background: #1b2420; color: #8fae9f; border-color: #4a6b5d; }
+        body.dark-mode .action-btn:hover { background-color: #232e29; }
+        body.dark-mode .action-btn.liked { background-color: #2a1e22; border-color: #7a3a4a; color: #e08090; }
+        .comment-section { width: 100%; min-height: 150px; }
+
+        body.dark-mode .chapter-discussion-box,
+        body.dark-mode .comment-sidebar { background-color: #1b2420 !important; }
+        body.dark-mode .discussion-header,
+        body.dark-mode .sidebar-header { border-bottom-color: #2e3d36 !important; }
+        body.dark-mode .discussion-header h3,
+        body.dark-mode .sidebar-header h4 { color: #8fae9f !important; }
+        body.dark-mode .quoted-paragraph-box { background: #232e29; border-left-color: #4a6b5d; color: #8fae9f; }
+
+        .share-modal-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.35);
+            z-index: 200000; display: none; align-items: center; justify-content: center;
+        }
+        .share-modal-overlay.active { display: flex; }
+        .share-modal {
+            background: #ffffff; border-radius: 12px;
+            padding: 28px 24px 22px; width: 380px; max-width: 92vw;
+            box-shadow: 0 12px 40px rgba(0,0,0,0.18);
+            animation: slideUp 0.25s ease;
+        }
+        @keyframes slideUp {
+            from { transform: translateY(20px); opacity: 0; }
+            to   { transform: translateY(0); opacity: 1; }
+        }
+        .share-modal h4 { color: #4a6b5d; font-size: 1.05rem; margin-bottom: 16px; text-align: center; }
+        .share-link-row { display: flex; gap: 8px; align-items: center; }
+        .share-link-input {
+            flex: 1; padding: 9px 12px; border: 1px solid #c8ddd5; border-radius: 8px;
+            font-size: 0.85rem; color: #444; background: #f8faf9;
+            outline: none; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
+        }
+        .copy-link-btn {
+            padding: 9px 16px; border-radius: 8px;
+            background: #4a6b5d; color: #ffffff; border: none;
+            font-size: 0.85rem; font-weight: 600; cursor: pointer;
+            transition: all 0.2s; white-space: nowrap;
+        }
+        .copy-link-btn:hover { background: #3a5a4d; }
+        .copy-link-btn.copied { background: #6aaa88; }
+        .share-modal-close {
+            display: block; width: 100%; margin-top: 14px;
+            padding: 8px; background: none; border: none;
+            color: #999; font-size: 0.85rem; cursor: pointer; text-align: center;
+        }
+        .share-modal-close:hover { color: #555; }
+        body.dark-mode .share-modal { background: #1b2420; }
+        body.dark-mode .share-modal h4 { color: #8fae9f; }
+        body.dark-mode .share-link-input { background: #232e29; border-color: #3a5040; color: #dae5e0; }
+        body.dark-mode .share-modal-close { color: #6a8a7a; }
+    </style>
+</head>
+<body>
+
+<div class="reader-controls-wrapper">
+    <div class="reader-controls-group" id="reader-group">
+        <button onclick="changeFontSize(1)" title="Phóng to chữ">A+</button>
+        <button onclick="changeFontSize(-1)" title="Thu nhỏ chữ">A-</button>
+        <button onclick="toggleDarkMode()" id="dark-mode-btn" title="Đổi màu nền">🌙</button>
+    </div>
+    <button class="reader-toggle-btn" id="reader-toggle" onclick="toggleReaderControls()" title="Tuỳ chỉnh đọc">⚙️</button>
+</div>
+
+<script>
+function toggleReaderControls() {
+    var group = document.getElementById('reader-group');
+    var btn   = document.getElementById('reader-toggle');
+    var isOpen = group.classList.toggle('open');
+    btn.style.background = isOpen ? '#4a6b5d' : '';
+    btn.style.color      = isOpen ? '#ffffff'  : '';
+}
+function toggleDarkMode() {
+    document.body.classList.toggle('dark-mode');
+    var isDark = document.body.classList.contains('dark-mode');
+    localStorage.setItem('night-mode', isDark ? 'on' : 'off');
+    document.getElementById('dark-mode-btn').innerText = isDark ? '☀️' : '🌙';
+    syncUtterancesTheme(isDark);
+}
+function changeFontSize(delta) {
+    var content = document.querySelector('.story-content') || document.body;
+    var cur = parseFloat(window.getComputedStyle(content).fontSize);
+    content.style.fontSize = (cur + delta) + 'px';
+}
+function syncUtterancesTheme(isDark) {
+    var theme = isDark ? 'github-dark' : 'github-light';
+    document.querySelectorAll('.utterances-frame').forEach(function(f) {
+        f.contentWindow.postMessage({ type: 'set-theme', theme: theme }, 'https://utteranc.es');
+    });
+}
+(function() {
+    if (localStorage.getItem('night-mode') === 'on') {
+        document.body.classList.add('dark-mode');
+        setTimeout(function() {
+            var b = document.getElementById('dark-mode-btn');
+            if (b) b.innerText = '☀️';
+        }, 80);
+    }
+})();
+</script>
+
+<header class="navbar">
+    <a href="../index.html" class="logo">🌿 Góc nhỏ của Khiết</a>
+    <nav class="nav-links"><a href="../index.html">Trang Chủ</a></nav>
+</header>
+
+<main class="story-container">
+    <div class="story-header">
+        <p class="novel-name">Cẩm Y Hành - Quyển 6</p>
+        <h1 class="chapter-title">Chương 72: Hổ mạnh ra khỏi lồng</h1>
+    </div>
+
+    <article class="story-content">
+        <p>Mạnh Kiếm Khanh nhanh chóng hiểu ra ý của Cao Thiên hộ.</p>
+        <p>Ba ngày sau, khi vòng cuối tuyển tú nữ của phủ Thái tử diễn ra, muội muội của Mạnh Kiếm Khanh là Mạnh Kiếm Hồng đã xảy ra xung đột với một tú nữ khác.</p>
+        <p>Trong cơn tức giận, nàng đánh trọng thương đối phương, bị Trắc phi của Thái tử chủ trì tuyển chọn phê phán là “đàn bà hung dữ” và loại khỏi danh sách.</p>
+        <p>May là uy danh Mạnh Kiếm Khanh vẫn còn giá trị, lại do tú nữ kia xúc phạm danh dự Mạnh Kiếm Hồng trước, nên nàng chỉ bị đưa về nhà mà không bị trừng phạt.</p>
+        <p>Khi tin Mạnh Kiếm Hồng bị loại truyền đến, Cao Thiên hộ đang cùng Mạnh Kiếm Khanh làm thủ tục bàn giao. Vốn nhiệm vụ bảo vệ Quốc Tử Giám trước đây do Cao Thiên hộ phụ trách, nhưng gần đây vì công việc ở phủ Thái tử quá bận rộn, Thẩm Quang Lễ đã ra lệnh tạm thời chuyển giao cho Mạnh Kiếm Khanh.</p>
+        <p>Nghe tin, khóe miệng Mạnh Kiếm Khanh giật giật, Cao Thiên hộ thở dài: “Xin chia buồn cùng Mạnh Bách hộ. Muội muội của ngài tài sắc vẹn toàn, chút sai sót nhỏ chẳng đáng kể gì.”</p>
+        <p>Dù từ “xin chia buồn” nghe khá chói tai, nhưng sự đồng cảm của Cao Thiên hộ có vẻ chân thành. Mạnh Kiếm Khanh mỉm cười: “Đa tạ lời vàng ngọc của Cao Thiên hộ. Đời người sớm nắng chiều mưa, gặp chuyện này cũng đành bấm bụng mà chịu vậy.”</p>
+        <p>Nhưng ngay sau đó, một tin khác truyền đến: con gái của Cao Thiên hộ bị ma ma khám thân phát hiện có mùi hôi nách, cũng bị loại ngay lập tức.</p>
+        <p>Sắc mặt Cao Thiên hộ lập tức tối sầm. Mạnh Kiếm Khanh đã chuẩn bị chiêu này từ khi nào? Cái cớ mùi hôi nách này… hết sức lộ liễu!</p>
+        <p>Mạnh Kiếm Khanh nhìn ông với ánh mắt cười như có như không, vừa lật giấy tờ vừa thở dài: “Xem ra cô nương hai nhà chúng ta đều không có duyên với Thái tử điện hạ rồi.”</p>
+        <p>Trong đại sảnh, bầu không khí ngột ngạt đến mức tất cả thuộc hạ đều cúi đầu im lặng.</p>
+        <p>Cuộc bàn giao giữa Cao Thiên hộ và Mạnh Kiếm Khanh kéo dài suốt mười ngày với đủ lý do.</p>
+        <p>Nào là sổ sách không khớp, nào là văn kiện sai sót, khi thì Cao Thiên hộ bận công vụ, lúc thì Mạnh Kiếm Khanh có việc gấp không thể tiếp tục.</p>
+        <p>Khi hoàn tất, thuộc hạ hai bên đều thở phào nhẹ nhõm.</p>
+        <p>Thẩm Quang Lễ nghe báo cáo về cuộc “chiến tranh lạnh” này chỉ mỉm cười bình thản.</p>
+        <p>Khi tiết xuân sang, nước sông ấm lên cũng là lúc cá nóc vào mùa. Thẩm Quang Lễ sai người mời cả hai đến dự tiệc tại Lâm Giang Các bên hồ Huyền Vũ nổi tiếng với món cá nóc.</p>
+        <p>Mọi người đều mặc thường phục, trong phòng riêng chỉ có ba người, lính vệ canh gác phòng bên. Từ song cửa phóng tầm mắt, mặt hồ mênh mông gợn sóng lăn tăn, gió xuân nhè nhẹ lướt qua. Quả thực là thắng địa hiếm có.</p>
+        <p>Cao Thiên hộ và Mạnh Kiếm Khanh lần lượt kính Thẩm Quang Lễ một chén, sau đó mới chúc nhau. Cao Thiên hộ tươi cười niềm nở, Mạnh Kiếm Khanh giữ thái độ cung kính, dù sao chức vụ và thâm niên của Cao Thiên hộ đều cao hơn.</p>
+        <p>Khi họ ngồi xuống, Thẩm Quang Lễ mỉm cười: “Hôm nay là tiệc riêng, không bàn chuyện công.”</p>
+        <p>Quả nhiên Thẩm Quang Lễ chỉ nói chuyện gia đình, nhưng dần dà dẫn đề tài đến Mạnh Kiếm Hồng và con gái Cao Thiên Hộ.</p>
+        <p>Mạnh Kiếm Khanh và Cao Thiên hộ đều hiểu, hôm nay phải giải quyết cho xong chuyện này.</p>
+        <p>Nhưng tiếng ồn ào bên ngoài ngày càng lớn, Thẩm Quang Lễ nhíu mày. Mạnh Kiếm Khanh lắng nghe một lúc rồi nói: “Là giám sinh Quốc Tử Giám đang tranh chỗ ngồi.”</p>
+        <p>Cao Thiên hộ mỉm cười: “Mạnh Bách hộ trẻ tuổi trí nhớ tốt, vừa nhận nhiệm vụ đã nhận ra tiếng giám sinh Quốc Tử Giám.”</p>
+        <p>Mạnh Kiếm Khanh cũng cười đáp: “Cao Thiên hộ quá khen. Ta nghe ra giọng mấy học sinh vùng biển, khẩu âm của họ rất đặc biệt.”</p>
+        <p>Hắn đứng dậy mở cửa, nhìn qua hành lang thấy rõ màn hỗn chiến đối diện.</p>
+        <p>Khách khứa và phụ bàn đã tản ra xa, để lại đám giám sinh Quốc Tử Giám đang hỗn chiến. Bảy học trò vùng biển nổi bật với làn da nâu bóng, dáng người gầy guộc nhưng dẻo dai, bộ áo quần sang trọng cùng những đường quyền cước chính xác đến kinh ngạc. Trong khi đó, nhóm bảy tám giám sinh bản địa đối đầu với họ đã bắt đầu đuối sức, lộ rõ vẻ thất thế.</p>
+        <p>Nhưng ánh mắt ba người đều đổ dồn về một người ngồi yên ở góc.</p>
+        <p>Thiếu niên áo vải giản dị, khuôn mặt thanh tú, đôi mắt đen láy lấp lánh, an nhiên ngồi xem chiến sự.</p>
+        <p>Thẩm Quang Lễ chăm chú nhìn hồi lâu rồi quay sang hai thuộc hạ, ánh mắt dò hỏi. Cao Thiên hộ lắc đầu tỏ ý không biết, đã nhiều tháng nay ông bận hộ tống Thái tử tuần biên, chẳng quan tâm đến Quốc Tử Giám. Mãi đến lúc ấy, Mạnh Kiếm Khanh mới chậm rãi thông báo: “Đó là Sở Bích Thiên.”</p>
+        <p>Sở Bích Thiên là con trai út của Hội trưởng Hoa thương Lữ Tống, đồng thời là sư đệ của Vân Yên Kiều. Mẹ của hắn là con gái của phiên vương Lữ Tống, nên từ khi nhập học đã bị Cẩm Y Vệ lập hồ sơ. Chỉ có điều, cả Thẩm Quang Lễ lẫn Cao Thiên hộ đều chưa từng gặp mặt.</p>
+        <p>Thẩm Quang Lễ ừ một tiếng, vừa quan sát Sở Bích Thiên vừa để ý thái độ kỳ lạ của Mạnh Kiếm Khanh, hắn dường như không vội ngăn cuộc ẩu đả.</p>
+        <p>Cũng vì ba vị quan lớn im lặng, đám lính vệ dưới quyền cũng chẳng dám tự ý hành động. Bởi lẽ, những giám sinh này phần lớn là con cháu nhà quan, thậm chí có cả con cháu nhà thổ ty, đụng vào dễ sinh phiền phức.</p>
+        <p>Hay Mạnh Kiếm Khanh đang cố ý quan sát bản chất thật của bọn giám sinh?</p>
+        <p>Đang suy nghĩ, một tiếng hét vang lên từ tầng dưới: “Đại ca! Bọn chúng ở trên này! Mau lên!”</p>
+        <p>Mấy tên giám sinh mới xông lên lầu nhanh như cắt, vừa nhập cuộc đã khiến bảy học trò vùng biển lập tức rối loạn. Trong nhóm mới đến, có một tên đánh vừa nhanh vừa mạnh khác thường, nổi bật hẳn lên.</p>
+        <p>Cao Thiên hộ liền giới thiệu: “Đó là Đoạn Tư Minh, hậu duệ hoàng tộc Đại Lý, vừa có tài văn võ, lại gia thế hiển hách, nên tính tình kiêu ngạo khác thường. Giám sinh các tộc Vân Quý đều xem hắn làm thủ lĩnh. Dĩ nhiên, số lần hắn gây sự cũng tăng theo, thành đối tượng trọng điểm của Cẩm Y Vệ.”</p>
+        <p>Tình thế đã nghiêng hẳn một phía, nhưng Sở Bích Thiên vẫn khoanh tay đứng xem. Thẩm Quang Lễ và Cao Thiên hộ đều nhìn Mạnh Kiếm Khanh. Sở Bích Thiên ngoan ngoãn như vậy, phải chăng đã bị Mạnh Kiếm Khanh cảnh cáo không được gây rối?</p>
+        <p>Khi Đoạn Tư Minh quăng một học sinh vùng biển sang bên, hắn khinh bỉ nhìn Sở Bích Thiên đang ngồi thù lù một góc.</p>
+        <p>Hầu như cả Quốc Tử Giám đều biết Sở Bích Thiên, một là vì gia đình cực kỳ giàu có, hai là vì sự ngoan ngoãn khác thường, ngày ngày chỉ biết theo tiên sinh nghe giảng, chưa từng tham gia ẩu đả. Một công tử nhà giàu được nuông chiều như hắn, đứng trước cảnh hỗn loạn này, tất nhiên chỉ biết co ro trong góc mà thôi.</p>
+        <p>Một học trò vùng biển bị hai đối thủ vây công, liên tiếp ăn mấy quả đấm cùng cú đá bay vào người. Hắn giả vờ kêu rống lên rồi lao thẳng về phía Đoạn Tư Minh, trong bụng nghĩ, dù không quật ngã được thằng khốn kiêu ngạo này, ít nhất cũng làm nó sưng mặt bầm mày cho bõ ghét!</p>
+        <p>Đoạn Tư Minh đang khinh bỉ nhìn Sở Bích Thiên ở góc phòng, không đề phòng kẻ xông tới. Hắn nhíu mày né người sang bên, tay phải như cánh diều vồ lấy cánh tay phải của tên đang toan tính xấu, xoắn mạnh ra sau lưng rồi tung một cước đá phăng thẳng, hất văng hắn đi xa.</p>
+        <p>Nhưng cú đá của Đoạn Tư Minh lần này khác hẳn lúc trước. Tên học trò vùng biển bị hất văng thẳng ra cửa sổ lầu, tiếng kêu lần này hoàn toàn thật sự, hắn vừa gào thét vừa giãy giụa giữa không trung.</p>
+        <p>Chính Đoạn Tư Minh cũng giật mình. Nếu rơi từ độ cao này mà bị thương nặng hay mất mạng thì rắc rối sẽ không nhỏ. Hắn tự trách mình sao lại lơ đễnh, sao lại ra đòn quá tay như thế?</p>
+        <p>Đoạn Tư Minh bực bội nhảy qua chiếc bàn, trong lòng nghĩ, dù sao cũng phải thử cứu, còn nước còn tát!</p>
+        <p>Nhưng có người đã nhanh chân hơn hắn. Một bóng người lao tới bên cửa sổ, kịp thời túm chặt cổ chân trái tên học trò kia, giật mạnh hắn vào trong. Một tay đỡ lấy eo, nhẹ nhàng đặt xuống sàn nhà an toàn.</p>
+        <p>Tên học trò thở hồng hộc, ngước mặt lên nhìn, suýt ngất khi nhận ra kẻ vừa cứu mình lại chính là Sở Bích Thiên. Một tiếng thét kinh hãi lại vang lên.</p>
+        <p>Đoạn Tư Minh đứng chết trân, ánh mắt lạnh như băng quét Sở Bích Thiên từ đầu tới chân, sự khinh bỉ trong mắt hắn giờ còn gấp bội lúc trước.</p>
+        <p>Đoạn Tư Minh càng nghĩ càng tức, nếu tên tiểu tử này trốn sau vì võ nghệ kém cỏi thì còn có thể thông cảm. Nhưng rõ ràng có bản lĩnh mà lại không chịu ra tay, đúng là đáng ghét!</p>
+        <p>Sở Bích Thiên lúc này mới giật mình nhận ra hành động của mình. Mặt hắn thoáng đỏ lên vì ngượng, đôi mắt đen nháy liếc quanh tìm lối thoát. Nhưng chưa kịp mở miệng, tiếng quát chát chúa của Đoạn Tư Minh đã nổ ra: “Tất cả im ngay!”</p>
+        <p>Khi Đoạn Tư Minh nghiêm mặt lên, uy nghiêm toát ra khiến cả đám đánh nhau phải im bặt. Ngay cả Sở Bích Thiên cũng đứng chôn chân tại chỗ, không dám nhúc nhích.</p>
+        <p>Hắn bước sát tới, ngón tay trỏ chĩa thẳng cách mũi Sở Bích Thiên chỉ một tấc, từng chữ nặng như đinh đóng cột: “Ngươi đấu với ta! Thắng, chỗ này nhường cho các ngươi! Thua, cả lũ cút ngay!”</p>
+        <p>Trừ tên học trò vừa được Sở Bích Thiên cứu, tất cả đều há hốc mồm.</p>
+        <p>Đoàn lão đại lại muốn đấu tay đôi với Sở Bích Thiên?</p>
+        <p>Nhưng điều khiến họ còn kinh ngạc hơn là thái độ của Sở Bích Thiên. Hắn đứng im quan sát Đoạn Tư Minh từ đầu tới chân, bất ngờ nở nụ cười tươi rói, gật đầu đồng ý: “Được.”</p>
+        <p>Đoạn Tư Minh từ từ hạ thấp trọng tâm, tư thế vững như bàn thạch, rõ ràng nhường Sở Bích Thiên ra đòn trước. Chẳng ngờ Sở Bích Thiên cũng chẳng khách sáo, phóng người tới như cắt. Bề ngoài hắn có vẻ thư sinh, nhưng động tác lại nhanh nhẹn như con vượn lì lợm, ngay đòn đầu đã vồ thẳng vào mặt Đoạn Tư Minh.</p>
+        <p>Kiểu đánh đường phố này khiến đám thuộc hạ Đoạn Tư Minh đồng loạt xì lên tỏ ý khinh bỉ. Đoạn Tư Minh đưa tay trái lên đỡ, đồng thời phóng một quyền vào ngực đối phương. Sở Bích Thiên biến chiêu cực nhanh, tay trái co lại chém vào cổ tay phải Đoạn Tư Minh.</p>
+        <p>Đoạn Tư Minh thuận thế xoay cổ tay đẩy lòng bàn tay trái hắn ra, quyền phải vẫn đánh tới ngực. Sở Bích Thiên hơi hít vào, ngực lõm vào trong một cách kỳ lạ, quyền của Đoạn Tư Minh chỉ cách áo một sợi tóc, không thể tiến thêm.</p>
+        <p>Hai người nhìn nhau, đều lộ vẻ kinh ngạc.</p>
+        <p>Đoạn Tư Minh thầm nghĩ, cổ tay mình bị chém đau rát thế này? Không ngờ tên tiểu tử này ra đòn lợi hại đến vậy!</p>
+        <p>Còn Sở Bích Thiên thì bất ngờ hơn, mình dùng tới một nửa sức lực mà hắn như không hề hấn gì? Ha! Đúng là đối thủ xứng tầm... phải cẩn thận kẻo lại dọa hắn chạy mất…</p>
+        <p>Sở Bích Thiên nhảy lùi vài bước, mắt không rời Đoạn Tư Minh. Bất chợt, nụ cười tươi tắn lại nở trên môi hắn, gật đầu hài lòng rồi lao tới như gió.</p>
+        <p>Lần này không còn là những đòn tay loạn xạ nữa. Hắn chuyển sang liên hoàn cước sát đất, những cú đá nhanh tựa chớp giật liên tiếp quất vào chân Đoạn Tư Minh.</p>
+        <p>Mấy phát trúng liền khiến ống chân Đoạn Tư Minh đau điếng. Tức giận, hắn nhảy phắt lên bàn, tay rút đoản đao từ trong ủng, chỉ thẳng mặt Sở Bích Thiên: “Ta không muốn động đao, nhưng xem ra ngươi cũng đáng mặt đối thủ, đấu không?”</p>
+        <p>Sở Bích Thiên chăm chú nhìn đoản đao trong tay Đoạn Tư Minh: “Đoản đao của ngươi, phải chăng làm bằng thép Miến Điện? Nếu ta thắng, ngươi có chịu nhường nó cho ta không?”</p>
+        <p>Đoạn Tư Minh cười lạnh: “Đợi khi nào thắng được ta rồi hãy nói, binh khí của ngươi đâu?”</p>
+        <p>Sở Bích Thiên rút từ trong áo ra một sợi xích vàng óng quấn quanh eo. Cả tầng lầu vang lên những tiếng hít hà kinh ngạc.Đúng là con nhà giàu, vũ khí lại là một dây xích tinh xảo làm bằng vàng ròng, mấu khóa còn khảm hai viên ngọc lam lấp lánh.</p>
+        <p>Sở Bích Thiên nghiêng đầu cười: “Ta thua, binh khí này cũng nhường ngươi.”</p>
+        <p>Lời còn chưa dứt, sợi xích vàng đã vút ra xé gió. Đoạn Tư Minh vung đao chém xuống, xích vàng như rắn cuộn quấn chặt lấy lưỡi dao. Hắn nhanh như chớp giật mạnh đao về. Nếu là xích sắt thường đã đứt lìa, nhưng xích vàng dẻo dai chỉ nghe xoảng xoảng rồi vẫn nguyên vẹn trở về tay chủ.</p>
+        <p>Sở Bích Thiên vừa đánh vừa hét lớn: “Đao pháp của ngươi không tồi!”</p>
+        <p>Mặt hắn đỏ bừng phấn khích. Lưỡi đao sắc lẹm dù chỉ lướt nhẹ cũng để lại vài vệt máu trên người hắn.</p>
+        <p>Đoạn Tư Minh cũng chẳng sướng gì hơn, chỗ nào bị xích vàng quất trúng thì xương cốt rêm rời như muốn vỡ tan.</p>
+        <p>Bọn giám sinh đi theo chia thành hai phe, hò hét cổ vũ, dậm chân ầm ầm khiến sàn lầu rung chuyển.</p>
+        <p>Thẩm Quang Lễ ngồi đối diện, chăm chú quan sát trận đấu, thầm nhíu mày. Cao Thiên hộ cười nói: “Mạnh Bách hộ, hai con hổ đánh nhau, chắc chắn một con sẽ bị thương.”</p>
+        <p>Mạnh Kiếm Khanh mỉm cười, quay người bước ra.</p>
+        <p>Khi đoản đao Miến Điện và xích vàng của Sở Bích Thiên sắp chạm nhau lần nữa, bỗng bị đao Bách Chiết của Mạnh Kiếm Khanh gạt ra.</p>
+        <p>Sở Bích Thiên thấy hắn thì giật mình vội thu xích vàng, cười ngượng nghịu lùi lại. Đoạn Tư Minh không ngờ có người có thể một đao đẩy lùi cả hai vũ khí của mình và Sở Bích Thiên, nhíu mày định hỏi, nhưng Mạnh Kiếm Khanh đã giơ lên một tấm thẻ bài.</p>
+        <p>Đoạn Tư Minh từng tiếp xúc với Cẩm Y Vệ, nhận ra thân phận của hắn, chỉ chần chừ một chút, liền rút đoản đao Miến Điện cắm trở lại vào ống bốt.</p>
+        <p>Đám giám sinh Quốc Tử Giám vốn đang hò reo náo nhiệt, giờ đều im bặt, ngơ ngác nhìn Mạnh Kiếm Khanh.</p>
+        <p>Hắn không nói nhiều, chỉ bắt họ bồi thường thiệt hại cho chủ quán rồi cho phép rời đi. Khi Đoạn Tư Minh và Sở Bích Thiên xuống lầu, hai người liếc nhìn nhau, trong lòng đều nôn nao không yên, không biết sẽ bị trừng phạt thế nào. Cảm giác cùng chung cảnh ngộ khiến họ bỗng thấy đối phương dễ chịu hơn, không còn chút oán hận nào sau trận đấu.</p>
+        <p>Ba người trên lầu quan sát cảnh tượng ấy. Thẩm Quang Lễ mỉm cười: “Đoạn Tư Minh này tuy kiêu ngạo nhưng thẳng thắn phóng khoáng, không khó sống chung. Gia thế nhân phẩm đều tốt, nghe nói cũng chưa hôn phối. Kiếm Khanh thấy thế nào?”</p>
+        <p>Mạnh Kiếm Khanh giật mình. Cao Thiên hộ đã cười nói: “Gần đây đại nhân rất hứng thú mai mối nhỉ.”</p>
+        <p>Chỉ trong khoảnh khắc đó, Mạnh Kiếm Khanh đã kịp trấn định, cúi đầu đáp:  “Đoạn Tư Minh quả thật rất tốt. Nếu được đại nhân ra mặt làm mối, Kiếm Khanh xin tuân lệnh.”</p>
+        <p>Thẩm Quang Lễ lại hỏi: “Cao Bình, ngươi không nghĩ ta thiên vị chứ?”</p>
+        <p>Cao Thiên Hộ cười đáp: “Không dám. Con gái của hạ quan nếu so với tiểu thư Mạnh gia thì yếu đuối quá, không xứng với Đoạn Tư Minh.”</p>
+        <p>Mạnh Kiếm Khanh liếc nhìn ông. Câu này nghe như ám chỉ danh hiệu “hung dữ” của Mạnh Kiếm Hồng.</p>
+        <p>Thẩm Quang Lễ cười nói: “Con gái ngươi yếu đuối thì nên chọn nhà thư hương. Đoạn Tư Minh có người anh họ tên Đoạn Tư Thông, là một tài tử nổi tiếng xứ Vân Nam, mấy năm nay vẫn du học xa, sắp tới cũng vào Quốc Tử Giám. Ngươi có thể xem qua, nếu ưng ý, ta sẵn lòng làm mai lần nữa. Hai ngươi đều là tâm phúc của ta, đương nhiên phải công bằng, để khỏi bị thiên hạ chê cười, có phải không?”</p>
+        <p>Thẩm Quang Lễ nói ra những lời nửa đùa nửa thật đầy ẩn ý, khiến Mạnh Kiếm Khanh và Cao Thiên hộ buộc phải nâng chén tỏ vẻ hòa hợp. Bề ngoài tưởng chừng như họ đã thực sự hòa giải, bỏ qua hiềm khích cũ.</p>
+        <p>Nhưng trong thâm tâm, cả hai đều hiểu rõ: việc Thẩm đại nhân cố ý gả con gái hai nhà về cùng một nơi, tương lai chắc chắn sẽ nảy sinh mâu thuẫn. Có lẽ đây chính là điều vị Thẩm đại nhân này mong muốn.</p>
+        <p>Xét theo quan niệm thông thường, cả hai hôn sự này đều là “con gái bên gả được nâng đỡ”.</p>
+        <p>Nếu không có uy tín của Thẩm Quang Lễ đứng ra làm mối, họ khó lòng kết thông gia với những gia tộc danh giá như Đoạn gia…</p>
+        <p>Cao Thiên hộ xin phép rút lui sớm vì còn phải đi tuần tra phủ Thái tử, không dám uống nhiều rượu. Sau khi ông đi khỏi, Thẩm Quang Lễ quay sang nhìn Mạnh Kiếm Khanh, nói thẳng: “Có gì muốn nói cứ nói.”</p>
+        <p>Mạnh Kiếm Khanh khẽ cười: “Hạ quan tưởng đại nhân sẽ chọn Sở Bích Thiên  làm chỗ dựa cho Cao Thiên hộ.”</p>
+        <p>Nếu đã muốn giữ thế cân bằng... sao chỉ để mỗi hắn gắn chặt quan hệ với thế lực Hải Thượng Tiên Sơn.</p>
+        <p>Thẩm Quang Lễ bình thản đáp: “Con gái của Cao Bình tuy có chút danh tiếng văn chương, cũng coi như xứng với Đoạn Tư Thông, nhưng muốn kết đôi với Sở Bích Thiên văn võ song toàn, tiền đồ vô lượng thì vẫn còn kém xa.”</p>
+        <p>Ông chuyển ánh mắt nhìn Mạnh Kiếm Khanh, nói rành rọt: “Muốn chiêu mộ nhân tài hạng nhất, phải cho hắn thứ tốt nhất, người tốt nhất.”</p>
+        <p>Ngụ ý rõ ràng: Mạnh Kiếm Khanh chính là nhân tài xuất chúng nhất dưới tay Thẩm Quang Lễ, nên mới được dùng để kết thân với Vân gia. Hoặc nói cách khác, chính vì Mạnh Kiếm Khanh đủ tài năng, Thẩm Quang Lễ mới chịu đích thân đến Vân gia hỏi cưới.</p>
+        <p>Thẩm Quang Lễ hiếm khi trực tiếp khen ngợi thuộc hạ như vậy. Mạnh Kiếm Khanh bối rối không biết ứng đáp thế nào, đành im lặng.</p>
+        <p>Nhưng Thẩm Quang Lễ đột ngột chuyển giọng: “Trò mèo lần này của ngươi và Cao Bình, đừng tưởng không ai biết.”</p>
+        <p>Mạnh Kiếm Khanh lạnh sống lưng, vốn định biện bạch nhưng kịp nghĩ lại, chỉ cúi đầu nói nhỏ: “Hạ quan biết lỗi.”</p>
+        <p>Hắn biết Thẩm Quang Lễ cực ghét thuộc hạ dối trá.</p>
+        <p>Thẩm Quang Lễ nhìn chằm chằm vào Mạnh Kiếm Khanh một lúc lâu, khẽ thở dài: “Hai năm nay ngươi quá thuận lợi nên mới sinh lòng kiêu ngạo chăng?”</p>
+        <p>Mạnh Kiếm Khanh hiểu việc Thẩm Quang Lễ trực tiếp nói ra những lời này nghĩa là sẽ không xử phạt thêm. Hắn thầm thở phào, ngẩng đầu đáp: “Đại nhân thấu suốt, Kiếm Khanh thực sự cần rèn luyện thêm.”</p>
+        <p>Thẩm Quang Lễ xoay chén rượu trong tay, lại thở dài: “Có lẽ ta hai năm nay cũng già đi, lòng trở nên mềm yếu. Nếu là trước đây, ngươi và Cao Bình giờ đã ở Thẩm Hình Ty rồi.”</p>
+        <p>Mạnh Kiếm Khanh im bặt, không dám nói thêm lời nào.</p>
+        <p>Sau khi tiễn Thẩm Quang Lễ, hắn chợt nhớ mình còn một thắc mắc chưa hỏi.</p>
+        <p>Đoạn Tư Minh là con cháu thổ ty, triều đình vốn ưu đãi các thế lực địa phương này. Nếu Đoạn Tư Minh không nể mặt Thẩm Quang Lễ, liệu ông có dám lấy quyền thế áp chế không? Vậy tại sao Thẩm Quang Lễ lại tự tin đến vậy?</p>
+        <p>Chẳng mấy chốc, câu trả lời đã đến.</p>
+        <p>Nửa tháng sau, cùng với Đoạn Tư Thông nhập học Quốc Tử Giám còn có nhóm con cháu các phiên vương vùng Tây Bắc. Trong số đó nổi bật là Giang Vô Cực, cháu ruột của Lạc Hà Khương Vương.</p>
+        <p>Triều đình phong một số con gái quan lại làm Huyện chúa, gả cho các con cháu của thổ ty và phiên vương chưa hôn phối, bao gồm Giang Vô Cực, Đoạn Tư Minh và Đoạn Tư Thông.</p>
+        <p>Được gả cho Giang Vô Cực đương nhiên là Thẩm Mộ Trần.</p>
+        <p>Nghe nói khi Hoàng đế xem danh sách đã cười bảo: “Thẩm hòa thượng lần này cũng biết lo cho con gái, vừa được việc công lại vừa được việc tư!”</p>
+        <p>Lời nhận xét nhạy cảm này tất nhiên không ai dám lan truyền.</p>
+        <p>Chỉ đến lúc này, Mạnh Kiếm Khanh mới thực sự thở phào nhẹ nhõm. Hắn đoán chắc Cao Thiên hộ cũng cảm thấy như vậy.</p>
+        <p>Trong lòng Mạnh Kiếm Khanh không khỏi nảy sinh nghi vấn, lần này Thẩm Quang Lễ rốt cuộc đang tính toán gì? Tại sao lại có những sắp xếp trái với thông lệ như vậy?</p>
+        <p>Chiếu chỉ ban hôn bất ngờ khiến Đoạn Tư Minh choáng váng, trong khi Sở Bích Thiên lại vui mừng vì tình bạn với hắn càng thêm thân thiết.</p>
+        <p>Còn Đoạn Tư Minh bực bội vì bản thân không có quyền lựa chọn, trì hoãn mãi cuối cùng lại bị ép kết hôn, đồng thời cũng khó hiểu vì theo nguồn tin riêng, muội muội có dung mạo xuất chúng của Mạnh Kiếm Khanh vốn nằm trong danh sách tuyển chọn của phủ Thái tử, không hiểu sao giờ lại rơi vào tay mình?</p>
+        <p>Phải chăng có ai đó đã chèn ép? Với thủ đoạn của Mạnh Kiếm Khanh, sao có thể để muội muội bị gạt khỏi con đường thăng tiến tốt nhất?</p>
+        <p>Chỉ ba ngày sau chiếu chỉ, tin tức Thái tử Chu Tiêu nguy kịch bắt đầu lan truyền. Đến tháng Tư, Thái tử qua đời.</p>
+        <p>Phản ứng đầu tiên của Đoạn Tư Minh: “Thái tử mất, tình hình Đại Minh chắc chắn đại loạn.”</p>
+        <p>Còn Sở Bích Thiên lại nghĩ khác: “May mà Mạnh Kiếm Khanh gả muội muội cho Đoạn Tư Minh, không thì giờ đã thành góa phụ. Không biết đây có phải trong họa có phúc không?”</p>
+        <p>Nhưng cú sốc tiếp theo còn kinh khủng hơn.</p>
+        <p>Hồng Vũ Đế ra chiếu chỉ: tất cả tỳ thiếp trong phủ Thái tử không có con đều phải tuẫn táng.</p>
+        <p>Tuẫn táng? Tục lệ dã man này ở Trung Nguyên không phải đã bị bãi bỏ từ lâu sao? Ngay cả Khổng Tử cũng từng nói, dùng tượng gỗ thế mạng còn là tội ác, huống chi là người thật?</p>
+        <p>Kỳ lạ thay, Đoạn Tư Minh chợt nảy ra ý nghĩ: với mạng lưới tình báo của Mạnh Kiếm Khanh, phải chăng hắn đã biết trước Thái tử sắp gặp nạn, nên mới chịu thiệt thòi để đưa muội muội ra khỏi danh sách?</p>
+        <p>Khi nhìn sang Sở Bích Thiên, rõ ràng hắn cũng đang nghĩ tương tự.</p>
+        <p>Nếu đúng như vậy, Mạnh Kiếm Khanh quả thật quá to gan. Giả sử Hồng Vũ Đế biết được việc này, ắt sẽ bị hiểu rằng hắn đã biết trước Thái tử sắp chết nên mới tìm cách đưa muội muội ra khỏi danh sách. Trong lúc đau buồn, Hoàng đế chắc chắn sẽ trừng phạt tàn khốc.</p>
+        <p>Đoạn Tư Minh và Sở Bích Thiên nhìn nhau, im lặng dừng lại không dám suy diễn thêm.</p>
+        <p>Việc tổ chức tang lễ Thái tử trở thành quốc sự trọng đại, toàn bộ Cẩm Y Vệ đều được huy động, mọi công việc khác đều tạm ngưng. Nhân lúc cùng tuần tra ca trước sau với Cao Thiên hộ, nửa đêm thay phiên, hai người chạm mắt nhau trong giây lát.</p>
+        <p>Cao Thiên Hộ lên tiếng trước: “Muội muội nhà ngài sắp xuất giá, bao giờ mời bọn ta uống rượu mừng?”</p>
+        <p>Mạnh Kiếm Khanh đáp: “Chén rượu của Cao Thiên hộ, đương nhiên không thể quên.”</p>
+        <p>Cao Thiên hộ nheo mắt nhìn hắn: “Một chén rượu đã đủ tạ ơn ta sao?”</p>
+        <p>Mạnh Kiếm Khanh khẽ mỉm cười: “Ta sẽ tiếp tục làm tốt vai trò... đối thủ của Cao Thiên hộ.”</p>
+        <p>Cao thiên hộ sửng sốt, nhìn chằm chằm hồi lâu rồi bỗng thở dài: “Phải! Đúng là có việc phải nhờ đối thủ mới xong được!”</p>
+        <p>Khi bóng dáng Cao Thiên hộ khuất sau cửa, Mạnh Kiếm Khanh ngả người tựa vào thành ghế, thở dài nhìn lên xà nhà. Ánh đèn chập chờn, in những vệt bóng mờ lên khuôn mặt hắn.</p>
+        <p>Thái tử băng hà, không biết sẽ kéo theo bao nhiêu sóng ngầm.</p>
+        <p>Mưa núi sắp đến, gió tràn khắp lầu.</p>
+        <p>Tháng 9 năm Hồng Vũ thứ 25: Hồng Vũ Đế lập cháu đích tôn Chu Doãn Văn là con trai trưởng của Thái tử làm Hoàng thái tôn. Chỉ huy sứ Cẩm Y Vệ Thẩm Quang Lễ tự nguyện xuất gia, lên núi tuyết Tây Tạng tu hành để cầu phúc cho Thái tôn. Động thái “buông tay đúng lúc” này của Thẩm Quang Lễ đã phá hỏng âm mưu của vô số phe phái.</p>
+        <p>Năm Hồng Vũ thứ 26: Tân Chỉ huy sứ Cẩm Y Vệ Tưởng Nghiệp tố cáo đại tướng Lam Ngọc mưu phản, liên đới xử tử hơn mười lăm ngàn người. Hồng Vũ Đế ban chiếu: “Từ nay mọi vụ án đều do Pháp ty xử lý, Cẩm Y Vệ không được can thiệp”. Thế lực từng lẫy lừng một thời của Cẩm Y Vệ chính thức chấm dứt.</p>
+        <p>Năm 27: Hồng Vũ Đế xử tử Định Viễn Hầu Vương Bật, Vĩnh Bình Hầu Tạ Thành, Dĩnh quốc công Phó Hữu Đức.</p>
+        <p>Năm 28: Xử tử Tống quốc công Phùng Thắng. Những công thần quyền lực, khó kiểm soát đều bị thanh trừng sạch sẽ.</p>
+        <p>Tháng 5 năm Hồng Vũ thứ 31: Hồng Vũ Đế băng hà, Thái tôn lên ngôi, đổi niên hiệu thành Kiến Văn.</p>
+        <p>Ngay từ khi Thẩm Quang Lễ xuất gia, Tưởng Nghiệp lên thay chức, Mạnh Kiếm Khanh đã bị điều sang chỗ Tần Hữu Danh giúp ông quản lý kho hồ sơ, mà thực ra là bị “xếp xó”, không còn việc quan trọng.</p>
+        <p>Chuyện này chẳng ai lấy làm lạ.</p>
+        <p>“Một triều vua, một triều thần”</p>
+        <p>Mạnh Kiếm Khanh vốn là tâm phúc của Thẩm Quang Lễ, lại chưa từng có giao tình với Tưởng Nghiệp, thì việc bị cho ra rìa là lẽ đương nhiên.</p>
+        <p>Tuy nhiên, Tưởng Nghiệp vẫn giữ chút thể diện cho Thẩm Quang Lễ. Ông điều Mạnh Kiếm Khanh về dưới quyền Tần Hữu Danh vốn thân thiết với Mạnh Kiếm Khanh và chắc chắn sẽ không gây khó dễ cho hắn.</p>
+        <p>Khi Cẩm Y Vệ bị giải tán, toàn bộ kho hồ sơ được bàn giao cho Phủ Hậu quân Đô đốc của phủ Ứng Thiên.</p>
+        <p>Đến khi Kiến Văn Đế lên ngôi, Tần Hữu Danh vì tuổi cao bệnh nặng xin từ chức, Mạnh Kiếm Khanh được kế nhiệm, thăng lên chức Thiên hộ.</p>
+        <p>Cùng thời điểm đó, Chương Đại Thịnh cũng được thăng làm Đô đốc tiền quân, còn Vân Yên Nhiên chính thức đảm nhiệm chức Đề đốc thủy quân Phúc Kiến.</p>
+        <p>Khi chiếu thăng chức vừa ban xuống, Yên vương ở Bắc Bình bất ngờ khởi binh, treo cờ hiệu dẹp loạn gian thần bên cạnh vua. Cuộc chiến Tĩnh Nan chính thức bắt đầu.</p>
+        <p>Vân Yên Nhiên chỉ một lòng huấn luyện thủy quân, sau khi vào triều báo cáo công việc xong thì lại vội vã trở về Phúc Kiến, hoàn toàn không lên tiếng bàn bạc gì về việc quân nơi tiền tuyến.</p>
+        <p>Mạnh Kiếm Khanh vẫn an phận ở kho hồ sơ, lặng lẽ quan sát đại quân Yên vương từ phương Bắc đánh thẳng xuống, quét sạch đất Tề, đất Lỗ, thế như chẻ tre.</p>
+        <p>Mùa xuân năm Kiến Văn thứ hai, sau nhiều trận thảm bại của quân triều đình, Binh bộ trong cơn rối ren mới đề nghị với Kiến Văn Đế khôi phục việc dùng Cẩm Y Vệ. Tuy Cẩm Y Vệ không phải là quân chính quy, nhưng binh pháp vốn trọng mưu kế; với vai trò quân kỳ tập kích, họ vẫn rất đáng để trông cậy.</p>
+        <p>Kiến Văn Đế do dự rất lâu rồi ra lệnh: không được dùng danh hiệu “Cẩm Y Vệ”.</p>
+        <p>Cái tên ấy từng khiến người trong thiên hạ nghe qua là khiếp đảm, trong mắt Hoàng đế cũng chẳng phải thứ gì tốt đẹp.</p>
+        <p>Binh bộ lĩnh ý, lập tức sắp xếp công việc.</p>
+        <p>Tên của Mạnh Kiếm Khanh vốn im ắng suốt mấy năm, được nhắc đến đầu tiên.</p>
+        <p>Các Cẩm Y Vệ khác tuy giàu kinh nghiệm nhưng đã quá dè dặt, Mạnh Kiếm Khanh từng lập chiến công hiển hách, chứng tỏ có đủ dũng khí phá trận, chém tướng; mà so với lớp tướng trẻ đầy tham vọng, hắn lại có bề dày kinh nghiệm mà họ còn thiếu.</p>
+        <p>Nhận được thánh chỉ, Mạnh Kiếm Khanh bước ra khỏi kho hồ sơ, ngẩng nhìn bầu trời mênh mông, mây trắng thênh thang, đàn nhạn phương Bắc đang sải cánh bay về Nam; trong khoảnh khắc ấy, hắn thấy lòng mình rộng mở như chính vòm trời kia.</p>
+        <p>Vị Binh bộ Tả thị lang đến truyền chỉ nhìn thần sắc điềm tĩnh, cùng ánh sáng rực rỡ trong đôi mắt hắn, bất giác trong lòng thoáng hiện hai câu chẳng hề liên quan: Hổ mạnh ra khỏi lồng, chim bay giữa trời cao.</p>
+    </article>
+
+    <div class="reading-nav">
+        <a href="camyhanhq6-71.html" class="nav-btn">⬅️ Chương trước</a>
+        <a href="../mucluc/camyhanh.html" class="nav-btn">📋 Mục lục</a>
+        <a href="camyhanhq6-73.html" class="nav-btn">Chương sau ➡️</a>
+    </div>
+</main>
+
+<div class="chapter-discussion-box">
+    <div class="discussion-header">
+        <div class="discussion-header-left">
+            <span>🌿</span>
+            <h3>Thảo luận về chương này</h3>
+            <span>🌸</span>
+        </div>
+        <div class="discussion-actions">
+            <button class="action-btn" id="like-btn" onclick="toggleLike()" title="Thả tim chương này">
+                <span class="heart-icon">🤍</span>
+                <span id="like-count">0</span>
+            </button>
+            <button class="action-btn" onclick="openShareModal()" title="Chia sẻ chương này">
+                🔗 Chia sẻ
+            </button>
+        </div>
+    </div>
+    <div class="comment-section">
+        <script src="https://utteranc.es/client.js"
+                repo="gocnhocuakhiet/gocnhocuakhiet.github.io"
+                issue-term="pathname"
+                label="comment"
+                theme="github-light"
+                crossorigin="anonymous"
+                async>
+        </script>
+    </div>
+</div>
+
+<div class="share-modal-overlay" id="share-modal-overlay" onclick="handleOverlayClick(event)">
+    <div class="share-modal">
+        <h4>🔗 Chia sẻ chương này</h4>
+        <div class="share-link-row">
+            <input class="share-link-input" id="share-link-input" type="text" readonly>
+            <button class="copy-link-btn" id="copy-link-btn" onclick="copyLink()">Sao chép</button>
+        </div>
+        <button class="share-modal-close" onclick="closeShareModal()">Đóng</button>
+    </div>
+</div>
+
+<div id="comment-sidebar" class="comment-sidebar">
+    <div class="sidebar-header">
+        <h4 id="sidebar-paragraph-title">Bình luận đoạn văn</h4>
+        <button class="close-sidebar-btn" onclick="closeInlineComment()">✕</button>
+    </div>
+    <div class="quoted-paragraph-box" id="quoted-paragraph-box"></div>
+    <div class="sidebar-mention-hint">
+        💡 Dùng <code>@tên-người</code> để nhắc đến ai đó trong bình luận.
+    </div>
+    <div id="sidebar-utterances-mount"></div>
+</div>
+<div id="sidebar-overlay" class="sidebar-overlay" onclick="closeInlineComment()"></div>
+
+<script>
+var GH_REPO  = 'gocnhocuakhiet/gocnhocuakhiet.github.io';
+var GH_LABEL = 'comment';
+var ORIGINAL_TITLE = document.title;
+
+function paragraphTitle(paraNum) {
+    return ORIGINAL_TITLE + ' [Đoạn ' + paraNum + ']';
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+    var paragraphs = document.querySelectorAll('.story-content p');
+    paragraphs.forEach(function (p, index) {
+        var paraNum = index + 1;
+        var row = document.createElement('div');
+        row.className = 'comment-row';
+        p.parentNode.insertBefore(row, p);
+        row.appendChild(p);
+        var badge = document.createElement('span');
+        badge.className = 'comment-badge';
+        badge.title = 'Bình luận về đoạn này';
+        badge.textContent = '💬';
+        badge.onclick = function () {
+            openInlineComment(p.innerText.trim().substring(0, 120), paraNum);
+        };
+        row.appendChild(badge);
+    });
+    initLike();
+});
+
+var currentParaNum = null;
+
+function openInlineComment(previewText, paraNum) {
+    document.getElementById('sidebar-paragraph-title').innerText = 'Đoạn ' + paraNum;
+    document.getElementById('quoted-paragraph-box').innerText =
+        '"' + previewText + (previewText.length >= 120 ? '…' : '') + '"';
+    document.getElementById('comment-sidebar').classList.add('active');
+    document.getElementById('sidebar-overlay').classList.add('active');
+    if (currentParaNum === paraNum) return;
+    currentParaNum = paraNum;
+    var mount = document.getElementById('sidebar-utterances-mount');
+    mount.innerHTML = '<div class="sidebar-loading">Đang tải bình luận…</div>';
+    document.title = paragraphTitle(paraNum);
+    var s = document.createElement('script');
+    s.src = 'https://utteranc.es/client.js';
+    s.setAttribute('repo',         GH_REPO);
+    s.setAttribute('issue-term',   'title');
+    s.setAttribute('label',        GH_LABEL);
+    s.setAttribute('theme',        document.body.classList.contains('dark-mode') ? 'github-dark' : 'github-light');
+    s.setAttribute('crossorigin',  'anonymous');
+    s.async = true;
+    s.onload = function () {
+        var loading = mount.querySelector('.sidebar-loading');
+        if (loading) loading.remove();
+        document.title = ORIGINAL_TITLE;
+    };
+    mount.innerHTML = '';
+    mount.appendChild(s);
+}
+
+function closeInlineComment() {
+    document.getElementById('comment-sidebar').classList.remove('active');
+    document.getElementById('sidebar-overlay').classList.remove('active');
+    document.title = ORIGINAL_TITLE;
+}
+
+function initLike() {
+    var key      = 'like-'      + window.location.pathname;
+    var countKey = 'likecount-' + window.location.pathname;
+    var liked    = localStorage.getItem(key) === '1';
+    var count    = parseInt(localStorage.getItem(countKey) || '0', 10);
+    updateLikeUI(liked, count);
+}
+
+function toggleLike() {
+    var key      = 'like-'      + window.location.pathname;
+    var countKey = 'likecount-' + window.location.pathname;
+    var liked    = localStorage.getItem(key) === '1';
+    var count    = parseInt(localStorage.getItem(countKey) || '0', 10);
+    liked = !liked;
+    count = liked ? count + 1 : Math.max(0, count - 1);
+    localStorage.setItem(key,      liked ? '1' : '0');
+    localStorage.setItem(countKey, count);
+    updateLikeUI(liked, count);
+}
+
+function updateLikeUI(liked, count) {
+    var btn       = document.getElementById('like-btn');
+    var heartSpan = btn.querySelector('.heart-icon');
+    var countSpan = document.getElementById('like-count');
+    heartSpan.textContent = liked ? '❤️' : '🤍';
+    countSpan.textContent = count;
+    liked ? btn.classList.add('liked') : btn.classList.remove('liked');
+}
+
+function openShareModal() {
+    document.getElementById('share-link-input').value = window.location.href;
+    document.getElementById('copy-link-btn').textContent = 'Sao chép';
+    document.getElementById('copy-link-btn').classList.remove('copied');
+    document.getElementById('share-modal-overlay').classList.add('active');
+}
+function closeShareModal() {
+    document.getElementById('share-modal-overlay').classList.remove('active');
+}
+function handleOverlayClick(e) {
+    if (e.target === document.getElementById('share-modal-overlay')) closeShareModal();
+}
+function copyLink() {
+    var input = document.getElementById('share-link-input');
+    var btn   = document.getElementById('copy-link-btn');
+    navigator.clipboard.writeText(input.value).then(function () {
+        btn.textContent = '✓ Đã sao chép';
+        btn.classList.add('copied');
+        setTimeout(function () { btn.textContent = 'Sao chép'; btn.classList.remove('copied'); }, 2000);
+    }).catch(function () {
+        input.select(); document.execCommand('copy');
+        btn.textContent = '✓ Đã sao chép'; btn.classList.add('copied');
+        setTimeout(function () { btn.textContent = 'Sao chép'; btn.classList.remove('copied'); }, 2000);
+    });
+}
+
+function syncUtterancesTheme(isDark) {
+    var theme = isDark ? 'github-dark' : 'github-light';
+    document.querySelectorAll('.utterances-frame').forEach(function (f) {
+        f.contentWindow.postMessage({ type: 'set-theme', theme: theme }, 'https://utteranc.es');
+    });
+}
+</script>
+
+</body>
+</html>

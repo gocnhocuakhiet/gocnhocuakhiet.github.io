@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <link rel="stylesheet" href="../style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cẩm Y Hành - Chương 75: Lưới</title>
+    
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f1f7f4;
+            color: #2d3a34;
+            line-height: 1.8;
+        }
+
+        .navbar {
+            background-color: #ffffff;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 10%;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        .navbar .logo { font-size: 1.2rem; font-weight: bold; color: #4a6b5d; text-decoration: none; }
+        .nav-links a { color: #555; text-decoration: none; font-size: 0.95rem; transition: color 0.3s; }
+        .nav-links a:hover { color: #4a6b5d; }
+
+        .story-container {
+            max-width: 700px;
+            margin: 40px auto;
+            padding: 30px;
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.02);
+        }
+
+        .story-header {
+            text-align: center;
+            margin-bottom: 35px;
+            border-bottom: 1px dashed #8fae9f;
+            padding-bottom: 20px;
+        }
+        .story-header .novel-name {
+            font-size: 0.95rem; color: #777;
+            text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px;
+        }
+        .story-header .chapter-title { color: #4a6b5d; font-size: 1.6rem; font-weight: 600; }
+
+        .story-content { font-size: 1.15rem; color: #333333; text-align: justify; }
+        .story-content p { margin-bottom: 22px; text-indent: 25px; }
+
+        .reading-nav {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-top: 50px; padding-top: 25px; border-top: 1px dashed #8fae9f;
+        }
+        .nav-btn {
+            display: inline-block; padding: 10px 20px;
+            background-color: #ffffff; color: #4a6b5d;
+            text-decoration: none; border: 1px solid #8fae9f;
+            border-radius: 20px; font-size: 0.9rem; font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        .nav-btn:hover { background-color: #4a6b5d; color: #ffffff; border-color: #4a6b5d; box-shadow: 0 4px 8px rgba(74,107,93,0.2); }
+        .nav-btn.disabled { color: #bbb; border-color: #e0e0e0; background-color: #fafafa; pointer-events: none; box-shadow: none; }
+
+        @media (max-width: 480px) {
+            .story-container { padding: 15px; margin: 20px auto; }
+            .nav-btn { padding: 8px 14px; font-size: 0.8rem; }
+            .comment-sidebar { width: 100%; right: -100%; }
+        }
+
+        body.dark-mode { background-color: #131a17; color: #dae5e0; }
+        body.dark-mode .navbar { background-color: #1b2420; box-shadow: 0 2px 5px rgba(0,0,0,0.3); }
+        body.dark-mode .navbar .logo { color: #8fae9f; }
+        body.dark-mode .nav-links a { color: #aaa; }
+        body.dark-mode .story-container { background-color: #1b2420; box-shadow: 0 2px 10px rgba(0,0,0,0.2); }
+        body.dark-mode .story-header .novel-name { color: #8fae9f; }
+        body.dark-mode .story-header .chapter-title { color: #8fae9f; }
+        body.dark-mode .story-content { color: #dae5e0; }
+        body.dark-mode .nav-btn { background-color: #1b2420; color: #8fae9f; border-color: #4a6b5d; }
+        body.dark-mode .nav-btn:hover { background-color: #4a6b5d; color: #ffffff; }
+        body.dark-mode .nav-btn.disabled { color: #444; border-color: #2e3d36; background-color: #161e1b; }
+
+        .reader-controls-wrapper {
+            position: fixed; bottom: 30px; right: 30px;
+            z-index: 10000;
+            display: flex; flex-direction: column; align-items: flex-end; gap: 10px;
+        }
+        .reader-toggle-btn {
+            width: 48px; height: 48px; border-radius: 50%;
+            border: 2px solid #8fae9f; background: white; color: #4a6b5d;
+            font-size: 18px; cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15); transition: all 0.3s;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .reader-toggle-btn:hover { background: #4a6b5d; color: white; transform: scale(1.1); }
+        .reader-controls-group {
+            display: flex; flex-direction: column; gap: 10px;
+            overflow: hidden; max-height: 0; opacity: 0;
+            transition: max-height 0.35s ease, opacity 0.3s ease;
+        }
+        .reader-controls-group.open { max-height: 200px; opacity: 1; }
+        .reader-controls-group button {
+            width: 48px; height: 48px; border-radius: 50%;
+            border: 2px solid #8fae9f; background: white; color: #4a6b5d;
+            font-size: 15px; font-weight: bold; cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15); transition: all 0.3s;
+        }
+        .reader-controls-group button:hover { background: #4a6b5d; color: white; transform: scale(1.1); }
+        body.dark-mode .reader-toggle-btn,
+        body.dark-mode .reader-controls-group button { background: #1b2420; color: #8fae9f; border-color: #4a6b5d; }
+        body.dark-mode .reader-toggle-btn:hover,
+        body.dark-mode .reader-controls-group button:hover { background: #4a6b5d; color: white; }
+
+        .comment-row {
+            display: flex; justify-content: space-between;
+            align-items: flex-start; gap: 15px;
+            margin-bottom: 22px; width: 100%;
+        }
+        .comment-row p { flex: 1; margin-bottom: 0 !important; }
+
+        .comment-badge {
+            cursor: pointer; flex-shrink: 0; margin-top: 6px;
+            width: 30px; height: 30px; border-radius: 50%;
+            background-color: #eaf2ee; color: #4a6b5d;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.9rem; line-height: 1;
+            transition: all 0.2s ease; user-select: none; border: none;
+        }
+        .comment-badge:hover { background-color: #4a6b5d; color: #ffffff; transform: scale(1.12); }
+        body.dark-mode .comment-badge { background-color: #25332c; color: #8fae9f; }
+        body.dark-mode .comment-badge:hover { background-color: #4a6b5d; color: #ffffff; }
+
+        .comment-sidebar {
+            position: fixed; top: 0; right: -420px; width: 400px; height: 100%;
+            background: #ffffff;
+            box-shadow: -5px 0 15px rgba(0,0,0,0.05);
+            z-index: 100000;
+            transition: right 0.4s cubic-bezier(0.25,0.8,0.25,1);
+            padding: 24px; overflow-y: auto; box-sizing: border-box;
+        }
+        .comment-sidebar.active { right: 0; }
+        .sidebar-header {
+            display: flex; justify-content: space-between; align-items: center;
+            border-bottom: 1px solid #dae5e0; padding-bottom: 12px; margin-bottom: 16px;
+        }
+        .sidebar-header h4 { color: #4a6b5d; margin: 0; }
+        .close-sidebar-btn { background: none; border: none; font-size: 1.2rem; color: #999; cursor: pointer; }
+        .quoted-paragraph-box {
+            background: #f0f7f4; border-left: 3px solid #8fae9f;
+            border-radius: 4px; padding: 10px 14px;
+            font-size: 0.88rem; color: #4a6b5d; font-style: italic;
+            line-height: 1.5; margin-bottom: 12px;
+        }
+        .sidebar-mention-hint {
+            font-size: 0.8rem; color: #888;
+            background: #f8faf9; border: 1px dashed #c8ddd5;
+            border-radius: 6px; padding: 8px 12px; margin-bottom: 14px; line-height: 1.5;
+        }
+        .sidebar-mention-hint code { background: #e4efe9; color: #4a6b5d; padding: 1px 5px; border-radius: 4px; font-size: 0.78rem; }
+        body.dark-mode .sidebar-mention-hint { background: #1e2b24; border-color: #2e3d36; color: #7a9a8a; }
+        body.dark-mode .sidebar-mention-hint code { background: #2a3830; color: #8fae9f; }
+        .sidebar-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.2); z-index: 99999; display: none;
+        }
+        .sidebar-overlay.active { display: block; }
+        .sidebar-loading {
+            text-align: center; padding: 30px 0;
+            color: #aaa; font-size: 0.9rem; font-style: italic;
+        }
+
+        .chapter-discussion-box {
+            max-width: 700px; margin: 30px auto 50px auto;
+            padding: 25px; background-color: #ffffff;
+            border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.02);
+        }
+        .discussion-header {
+            display: flex; justify-content: space-between; align-items: center;
+            gap: 10px; margin-bottom: 25px;
+            border-bottom: 1px dashed #dae5e0; padding-bottom: 15px;
+        }
+        .discussion-header-left { display: flex; align-items: center; gap: 10px; }
+        .discussion-header h3 { color: #4a6b5d; font-size: 1.2rem; margin: 0; }
+        .discussion-actions { display: flex; align-items: center; gap: 10px; }
+        .action-btn {
+            display: flex; align-items: center; gap: 6px;
+            padding: 7px 14px; border-radius: 20px; border: 1px solid #8fae9f;
+            background: #ffffff; color: #4a6b5d;
+            font-size: 0.85rem; font-weight: 500; cursor: pointer;
+            transition: all 0.25s ease; user-select: none;
+        }
+        .action-btn:hover { background-color: #f0f7f4; box-shadow: 0 3px 8px rgba(74,107,93,0.15); }
+        .action-btn.liked { background-color: #fff0f3; border-color: #e8a0b0; color: #c0556a; }
+        .action-btn.liked .heart-icon { animation: heartPop 0.35s ease; }
+        @keyframes heartPop {
+            0% { transform: scale(1); } 40% { transform: scale(1.45); }
+            70% { transform: scale(0.9); } 100% { transform: scale(1); }
+        }
+        body.dark-mode .action-btn { background: #1b2420; color: #8fae9f; border-color: #4a6b5d; }
+        body.dark-mode .action-btn:hover { background-color: #232e29; }
+        body.dark-mode .action-btn.liked { background-color: #2a1e22; border-color: #7a3a4a; color: #e08090; }
+        .comment-section { width: 100%; min-height: 150px; }
+
+        body.dark-mode .chapter-discussion-box,
+        body.dark-mode .comment-sidebar { background-color: #1b2420 !important; }
+        body.dark-mode .discussion-header,
+        body.dark-mode .sidebar-header { border-bottom-color: #2e3d36 !important; }
+        body.dark-mode .discussion-header h3,
+        body.dark-mode .sidebar-header h4 { color: #8fae9f !important; }
+        body.dark-mode .quoted-paragraph-box { background: #232e29; border-left-color: #4a6b5d; color: #8fae9f; }
+
+        .share-modal-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.35);
+            z-index: 200000; display: none; align-items: center; justify-content: center;
+        }
+        .share-modal-overlay.active { display: flex; }
+        .share-modal {
+            background: #ffffff; border-radius: 12px;
+            padding: 28px 24px 22px; width: 380px; max-width: 92vw;
+            box-shadow: 0 12px 40px rgba(0,0,0,0.18);
+            animation: slideUp 0.25s ease;
+        }
+        @keyframes slideUp {
+            from { transform: translateY(20px); opacity: 0; }
+            to   { transform: translateY(0); opacity: 1; }
+        }
+        .share-modal h4 { color: #4a6b5d; font-size: 1.05rem; margin-bottom: 16px; text-align: center; }
+        .share-link-row { display: flex; gap: 8px; align-items: center; }
+        .share-link-input {
+            flex: 1; padding: 9px 12px; border: 1px solid #c8ddd5; border-radius: 8px;
+            font-size: 0.85rem; color: #444; background: #f8faf9;
+            outline: none; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
+        }
+        .copy-link-btn {
+            padding: 9px 16px; border-radius: 8px;
+            background: #4a6b5d; color: #ffffff; border: none;
+            font-size: 0.85rem; font-weight: 600; cursor: pointer;
+            transition: all 0.2s; white-space: nowrap;
+        }
+        .copy-link-btn:hover { background: #3a5a4d; }
+        .copy-link-btn.copied { background: #6aaa88; }
+        .share-modal-close {
+            display: block; width: 100%; margin-top: 14px;
+            padding: 8px; background: none; border: none;
+            color: #999; font-size: 0.85rem; cursor: pointer; text-align: center;
+        }
+        .share-modal-close:hover { color: #555; }
+        body.dark-mode .share-modal { background: #1b2420; }
+        body.dark-mode .share-modal h4 { color: #8fae9f; }
+        body.dark-mode .share-link-input { background: #232e29; border-color: #3a5040; color: #dae5e0; }
+        body.dark-mode .share-modal-close { color: #6a8a7a; }
+    </style>
+</head>
+<body>
+
+<div class="reader-controls-wrapper">
+    <div class="reader-controls-group" id="reader-group">
+        <button onclick="changeFontSize(1)" title="Phóng to chữ">A+</button>
+        <button onclick="changeFontSize(-1)" title="Thu nhỏ chữ">A-</button>
+        <button onclick="toggleDarkMode()" id="dark-mode-btn" title="Đổi màu nền">🌙</button>
+    </div>
+    <button class="reader-toggle-btn" id="reader-toggle" onclick="toggleReaderControls()" title="Tuỳ chỉnh đọc">⚙️</button>
+</div>
+
+<script>
+function toggleReaderControls() {
+    var group = document.getElementById('reader-group');
+    var btn   = document.getElementById('reader-toggle');
+    var isOpen = group.classList.toggle('open');
+    btn.style.background = isOpen ? '#4a6b5d' : '';
+    btn.style.color      = isOpen ? '#ffffff'  : '';
+}
+function toggleDarkMode() {
+    document.body.classList.toggle('dark-mode');
+    var isDark = document.body.classList.contains('dark-mode');
+    localStorage.setItem('night-mode', isDark ? 'on' : 'off');
+    document.getElementById('dark-mode-btn').innerText = isDark ? '☀️' : '🌙';
+    syncUtterancesTheme(isDark);
+}
+function changeFontSize(delta) {
+    var content = document.querySelector('.story-content') || document.body;
+    var cur = parseFloat(window.getComputedStyle(content).fontSize);
+    content.style.fontSize = (cur + delta) + 'px';
+}
+function syncUtterancesTheme(isDark) {
+    var theme = isDark ? 'github-dark' : 'github-light';
+    document.querySelectorAll('.utterances-frame').forEach(function(f) {
+        f.contentWindow.postMessage({ type: 'set-theme', theme: theme }, 'https://utteranc.es');
+    });
+}
+(function() {
+    if (localStorage.getItem('night-mode') === 'on') {
+        document.body.classList.add('dark-mode');
+        setTimeout(function() {
+            var b = document.getElementById('dark-mode-btn');
+            if (b) b.innerText = '☀️';
+        }, 80);
+    }
+})();
+</script>
+
+<header class="navbar">
+    <a href="../index.html" class="logo">🌿 Góc nhỏ của Khiết</a>
+    <nav class="nav-links"><a href="../index.html">Trang Chủ</a></nav>
+</header>
+
+<main class="story-container">
+    <div class="story-header">
+        <p class="novel-name">Cẩm Y Hành - Quyển 6</p>
+        <h1 class="chapter-title">Chương 75: Lưới</h1>
+    </div>
+
+    <article class="story-content">
+        <p>Hai ngày sau, đoàn quân Yên vận chuyển bạc lương từ Bắc Bình tới doanh trại Chu Năng đã đi vòng qua một chút để tiện đường đến chỗ mưu sĩ thân tín của Yên vương là Đạo Diễn đại sư.</p>
+        <p>Đạo Diễn đại sư mỉm cười nói với Trương Phạm đang giận dữ: “Tướng quân hãy tạm nguôi giận. Kẻ địch lần này không phải hạng tầm thường, mới giao tranh đã thua thiệt đôi chút cũng là lẽ thường. Bần tăng mang tới mấy người, hi vọng có thể giúp ích cho tướng quân.”</p>
+        <p>Mấy người phía sau Đạo Diễn đều mặc giáp lính Yên thông thường, nhưng trong mắt Trương Phạm, rõ ràng họ không phải lính tầm thường.</p>
+        <p>Đạo Diễn chỉ vào người đàn ông trung niên mặt trắng râu thưa đầu tiên: “Vị này từng là Thiên hộ Cao Bình của Cẩm Y Vệ, sau khi Cẩm Y Vệ giải tán, làm việc tại phủ Đô đốc Tả quân Ứng Thiên. Nhưng giờ đã quy phục Yên vương điện hạ.”</p>
+        <p>Trương Phạm thầm gật đầu. Nếu đối phương là cựu thành viên Cẩm Y Vệ, thì Cao Thiên hộ am hiểu nội tình hẳn sẽ là trợ thủ đắc lực. Nhưng nếu không phải do Đạo Diễn đại sư đích thân tiến cử, hắn cũng không dám tùy tiện trọng dụng vị Thiên hộ này.</p>
+        <p>Người thứ hai là Lý Mạc, từng là thuộc hạ của Ninh vương. Từ thời còn ở Giảng Võ Đường, Lý Mạc đã nổi tiếng với tài vẽ bản đồ địa hình. Sau khi Yên vương chiếm Đại Ninh, thuộc hạ của Ninh vương và đội quân Đóa Nhan đều quy phục Yên vương. Với kiến thức địa hình của Lý Mạc, việc bố trí phục kích sẽ vô cùng chuẩn xác.</p>
+        <p>Người thứ ba là Mạnh Kiếm Thần, ái tướng của Yên vương. Trương Phạm nghe đến đây lại lấy làm lạ. Mạnh Kiếm Thần vốn trấn thủ ngoài biên ải, ngay cả khi chiến sự Tĩnh Nan nguy cấp nhất cũng không được điều về. Cớ sao lần này lại điều về?</p>
+        <p>Người thứ tư là Công Tôn Nghĩa, cộng sự lâu năm của Mạnh Kiếm Thần. Trương Phạm không nhịn được cười. Trong quân Yên, Công Tôn Nghĩa nổi tiếng nhất nhờ vận may trời cho, kiểu may mắn vấp ngã lại nhặt được vàng.</p>
+        <p>Đạo Diễn đại sư tươi cười đứng dậy: “Thôi, bần tăng còn việc phải làm, xin phép không tiếp tướng quân nữa.”</p>
+        <p>Tiễn Đạo Diễn đại sư ra về, Cao Thiên hộ quay lại thở dài: “Tiếc thật, nếu đại sư không vội về phò tá thế tử, vốn là mồi nhử tuyệt nhất. Dù biết là bẫy, Mạnh Kiếm Khanh hẳn cũng phải lao vào cắn câu.”</p>
+        <p>Trương Phạm nghe tim đập thình thịch, liếc nhìn Mạnh Kiếm Thần.</p>
+        <p>Hắn đương nhiên từng nghe danh huynh trưởng Mạnh Kiếm Khanh của vị tướng này, cựu nhân vật lẫy lừng của Cẩm Y Vệ, muốn không nghe cũng khó.</p>
+        <p>Hóa ra đối thủ là hắn ta. Kẻ có thể tung hoành ngang dọc trong Cẩm Y Vệ, quả thực không phải hạng tầm thường. Lần này mình thất bại cũng đành chấp nhận.</p>
+        <p>Chắc hẳn năm xưa Cao Thiên hộ cũng từng ăn đau đớn với Mạnh Kiếm Khanh, nên mới nhiệt tình đối phó đến thế.</p>
+        <p>Chẳng trách Yên vương điều Mạnh Kiếm Thần về. Không phải người nhà, sao hiểu chuyện nhà? Có lẽ trong mắt Yên vương, Mạnh Kiếm Thần mới là người thích hợp đối phó Mạnh Kiếm Khanh.</p>
+        <p>Trương Phạm tập hợp các phó tướng, cùng nghe kế hoạch của bốn người.</p>
+        <p>Cao Thiên hộ giới thiệu tỉ mỉ về Mạnh Kiếm Khanh: Từ thăng tiến trong Cẩm Y Vệ đến khi bị ghẻ lạnh gần đây. Đến lúc Tĩnh Nan chi dịch, quân Nam thua liểng xiểng, Kiến Văn đế mới trọng dụng cựu thành viên Cẩm Y Vệ như Mạnh Kiếm Khanh, hi vọng xuất kỳ chế thắng.</p>
+        <p>Cao Thiên hộ tỉ mỉ giới thiệu về Mạnh Kiếm Khanh mà ông biết.</p>
+        <p>Từ quá trình thăng tiến trong Cẩm Y Vệ, đến những năm gần đây bị ghẻ lạnh, không sót chi tiết nào. Mãi đến khi loạn Tĩnh Nan bùng phát, quân Nam thất bại liên tiếp, Kiến Văn Đế mới trọng dụng lại những cựu thành viên Cẩm Y Vệ như Mạnh Kiếm Khanh, hy vọng tạo bước ngoặt.</p>
+        <p>Mạnh Kiếm Khanh dành một năm huấn luyện đội quân đặc biệt, gồm cả cựu thành viên Cẩm Y Vệ lẫn giang hồ nhân sĩ do hắn chiêu mộ. Kiến Văn Đế đặt tên đội quân này là “Ngư Tràng”.</p>
+        <p>Nghe cái tên này, mọi người trong trướng đều bật cười.</p>
+        <p>Dùng tên đoản kiếm Ngư Tràng mà Chuyên Chư từng dùng để ám sát Liêu công tử để đặt cho một đội quân chuyên làm nhiệm vụ ám sát, xét ra cũng hợp lý. Nhưng Mạnh Kiếm Khanh và thuộc hạ chắc hẳn cảm thấy ngượng ngùng. Kiến Văn Đế vốn không ưa phong cách Cẩm Y Vệ, chẳng biết có phải cố tình mỉa mai mà ban ra cái tên này không.</p>
+        <p>Đội Ngư Tràng do Mạnh Kiếm Khanh trực tiếp xây dựng và huấn luyện, kiểm soát cực kỳ nghiêm ngặt. Về phương thức kiểm soát, Cao Thiên hộ không nói rõ, nhưng có lẽ xuất phát từ bí kíp bất truyền của Cẩm Y Vệ. Cách làm này đảm bảo mệnh lệnh của Mạnh Kiếm Khanh được thi hành triệt để. Bất kể nhiệm vụ thành bại, không một sát thủ nào dám phản kháng hay tiết lộ bí mật. Nhưng điểm yếu cũng nằm ở đây, chỉ cần diệt được Mạnh Kiếm Khanh, sẽ không còn ai điều khiển được quân Ngư Tràng.</p>
+        <p>Trương Phạm chợt lóe lên ý nghĩ: Phải chăng Yên vương điều Mạnh Kiếm Thần đến là muốn chiêu hàng Mạnh Kiếm Khanh? Nghĩ đến chiến tích của đội Ngư Tràng, nếu thu phục được thì lợi hơn tiêu diệt bội phần...</p>
+        <p>Các phó tướng của Trương Phạm sau khi biết thân phận của Mạnh Kiếm Thần, đều nhìn hắn với ánh mắt nghi ngại. Dù không dám hoài nghi quyết định sáng suốt của Yên vương, nhưng lo lắng vẫn không tránh khỏi.</p>
+        <p>Khóe miệng Mạnh Kiếm Thần  nhếch lên đầy mỉa mai: “Trên chiến trường không có cha con, nói gì đến huynh đệ. Hơn nữa, Vương gia đã dặn ta cố gắng bắt sống, thế cũng coi như không phụ lòng huynh trưởng của ta rồi.”</p>
+        <p>Tấm màn trướng bỗng mở ra, Đạo Diễn đại sư quay lại.</p>
+        <p>Đại sư mỉm cười chắp tay thi lễ: “Bần tăng vốn đã lên đường, nhưng không hiểu sao lòng bất an. Suy đi nghĩ lại, mới biết đó là Phật tổ cảnh báo, chỉ thị bần tăng phải đợi nguy cơ qua đi mới được trở về Bắc Bình.”</p>
+        <p>Bốn tăng nhân và bốn thị vệ của vương phủ đi theo Đạo Diễn đại sư đều lộ vẻ không tán thành, cho rằng đại sư quá coi trọng Mạnh Kiếm Khanh.</p>
+        <p>Riêng Cao Thiên hộ lại mỉm cười: “Đại sư ở lại càng tốt.”</p>
+        <p>Kế hoạch của ông là dùng Đạo Diễn đại sư làm mồi nhử.</p>
+        <p>Trương Phạm nhíu mày, đây là điều tuyệt đối không thể.</p>
+        <p>Cao Thiên hộ giải thích: “Biến hư thành thực, biến thực thành hư. Đại sư không cần đích thân mạo hiểm.”</p>
+        <p>Tức là dùng người giả. Và không chỉ một người.</p>
+        <p>Họ quyết định bố trí bốn tăng nhân giả làm Đạo Diễn đại sư, chia nhau bốn hướng về Bắc Bình. Để tăng độ tin cậy, mỗi đoàn đều có cao thủ hộ tống. Bất kỳ đoàn nào bị tập kích đều phải lập tức báo hiệu và câu giờ chờ viện binh.</p>
+        <p>Kế hoạch đã định, việc còn lại là sắp xếp lộ trình và bố trí mai phục cụ thể.</p>
+        <p>Mọi ánh mắt đổ dồn về Lý Mạc.</p>
+        <p>Lý Mạc đang im lặng điều chỉnh mô hình địa hình bên bàn cát, ngẩng đầu lên nói: “Nếu chia bốn hướng, cần tới năm nghìn quân mới kiểm soát được mọi nút giao giữa doanh trại này và đại bản doanh của Chu Nguyên soái, đồng thời kịp thời ứng cứu.”</p>
+        <p>Cả trướng im phăng phắc. Trương Phạm chỉ có ba nghìn quân. Cộng thêm một trăm quân hộ tống đặc biệt cho Đạo Diễn đại sư…</p>
+        <p>Trương Phạm ho khan một tiếng: “Chia bốn hướng có cần thiết không?”</p>
+        <p>Mạnh Kiếm Thần nhếch mép cười: “Thật ra một hướng cũng đủ. Nhưng doanh trại này phải giữ đủ lực lượng, kẻo mất bò mới lo làm chuồng.”</p>
+        <p>Công Tôn Nghĩa cười lớn: “Không phải Cao Thiên hộ nói rồi sao? Đội Ngư Tràng nhiều lắm chỉ một hai trăm người, làm vài vụ ám sát thì được, làm sao dám đánh úp doanh trại?”</p>
+        <p>Mạnh Kiếm Thần lạnh lùng đáp: “Đừng nói với ta rằng ngươi không biết chủ tướng quân Nam gần nhất là ai.”</p>
+        <p>Công Tôn Nghĩa à lên một tiếng: “Là ai vậy?”</p>
+        <p>Tên ăn không ngồi rồi này chẳng biết gì thật. Mạnh Kiếm Thần khịt mũi đầy khinh bỉ, nhưng cuối cùng vẫn không nói ra suy nghĩ đó trước mặt mọi người.</p>
+        <p>Một phó tướng nhanh nhảu đáp: “Hồ Tiến Dũng.”</p>
+        <p>Viên tướng dũng mãnh nổi tiếng “đánh không chết, kéo không đổ” của quân Nam.</p>
+        <p>Công Tôn Nghĩa gãi đầu: “Là hắn à. Thế thì rắc rối rồi. Trừ chuyện phản nghịch, còn lại lão Mạnh bảo mặt trời đen như mực, hắn cũng gật gù phụ họa.”</p>
+        <p>Nếu Mạnh Kiếm Khanh nhờ Hồ Tiến Dũng tập kích quân Yên, hắn chắc chắn không chần chừ.</p>
+        <p>Còn quân lệnh?</p>
+        <p>Tướng ngoài biên ải, vua khó bề sai khiến.</p>
+        <p>Hồ Tiến Dũng liều lĩnh có cả tá cách đối phó với cấp trên. Thấy cơ hội chiến trường há lại không ra tay?</p>
+        <p>Trương Phạm và những người khác giật mình. Ngay cả Cao Thiên hộ cũng chỉ biết Hồ Tiến Dũng thân với Mạnh Kiếm Khanh, nhưng không ngờ thân đến mức này. Có vẻ các tướng tốt nghiệp Giảng Võ Đường dù ở phương trời nào cũng có mạng lưới quan hệ vô hình mà người ngoài không thể thâm nhập.</p>
+        <p>Đúng là rắc rối lớn...</p>
+        <p>Trương Phạm suy nghĩ giây lát rồi nói: “Vậy thì không chia quân. Theo ta, việc hộ tống đại sư về Bắc Bình an toàn còn quan trọng hơn dụ giết Mạnh Kiếm Khanh.”</p>
+        <p>Lý Mạc im lặng bấy lâu bỗng lên tiếng: “Thật ra, hai việc không mâu thuẫn.”</p>
+        <p>Hắn cầm những lá cờ nhỏ, lần lượt cắm lên bàn cát.</p>
+        <p>Khi hoàn thành, một mạng lưới đan xen đỏ - xanh hiện ra trên bàn cát.</p>
+        <p>Ngón tay Lý Mạc nhẹ nhàng vạch một đường rồi nói chậm rãi: “Con đường này... có lẽ được.”</p>
+        <p>Con đường uốn lượn xuyên qua mạng lưới ấy tựa một con rắn dài lười biếng, nằm im lìm trên bàn cát.</p>
+        <p>Lý Mạc tiếp tục giải thích: “Những vị trí cắm cờ đỏ, ta có thể bố trí từ ba đến năm đội phục kích, mỗi đội mười người. Còn những điểm cắm cờ xanh chỉ nên đặt một đội. Điều quan trọng là bất kỳ hai vị trí phục kích nào cũng phải có khả năng ứng cứu lẫn nhau trong vòng một khắc.</p>
+        <p>Tuy nhiên, có những nơi núi non hiểm trở, đường đi chật hẹp, nếu bố trí quá nhiều mai phục sẽ phản tác dụng. Nhưng nếu đặt quân quá ít, một khi đụng độ Mạnh Kiếm Khanh, không những không kịp phát tín hiệu báo động, mà còn có thể đánh động mục tiêu. Vì vậy, ta quyết định không bố trí quân ở mười ba vị trí như thế này.</p>
+        <p>Lần này Mạnh Kiếm Khanh chắc chắn sẽ đích thân xuất trận. Theo thông tin từ Cao Thiên hộ, hắn vốn có thói quen dẫn theo ít người. Do đó, mười ba vị trí bỏ trống này chính là những nơi hắn dễ chọn làm điểm mai phục nhất. Với tầm bắn tối đa một dặm của nỏ bệ, có năm vị trí trong số đó nếu bố trí nỏ sẽ khống chế được toàn bộ lộ trình ta vừa chọn. Năm điểm này cần được giám sát đặc biệt.</p>
+        <p>Trước khi hắn hành động, chúng ta khó lòng phát hiện. Nhưng một khi hắn ra tay, chắc chắn sẽ có ít nhất một đội mai phục phát hiện và kịp thời báo động.”</p>
+        <p>Một khi lọt vào mạng lưới này, dù Mạnh Kiếm Khanh có mọc cánh cũng khó thoát.</p>
+        <p>Công Tôn Nghĩa nhìn tới nhìn lui, không tìm được kẽ hở, đành nói: “Lưới giăng thì chắc đấy, nhưng làm sao bí mật triển khai?”</p>
+        <p>Mạnh Kiếm Thần đập vào đầu hắn: “Đồ ngốc! Không biết dọn đường trước sao?”</p>
+        <p>Với địa vị của Đạo Diễn đại sư, lại thêm bọn ám sát đang hoành hành, việc dọn đường là đương nhiên.</p>
+        <p>Trương Phạm giờ đã hiểu ra, cười nói: “Không sao, dù Mạnh Kiếm Khanh phát hiện có mai phục, cũng không ngờ số lượng lớn thế này.”</p>
+        <p>Nếu hắn không đến thì càng tốt. Trong lòng Trương Phạm thực sự không muốn Đạo Diễn đại sư gặp nạn trên địa bàn mình.</p>
+        <p>Đồng thời, hắn không khỏi nghĩ thầm, Lý Mạc bề ngoài lầm lì ít nói, có vẻ lười biếng, ai ngờ khi xử lý công việc lại chu đáo và lão luyện đến thế.</p>
+        <p>Khi mọi người tản đi chuẩn bị, Mạnh Kiếm Thần và Công Tôn Nghĩa áp sát Lý Mạc từ hai phía. Mạnh Kiếm Thần cười lạnh lẽo, gần như cắn vào tai Lý Mạc thì thầm: “Con người ngươi thì ta nghe danh đã lâu, vốn là kẻ lười nhác trước mọi việc. Sao lần này lại nhiệt tình thế? Hay là... huynh trưởng ta từng khiến ngươi khốn đốn?”</p>
+        <p>Lý Mạc ngẩn người một chút, rồi chậm rãi đáp: “Yên vương điều ta đến, ta đương nhiên phải tận lực. Bằng không…”</p>
+        <p>Mạnh Kiếm Thần vỗ mạnh vào vai hắn, cười ha hả: “Thôi đi! Ngươi sợ nếu lần này không hạ được hắn, để hắn biết ngươi có dính líu, thì sau này sẽ không tha cho ngươi, phải không?”</p>
+        <p>Lý Mạc nhếch mép, coi như một nụ cười gượng.</p>
+        <p>Hắn không hiểu nổi suy nghĩ của Mạnh Kiếm Thần. Nếu không ưa sự nhiệt tình của hắn, sao bản thân lại từ bỏ biên ải chạy về? Nếu thực sự không muốn, Yên vương cũng không ép, tình huynh đệ như thế là hợp lẽ tự nhiên. Thế nhưng hắn không những về, còn tỏ ra vô cùng hăng hái.</p>
+        <p>Nhưng Yên vương đã sắp đặt như vậy, ắt phải có lý do.</p>
+    </article>
+
+    <div class="reading-nav">
+        <a href="camyhanhq6-74.html" class="nav-btn">⬅️ Chương trước</a>
+        <a href="../mucluc/camyhanh.html" class="nav-btn">📋 Mục lục</a>
+        <a href="camyhanhq6-76.html" class="nav-btn">Chương sau ➡️</a>
+    </div>
+</main>
+
+<div class="chapter-discussion-box">
+    <div class="discussion-header">
+        <div class="discussion-header-left">
+            <span>🌿</span>
+            <h3>Thảo luận về chương này</h3>
+            <span>🌸</span>
+        </div>
+        <div class="discussion-actions">
+            <button class="action-btn" id="like-btn" onclick="toggleLike()" title="Thả tim chương này">
+                <span class="heart-icon">🤍</span>
+                <span id="like-count">0</span>
+            </button>
+            <button class="action-btn" onclick="openShareModal()" title="Chia sẻ chương này">
+                🔗 Chia sẻ
+            </button>
+        </div>
+    </div>
+    <div class="comment-section">
+        <script src="https://utteranc.es/client.js"
+                repo="gocnhocuakhiet/gocnhocuakhiet.github.io"
+                issue-term="pathname"
+                label="comment"
+                theme="github-light"
+                crossorigin="anonymous"
+                async>
+        </script>
+    </div>
+</div>
+
+<div class="share-modal-overlay" id="share-modal-overlay" onclick="handleOverlayClick(event)">
+    <div class="share-modal">
+        <h4>🔗 Chia sẻ chương này</h4>
+        <div class="share-link-row">
+            <input class="share-link-input" id="share-link-input" type="text" readonly>
+            <button class="copy-link-btn" id="copy-link-btn" onclick="copyLink()">Sao chép</button>
+        </div>
+        <button class="share-modal-close" onclick="closeShareModal()">Đóng</button>
+    </div>
+</div>
+
+<div id="comment-sidebar" class="comment-sidebar">
+    <div class="sidebar-header">
+        <h4 id="sidebar-paragraph-title">Bình luận đoạn văn</h4>
+        <button class="close-sidebar-btn" onclick="closeInlineComment()">✕</button>
+    </div>
+    <div class="quoted-paragraph-box" id="quoted-paragraph-box"></div>
+    <div class="sidebar-mention-hint">
+        💡 Dùng <code>@tên-người</code> để nhắc đến ai đó trong bình luận.
+    </div>
+    <div id="sidebar-utterances-mount"></div>
+</div>
+<div id="sidebar-overlay" class="sidebar-overlay" onclick="closeInlineComment()"></div>
+
+<script>
+var GH_REPO  = 'gocnhocuakhiet/gocnhocuakhiet.github.io';
+var GH_LABEL = 'comment';
+var ORIGINAL_TITLE = document.title;
+
+function paragraphTitle(paraNum) {
+    return ORIGINAL_TITLE + ' [Đoạn ' + paraNum + ']';
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+    var paragraphs = document.querySelectorAll('.story-content p');
+    paragraphs.forEach(function (p, index) {
+        var paraNum = index + 1;
+        var row = document.createElement('div');
+        row.className = 'comment-row';
+        p.parentNode.insertBefore(row, p);
+        row.appendChild(p);
+        var badge = document.createElement('span');
+        badge.className = 'comment-badge';
+        badge.title = 'Bình luận về đoạn này';
+        badge.textContent = '💬';
+        badge.onclick = function () {
+            openInlineComment(p.innerText.trim().substring(0, 120), paraNum);
+        };
+        row.appendChild(badge);
+    });
+    initLike();
+});
+
+var currentParaNum = null;
+
+function openInlineComment(previewText, paraNum) {
+    document.getElementById('sidebar-paragraph-title').innerText = 'Đoạn ' + paraNum;
+    document.getElementById('quoted-paragraph-box').innerText =
+        '"' + previewText + (previewText.length >= 120 ? '…' : '') + '"';
+    document.getElementById('comment-sidebar').classList.add('active');
+    document.getElementById('sidebar-overlay').classList.add('active');
+    if (currentParaNum === paraNum) return;
+    currentParaNum = paraNum;
+    var mount = document.getElementById('sidebar-utterances-mount');
+    mount.innerHTML = '<div class="sidebar-loading">Đang tải bình luận…</div>';
+    document.title = paragraphTitle(paraNum);
+    var s = document.createElement('script');
+    s.src = 'https://utteranc.es/client.js';
+    s.setAttribute('repo',         GH_REPO);
+    s.setAttribute('issue-term',   'title');
+    s.setAttribute('label',        GH_LABEL);
+    s.setAttribute('theme',        document.body.classList.contains('dark-mode') ? 'github-dark' : 'github-light');
+    s.setAttribute('crossorigin',  'anonymous');
+    s.async = true;
+    s.onload = function () {
+        var loading = mount.querySelector('.sidebar-loading');
+        if (loading) loading.remove();
+        document.title = ORIGINAL_TITLE;
+    };
+    mount.innerHTML = '';
+    mount.appendChild(s);
+}
+
+function closeInlineComment() {
+    document.getElementById('comment-sidebar').classList.remove('active');
+    document.getElementById('sidebar-overlay').classList.remove('active');
+    document.title = ORIGINAL_TITLE;
+}
+
+function initLike() {
+    var key      = 'like-'      + window.location.pathname;
+    var countKey = 'likecount-' + window.location.pathname;
+    var liked    = localStorage.getItem(key) === '1';
+    var count    = parseInt(localStorage.getItem(countKey) || '0', 10);
+    updateLikeUI(liked, count);
+}
+
+function toggleLike() {
+    var key      = 'like-'      + window.location.pathname;
+    var countKey = 'likecount-' + window.location.pathname;
+    var liked    = localStorage.getItem(key) === '1';
+    var count    = parseInt(localStorage.getItem(countKey) || '0', 10);
+    liked = !liked;
+    count = liked ? count + 1 : Math.max(0, count - 1);
+    localStorage.setItem(key,      liked ? '1' : '0');
+    localStorage.setItem(countKey, count);
+    updateLikeUI(liked, count);
+}
+
+function updateLikeUI(liked, count) {
+    var btn       = document.getElementById('like-btn');
+    var heartSpan = btn.querySelector('.heart-icon');
+    var countSpan = document.getElementById('like-count');
+    heartSpan.textContent = liked ? '❤️' : '🤍';
+    countSpan.textContent = count;
+    liked ? btn.classList.add('liked') : btn.classList.remove('liked');
+}
+
+function openShareModal() {
+    document.getElementById('share-link-input').value = window.location.href;
+    document.getElementById('copy-link-btn').textContent = 'Sao chép';
+    document.getElementById('copy-link-btn').classList.remove('copied');
+    document.getElementById('share-modal-overlay').classList.add('active');
+}
+function closeShareModal() {
+    document.getElementById('share-modal-overlay').classList.remove('active');
+}
+function handleOverlayClick(e) {
+    if (e.target === document.getElementById('share-modal-overlay')) closeShareModal();
+}
+function copyLink() {
+    var input = document.getElementById('share-link-input');
+    var btn   = document.getElementById('copy-link-btn');
+    navigator.clipboard.writeText(input.value).then(function () {
+        btn.textContent = '✓ Đã sao chép';
+        btn.classList.add('copied');
+        setTimeout(function () { btn.textContent = 'Sao chép'; btn.classList.remove('copied'); }, 2000);
+    }).catch(function () {
+        input.select(); document.execCommand('copy');
+        btn.textContent = '✓ Đã sao chép'; btn.classList.add('copied');
+        setTimeout(function () { btn.textContent = 'Sao chép'; btn.classList.remove('copied'); }, 2000);
+    });
+}
+
+function syncUtterancesTheme(isDark) {
+    var theme = isDark ? 'github-dark' : 'github-light';
+    document.querySelectorAll('.utterances-frame').forEach(function (f) {
+        f.contentWindow.postMessage({ type: 'set-theme', theme: theme }, 'https://utteranc.es');
+    });
+}
+</script>
+
+</body>
+</html>

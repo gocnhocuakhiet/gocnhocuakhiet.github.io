@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <link rel="stylesheet" href="../style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cẩm Y Hành - Chương 81: Lựa chọn</title>
+    
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f1f7f4;
+            color: #2d3a34;
+            line-height: 1.8;
+        }
+
+        .navbar {
+            background-color: #ffffff;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 10%;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+        }
+        .navbar .logo { font-size: 1.2rem; font-weight: bold; color: #4a6b5d; text-decoration: none; }
+        .nav-links a { color: #555; text-decoration: none; font-size: 0.95rem; transition: color 0.3s; }
+        .nav-links a:hover { color: #4a6b5d; }
+
+        .story-container {
+            max-width: 700px;
+            margin: 40px auto;
+            padding: 30px;
+            background-color: #ffffff;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.02);
+        }
+
+        .story-header {
+            text-align: center;
+            margin-bottom: 35px;
+            border-bottom: 1px dashed #8fae9f;
+            padding-bottom: 20px;
+        }
+        .story-header .novel-name {
+            font-size: 0.95rem; color: #777;
+            text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px;
+        }
+        .story-header .chapter-title { color: #4a6b5d; font-size: 1.6rem; font-weight: 600; }
+
+        .story-content { font-size: 1.15rem; color: #333333; text-align: justify; }
+        .story-content p { margin-bottom: 22px; text-indent: 25px; }
+
+        .reading-nav {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-top: 50px; padding-top: 25px; border-top: 1px dashed #8fae9f;
+        }
+        .nav-btn {
+            display: inline-block; padding: 10px 20px;
+            background-color: #ffffff; color: #4a6b5d;
+            text-decoration: none; border: 1px solid #8fae9f;
+            border-radius: 20px; font-size: 0.9rem; font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        .nav-btn:hover { background-color: #4a6b5d; color: #ffffff; border-color: #4a6b5d; box-shadow: 0 4px 8px rgba(74,107,93,0.2); }
+        .nav-btn.disabled { color: #bbb; border-color: #e0e0e0; background-color: #fafafa; pointer-events: none; box-shadow: none; }
+
+        @media (max-width: 480px) {
+            .story-container { padding: 15px; margin: 20px auto; }
+            .nav-btn { padding: 8px 14px; font-size: 0.8rem; }
+            .comment-sidebar { width: 100%; right: -100%; }
+        }
+
+        body.dark-mode { background-color: #131a17; color: #dae5e0; }
+        body.dark-mode .navbar { background-color: #1b2420; box-shadow: 0 2px 5px rgba(0,0,0,0.3); }
+        body.dark-mode .navbar .logo { color: #8fae9f; }
+        body.dark-mode .nav-links a { color: #aaa; }
+        body.dark-mode .story-container { background-color: #1b2420; box-shadow: 0 2px 10px rgba(0,0,0,0.2); }
+        body.dark-mode .story-header .novel-name { color: #8fae9f; }
+        body.dark-mode .story-header .chapter-title { color: #8fae9f; }
+        body.dark-mode .story-content { color: #dae5e0; }
+        body.dark-mode .nav-btn { background-color: #1b2420; color: #8fae9f; border-color: #4a6b5d; }
+        body.dark-mode .nav-btn:hover { background-color: #4a6b5d; color: #ffffff; }
+        body.dark-mode .nav-btn.disabled { color: #444; border-color: #2e3d36; background-color: #161e1b; }
+
+        .reader-controls-wrapper {
+            position: fixed; bottom: 30px; right: 30px;
+            z-index: 10000;
+            display: flex; flex-direction: column; align-items: flex-end; gap: 10px;
+        }
+        .reader-toggle-btn {
+            width: 48px; height: 48px; border-radius: 50%;
+            border: 2px solid #8fae9f; background: white; color: #4a6b5d;
+            font-size: 18px; cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15); transition: all 0.3s;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .reader-toggle-btn:hover { background: #4a6b5d; color: white; transform: scale(1.1); }
+        .reader-controls-group {
+            display: flex; flex-direction: column; gap: 10px;
+            overflow: hidden; max-height: 0; opacity: 0;
+            transition: max-height 0.35s ease, opacity 0.3s ease;
+        }
+        .reader-controls-group.open { max-height: 200px; opacity: 1; }
+        .reader-controls-group button {
+            width: 48px; height: 48px; border-radius: 50%;
+            border: 2px solid #8fae9f; background: white; color: #4a6b5d;
+            font-size: 15px; font-weight: bold; cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15); transition: all 0.3s;
+        }
+        .reader-controls-group button:hover { background: #4a6b5d; color: white; transform: scale(1.1); }
+        body.dark-mode .reader-toggle-btn,
+        body.dark-mode .reader-controls-group button { background: #1b2420; color: #8fae9f; border-color: #4a6b5d; }
+        body.dark-mode .reader-toggle-btn:hover,
+        body.dark-mode .reader-controls-group button:hover { background: #4a6b5d; color: white; }
+
+        .comment-row {
+            display: flex; justify-content: space-between;
+            align-items: flex-start; gap: 15px;
+            margin-bottom: 22px; width: 100%;
+        }
+        .comment-row p { flex: 1; margin-bottom: 0 !important; }
+
+        .comment-badge {
+            cursor: pointer; flex-shrink: 0; margin-top: 6px;
+            width: 30px; height: 30px; border-radius: 50%;
+            background-color: #eaf2ee; color: #4a6b5d;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.9rem; line-height: 1;
+            transition: all 0.2s ease; user-select: none; border: none;
+        }
+        .comment-badge:hover { background-color: #4a6b5d; color: #ffffff; transform: scale(1.12); }
+        body.dark-mode .comment-badge { background-color: #25332c; color: #8fae9f; }
+        body.dark-mode .comment-badge:hover { background-color: #4a6b5d; color: #ffffff; }
+
+        .comment-sidebar {
+            position: fixed; top: 0; right: -420px; width: 400px; height: 100%;
+            background: #ffffff;
+            box-shadow: -5px 0 15px rgba(0,0,0,0.05);
+            z-index: 100000;
+            transition: right 0.4s cubic-bezier(0.25,0.8,0.25,1);
+            padding: 24px; overflow-y: auto; box-sizing: border-box;
+        }
+        .comment-sidebar.active { right: 0; }
+        .sidebar-header {
+            display: flex; justify-content: space-between; align-items: center;
+            border-bottom: 1px solid #dae5e0; padding-bottom: 12px; margin-bottom: 16px;
+        }
+        .sidebar-header h4 { color: #4a6b5d; margin: 0; }
+        .close-sidebar-btn { background: none; border: none; font-size: 1.2rem; color: #999; cursor: pointer; }
+        .quoted-paragraph-box {
+            background: #f0f7f4; border-left: 3px solid #8fae9f;
+            border-radius: 4px; padding: 10px 14px;
+            font-size: 0.88rem; color: #4a6b5d; font-style: italic;
+            line-height: 1.5; margin-bottom: 12px;
+        }
+        .sidebar-mention-hint {
+            font-size: 0.8rem; color: #888;
+            background: #f8faf9; border: 1px dashed #c8ddd5;
+            border-radius: 6px; padding: 8px 12px; margin-bottom: 14px; line-height: 1.5;
+        }
+        .sidebar-mention-hint code { background: #e4efe9; color: #4a6b5d; padding: 1px 5px; border-radius: 4px; font-size: 0.78rem; }
+        body.dark-mode .sidebar-mention-hint { background: #1e2b24; border-color: #2e3d36; color: #7a9a8a; }
+        body.dark-mode .sidebar-mention-hint code { background: #2a3830; color: #8fae9f; }
+        .sidebar-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.2); z-index: 99999; display: none;
+        }
+        .sidebar-overlay.active { display: block; }
+        .sidebar-loading {
+            text-align: center; padding: 30px 0;
+            color: #aaa; font-size: 0.9rem; font-style: italic;
+        }
+
+        .chapter-discussion-box {
+            max-width: 700px; margin: 30px auto 50px auto;
+            padding: 25px; background-color: #ffffff;
+            border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.02);
+        }
+        .discussion-header {
+            display: flex; justify-content: space-between; align-items: center;
+            gap: 10px; margin-bottom: 25px;
+            border-bottom: 1px dashed #dae5e0; padding-bottom: 15px;
+        }
+        .discussion-header-left { display: flex; align-items: center; gap: 10px; }
+        .discussion-header h3 { color: #4a6b5d; font-size: 1.2rem; margin: 0; }
+        .discussion-actions { display: flex; align-items: center; gap: 10px; }
+        .action-btn {
+            display: flex; align-items: center; gap: 6px;
+            padding: 7px 14px; border-radius: 20px; border: 1px solid #8fae9f;
+            background: #ffffff; color: #4a6b5d;
+            font-size: 0.85rem; font-weight: 500; cursor: pointer;
+            transition: all 0.25s ease; user-select: none;
+        }
+        .action-btn:hover { background-color: #f0f7f4; box-shadow: 0 3px 8px rgba(74,107,93,0.15); }
+        .action-btn.liked { background-color: #fff0f3; border-color: #e8a0b0; color: #c0556a; }
+        .action-btn.liked .heart-icon { animation: heartPop 0.35s ease; }
+        @keyframes heartPop {
+            0% { transform: scale(1); } 40% { transform: scale(1.45); }
+            70% { transform: scale(0.9); } 100% { transform: scale(1); }
+        }
+        body.dark-mode .action-btn { background: #1b2420; color: #8fae9f; border-color: #4a6b5d; }
+        body.dark-mode .action-btn:hover { background-color: #232e29; }
+        body.dark-mode .action-btn.liked { background-color: #2a1e22; border-color: #7a3a4a; color: #e08090; }
+        .comment-section { width: 100%; min-height: 150px; }
+
+        body.dark-mode .chapter-discussion-box,
+        body.dark-mode .comment-sidebar { background-color: #1b2420 !important; }
+        body.dark-mode .discussion-header,
+        body.dark-mode .sidebar-header { border-bottom-color: #2e3d36 !important; }
+        body.dark-mode .discussion-header h3,
+        body.dark-mode .sidebar-header h4 { color: #8fae9f !important; }
+        body.dark-mode .quoted-paragraph-box { background: #232e29; border-left-color: #4a6b5d; color: #8fae9f; }
+
+        .share-modal-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.35);
+            z-index: 200000; display: none; align-items: center; justify-content: center;
+        }
+        .share-modal-overlay.active { display: flex; }
+        .share-modal {
+            background: #ffffff; border-radius: 12px;
+            padding: 28px 24px 22px; width: 380px; max-width: 92vw;
+            box-shadow: 0 12px 40px rgba(0,0,0,0.18);
+            animation: slideUp 0.25s ease;
+        }
+        @keyframes slideUp {
+            from { transform: translateY(20px); opacity: 0; }
+            to   { transform: translateY(0); opacity: 1; }
+        }
+        .share-modal h4 { color: #4a6b5d; font-size: 1.05rem; margin-bottom: 16px; text-align: center; }
+        .share-link-row { display: flex; gap: 8px; align-items: center; }
+        .share-link-input {
+            flex: 1; padding: 9px 12px; border: 1px solid #c8ddd5; border-radius: 8px;
+            font-size: 0.85rem; color: #444; background: #f8faf9;
+            outline: none; overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
+        }
+        .copy-link-btn {
+            padding: 9px 16px; border-radius: 8px;
+            background: #4a6b5d; color: #ffffff; border: none;
+            font-size: 0.85rem; font-weight: 600; cursor: pointer;
+            transition: all 0.2s; white-space: nowrap;
+        }
+        .copy-link-btn:hover { background: #3a5a4d; }
+        .copy-link-btn.copied { background: #6aaa88; }
+        .share-modal-close {
+            display: block; width: 100%; margin-top: 14px;
+            padding: 8px; background: none; border: none;
+            color: #999; font-size: 0.85rem; cursor: pointer; text-align: center;
+        }
+        .share-modal-close:hover { color: #555; }
+        body.dark-mode .share-modal { background: #1b2420; }
+        body.dark-mode .share-modal h4 { color: #8fae9f; }
+        body.dark-mode .share-link-input { background: #232e29; border-color: #3a5040; color: #dae5e0; }
+        body.dark-mode .share-modal-close { color: #6a8a7a; }
+    </style>
+</head>
+<body>
+
+<div class="reader-controls-wrapper">
+    <div class="reader-controls-group" id="reader-group">
+        <button onclick="changeFontSize(1)" title="Phóng to chữ">A+</button>
+        <button onclick="changeFontSize(-1)" title="Thu nhỏ chữ">A-</button>
+        <button onclick="toggleDarkMode()" id="dark-mode-btn" title="Đổi màu nền">🌙</button>
+    </div>
+    <button class="reader-toggle-btn" id="reader-toggle" onclick="toggleReaderControls()" title="Tuỳ chỉnh đọc">⚙️</button>
+</div>
+
+<script>
+function toggleReaderControls() {
+    var group = document.getElementById('reader-group');
+    var btn   = document.getElementById('reader-toggle');
+    var isOpen = group.classList.toggle('open');
+    btn.style.background = isOpen ? '#4a6b5d' : '';
+    btn.style.color      = isOpen ? '#ffffff'  : '';
+}
+function toggleDarkMode() {
+    document.body.classList.toggle('dark-mode');
+    var isDark = document.body.classList.contains('dark-mode');
+    localStorage.setItem('night-mode', isDark ? 'on' : 'off');
+    document.getElementById('dark-mode-btn').innerText = isDark ? '☀️' : '🌙';
+    syncUtterancesTheme(isDark);
+}
+function changeFontSize(delta) {
+    var content = document.querySelector('.story-content') || document.body;
+    var cur = parseFloat(window.getComputedStyle(content).fontSize);
+    content.style.fontSize = (cur + delta) + 'px';
+}
+function syncUtterancesTheme(isDark) {
+    var theme = isDark ? 'github-dark' : 'github-light';
+    document.querySelectorAll('.utterances-frame').forEach(function(f) {
+        f.contentWindow.postMessage({ type: 'set-theme', theme: theme }, 'https://utteranc.es');
+    });
+}
+(function() {
+    if (localStorage.getItem('night-mode') === 'on') {
+        document.body.classList.add('dark-mode');
+        setTimeout(function() {
+            var b = document.getElementById('dark-mode-btn');
+            if (b) b.innerText = '☀️';
+        }, 80);
+    }
+})();
+</script>
+
+<header class="navbar">
+    <a href="../index.html" class="logo">🌿 Góc nhỏ của Khiết</a>
+    <nav class="nav-links"><a href="../index.html">Trang Chủ</a></nav>
+</header>
+
+<main class="story-container">
+    <div class="story-header">
+        <p class="novel-name">Cẩm Y Hành - Quyển 6</p>
+        <h1 class="chapter-title">Chương 81: Lựa chọn</h1>
+    </div>
+
+    <article class="story-content">
+        <p>Một khi đã quyết định can thiệp, vấn đề tiếp theo là can thiệp như thế nào? Hay nói cách khác, là đứng về phe nào?</p>
+        <p>Lý Khắc Kỷ là người đầu tiên bày tỏ lập trường, thẳng thắn nói rằng hắn không quan tâm chú cháu Chu gia ai thắng ai thua, miễn là chiến tranh kết thúc sớm.</p>
+        <p>Nhớ lại thái độ khinh bỉ của Thiết Địch Thu trước đây với các thế lực tranh hùng, Mạnh Kiếm Khanh thầm cảm thán: quả đúng là thầy trò một nhà.</p>
+        <p>Minh Viễn lên tiếng: “Nếu Lý sư điệt thực sự mong chiến tranh chấm dứt sớm, thì không thể giữ thái độ trung lập. Tình thế hiện tại rõ như ban ngày, quân Nam và quân Yên đều có điểm mạnh yếu riêng, thế lực ngang nhau. Nếu không có bên nào tìm được cách đánh bất ngờ hay được viện binh ngoài dự kiến, ắt sẽ kéo dài. Vì vậy, Lý sư điệt nên cân nhắc kỹ xem đứng về phe nào.”</p>
+        <p>Lý Khắc Kỷ im lặng không trả lời, rõ ràng đang đắn đo.</p>
+        <p>Mạnh Kiếm Khanh vô cùng chấn động. Dường như Lý Khắc Kỷ hoàn toàn không nghĩ mình còn là quan chức triều đình, nếu phải lựa chọn thì đáng lẽ phải không do dự đứng về phía Kiến Văn Đế.</p>
+        <p>Có lẽ trong mắt những người này, Hoàng đế chỉ là bức tranh xa xôi nơi quê nhà. Ngay cả Lý Khắc Kỷ lớn lên ở Thục, cũng không có lòng kính sợ chân thành như nho sĩ bình thường dành cho người ngồi trên ngai vàng.</p>
+        <p>Trong rừng phong này, họ không coi ai là người ngoài, nên đã tháo bỏ lớp mặt nạ thường ngày, phô bày tâm tư tự do phóng khoáng như biển rộng trời cao.</p>
+        <p>Họ đang cho Mạnh Kiếm Khanh thấy một thế giới kỳ lạ đến vậy.</p>
+        <p>Trái với dự đoán của Mạnh Kiếm Khanh, người phá vỡ im lặng lại là Liêm Trinh tinh quân Ngọc Hành.</p>
+        <p>Ngọc Hoành giọng vẫn chậm rãi: “Quốc gia đã có chế độ sẵn, không cần bàn cãi nhiều về việc Yên vương và Hoàng thượng ai hơn ai. Nhưng nếu hôm nay để Yên vương thành công, ngày mai sẽ có vô số Yên vương khác nổi lên. Vì con người mà phá vỡ chế độ, sau này thành thói quen, chỉ sợ đất nước không còn ngày yên ổn.”</p>
+        <p>Đây là đạo lý mà mọi người trong rừng phong đều hiểu.</p>
+        <p>Minh Viễn cười ha hả: “Chế độ mà Hồng Vũ Đế đặt ra có vô số kẽ hở. Phiên vương vừa nắm trọng binh vừa có quyền dẹp loạn chính là lỗ hổng lớn nhất. Phiên vương đủ sức tranh ngai vàng, không thể cưỡng lại sự cám dỗ của vị trí đó. Đã là chế độ không hoàn thiện, cớ gì phải khư khư giữ lấy?”</p>
+        <p>Ngọc Hành đáp: “Việc Hoàng thượng đang làm hiện nay, chẳng phải là để bịt lỗ hổng lớn nhất mà Minh sư huynh vừa nói đó sao?”</p>
+        <p>Minh Viễn hỏi lại: “Ninh sư đệ cho rằng Hoàng thượng có đủ năng lực bịt lỗ hổng này không? Nếu có, đã không xảy ra loạn Tĩnh Nan.”</p>
+        <p>Hóa ra Ngọc Hoành họ Ninh.</p>
+        <p>Mạnh Kiếm Khanh đã đoán được thân phận thật của ông.</p>
+        <p>Trong ba thuộc hạ mất tích của Binh bộ Tả thị lang, có một người tên Ninh Hành, tự Thủ Liêm.</p>
+        <p>Ninh Hành quê ở Thiệu Hưng, làm quan đã lâu năm, từng trải qua nhiều bộ khác nhau. Dù thăng tiến chậm, đến giờ mới ở chức Chánh lục phẩm, nhưng nổi tiếng khắp sáu bộ nhờ hiểu sâu luật lệ.</p>
+        <p>Các quan lớn tuy không coi Ninh Hành sống độc lập và có phần kiêu ngạo này làm tâm phúc, nhưng hễ gặp vụ án khó hay vướng mắc luật lệ, đều không quên tham khảo ý kiến ông. Nhờ vậy, tiếng tăm Ninh Hành được truyền tụng khắp lục bộ.</p>
+        <p>Cũng chính vì điểm này mà Mạnh Kiếm Khanh đã nhớ đến ông.</p>
+        <p>Người ẩn cư thực sự thường náu mình ngay giữa triều đình. Ninh Hoành quả biết chọn nơi ẩn náu.</p>
+        <p>Cũng chẳng trách toán quân tấn công đoàn người của Ninh Hành khi đó biến mất không dấu vết. Đó rõ ràng là kế “kim thiền thoát xác” của ông.</p>
+        <p>Ninh Hành nói: “Chính vì vậy, Hoàng thượng mới cần chúng ta giúp một tay.”</p>
+        <p>Minh Viễn chưa kịp bác bỏ, Lôi Công Phụ đã cười lớn đầy khinh bỉ: “Cần chúng ta giúp một tay! Thật nực cười! Hồng Vũ Đế đã trao cho hắn quyền lực tối thượng, mà vẫn dẫn đến cục diện hôm nay. Cho dù chúng ta có mượn thêm thanh bảo kiếm sắc bén, nhưng một đứa trẻ không biết dùng kiếm, cầm thanh kiếm ấy cũng vô dụng!”</p>
+        <p>Lôi Công Phụ nhiều năm chinh chiến trên biển, đương nhiên không mấy coi trọng loại vua chúa lớn lên trong cung cấm như Kiến Văn Đế, ngược lại còn có chút thiện cảm với Yên vương trấn thủ biên cương nhiều năm.</p>
+        <p>Minh Viễn hứng thú hỏi: “Nghe vậy là Lôi sư huynh định chọn Yên vương?”</p>
+        <p>Lôi Công Phụ  lắc đầu: “Ta khâm phục Yên vương không có nghĩa sẽ chọn hắn. Nói thật, thuộc hạ của ta thà chơi trò quan bắt cướp với Kiến Văn Đế còn hơn đối đầu Yên vương.”</p>
+        <p>Sở Bích Thiên bật cười: “Lôi sư bá, xem ra tiểu điệt lại đồng quan điểm với ngài. Ta không ưa Yên vương, nhưng Công hội Hoa thương vùng biển phía nam lại cho rằng chúng ta cần Yên vương hơn Hoàng thượng hiện tại.”</p>
+        <p>Với chủ trương “trọng văn khinh võ”, Kiến Văn Đế cùng các đại thần cốt cán đầy chất thư sinh của mình chắc chắn sẽ không bao giờ tán thành một kế hoạch xây dựng hải quân quy mô chưa từng có, vừa tốn kém khủng khiếp, lợi ích khó lường, lại dễ bị mang tiếng hiếu chiến, như việc viễn chinh vùng biển phía nam và nước ngoài.</p>
+        <p>Ninh Hành nói: “Hoàng thượng không làm, không có nghĩa Yên vương sẽ làm.”</p>
+        <p>Minh Viễn cười khẩy: “Đạo Diễn hòa thượng từng đánh giá Yên vương: trong lòng ham muốn chất chồng, bên ngoài thì khoác áo nhân nghĩa. Lão tăng gian xảo đó nhìn người vừa chuẩn vừa độc, câu nói này chắc chắn không phải vu khống. Mọi người thử nghĩ xem, một vị quân chủ như vậy, trước kế hoạch có thể đem lại cả danh lẫn lợi, làm sao không động lòng? Huống chi Sở sư điệt chắc chắn không tay không đến gặp Yên vương đâu nhỉ. Công hội Hoa thương vùng biển phía nam giờ trao quả ngọt, Yên vương sau này ắt sẽ đáp trả xứng đáng.”</p>
+        <p>Mạnh Kiếm Khanh dù không ngoảnh lại cũng có thể tưởng tượng được biểu cảm và tâm trạng hiện tại của Vân Yên Kiều.</p>
+        <p>Dù chiến sự giữa quân Nam và quân Yên ở phương Bắc ác liệt đến đâu, Vân Yên Nhiên vẫn kiên định trấn thủ Phúc Kiến, chuyên tâm huấn luyện đội thủy quân chuẩn bị nam tiến.</p>
+        <p>Liệu Vân gia có cùng ý đồ như Sở Bích Thiên, đặt hy vọng vào Yên vương đầy tham vọng?</p>
+        <p>Minh Viễn quay sang hai người khác: “Phạm sư huynh, Thạch sư điệt, ý hai vị kiến thế nào?”</p>
+        <p>Phạm Phúc thở dài: “Gia nghiệp của ta đều ở Giang Nam, Minh sư đệ nghĩ ta còn lựa chọn nào khác? Dù sao, ít nhất trên danh nghĩa, ta vẫn phải giữ lòng trung thành với vị kia ở phủ Ứng Thiên.”</p>
+        <p>Lời tuyên bố thẳng thừng của Phạm Phúc khiến mọi người đều ngạc nhiên. Chỉ đến câu nói sau cùng thì ẩn ý mới lộ rõ, vẫn còn có thể xoay chuyển.</p>
+        <p>Thạch Cảm Phong thì bộc trực hơn nhiều: “Ta không ưa vị kia ở phủ Ứng Thiên. Sinh trong cung cấm, lớn lên dưới tay đàn bà, lên ngôi đến nay luôn bị bọn văn thần hủ lậu vây quanh, tưởng mọi chuyện trong thiên hạ đều có thể giải quyết trên giấy tờ. Một vị quân chủ như vậy làm nên trò trống gì? Nên ta chọn Yên vương. Dù một ngày kia trở thành đối thủ, có được đối thủ mạnh như vậy cũng đủ để nâng chén say sưa!”</p>
+        <p>Lời lẽ đầy gai góc, ám chỉ thẳng Lôi Công Phụ né cái mạnh đánh cái yếu.</p>
+        <p>Lôi Công Phụ cười lớn: “Thạch sư điệt vốn tự do tự tại, đâu giống ta phải lo cơm áo cho mấy vạn thuộc hạ? Dĩ nhiên không thể có được quyết tâm hào hùng như ngươi. Lý sư điệt, giờ lựa chọn của ngươi mới là then chốt, đã nghĩ kỹ chưa?”</p>
+        <p>Ninh Hành nói: “Không chỉ Lý sư điệt cần suy nghĩ kỹ, ta thấy mọi người đều nên cân nhắc. Theo ta, dù còn nhiều sơ hở, nhưng chế độ quốc gia đã rất hoàn thiện, mọi việc đều có quan lại các cấp xử lý, chỉ cần tuân thủ quy trình, chẳng cần một vị vua tùy hứng làm chuyện khác thường. Bởi vậy, người ở ngôi cao, quan trọng nhất là phải biết theo khuôn phép. Một bậc vua võ nghệ dũng mãnh, so với một bậc vua văn nhã nhân hậu, ai thích hợp hơn? Hẳn đã quá rõ ràng.”</p>
+        <p>Minh Viễn bèn mỉa mai: “Theo khuôn phép? Thế thì e rằng đối với Lục bộ các ngươi, một con rối ngồi trên ngai vàng, mới là lựa chọn hoàn hảo nhất chứ gì?”</p>
+        <p>Ninh Hành đáp: “Minh sư huynh có phần quá lời rồi. Nhiều khi, Lục bộ vẫn cần người ở trên phân xử tranh chấp. Hơn nữa, nếu quan lại không biết tôn trọng người cầm quyền, thì dân làm sao kính trọng quan phủ? Khổng Tử từng nói: mũ tuy rách nhưng phải đội trên đầu, giày tuy mới nhưng phải mang dưới chân. Đạo lý chính là ở đó.”</p>
+        <p>Minh Viễn chất vấn: “Ninh sư đệ cho rằng Kiến Văn Đế thích hợp làm người phân xử hơn Yên vương? Kiến Văn đúng là có nhân từ, nhưng chỉ là thứ nhân từ nhu nhược như lòng dạ đàn bà, biết thưởng không biết phạt, ngươi chắc chắn cần một người phân xử như vậy?”</p>
+        <p>Ninh Hành đáp: “Kiến Văn đúng là có nhiều điểm yếu, nhưng nếu Yên vương soán ngôi, ai dám đảm bảo hắn sẽ tuân thủ chế độ quốc gia?”</p>
+        <p>Minh Viễn viện dẫn: “Sự biến Huyền Vũ Môn cũng chẳng ngăn nổi Đường Thái Tông trở thành minh quân. Có lẽ chính vì cảm thấy có lỗi, Thái Tông hoàng đế mới luôn cảnh giác trước triều thần và thiên hạ, cẩn thận từng bước, cố gắng chứng minh mình là lựa chọn đúng đắn của trời.”</p>
+        <p>Ninh Hành phản bác: “Đó chỉ là suy đoán của Minh sư huynh. Huống hồ, dù Thái Tông hoàng đế nghĩ vậy làm vậy, không có nghĩa Yên vương sẽ noi theo. Ta không cho rằng có lý do gì để mạo hiểm như vậy.”</p>
+        <p>Minh Viễn và Ninh Hành tranh luận gay gắt, lời qua tiếng lại không phân thắng bại.</p>
+        <p>Phạm Phúc thì thầm nhắc Lý Khắc Kỷ nhanh chóng đưa ra lựa chọn. Một khi hắn quyết định, Minh Viễn và Ninh Hành đương nhiên sẽ không còn gì để tranh cãi.</p>
+        <p>Lý Khắc Kỷ vẫn do dự không quyết, mãi sau mới lên tiếng: “Ta không thể chọn bất cứ bên nào.”</p>
+        <p>Phạm Phúc gật đầu tán đồng: “Cũng phải thôi. Bên nào cũng có điểm mạnh yếu, không thể cùng lúc có cả cá với gấu, chọn ai cũng thấy tiếc.”</p>
+        <p>Nhưng Lý Khắc Kỷ lại nói: “Ta chỉ nghĩ, chọn bên nào thì có khác gì nhau? Kẻ trộm móc túi bị xử tử, kẻ cướp nước lại thành chư hầu, chuyện đời đều như vậy mà thôi.”</p>
+        <p>Mọi người trong rừng phong đều giật mình.</p>
+        <p>Thái độ cảnh giác và phản kháng sâu sắc với kẻ cầm quyền của Thiết Địch Thu dường như đã ngấm sâu vào máu thịt Lý Khắc Kỷ, đến nỗi dù đã làm quan nhiều năm, hắn vẫn buột miệng nói ra câu như thế.</p>
+        <p>Phạm Phúc cười khổ: “Lý sư điệt, dù sao đi nữa, cứ nhắm mắt chọn đại một bên đi chứ? Chúng ta khó khăn lắm mới tụ họp đủ người, cứ lần lữa mãi, e rằng thời thế sẽ đổi thay.”</p>
+        <p>Đang lúc do dự, Lý Khắc Kỷ chợt nảy ra ý nghĩ, nói: “Đã không thể chọn, vậy thì không chọn nữa, cứ thuận theo ý trời.”</p>
+        <p>Minh Viễn khinh bật cười: “Chẳng lẽ sư điệt định tung đồng xu quyết định?”</p>
+        <p>Lý Khắc Kỷ đáp: “Việc trọng đại như thế, làm vậy khác nào trẻ con. Hơn nữa, ta cũng không có quyền quyết định vận mệnh người khác. Vì vậy, ta sẽ trao quyền lựa chọn cho chính họ.”</p>
+        <p>Giọng hắn từ trầm lắng bỗng trở nên trong trẻo, như thể vừa gỡ rối được mớ suy nghĩ hỗn độn mà tràn đầy phấn khởi: “Hiện tại trong phủ Quảng Bình có sáu ngàn thạch lương thực, trong khi hai cánh quân đóng quanh đây do đánh lén nhau thời gian qua đều đã thiếu lương trầm trọng. Số lương này tuy không nhiều, nhưng đủ giải cơn đói trước mắt. Vì thế, lựa chọn của ta là: bên nào động vào số lương này trước, bên đó sẽ là kẻ thù của ta.”</p>
+        <p>Giọng điệu ôn hòa nhưng ẩn chứa quyết tâm không lay chuyển.</p>
+        <p>Minh Viễn rõ ràng cũng nhận ra quyết tâm ấy, trầm mặc một lúc mới nói: “Nghe vậy Lý sư điệt chọn cứu dân đói mà bỏ mặc lính đói sao?”</p>
+        <p>Lý Khắc Kỷ lạnh lùng đáp: “Bọn lính chỉ là không được no bụng, còn dân Quảng Bình đã đến đường cùng. Ta có khả năng này, không thể khoanh tay nhìn họ chết.”</p>
+        <p>Phạm Phúc nói: “Sáu ngàn thạch lương thực kia có thể an toàn vượt chiến trường vào phủ Quảng Bình, hẳn là do Lý sư điệt đã cảnh báo trước với tướng lĩnh hai phe. Như vậy thì ai còn dám động vào? Cách này e rằng không khả thi.”</p>
+        <p>Ninh Hành lại nói: “Hiện Quảng Bình không thuộc quyền Yên vương. Nếu Tuần phủ Hà Bắc hạ lệnh điều lương, Quảng Bình không thể từ chối. Có cách hợp pháp như vậy để lấy lương, Liêu Đô đốc và thuộc hạ khó lòng cưỡng lại cám dỗ.”</p>
+        <p>Khi cấp giấy thông hành cho đoàn vận lương, Liêu Đô đốc đã tính trước điều này chăng?</p>
+        <p>Như vậy, cách của Lý Khắc Kỷ tưởng công bằng, nhưng thực chất đã định đoạt bên thua cuộc.</p>
+        <p>Giữa bầu không khí lặng ngắt, Mạnh Kiếm Khanh bỗng cất giọng cao hơn: “Có một tin quan trọng có lẽ mọi người chưa hay. Hôm qua, quân Yên đã thay đổi lực lượng phòng thủ. Tướng mới điều đến là Lăng Phong, tốt nghiệp hạng hai khóa đầu Giảng Võ Đường, nổi tiếng hung hãn nên có biệt danh Lăng Điên.</p>
+        <p>Phó tướng của hắn là Tiêu Nhượng, bạn học cũ đã cùng hắn chiến đấu suốt bảy năm. Khi còn phục vụ dưới trướng Mộc vương ở Vân Nam, hai người này từng san bằng mười bảy thành trại chỉ trong ba tháng.</p>
+        <p>Với kinh nghiệm đó, Tiêu Nhượng chắc chắn sẽ nhận ra cơ hội biến số lương thực này thành quân nhu. Mà Lăng Phong thì không phải loại người khoanh tay đứng nhìn. Dù không dám phá vỡ thỏa thuận đốt lương, nhưng hắn sẽ chủ động tấn công trước, không cần chiếm được Quảng Bình, chỉ cần không để lương rơi vào tay địch là được.”</p>
+        <p>Trong bảy người, ngoại trừ Minh Viễn thường phiêu bạt giang hồ, những người khác đều từng tiếp xúc với Mạnh Kiếm Khanh.</p>
+        <p>Minh Viễn tuy chỉ nghe danh Mạnh Kiếm Khanh nhưng luôn có thành kiến. Cho rằng gã trai trẻ thăng quan tiến chức nhanh chóng kia chẳng khác nào kẻ trọc phú. Ông từng nghĩ Vân Yên Kiều lấy phải người chồng như thế thật là nhục nhã.</p>
+        <p>Nhưng sau khi nghe phân tích sắc bén về tình hình quân sự, ấn tượng của Minh Viễn về Mạnh Kiếm Khanh dần thay đổi. Ông chợt nhận ra: đúng là xuất thân Cẩm Y Vệ, hắn có khả năng thu thập tin tức và phân tích tình huống rất bài bản.</p>
+        <p>Minh Viễn chua chát nhớ lại lời Đạo Diễn hòa thượng từng nói về mình: “Nhìn xa trông rộng nhưng lại bỏ sót chi tiết”.</p>
+        <p>Quả thật, chính ông đã bỏ qua thông tin quan trọng về việc quân Yên thay đổi phòng thủ.</p>
+        <p>Như vậy chẳng phải lại rơi vào thế bế tắc sao?</p>
+        <p>Lôi Công Phụ sau nhiều năm đối đầu với Thẩm Quang Lễ, cũng đánh giá cao Mạnh Kiếm Khanh, liền nói: “Người do Thẩm hòa thượng đào tạo, tầm nhìn tất không tầm thường. Mạnh Thiên hộ, ngươi thử nói xem Lý sư điệt nên chọn thế nào?”</p>
+        <p>Mạnh Kiếm Khanh giật mình.</p>
+        <p>Với thân phận của hắn, sao có thể đưa ra ý kiến về việc này?</p>
+        <p>Không ngờ Minh Viễn lại tán thành: “Cũng được. Chúng ta đều là người trong cuộc, nên nghe ý kiến của người ngoài cuộc.”</p>
+        <p>Vân Yên Kiều nghiêng đầu sang, ánh mắt lấp lánh như dò hỏi Mạnh Kiếm Khanh.</p>
+        <p>Mạnh Kiếm Khanh đột nhiên cảm thấy một áp lực khổng lồ đè nặng. Nhưng chính áp lực ấy lại khiến tinh thần hắn căng thẳng và phấn chấn lạ thường, bất giác buột miệng đáp: “Đương nhiên phải chọn phe có khả năng thắng cao hơn.”</p>
+        <p>Lời vừa dứt, hắn chợt nhận ra mình vừa thốt lên suy nghĩ thầm kín nhất. Hóa ra trong sâu thẳm, hắn cũng giống Lý Khắc Kỷ, đều coi cuộc tranh chấp giữa chú cháu Chu gia chỉ là chuyện nội bộ, chẳng liên can gì đến người ngoài. Đã vậy thì chọn bên nào chẳng như nhau?</p>
+        <p>Đó là lý do hắn dễ dàng chấp nhận điều kiện của Đạo Diễn, đồng ý yêu cầu của Lý Khắc Kỷ.</p>
+        <p>Nếu người khác nghe được câu nói này, hẳn sẽ gây ra vô vàn rắc rối. Nhưng giữa rừng phong mờ ảo như cõi mộng, chút hối hận thoáng qua trong lòng Mạnh Kiếm Khanh nhanh chóng tan biến trong làn sương dày. Thở phào một hơi, hắn bỗng cảm thấy nhẹ nhõm như trút được gánh nặng.</p>
+        <p>Đã lâu lắm rồi hắn mới có thể thẳng thắn thổ lộ những suy nghĩ mà ngay cả bản thân cũng trốn tránh.</p>
+        <p>Minh Viễn khẽ giật mình rồi bật cười: “Hay lắm! Quả nhiên người ngoài cuộc sáng suốt hơn!”</p>
+        <p>Với Lý Khắc Kỷ, chọn phe có lợi thế chính là cách nhanh nhất kết thúc chiến tranh.</p>
+        <p>Ninh Hành bình thản nói: “Vấn đề là hiện tại quân Yên và quân Nam thế lực ngang nhau, làm sao xác định ai thắng ai thua? Hơn nữa, nếu có thể phân thắng bại nhanh chóng, cần gì chúng ta nhúng tay?”</p>
+        <p>Minh Viễn đáp: “Ai bảo thế lực ngang nhau? Yên vương và Kiến Văn giằng co chỉ vì Yên vương quen đánh Mông Cổ, áp dụng chiến thuật sai chỗ. Nếu hắn nhận ra điểm khác biệt, cục diện sẽ rõ như ban ngày!”</p>
+        <p>Chẳng đợi mọi người chất vấn, Minh Viễn tiếp tục: “Đánh Mông Cổ, địch tràn ngập thảo nguyên nên phải tiến từng bước vững chắc. Chiến lược hiện nay của Yên vương cũng vậy.</p>
+        <p>Chiếm Sơn Đông, Hà Bắc trước để ổn định hậu phương rồi mới nam tiến. Nhưng Yên vương dấy binh với danh nghĩa diệt trừ gian thần bên cạnh hoàng đế theo di chiếu Hồng Vũ Đế.</p>
+        <p>Ngay cả Kiến Văn cũng không thể dựa vào địa vị chính thống để buộc tội Yên vương phản nghịch. Trận Tế Nam, Kiến Văn còn vì sợ mang tiếng giết chú mà thả hổ về rừng. Chủ soái đã như vậy, thì trong quân Nam đối đầu với Yên vương, có bao nhiêu là kẻ thù thực sự, bao nhiêu chỉ đứng nhìn?”</p>
+        <p>Mạnh Kiếm Khanh chính là ví dụ sống.</p>
+        <p>Lẽ ra phải trung thành tuyệt đối với Kiến Văn Đế, hắn lại thốt ra câu nói như vậy.</p>
+        <p>Minh Viễn nói thêm: “Chỉ cần Yên vương nhận ra điều này, thay đổi toàn cục chiến lược, thắng bại không khó đoán.”</p>
+        <p>Minh Viễn không giải thích thêm, nhưng ai nấy trong rừng phong đều đã hiểu cục diện thế trận mà ông ám chỉ thực sự rõ ràng.</p>
+        <p>Quân Nam tưởng mạnh nhưng có điểm yếu chí mạng.</p>
+        <p>Minh Viễn bổ sung: “Hơn nữa, nghìn quân dễ kiếm, một tướng khó tìm. Thời Hồng Vũ, tướng lão luyện trong quân Nam đều bị giết sạch. Tướng trẻ Giảng Võ Đường tuy được coi là cốt cán nhưng non kinh nghiệm, địa vị thấp, đến nỗi Kiến Văn phải cử Lý Cảnh Long chỉ là một công tử bột vô dụng làm Thống soái. Quân Nam dù đông quân nhiều lương cũng vô ích!”</p>
+        <p>Những lời này cuối cùng khiến Lý Khắc Kỷ thở dài: “Vậy thì ta chọn Yên vương vậy.”</p>
+        <p>Thế cục đã định. Không khí trong rừng phong bỗng vừa trĩu nặng, vừa như nhẹ nhõm.</p>
+        <p>Phạm Phúc nhíu mày: “Nhưng gia nghiệp của ta đều ở Giang Nam, sao có thể công khai ủng hộ Yên vương được?”</p>
+        <p>Minh Viễn tỏ ra rất hài lòng, nụ cười lạnh lẽo của ông giờ pha chút ấm áp: “Yên vương hiểu rõ khó khăn của Phạm sư huynh. Chỉ cần sau này thành tâm quy thuận, cần gì phải bận tâm chuyện nhỏ trước mắt? Vậy Lôi sư huynh và Ninh sư đệ còn ý kiến gì?”</p>
+        <p>Lôi Công Phụ nói: “Yên vương tài trí hơn người, ắt hiểu rằng: nước quá trong sẽ không có cá, người quá sáng suốt sẽ không có bạn. Mặt trời tháng Sáu còn có chỗ không chiếu tới. Rồng là đứng đầu tứ linh nhưng không quản được chim muông. Tam hoàng ngũ đế cũng có dân man di không hàng phục được.</p>
+        <p>Vì vậy, khi đạt được nguyện vọng, Yên vương nên hiểu không phải mọi việc đều nằm trong tầm kiểm soát. Cho người khác đường lui cũng là tự cho mình lối thoát.”</p>
+        <p>Minh Viễn cười: “Ta hiểu ý Lôi sư huynh. Bậc minh quân sáng suốt nhất cũng không thể khiến thiên hạ trong sạch tuyệt đối. Trong bóng tối, hay nơi ranh giới thiện ác, luôn tồn tại những việc không thể phơi bày, nuôi sống vô số người.</p>
+        <p>Đó là lớp bùn dưới mặt nước trong, hôi thối nhưng không thể thiếu. Lôi sư huynh muốn Yên vương đừng khuấy động lớp bùn ấy, kẻo vẩn đục cả hồ nước phải không? Nhưng sư huynh yên tâm, Yên vương đâu phải loại thư sinh cứng nhắc như Kiến Văn, ắt biết lúc nào nên tỏ tường, lúc nào cần giả vờ mờ mịt.”</p>
+        <p>Lôi Công Phụ thống lĩnh Đông Hải mấy chục năm, các bang phái trên sông Dương Tử đều phải nể mặt bảy phần. Một minh chủ thủy đạo quan trọng như vậy nếu tự nguyện thuần phục, Yên vương nào cần gây sóng gió làm đục dòng nước vốn đang yên ả?</p>
+        <p>Ninh Hành bình thản nói với giọng lạnh lùng: “Ta vẫn cho rằng, một vị quân chủ quá cứng rắn và tàn bạo, trừ phi là Thái Tông hoàng đế, nếu không đều chỉ có hại chứ không có lợi cho đất nước. Ta sẽ không ngăn cản mọi người chọn Yên vương. Nếu Yên vương thành công, ta cũng sẽ không dại dột chống lại. Tuy nhiên, ta hy vọng có thể giữ lại Kiến Văn để kiềm chế Yên vương. Chỉ khi Yên vương biết Kiến Văn vẫn còn sống, hắn mới có chút e dè và kiềm chế, để tránh cho Kiến Văn cơ hội trỗi dậy.”</p>
+        <p>Không ai phản đối. Ngay cả Minh Viễn cũng e dè trước sự cứng rắn của Yên vương.</p>
+        <p>Ninh Hành nói đến đây, bỗng chuyển hướng: “Bây giờ còn một vấn đề nữa. Mạnh Thiên hộ tình cờ dự hội này, vậy ý định của ngài thế nào?”</p>
+        <p>Với Yên vương, Mạnh Kiếm Khanh và đội Ngư Tràng là đối thủ không thể xem thường.</p>
+        <p>Mạnh Kiếm Khanh đáp: “Ta cùng với Đạo Diễn đại sư và Lý huynh đã có ước hẹn ba tháng. Trong ba tháng, quân Ngư Tràng sẽ không ám sát tướng lĩnh của quân Yên, cũng không đụng đến lương thảo của họ. Còn chuyện sau ba tháng, khi Minh Viễn đạo trưởng đến Bắc Bình, tình thế chắc chắn sẽ có biến động lớn, vậy chúng ta hãy đợi ba tháng sau rồi tính tiếp được không?”</p>
+        <p>Vân Yên Kiều thêm vào: “Bảo Nhi còn làm con tin trong cung. Quân Ngư Tràng chỉ có thể làm đến thế.”</p>
+        <p>Minh Viễn nói: “Vân sư điệt không cần phải nói vòng vo. Có phải cứu được công tử, Mạnh Thiên hộ sẽ giữ thái độ trung lập không?”</p>
+        <p>Gia quyến của các tướng sĩ quân Ngư Tràng đều ở phương nam. Vì vậy dù thế nào đi nữa, Mạnh Kiếm Khanh cũng không thể công khai đứng về phe Yên vương. Minh Viễn biết mình chỉ có thể yêu cầu Mạnh Kiếm Khanh và quân Ngư Tràng giữ thái độ trung lập.</p>
+        <p>Mạnh Kiếm Khanh và Vân Yên Kiều nhìn nhau, hắn nói: “Đương nhiên.”</p>
+        <p>Minh Viễn cười lớn: “Mạnh Thiên hộ là người dám nghĩ dám làm, tiếng tăm không ngoa! Được, một lời đã định!”</p>
+    </article>
+
+    <div class="reading-nav">
+        <a href="camyhanhq6-80.html" class="nav-btn">⬅️ Chương trước</a>
+        <a href="../mucluc/camyhanh.html" class="nav-btn">📋 Mục lục</a>
+        <a href="camyhanhq6-82.html" class="nav-btn">Chương sau ➡️</a>
+    </div>
+</main>
+
+<div class="chapter-discussion-box">
+    <div class="discussion-header">
+        <div class="discussion-header-left">
+            <span>🌿</span>
+            <h3>Thảo luận về chương này</h3>
+            <span>🌸</span>
+        </div>
+        <div class="discussion-actions">
+            <button class="action-btn" id="like-btn" onclick="toggleLike()" title="Thả tim chương này">
+                <span class="heart-icon">🤍</span>
+                <span id="like-count">0</span>
+            </button>
+            <button class="action-btn" onclick="openShareModal()" title="Chia sẻ chương này">
+                🔗 Chia sẻ
+            </button>
+        </div>
+    </div>
+    <div class="comment-section">
+        <script src="https://utteranc.es/client.js"
+                repo="gocnhocuakhiet/gocnhocuakhiet.github.io"
+                issue-term="pathname"
+                label="comment"
+                theme="github-light"
+                crossorigin="anonymous"
+                async>
+        </script>
+    </div>
+</div>
+
+<div class="share-modal-overlay" id="share-modal-overlay" onclick="handleOverlayClick(event)">
+    <div class="share-modal">
+        <h4>🔗 Chia sẻ chương này</h4>
+        <div class="share-link-row">
+            <input class="share-link-input" id="share-link-input" type="text" readonly>
+            <button class="copy-link-btn" id="copy-link-btn" onclick="copyLink()">Sao chép</button>
+        </div>
+        <button class="share-modal-close" onclick="closeShareModal()">Đóng</button>
+    </div>
+</div>
+
+<div id="comment-sidebar" class="comment-sidebar">
+    <div class="sidebar-header">
+        <h4 id="sidebar-paragraph-title">Bình luận đoạn văn</h4>
+        <button class="close-sidebar-btn" onclick="closeInlineComment()">✕</button>
+    </div>
+    <div class="quoted-paragraph-box" id="quoted-paragraph-box"></div>
+    <div class="sidebar-mention-hint">
+        💡 Dùng <code>@tên-người</code> để nhắc đến ai đó trong bình luận.
+    </div>
+    <div id="sidebar-utterances-mount"></div>
+</div>
+<div id="sidebar-overlay" class="sidebar-overlay" onclick="closeInlineComment()"></div>
+
+<script>
+var GH_REPO  = 'gocnhocuakhiet/gocnhocuakhiet.github.io';
+var GH_LABEL = 'comment';
+var ORIGINAL_TITLE = document.title;
+
+function paragraphTitle(paraNum) {
+    return ORIGINAL_TITLE + ' [Đoạn ' + paraNum + ']';
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+    var paragraphs = document.querySelectorAll('.story-content p');
+    paragraphs.forEach(function (p, index) {
+        var paraNum = index + 1;
+        var row = document.createElement('div');
+        row.className = 'comment-row';
+        p.parentNode.insertBefore(row, p);
+        row.appendChild(p);
+        var badge = document.createElement('span');
+        badge.className = 'comment-badge';
+        badge.title = 'Bình luận về đoạn này';
+        badge.textContent = '💬';
+        badge.onclick = function () {
+            openInlineComment(p.innerText.trim().substring(0, 120), paraNum);
+        };
+        row.appendChild(badge);
+    });
+    initLike();
+});
+
+var currentParaNum = null;
+
+function openInlineComment(previewText, paraNum) {
+    document.getElementById('sidebar-paragraph-title').innerText = 'Đoạn ' + paraNum;
+    document.getElementById('quoted-paragraph-box').innerText =
+        '"' + previewText + (previewText.length >= 120 ? '…' : '') + '"';
+    document.getElementById('comment-sidebar').classList.add('active');
+    document.getElementById('sidebar-overlay').classList.add('active');
+    if (currentParaNum === paraNum) return;
+    currentParaNum = paraNum;
+    var mount = document.getElementById('sidebar-utterances-mount');
+    mount.innerHTML = '<div class="sidebar-loading">Đang tải bình luận…</div>';
+    document.title = paragraphTitle(paraNum);
+    var s = document.createElement('script');
+    s.src = 'https://utteranc.es/client.js';
+    s.setAttribute('repo',         GH_REPO);
+    s.setAttribute('issue-term',   'title');
+    s.setAttribute('label',        GH_LABEL);
+    s.setAttribute('theme',        document.body.classList.contains('dark-mode') ? 'github-dark' : 'github-light');
+    s.setAttribute('crossorigin',  'anonymous');
+    s.async = true;
+    s.onload = function () {
+        var loading = mount.querySelector('.sidebar-loading');
+        if (loading) loading.remove();
+        document.title = ORIGINAL_TITLE;
+    };
+    mount.innerHTML = '';
+    mount.appendChild(s);
+}
+
+function closeInlineComment() {
+    document.getElementById('comment-sidebar').classList.remove('active');
+    document.getElementById('sidebar-overlay').classList.remove('active');
+    document.title = ORIGINAL_TITLE;
+}
+
+function initLike() {
+    var key      = 'like-'      + window.location.pathname;
+    var countKey = 'likecount-' + window.location.pathname;
+    var liked    = localStorage.getItem(key) === '1';
+    var count    = parseInt(localStorage.getItem(countKey) || '0', 10);
+    updateLikeUI(liked, count);
+}
+
+function toggleLike() {
+    var key      = 'like-'      + window.location.pathname;
+    var countKey = 'likecount-' + window.location.pathname;
+    var liked    = localStorage.getItem(key) === '1';
+    var count    = parseInt(localStorage.getItem(countKey) || '0', 10);
+    liked = !liked;
+    count = liked ? count + 1 : Math.max(0, count - 1);
+    localStorage.setItem(key,      liked ? '1' : '0');
+    localStorage.setItem(countKey, count);
+    updateLikeUI(liked, count);
+}
+
+function updateLikeUI(liked, count) {
+    var btn       = document.getElementById('like-btn');
+    var heartSpan = btn.querySelector('.heart-icon');
+    var countSpan = document.getElementById('like-count');
+    heartSpan.textContent = liked ? '❤️' : '🤍';
+    countSpan.textContent = count;
+    liked ? btn.classList.add('liked') : btn.classList.remove('liked');
+}
+
+function openShareModal() {
+    document.getElementById('share-link-input').value = window.location.href;
+    document.getElementById('copy-link-btn').textContent = 'Sao chép';
+    document.getElementById('copy-link-btn').classList.remove('copied');
+    document.getElementById('share-modal-overlay').classList.add('active');
+}
+function closeShareModal() {
+    document.getElementById('share-modal-overlay').classList.remove('active');
+}
+function handleOverlayClick(e) {
+    if (e.target === document.getElementById('share-modal-overlay')) closeShareModal();
+}
+function copyLink() {
+    var input = document.getElementById('share-link-input');
+    var btn   = document.getElementById('copy-link-btn');
+    navigator.clipboard.writeText(input.value).then(function () {
+        btn.textContent = '✓ Đã sao chép';
+        btn.classList.add('copied');
+        setTimeout(function () { btn.textContent = 'Sao chép'; btn.classList.remove('copied'); }, 2000);
+    }).catch(function () {
+        input.select(); document.execCommand('copy');
+        btn.textContent = '✓ Đã sao chép'; btn.classList.add('copied');
+        setTimeout(function () { btn.textContent = 'Sao chép'; btn.classList.remove('copied'); }, 2000);
+    });
+}
+
+function syncUtterancesTheme(isDark) {
+    var theme = isDark ? 'github-dark' : 'github-light';
+    document.querySelectorAll('.utterances-frame').forEach(function (f) {
+        f.contentWindow.postMessage({ type: 'set-theme', theme: theme }, 'https://utteranc.es');
+    });
+}
+</script>
+
+</body>
+</html>
