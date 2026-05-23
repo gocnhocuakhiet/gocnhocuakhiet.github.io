@@ -363,6 +363,51 @@
             .discussion-stats { gap: 6px; }
             .stat-card { min-width: 70px; padding: 8px; }
         }
+
+        /* ── Avatar picker ── */
+        .avatar-picker-label { font-size: 0.82rem; color: #777; margin-bottom: 5px; }
+        body.dark-mode .avatar-picker-label { color: #8fae9f; }
+        .avatar-picker {
+            display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 2px;
+        }
+        .avatar-option {
+            width: 34px; height: 34px; border-radius: 50%;
+            background: #eaf2ee; border: 2px solid transparent;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.1rem; cursor: pointer; transition: all 0.18s;
+            user-select: none;
+        }
+        .avatar-option:hover { background: #d4e9de; transform: scale(1.12); }
+        .avatar-option.selected { border-color: #4a6b5d; background: #d4e9de; transform: scale(1.15); }
+        body.dark-mode .avatar-option { background: #25332c; }
+        body.dark-mode .avatar-option:hover { background: #2e3d36; }
+        body.dark-mode .avatar-option.selected { border-color: #8fae9f; background: #2e3d36; }
+
+        /* ── Sticker picker ── */
+        .sticker-picker-label { font-size: 0.82rem; color: #777; margin-bottom: 5px; }
+        body.dark-mode .sticker-picker-label { color: #8fae9f; }
+        .sticker-picker {
+            display: flex; flex-wrap: wrap; gap: 5px;
+        }
+        .sticker-btn {
+            padding: 4px 9px; background: #eaf2ee;
+            border: 1px solid #c8ddd5; border-radius: 8px;
+            font-size: 0.82rem; cursor: pointer; transition: all 0.15s;
+            color: #333; user-select: none;
+        }
+        .sticker-btn:hover { background: #4a6b5d; color: #fff; border-color: #4a6b5d; transform: scale(1.05); }
+        body.dark-mode .sticker-btn { background: #25332c; border-color: #2e3d36; color: #dae5e0; }
+        body.dark-mode .sticker-btn:hover { background: #4a6b5d; color: #fff; }
+
+        /* ── Author row (avatar hiển thị bên cạnh tên) ── */
+        .author-row { display: flex; align-items: center; gap: 8px; }
+        .author-row input { flex: 1; }
+        .author-avatar-preview {
+            width: 34px; height: 34px; border-radius: 50%; background: #eaf2ee;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.1rem; flex-shrink: 0; border: 2px solid #c8ddd5;
+        }
+        body.dark-mode .author-avatar-preview { background: #25332c; border-color: #2e3d36; }
     </style>
 </head>
 <body>
@@ -492,11 +537,18 @@ function changeFontSize(delta) {
 
     <!-- Form bình luận chính -->
     <div class="main-comment-form">
-        <input type="text" id="main-author" placeholder="Tên của bạn" maxlength="30">
+        <div class="author-row">
+            <div class="author-avatar-preview" id="main-avatar-preview">🌿</div>
+            <input type="text" id="main-author" placeholder="Tên của bạn" maxlength="30">
+        </div>
+        <div class="avatar-picker-label">Chọn hình đại diện:</div>
+        <div class="avatar-picker" id="main-avatar-picker"></div>
         <textarea id="main-content" placeholder="Viết cảm nhận của bạn về chương này..." rows="4" maxlength="2000"></textarea>
-        <div style="display:flex; justify-content:space-between; align-items:center;">
+        <div class="sticker-picker-label">Chèn nhãn dán:</div>
+        <div class="sticker-picker" id="main-sticker-picker"></div>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:4px;">
             <span class="char-count"><span id="main-char-count">0</span>/2000 ký tự</span>
-            <button class="main-submit-btn" onclick="submitMainComment()">Gửi bình luận</button>
+            <button class="main-submit-btn" onclick="submitMainComment()">Gửi bình luận 🌸</button>
         </div>
     </div>
 
@@ -527,9 +579,16 @@ function changeFontSize(delta) {
     <div class="sidebar-body">
         <div class="quoted-paragraph-box" id="sidebar-quote"></div>
         <div class="sidebar-comment-form">
-            <input type="text" id="sidebar-author" placeholder="Tên của bạn" maxlength="30">
+            <div class="author-row">
+                <div class="author-avatar-preview" id="sidebar-avatar-preview">🌿</div>
+                <input type="text" id="sidebar-author" placeholder="Tên của bạn" maxlength="30">
+            </div>
+            <div class="avatar-picker-label">Chọn hình đại diện:</div>
+            <div class="avatar-picker" id="sidebar-avatar-picker"></div>
             <textarea id="sidebar-content" placeholder="Bình luận về đoạn này..." rows="3" maxlength="1000"></textarea>
-            <button class="sidebar-submit-btn" onclick="submitSidebarComment()">Gửi</button>
+            <div class="sticker-picker-label">Chèn nhãn dán:</div>
+            <div class="sticker-picker" id="sidebar-sticker-picker"></div>
+            <button class="sidebar-submit-btn" onclick="submitSidebarComment()" style="margin-top:4px;">Gửi 🌸</button>
         </div>
         <div class="sidebar-comments-list" id="sidebar-comments-list">
             <div class="loading-text">Đang tải…</div>
@@ -618,6 +677,10 @@ document.addEventListener('DOMContentLoaded', function() {
     loadParaCounts();
     loadMainComments();
     initLike();
+    initAvatarPicker('main');
+    initAvatarPicker('sidebar');
+    initStickerPicker('main');
+    initStickerPicker('sidebar');
 
     // Char counter
     document.getElementById('main-content').addEventListener('input', function() {
@@ -629,6 +692,11 @@ document.addEventListener('DOMContentLoaded', function() {
     if (savedName) {
         document.getElementById('main-author').value   = savedName;
         document.getElementById('sidebar-author').value = savedName;
+    }
+    var savedAvatar = localStorage.getItem('comment-avatar');
+    if (savedAvatar) {
+        selectedAvatar['main']    = savedAvatar;
+        selectedAvatar['sidebar'] = savedAvatar;
     }
 });
 
@@ -740,7 +808,7 @@ async function submitSidebarComment() {
     try {
         await sbFetch('comments', 'POST', {
             page_path: PAGE_PATH, para_index: currentParaIndex,
-            author_name: name, author_id: AUTHOR_ID, content: content
+            author_name: selectedAvatar['sidebar'] + ' ' + name, author_id: AUTHOR_ID, content: content
         });
         document.getElementById('sidebar-content').value = '';
         paraCommentCounts[currentParaIndex] = (paraCommentCounts[currentParaIndex] || 0) + 1;
@@ -802,7 +870,7 @@ async function submitMainComment() {
     try {
         await sbFetch('comments', 'POST', {
             page_path: PAGE_PATH, para_index: null,
-            author_name: name, author_id: AUTHOR_ID, content: content
+            author_name: selectedAvatar['main'] + ' ' + name, author_id: AUTHOR_ID, content: content
         });
         document.getElementById('main-content').value = '';
         document.getElementById('main-char-count').textContent = '0';
@@ -951,6 +1019,87 @@ function copyLink() {
 // ══════════════════════════════════════════════
 // TIỆN ÍCH
 // ══════════════════════════════════════════════
+
+// ══════════════════════════════════════════════
+// AVATAR & STICKER
+// ══════════════════════════════════════════════
+var AVATARS = [
+    '🌸','🌺','🌻','🌹','🌷','🪷','💐','🌼',
+    '🍀','🌿','🪴','🌱','🎋','🎍','🍃','🪻',
+    '🌾','🍂','🍁','🫧','✨','💫','🌙','⭐'
+];
+
+var STICKERS = [
+    '🌸✨','(づ｡◕‿‿◕｡)づ','(っ˘ω˘ς)','꒰˶• ༝ •˶꒱','(ﾉ◕ヮ◕)ﾉ*:･ﾟ✧',
+    '｡˚⋆｡˚✿','(´｡• ᵕ •｡`)','🌿✨','₍ᐢ._.ᐢ₎♡','(˶ᵔ ᵕ ᵔ˶)',
+    '✦ ˚ · .','꒰꒱ᵕ̈','🍃💫','(◍•ᴗ•◍)❤','·˚ ༘ ✧',
+    '(´• ω •`)','˚₊‧꒰ᵕ̈꒱‧₊˚','🌺ෆ','⸜(。˃ ᵕ ˂ )⸝♡','✿.｡.:* ☆'
+];
+
+var selectedAvatar = { main: '🌿', sidebar: '🌿' };
+
+function initAvatarPicker(context) {
+    var pickerId  = context + '-avatar-picker';
+    var previewId = context + '-avatar-preview';
+    var picker    = document.getElementById(pickerId);
+    if (!picker) return;
+
+    var saved = localStorage.getItem('comment-avatar');
+    if (saved) selectedAvatar[context] = saved;
+    document.getElementById(previewId).textContent = selectedAvatar[context];
+
+    AVATARS.forEach(function(av) {
+        var btn = document.createElement('span');
+        btn.className = 'avatar-option' + (av === selectedAvatar[context] ? ' selected' : '');
+        btn.textContent = av;
+        btn.title = av;
+        btn.onclick = function() {
+            selectedAvatar[context] = av;
+            localStorage.setItem('comment-avatar', av);
+            document.getElementById(previewId).textContent = av;
+            // sync cả 2 context
+            var other = context === 'main' ? 'sidebar' : 'main';
+            selectedAvatar[other] = av;
+            var otherPreview = document.getElementById(other + '-avatar-preview');
+            if (otherPreview) otherPreview.textContent = av;
+            picker.querySelectorAll('.avatar-option').forEach(function(b) { b.classList.remove('selected'); });
+            btn.classList.add('selected');
+            var otherPicker = document.getElementById(other + '-avatar-picker');
+            if (otherPicker) {
+                otherPicker.querySelectorAll('.avatar-option').forEach(function(b) {
+                    b.classList.toggle('selected', b.textContent === av);
+                });
+            }
+        };
+        picker.appendChild(btn);
+    });
+}
+
+function initStickerPicker(context) {
+    var pickerId  = context + '-sticker-picker';
+    var contentId = context === 'main' ? 'main-content' : 'sidebar-content';
+    var picker    = document.getElementById(pickerId);
+    if (!picker) return;
+
+    STICKERS.forEach(function(st) {
+        var btn = document.createElement('span');
+        btn.className = 'sticker-btn';
+        btn.textContent = st;
+        btn.onclick = function() {
+            var ta = document.getElementById(contentId);
+            var pos = ta.selectionStart;
+            var val = ta.value;
+            ta.value = val.slice(0, pos) + st + val.slice(pos);
+            ta.selectionStart = ta.selectionEnd = pos + st.length;
+            ta.focus();
+            if (contentId === 'main-content') {
+                document.getElementById('main-char-count').textContent = ta.value.length;
+            }
+        };
+        picker.appendChild(btn);
+    });
+}
+
 function escHtml(s) {
     return String(s)
         .replace(/&/g,'&amp;').replace(/</g,'&lt;')
