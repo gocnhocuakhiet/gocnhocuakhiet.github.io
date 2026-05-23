@@ -8,6 +8,10 @@
     <link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,500;1,400&family=Be+Vietnam+Pro:wght@300;400;500&display=swap" rel="stylesheet">
     <script src="https://iframe.chat/scripts/main.min.js"></script>
 
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
+
     <style>
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -94,7 +98,7 @@
             50%      { transform: translateY(-8px); }
         }
 
-        /* ══ BỐ CỤC DESKTOP: 3 cột ══ */
+        /* ══ BỐ CỤC DESKTOP ══ */
         .wrapper {
             max-width: 1260px; margin: 0 auto;
             padding: 28px 24px 60px;
@@ -103,7 +107,6 @@
             gap: 24px; align-items: start;
         }
 
-        /* ── SIDEBAR ── */
         .sidebar-left, .sidebar-right {
             display: flex; flex-direction: column; gap: 14px;
         }
@@ -135,7 +138,6 @@
         .filter-btn.active .cnt { color: var(--green-light); }
         .divider { height: 1px; background: var(--border); margin: 6px 0; }
 
-        /* Updates */
         .updates-list { list-style: none; }
         .updates-list li { border-bottom: 1px dashed var(--border); }
         .updates-list li:last-child { border-bottom: none; }
@@ -148,7 +150,6 @@
         .u-title { flex: 1; }
         .u-date  { font-size: .72rem; color: var(--text-faint); }
 
-        /* Comment feed */
         .feed-item { padding: 8px 0; border-bottom: 1px dashed var(--border); }
         .feed-item:last-child { border-bottom: none; }
         .feed-top  { display: flex; justify-content: space-between; margin-bottom: 2px; flex-wrap: wrap; gap: 2px; }
@@ -158,7 +159,6 @@
                        display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
         .muted-note  { font-size: .8rem; color: var(--text-faint); font-style: italic; }
 
-        /* Chat */
         .chat-card {
             background: var(--bg-card); border: 1px solid var(--border);
             border-radius: var(--radius-lg); overflow: hidden;
@@ -174,7 +174,7 @@
             border-radius: 0 0 var(--radius-lg) var(--radius-lg);
         }
 
-        /* ══ MARQUEE THÔNG BÁO ══ */
+        /* ══ MARQUEE ══ */
         .announce-bar {
             display: flex; align-items: center; gap: 10px;
             background: var(--bg-card);
@@ -226,11 +226,9 @@
         }
         .result-info { font-size: .8rem; color: var(--text-faint); margin-bottom: 14px; }
 
-        /* ══ MOBILE FILTER BAR (chỉ hiện trên mobile) ══ */
+        /* Mobile filter chips */
         .mobile-filter-bar {
-            display: none;
-            flex-wrap: wrap; gap: 6px;
-            margin-bottom: 12px;
+            display: none; flex-wrap: wrap; gap: 6px; margin-bottom: 12px;
         }
         .mobile-filter-bar .filter-chip {
             padding: 5px 12px; border-radius: 20px;
@@ -242,7 +240,7 @@
             background: var(--green); color: #fff; border-color: var(--green);
         }
 
-        /* Lưới truyện */
+        /* ══ NOVEL CARD ══ */
         .novel-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
@@ -253,20 +251,37 @@
             border-radius: var(--radius-md); overflow: hidden;
             text-decoration: none; display: block;
             transition: transform .2s, box-shadow .2s, border-color .2s;
+            position: relative;
         }
         .novel-card:hover {
             transform: translateY(-4px); box-shadow: 0 10px 28px var(--shadow);
             border-color: var(--green-light);
         }
+        /* HOT card — viền cam + glow nhẹ */
+        .novel-card.is-hot {
+            border-color: #f97316;
+            box-shadow: 0 0 0 1px #f9731640;
+        }
+        .novel-card.is-hot:hover {
+            box-shadow: 0 10px 28px rgba(249,115,22,.25);
+            border-color: #f97316;
+        }
+
         .novel-cover { width: 100%; aspect-ratio: 2/3; object-fit: cover; display: block; }
         .cover-placeholder {
             width: 100%; aspect-ratio: 2/3;
             display: flex; align-items: center; justify-content: center; font-size: 2.2rem;
         }
+
+        /* Badge wrap — góc trên bìa */
         .badge-wrap {
             position: absolute; top: 6px; left: 6px; right: 6px;
-            display: flex; justify-content: space-between; pointer-events: none;
+            display: flex; justify-content: space-between;
+            align-items: flex-start; pointer-events: none; gap: 2px;
         }
+        .badge-left  { display: flex; flex-direction: column; gap: 3px; }
+        .badge-right { display: flex; flex-direction: column; gap: 3px; align-items: flex-end; }
+
         .badge { font-size: .65rem; font-weight: 500; padding: 2px 6px; border-radius: 4px; line-height: 1.6; }
         .badge-nt      { background: #fce7f3; color: #9d2f62; }
         .badge-dm      { background: #ede9fe; color: #4f3fb5; }
@@ -274,6 +289,20 @@
         .badge-other   { background: #fef9c3; color: #854d0e; }
         .badge-full    { background: #d1fae5; color: #065f46; }
         .badge-ongoing { background: #fef3c7; color: #92400e; }
+
+        /* HOT badge */
+        .badge-hot {
+            background: linear-gradient(135deg, #f97316, #ef4444);
+            color: #fff; font-size: .65rem; font-weight: 700;
+            padding: 2px 7px; border-radius: 4px; line-height: 1.6;
+            letter-spacing: .3px;
+            animation: hotPulse 2s ease-in-out infinite;
+        }
+        @keyframes hotPulse {
+            0%,100% { opacity: 1; }
+            50%      { opacity: .75; }
+        }
+
         .novel-info    { padding: 9px 9px 11px; }
         .novel-title {
             font-size: .8rem; font-weight: 500; color: var(--text); line-height: 1.4;
@@ -281,6 +310,14 @@
             overflow: hidden; margin-bottom: 4px;
         }
         .novel-meta { font-size: .73rem; color: var(--text-faint); }
+
+        /* Lượt xem dưới số chương */
+        .novel-views {
+            font-size: .7rem; color: var(--text-faint);
+            margin-top: 2px; display: flex; align-items: center; gap: 3px;
+        }
+        .novel-views.loading { opacity: .4; }
+
         .empty-state {
             grid-column: 1/-1; text-align: center;
             padding: 50px 0; color: var(--text-faint); font-size: .9rem;
@@ -304,7 +341,7 @@
         .pg-btn:disabled { opacity: .3; cursor: default; }
         .pg-dots { color: var(--text-faint); font-size: .85rem; }
 
-        /* ══ NÚT BÁNH RĂNG ══ */
+        /* Bánh răng */
         .reader-controls-wrapper {
             position: fixed; bottom: 28px; right: 28px;
             display: flex; flex-direction: column; align-items: flex-end;
@@ -334,7 +371,7 @@
         .gear-btn:hover { background: var(--green); color: #fff; transform: scale(1.08); }
         .gear-btn.active { background: var(--green); color: #fff; transform: rotate(45deg) scale(1.08); }
 
-        /* ══ TOAST ══ */
+        /* Toast */
         .toast {
             position: fixed; bottom: -120px; left: 28px; width: 300px;
             background: var(--bg-card); border: 1px solid var(--border);
@@ -353,43 +390,25 @@
         .toast-head button { background: none; border: none; color: var(--text-faint); cursor: pointer; }
         .toast-body { font-size: .82rem; color: var(--text-muted); line-height: 1.4; }
 
-        /* ══ FOOTER ══ */
         footer {
             text-align: center; padding: 20px;
             font-size: .8rem; color: var(--text-faint);
             border-top: 1px solid var(--border);
         }
 
-        /* ══════════════════════════════════════════
-           RESPONSIVE — MOBILE
-           Thứ tự: Thông báo → Đôi lời/Thể loại →
-                   Tìm kiếm → Lưới truyện →
-                   Mới cập nhật/Hoạt động → Chat
-        ══════════════════════════════════════════ */
+        /* ══ RESPONSIVE ══ */
         @media (max-width: 900px) {
             .wrapper {
                 grid-template-columns: 1fr;
-                /* Đặt thứ tự từng vùng */
-                grid-template-areas:
-                    "left"
-                    "main"
-                    "right";
+                grid-template-areas: "left" "main" "right";
                 padding: 12px; gap: 12px;
             }
-            .sidebar-left  { position: static; grid-area: left; order: 1; }
+            .sidebar-left  { position: static; grid-area: left;  order: 1; }
             .library       { grid-area: main;  order: 2; }
             .sidebar-right { position: static; grid-area: right; order: 3; }
-
-            /* Ẩn sidebar trái desktop, hiện mobile filter bar */
-            .sidebar-left .sidebar-card:first-child { display: none; } /* Đôi lời — ẩn trên mobile */
+            .sidebar-left .sidebar-card:first-child { display: none; }
             .mobile-filter-bar { display: flex; }
-
-            /* Sidebar trái chỉ còn thể loại — thu nhỏ */
             .sidebar-left .sidebar-card { padding: 12px; }
-
-            /* Chat nằm cuối */
-            .chat-card { order: 10; }
-
             .novel-grid { grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 10px; }
             .lib-topbar { flex-wrap: wrap; }
             .reader-controls-wrapper { bottom: 16px; right: 16px; }
@@ -397,7 +416,6 @@
             .nav-links { display: none; }
             #chattable { height: 240px; }
         }
-
         @media (max-width: 480px) {
             .novel-grid { grid-template-columns: repeat(3, 1fr); gap: 8px; }
             .announce-bar { padding: 7px 10px; }
@@ -424,20 +442,19 @@
     </nav>
 </header>
 
-<!-- ══ NÚT BÁNH RĂNG ══ -->
+<!-- ══ BÁNH RĂNG ══ -->
 <div class="reader-controls-wrapper">
     <div class="reader-panel" id="reader-panel">
-        <button onclick="changeFontSize(1)"  title="Phóng to chữ">A+</button>
-        <button onclick="changeFontSize(-1)" title="Thu nhỏ chữ">A−</button>
+        <button onclick="changeFontSize(1)"  title="Phóng to">A+</button>
+        <button onclick="changeFontSize(-1)" title="Thu nhỏ">A−</button>
         <button onclick="toggleDark()" id="dark-btn" title="Chế độ tối">🌙</button>
     </div>
     <button class="gear-btn" id="gear-btn" onclick="toggleReaderPanel()" title="Tuỳ chỉnh">⚙️</button>
 </div>
 
-<!-- ══ NỘI DUNG CHÍNH ══ -->
+<!-- ══ NỘI DUNG ══ -->
 <div class="wrapper">
 
-    <!-- SIDEBAR TRÁI -->
     <aside class="sidebar-left">
         <div class="sidebar-card">
             <h3>Đôi lời</h3>
@@ -462,10 +479,7 @@
         </div>
     </aside>
 
-    <!-- NỘI DUNG GIỮA -->
     <main class="library">
-
-        <!-- Thông báo -->
         <div class="announce-bar">
             <span class="announce-label">📢 Thông báo</span>
             <div class="announce-track">
@@ -475,7 +489,6 @@
             </div>
         </div>
 
-        <!-- Filter chips mobile -->
         <div class="mobile-filter-bar" id="mobile-genre-bar">
             <button class="filter-chip active" data-genre="all">Tất cả</button>
             <button class="filter-chip" data-genre="nt">🌸 Ngôn tình</button>
@@ -484,7 +497,6 @@
             <button class="filter-chip" data-genre="other">📚 Khác</button>
         </div>
 
-        <!-- Tìm kiếm -->
         <div class="lib-topbar">
             <div class="search-wrap">
                 <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
@@ -494,6 +506,7 @@
                 <option value="new">Mới nhất</option>
                 <option value="alpha">A → Z</option>
                 <option value="chapters">Nhiều chương nhất</option>
+                <option value="views">Lượt xem nhiều nhất</option>
             </select>
         </div>
 
@@ -502,7 +515,6 @@
         <div class="pagination"  id="pagination"></div>
     </main>
 
-    <!-- SIDEBAR PHẢI -->
     <aside class="sidebar-right">
         <div class="sidebar-card">
             <h3>Mới cập nhật</h3>
@@ -521,10 +533,8 @@
             <iframe src="https://iframe.chat/embed?chat=91145876" id="chattable"></iframe>
         </div>
     </aside>
-
 </div>
 
-<!-- ══ TOAST ══ -->
 <div class="toast" id="toast">
     <div class="toast-head">
         <span>✨</span>
@@ -535,7 +545,6 @@
     <div class="toast-body" id="toast-msg">…</div>
 </div>
 
-<!-- ══ FOOTER ══ -->
 <footer>
     <p>© 2026 Góc nhỏ của Khiết · Lưu trữ miễn phí trên GitHub Pages</p>
 </footer>
@@ -545,23 +554,27 @@
      ⚙️  CẤU HÌNH — CHỈ SỬA PHẦN NÀY
      ════════════════════════════════════════════════ -->
 <script>
+/* ── Firebase config ── */
+const firebaseConfig = {
+    apiKey            : "AIzaSyAZqTj2Ji4peUcL7-sQEcgUJ38CoYnCi-o",
+    authDomain        : "novelhot-1e5e2.firebaseapp.com",
+    projectId         : "novelhot-1e5e2",
+    storageBucket     : "novelhot-1e5e2.firebasestorage.app",
+    messagingSenderId : "734349001437",
+    appId             : "1:734349001437:web:4c38fb08d6c51d686f5134",
+    databaseURL       : "https://novelhot-1e5e2-default-rtdb.firebaseio.com"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
+/* ── GitHub ── */
 const GH_OWNER = 'gocnhocuakhiet';
 const GH_REPO  = 'gocnhocuakhiet.github.io';
 
-/* ══ THÊM TẤT CẢ CÁC THƯ MỤC TRUYỆN VÀO ĐÂY ══
-   Mỗi khi tạo thư mục truyện mới trên GitHub,
-   thêm tên thư mục vào danh sách này là xong. */
 const CHAPTER_FOLDERS = [
-    'olongkyduyen',
-    'dehoangthu',
-    'camyhanh',
-    'quyphi',
-    'toimuondinguocgio',
-    'tatrothanhanhtrai',
-    'nghenoithuatuong',
-    'chiataythoima',
-    'hoanquanquyenthe',
-    'duonglennui',
+    'olongkyduyen', 'dehoangthu', 'camyhanh', 'quyphi',
+    'toimuondinguocgio', 'tatrothanhanhtrai', 'nghenoithuatuong',
+    'chiataythoima', 'hoanquanquyenthe', 'duonglennui',
 ];
 
 const NOVEL_NAME_MAP = {
@@ -579,47 +592,53 @@ const NOVEL_NAME_MAP = {
 
 const ANNOUNCE_TEXT = '🌿 Chào mừng các bạn đến với Góc nhỏ của Khiết! 🌸 Trang web đang trong giai đoạn hoàn thiện, cảm ơn các bạn đã ghé thăm! 🌸 Mọi góp ý xin gửi qua Facebook hoặc bình luận bên dưới nhé~ 🌿';
 
+/* HOT_THRESHOLD: truyện đạt số lượt xem này sẽ hiện badge HOT */
+const HOT_THRESHOLD = 50;
+
 const NOVELS = [
-    { id:1,  title:'Đế Hoàng Thư',
+    { id:'dehoangthu',        title:'Đế Hoàng Thư',
       genre:'nt', status:'ongoing', chapters:246,
-      cover:'images/dehoangthu.jpg', link:'mucluc/dehoangthu.html', emoji:'👑', color:'#fce7f3' },
-    { id:2,  title:'Tôi Muốn Đi Ngược Gió',
-      genre:'nt', status:'full', chapters:9,
-      cover:'images/toimuondinguocgio.png', link:'mucluc/toimuondinguocgio.html', emoji:'🌬️', color:'#e0f2fe' },
-    { id:3,  title:'Quý Phi Mỗi Ngày Chỉ Muốn Làm Cá Muối',
+      cover:'images/dehoangthu.jpg',        link:'mucluc/dehoangthu.html',        emoji:'👑', color:'#fce7f3' },
+    { id:'toimuondinguocgio', title:'Tôi Muốn Đi Ngược Gió',
+      genre:'nt', status:'full',    chapters:9,
+      cover:'images/toimuondinguocgio.png',  link:'mucluc/toimuondinguocgio.html', emoji:'🌬️', color:'#e0f2fe' },
+    { id:'quyphi',            title:'Quý Phi Mỗi Ngày Chỉ Muốn Làm Cá Muối',
       genre:'nt', status:'ongoing', chapters:1183,
-      cover:'images/quyphi.png', link:'mucluc/quyphi.html', emoji:'🐟', color:'#fef3c7' },
-    { id:4,  title:'Cẩm Y Hành',
-      genre:'nt', status:'full', chapters:103,
-      cover:'images/camyhanh.png', link:'mucluc/camyhanh.html', emoji:'⚔️', color:'#fef9c3' },
-    { id:5,  title:'Hoạn Quan Quyền Thế Thật Ra Là Trung Thần Lương Tướng',
-      genre:'nt', status:'full', chapters:13,
-      cover:'images/hoanquan.png', link:'mucluc/hoanquanquyenthe.html', emoji:'⚔️', color:'#fef9c3' },
-    { id:6,  title:'Ta Trở Thành Anh Trai Của Nữ Chính Ngược Văn',
-      genre:'dm', status:'full', chapters:140,
-      cover:'images/tatrothanhanhtrai.png', link:'mucluc/tatrothanhanhtrai.html', emoji:'🌸', color:'#fce7f3' },
-    { id:7,  title:'Nghe Nói Thừa Tướng Quyền Thế Muốn Hoàn Lương',
-      genre:'dm', status:'full', chapters:110,
-      cover:'images/nghenoithuatuong.png', link:'mucluc/nghenoithuatuong.html', emoji:'🏯', color:'#f0fdf4' },
-    { id:8,  title:'Ô Long Kỳ Duyên',
-      genre:'dm', status:'full', chapters:65,
-      cover:'images/olongkyduyen.png', link:'mucluc/olongkyduyen.html', emoji:'🐉', color:'#ede9fe' },
-    { id:9,  title:'Chia Tay Thôi Mà, Sao Anh Ta Bỗng Dưng Điên Thế',
+      cover:'images/quyphi.png',             link:'mucluc/quyphi.html',           emoji:'🐟', color:'#fef3c7' },
+    { id:'camyhanh',          title:'Cẩm Y Hành',
+      genre:'nt', status:'full',    chapters:103,
+      cover:'images/camyhanh.png',           link:'mucluc/camyhanh.html',         emoji:'⚔️', color:'#fef9c3' },
+    { id:'hoanquanquyenthe',  title:'Hoạn Quan Quyền Thế Thật Ra Là Trung Thần Lương Tướng',
+      genre:'nt', status:'full',    chapters:13,
+      cover:'images/hoanquan.png',           link:'mucluc/hoanquanquyenthe.html', emoji:'⚔️', color:'#fef9c3' },
+    { id:'tatrothanhanhtrai', title:'Ta Trở Thành Anh Trai Của Nữ Chính Ngược Văn',
+      genre:'dm', status:'full',    chapters:140,
+      cover:'images/tatrothanhanhtrai.png',  link:'mucluc/tatrothanhanhtrai.html',emoji:'🌸', color:'#fce7f3' },
+    { id:'nghenoithuatuong',  title:'Nghe Nói Thừa Tướng Quyền Thế Muốn Hoàn Lương',
+      genre:'dm', status:'full',    chapters:110,
+      cover:'images/nghenoithuatuong.png',   link:'mucluc/nghenoithuatuong.html', emoji:'🏯', color:'#f0fdf4' },
+    { id:'olongkyduyen',      title:'Ô Long Kỳ Duyên',
+      genre:'dm', status:'full',    chapters:65,
+      cover:'images/olongkyduyen.png',       link:'mucluc/olongkyduyen.html',     emoji:'🐉', color:'#ede9fe' },
+    { id:'chiataythoima',     title:'Chia Tay Thôi Mà, Sao Anh Ta Bỗng Dưng Điên Thế',
       genre:'dm', status:'ongoing', chapters:110,
-      cover:'images/chiataythoima.png', link:'mucluc/chiataythoima.html', emoji:'💔', color:'#fef2f2' },
-    { id:10, title:'Đường Lên Núi',
+      cover:'images/chiataythoima.png',      link:'mucluc/chiataythoima.html',    emoji:'💔', color:'#fef2f2' },
+    { id:'duonglennui',       title:'Đường Lên Núi',
       genre:'dn', status:'ongoing', chapters:30,
-      cover:'images/duonglennui.png', link:'mucluc/duonglennui.html', emoji:'🏔️', color:'#f0fdf4' },
+      cover:'images/duonglennui.png',        link:'mucluc/duonglennui.html',      emoji:'🏔️', color:'#f0fdf4' },
 ];
 </script>
 
 
 <!-- ════════════════════════════════════════════════
-     LOGIC TỰ ĐỘNG
+     LOGIC
      ════════════════════════════════════════════════ -->
 <script>
 const GH_API    = `https://api.github.com/repos/${GH_OWNER}/${GH_REPO}`;
 const PAGE_SIZE = 12;
+
+/* Lưu lượt xem realtime từ Firebase */
+const viewCounts = {}; /* { novelId: number } */
 
 let filterGenre  = 'all';
 let filterStatus = 'all';
@@ -627,6 +646,52 @@ let searchQuery  = '';
 let sortMode     = 'new';
 let currentPage  = 1;
 let lastCmtId    = null;
+
+/* ── Đọc lượt xem từ Firebase, lắng nghe real-time ── */
+function initViewCounts() {
+    NOVELS.forEach(n => {
+        viewCounts[n.id] = 0;
+        db.ref('views/' + n.id).on('value', snap => {
+            viewCounts[n.id] = snap.val() || 0;
+            /* Cập nhật UI ngay lập tức không cần render lại toàn bộ */
+            const el = document.getElementById('views-' + n.id);
+            if (el) {
+                el.textContent = '👁 ' + fmtViews(viewCounts[n.id]);
+                el.classList.remove('loading');
+            }
+            const card = document.getElementById('card-' + n.id);
+            if (card) {
+                card.classList.toggle('is-hot', viewCounts[n.id] >= HOT_THRESHOLD);
+                const hotBadge = card.querySelector('.badge-hot');
+                if (viewCounts[n.id] >= HOT_THRESHOLD) {
+                    if (!hotBadge) {
+                        const bw = card.querySelector('.badge-right');
+                        if (bw) {
+                            const b = document.createElement('span');
+                            b.className = 'badge badge-hot';
+                            b.textContent = '🔥 HOT';
+                            bw.prepend(b);
+                        }
+                    }
+                } else {
+                    if (hotBadge) hotBadge.remove();
+                }
+            }
+        });
+    });
+}
+
+/* ── Tăng lượt xem khi click vào truyện ── */
+function incrementView(novelId) {
+    const ref = db.ref('views/' + novelId);
+    ref.transaction(cur => (cur || 0) + 1);
+}
+
+/* ── Format số lượt xem ── */
+function fmtViews(n) {
+    if (n >= 1000) return (n / 1000).toFixed(1).replace('.0','') + 'k';
+    return n.toString();
+}
 
 /* ── Bánh răng ── */
 function toggleReaderPanel() {
@@ -653,7 +718,6 @@ function initAnnounce() {
         `<span style="margin:0 40px;color:var(--green-light)">✦</span>`;
 }
 
-/* ── Helpers ── */
 function fmtDate(iso) {
     const d = new Date(iso);
     return `${d.getDate()}/${d.getMonth()+1}/${d.getFullYear()}`;
@@ -678,7 +742,6 @@ function guessChap(filename) {
     return m ? `Chương ${m[1]}` : '';
 }
 
-/* ── Đếm badge ── */
 function updateCounts() {
     document.getElementById('cnt-all').textContent   = NOVELS.length;
     document.getElementById('cnt-nt').textContent    = NOVELS.filter(n=>n.genre==='nt').length;
@@ -687,7 +750,6 @@ function updateCounts() {
     document.getElementById('cnt-other').textContent = NOVELS.filter(n=>n.genre==='other').length;
 }
 
-/* ── Lọc ── */
 function getFiltered() {
     let list = [...NOVELS];
     if (filterGenre  !== 'all') list = list.filter(n => n.genre  === filterGenre);
@@ -696,12 +758,12 @@ function getFiltered() {
         const q = searchQuery.toLowerCase();
         list = list.filter(n => n.title.toLowerCase().includes(q));
     }
-    if (sortMode === 'alpha')         list.sort((a,b) => a.title.localeCompare(b.title,'vi'));
+    if      (sortMode === 'alpha')    list.sort((a,b) => a.title.localeCompare(b.title,'vi'));
     else if (sortMode === 'chapters') list.sort((a,b) => b.chapters - a.chapters);
+    else if (sortMode === 'views')    list.sort((a,b) => (viewCounts[b.id]||0) - (viewCounts[a.id]||0));
     return list;
 }
 
-/* ── Render grid ── */
 function renderGrid() {
     const list  = getFiltered();
     const total = list.length;
@@ -710,6 +772,7 @@ function renderGrid() {
 
     const from  = (currentPage-1) * PAGE_SIZE;
     const slice = list.slice(from, from + PAGE_SIZE);
+
     const genreLabel = { nt:'Ngôn tình', dm:'Đam mỹ', dn:'Đồng nhân', other:'Khác' };
     const genreClass = { nt:'badge-nt', dm:'badge-dm', dn:'badge-dn', other:'badge-other' };
 
@@ -721,25 +784,39 @@ function renderGrid() {
         grid.innerHTML = `<div class="empty-state"><span>🔍</span>Không tìm thấy truyện nào.</div>`;
     } else {
         grid.innerHTML = slice.map(n => {
-            const imgTag = n.cover
+            const views   = viewCounts[n.id] || 0;
+            const isHot   = views >= HOT_THRESHOLD;
+            const imgTag  = n.cover
                 ? `<img class="novel-cover" src="${n.cover}" alt="${n.title}" loading="lazy"
                         onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
                   + `<div class="cover-placeholder" style="background:${n.color};display:none">${n.emoji}</div>`
                 : `<div class="cover-placeholder" style="background:${n.color}">${n.emoji}</div>`;
             const stBadge = n.status === 'full' ? 'badge-full' : 'badge-ongoing';
             const stLabel = n.status === 'full' ? 'Full' : 'Đang ra';
+            const hotBadge = isHot ? `<span class="badge badge-hot">🔥 HOT</span>` : '';
             return `
-            <a href="${n.link}" class="novel-card">
+            <a href="${n.link}" class="novel-card${isHot ? ' is-hot' : ''}"
+               id="card-${n.id}"
+               onclick="incrementView('${n.id}')">
                 <div style="position:relative">
                     ${imgTag}
                     <div class="badge-wrap">
-                        <span class="badge ${genreClass[n.genre]}">${genreLabel[n.genre]}</span>
-                        <span class="badge ${stBadge}">${stLabel}</span>
+                        <div class="badge-left">
+                            <span class="badge ${genreClass[n.genre]}">${genreLabel[n.genre]}</span>
+                            <span class="badge ${stBadge}">${stLabel}</span>
+                        </div>
+                        <div class="badge-right">
+                            ${hotBadge}
+                        </div>
                     </div>
                 </div>
                 <div class="novel-info">
                     <div class="novel-title">${n.title}</div>
                     <div class="novel-meta">${n.chapters} chương</div>
+                    <div class="novel-views${views === 0 ? ' loading' : ''}"
+                         id="views-${n.id}">
+                        👁 ${views === 0 ? '...' : fmtViews(views)}
+                    </div>
                 </div>
             </a>`;
         }).join('');
@@ -747,7 +824,6 @@ function renderGrid() {
     renderPagination(totalPages);
 }
 
-/* ── Phân trang ── */
 function renderPagination(totalPages) {
     const pag = document.getElementById('pagination');
     if (totalPages <= 1) { pag.innerHTML = ''; return; }
@@ -777,86 +853,54 @@ function renderPagination(totalPages) {
     if (pn) pn.addEventListener('click', () => { if(currentPage<totalPages){currentPage++;renderGrid();scrollTo({top:0,behavior:'smooth'});} });
 }
 
-/* ══════════════════════════════════════════════════
-   MỚI CẬP NHẬT — cách mới: lấy commits của repo
-   rồi lọc file .html, không cần gọi API từng file
-   → Nhanh hơn, không bị rate limit, tự động cập nhật
-   ══════════════════════════════════════════════════ */
+/* ── Mới cập nhật (dùng commits API) ── */
 async function loadUpdates() {
     const el = document.getElementById('updates-list');
     try {
-        /* Lấy 30 commit gần nhất của repo */
-        const r = await fetch(
-            `${GH_API}/commits?per_page=30`,
-            { headers: { Accept: 'application/vnd.github+json' } }
-        );
+        const r = await fetch(`${GH_API}/commits?per_page=30`,
+            { headers: { Accept: 'application/vnd.github+json' } });
         if (!r.ok) throw new Error();
         const commits = await r.json();
-
-        /* Duyệt từng commit, lấy danh sách file thay đổi */
-        const seen   = new Set(); /* tránh trùng file */
-        const result = [];
-
+        const seen = new Set(), result = [];
         for (const cm of commits) {
             if (result.length >= 5) break;
             try {
-                const detail = await fetch(
-                    `${GH_API}/commits/${cm.sha}`,
-                    { headers: { Accept: 'application/vnd.github+json' } }
-                );
-                if (!detail.ok) continue;
-                const data = await detail.json();
-
+                const d = await fetch(`${GH_API}/commits/${cm.sha}`,
+                    { headers: { Accept: 'application/vnd.github+json' } });
+                if (!d.ok) continue;
+                const data = await d.json();
                 for (const file of (data.files || [])) {
                     if (!file.filename.endsWith('.html')) continue;
-
-                    /* Chỉ lấy file trong các thư mục truyện */
-                    const parts  = file.filename.split('/');
-                    const folder = parts[0];
-                    const fname  = parts[parts.length - 1];
+                    const parts = file.filename.split('/');
+                    const folder = parts[0], fname = parts[parts.length-1];
                     if (!CHAPTER_FOLDERS.includes(folder)) continue;
                     if (seen.has(file.filename)) continue;
                     seen.add(file.filename);
-
-                    result.push({
-                        folder,
-                        name  : fname,
-                        path  : file.filename,
-                        date  : cm.commit.committer.date,
-                    });
+                    result.push({ folder, name: fname, path: file.filename, date: cm.commit.committer.date });
                     if (result.length >= 5) break;
                 }
             } catch(_) {}
         }
-
-        if (!result.length) {
-            el.innerHTML = '<li><span class="muted-note">Chưa có cập nhật.</span></li>';
-            return;
-        }
-
+        if (!result.length) { el.innerHTML = '<li><span class="muted-note">Chưa có cập nhật.</span></li>'; return; }
         el.innerHTML = result.map(f => {
-            const novel = guessName(f.name);
-            const chap  = guessChap(f.name);
+            const novel = guessName(f.name), chap = guessChap(f.name);
             const label = chap ? `${novel} – ${chap}` : novel;
             return `<li><a href="${f.path}">
                 <span class="u-title">${label}</span>
                 <span class="u-date">${fmtDate(f.date)}</span>
             </a></li>`;
         }).join('');
-
     } catch(_) {
         el.innerHTML = '<li><span class="muted-note">Không thể tải.</span></li>';
     }
 }
 
-/* ── Bình luận gần đây ── */
+/* ── Bình luận ── */
 async function loadComments() {
     const el = document.getElementById('comment-feed');
     try {
-        const r = await fetch(
-            `${GH_API}/issues/comments?sort=created&direction=desc&per_page=6`,
-            { headers: { Accept: 'application/vnd.github+json' } }
-        );
+        const r = await fetch(`${GH_API}/issues/comments?sort=created&direction=desc&per_page=6`,
+            { headers: { Accept: 'application/vnd.github+json' } });
         if (!r.ok) throw new Error();
         const cmts = await r.json();
         if (!cmts.length) { el.innerHTML = '<p class="muted-note">Chưa có bình luận.</p>'; return; }
@@ -877,7 +921,6 @@ async function loadComments() {
     }
 }
 
-/* ── Toast ── */
 function showToast(author, msg) {
     document.getElementById('toast-author').textContent = author;
     document.getElementById('toast-msg').textContent = msg.length > 80 ? msg.substring(0,80)+'…' : msg;
@@ -890,33 +933,30 @@ function closeToast() { document.getElementById('toast').classList.remove('show'
 document.addEventListener('DOMContentLoaded', () => {
     initAnnounce();
     updateCounts();
+    initViewCounts();  /* Firebase — lắng nghe real-time */
     renderGrid();
     loadUpdates();
     loadComments();
     setInterval(loadComments, 60000);
 
-    /* Filter desktop sidebar */
     document.getElementById('genre-filters').addEventListener('click', e => {
         const b = e.target.closest('[data-genre]');
         if (!b) return;
         filterGenre = b.dataset.genre; currentPage = 1;
         document.querySelectorAll('[data-genre]').forEach(x => x.classList.remove('active'));
         b.classList.add('active');
-        /* Đồng bộ mobile chips */
         document.querySelectorAll('#mobile-genre-bar .filter-chip').forEach(x => {
             x.classList.toggle('active', x.dataset.genre === filterGenre);
         });
         renderGrid();
     });
 
-    /* Filter chips mobile */
     document.getElementById('mobile-genre-bar').addEventListener('click', e => {
         const b = e.target.closest('[data-genre]');
         if (!b) return;
         filterGenre = b.dataset.genre; currentPage = 1;
         document.querySelectorAll('#mobile-genre-bar .filter-chip').forEach(x => x.classList.remove('active'));
         b.classList.add('active');
-        /* Đồng bộ desktop sidebar */
         document.querySelectorAll('[data-genre]').forEach(x => {
             x.classList.toggle('active', x.dataset.genre === filterGenre);
         });
@@ -940,7 +980,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 
-/* ── Dark mode & font ── */
 function toggleDark() {
     document.body.classList.toggle('dark-mode');
     const dark = document.body.classList.contains('dark-mode');
@@ -960,7 +999,6 @@ function changeFontSize(d) {
         }, 80);
     }
 })();
-
 function closeWelcome() {
     document.getElementById('welcome-screen').classList.add('fade-out');
 }
