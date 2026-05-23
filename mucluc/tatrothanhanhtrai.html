@@ -278,10 +278,9 @@
 
         /* ── Discussion box từ tatrothanhanhtraiml.html ── */
         .chapter-discussion-box {
-            max-width: 100%; margin: 50px auto 10px auto;
+            max-width: 700px; margin: 30px auto 50px auto;
             padding: 25px; background-color: #ffffff;
-            border: 1px solid #dae5e0; border-top: 4px solid #4a6b5d;
-            border-radius: 12px;
+            border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.04);
         }
         .discussion-header {
             display: flex; justify-content: space-between; align-items: center;
@@ -472,7 +471,7 @@
     </script>
 
     <header class="navbar">
-        <a href="../index.html" class="logo" style="text-decoration:none;">🌿 Góc nhỏ của Khiết</a>
+        <a href="../index.html" class="logo">🌿 Góc nhỏ của Khiết</a>
         <nav class="nav-links">
             <a href="../index.html">Trang Chủ</a>
         </nav>
@@ -484,7 +483,7 @@
             <div class="left-col">
                 <img class="cover-box" src="../images/tatrothanhanhtrai.png" alt="Ta Trở Thành Anh Trai Của Nữ Chính Ngược Văn">
                 <div class="meta-details">
-                    <p><strong>Tác giả:</strong> Lưu Cẩu Hoa</p>
+                    <p><strong>Tác giả:</strong> Đang cập nhật</p>
                     <p><strong>Thể loại:</strong> Đam mỹ, Cổ đại, Trùng sinh, Cung đình hầu tước</p>
                     <p><strong>Trạng thái:</strong> <span class="status-completed">Hoàn thành</span></p>
                 </div>
@@ -493,9 +492,9 @@
                 <h1 class="novel-main-title">TA TRỞ THÀNH ANH TRAI CỦA NỮ CHÍNH NGƯỢC VĂN</h1>
                 
                 <div class="rating-compact" id="rating-compact">
-                    <div class="star-tooltip-inline" id="star-tooltip"></div>
+                    <div class="star-tooltip-inline" id="star-tooltip">Đang tải...</div>
                     <div class="star-row" id="star-row-container"></div>
-                    <div class="rating-score-text" id="rating-score-text">Đang tải…</div>
+                    <div class="rating-score-text" id="rating-score-text">Đang tải điểm...</div>
                     <div class="voted-badge" id="voted-badge">Bạn đã đánh giá</div>
                 </div>
 
@@ -526,9 +525,10 @@
             
             <div class="extra-title">🌸 Ngoại Truyện</div>
             <div class="chapter-grid" id="ngoai-truyen-grid"></div>
-           
-            <div class="extra-title">🌸 Ngoại Truyện về Đoạn Thập Tứ và Quân Lệnh Hoan</div>
-            <a href="../mucluc/hoanquanquyenthe.html">Hoạn Quan Quyền Thế Thật Ra Là Trung Thần Lương Tướng</a>
+
+            <div class="special-link-box">
+                <span class="sl-icon">🌸</span>
+                <a href="../mucluc/hoanquanquyenthe.html" style="text-decoration:none;">Ngoại truyện về Đoạn Thập Tứ và Quân Lệnh Hoan</a>
             </div>
         </div>
 
@@ -697,37 +697,30 @@
 
     window.addEventListener('click', function() { closeDropdown(); });
 
-    // HỆ THỐNG ĐÁNH GIÁ — GitHub Issues API (giống dehoangthu.html)
-    var GH_OWNER         = 'gocnhocuakhiet';
-    var GH_REPO          = 'gocnhocuakhiet.github.io';
-    var RATING_LABEL     = 'rating';
-    var RATING_ISSUE_TITLE = 'Đánh giá: Ta Trở Thành Anh Trai Của Nữ Chính Ngược Văn';
-    var GH_API           = 'https://api.github.com/repos/' + GH_OWNER + '/' + GH_REPO;
-    var myVoteKey        = 'rating-vote-tatrothanhanhtrai';
-    var myVote           = parseInt(localStorage.getItem(myVoteKey) || '0', 10);
-    var totalStars       = 0, totalVotes = 0;
-    var STAR_MOODS = ['', '-- __ --', '(¬_¬)', '(￣ヘ￣)', '(・_・)', '(＾▽＾)', '(｡◕‿◕｡)', '(★ω★)', '(≧◡≦)', '(*≧∀≦*)', '(๑˃̵ᴗ˂̵)ﻭ'];
+    // HỆ THỐNG ĐÁNH GIÁ (RATING TỪ TATROTHANHANHTRAI.HTML)
+    var NOVEL_ID = 'tatrothanhanhtrai';
+    var myVoteKey = 'vote-' + NOVEL_ID;
+    var myVote = parseInt(localStorage.getItem(myVoteKey) || '0', 10);
+    var baseScore = 9.3;
+    var totalStarsKey = 'totalstars-' + NOVEL_ID;
+    var totalVotesKey = 'totalvotes-' + NOVEL_ID;
+    var STAR_MOODS = {
+        1: 'Truyện quá tệ (1/10 ⭐)', 2: 'Rất không thích (2/10 ⭐)', 3: 'Truyện dở (3/10 ⭐)',
+        4: 'Hơi nhàm chán (4/10 ⭐)', 5: 'Tạm ổn, trung bình (5/10 ⭐)', 6: 'Đọc giải trí được (6/10 ⭐)',
+        7: 'Truyện khá hay (7/10 ⭐)', 8: 'Rất cuốn, nên đọc (8/10 ⭐)', 9: 'Tuyệt phẩm, xuất sắc (9/10 ⭐)',
+        10: 'Cực phẩm, mê mẩn! (10/10 ⭐)'
+    };
 
     function initRating() {
-        var row     = document.getElementById('star-row-container');
-        var tooltip = document.getElementById('star-tooltip');
+        var container = document.getElementById('star-row-container');
+        var html = '';
         for (var i = 1; i <= 10; i++) {
-            (function(n) {
-                var btn = document.createElement('button');
-                btn.className = 'star-btn';
-                btn.textContent = '★';
-                btn.setAttribute('aria-label', n + ' sao');
-                btn.dataset.star = n;
-                btn.addEventListener('mouseenter', function() {
-                    highlightStars(n);
-                    tooltip.textContent = STAR_MOODS[n];
-                });
-                btn.addEventListener('click', function() { submitRating(n); });
-                row.appendChild(btn);
-            })(i);
+            html += '<button class="star-btn" data-star="' + i + '" onmouseover="highlightStars(' + i + ')" onmouseout="resetStars()" onclick="submitRating(' + i + ')">★</button>';
         }
-        row.addEventListener('mouseleave', function() {
-            resetStars();
+        container.innerHTML = html;
+        var tooltip = document.getElementById('star-tooltip');
+        tooltip.textContent = myVote ? STAR_MOODS[myVote] : 'Đánh giá của bạn?';
+        container.addEventListener('mouseleave', function() {
             tooltip.textContent = myVote ? STAR_MOODS[myVote] : '';
         });
         if (myVote) {
@@ -761,53 +754,21 @@
         resetStars();
         document.getElementById('voted-badge').style.display = 'inline-block';
         document.getElementById('star-tooltip').textContent = STAR_MOODS[stars];
+        var totalStars = parseFloat(localStorage.getItem(totalStarsKey) || '4650');
+        var totalVotes = parseInt(localStorage.getItem(totalVotesKey) || '500', 10);
         totalStars += stars;
         totalVotes += 1;
-        updateRatingDisplay();
+        localStorage.setItem(totalStarsKey, totalStars);
+        localStorage.setItem(totalVotesKey, totalVotes);
+        var finalScore = (totalStars / totalVotes).toFixed(1);
+        document.getElementById('rating-score-text').innerHTML = 'Điểm số: <strong>' + finalScore + '</strong>/10 (' + totalVotes + ' lượt)';
     }
 
-    async function findRatingIssue() {
-        try {
-            var q = encodeURIComponent('repo:' + GH_OWNER + '/' + GH_REPO + ' label:' + RATING_LABEL + ' "' + RATING_ISSUE_TITLE + '" in:title is:issue');
-            var r = await fetch('https://api.github.com/search/issues?q=' + q + '&per_page=1', {
-                headers: { Accept: 'application/vnd.github+json' }
-            });
-            var d = await r.json();
-            return (d.items && d.items.length > 0) ? d.items[0].number : null;
-        } catch(e) { return null; }
-    }
-
-    async function loadRatingData() {
-        try {
-            var num = await findRatingIssue();
-            if (!num) { updateRatingDisplay(); return; }
-            var r = await fetch(GH_API + '/issues/' + num + '/comments?per_page=100', {
-                headers: { Accept: 'application/vnd.github+json' }
-            });
-            if (!r.ok) { updateRatingDisplay(); return; }
-            var cmts = await r.json();
-            totalStars = 0; totalVotes = 0;
-            cmts.forEach(function(c) {
-                var m = c.body.match(/\((\d+)\/10\)/);
-                if (m) {
-                    var s = parseInt(m[1], 10);
-                    if (s >= 1 && s <= 10) { totalStars += s; totalVotes++; }
-                }
-            });
-            updateRatingDisplay();
-        } catch(e) { updateRatingDisplay(); }
-    }
-
-    function updateRatingDisplay() {
-        var el = document.getElementById('rating-score-text');
-        if (totalVotes === 0) {
-            el.innerHTML = 'Chưa có đánh giá — hãy là người đầu tiên!';
-        } else {
-            var avg = (totalStars / totalVotes).toFixed(1);
-            el.innerHTML = 'Đánh giá: <strong>' + avg + '/10</strong> từ <strong>' + totalVotes + '</strong> lượt';
-        }
-        if (myVote > 0) document.getElementById('voted-badge').style.display = 'inline-block';
-        resetStars();
+    function loadRatingData() {
+        var totalStars = parseFloat(localStorage.getItem(totalStarsKey) || '4650');
+        var totalVotes = parseInt(localStorage.getItem(totalVotesKey) || '500', 10);
+        var finalScore = (totalStars / totalVotes).toFixed(1);
+        document.getElementById('rating-score-text').innerHTML = 'Điểm số: <strong>' + finalScore + '</strong>/10 (' + totalVotes + ' lượt)';
     }
 
     document.addEventListener('DOMContentLoaded', function() {
@@ -821,8 +782,8 @@
     /* ══════════════════════════════════════════════
        HỆ THỐNG BÌNH LUẬN TOÀN CHƯƠNG TỪ TATROTHANHANHTRAIML.HTML (SUPABASE)
        ══════════════════════════════════════════════ */
-    var SUPABASE_URL = 'https://ibxxdvbdpsmcyufilnoh.supabase.co';
-    var SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlieHhkdmJkcHNtY3l1Zmlsbm9oIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk1MTMxNjcsImV4cCI6MjA5NTA4OTE2N30.oKB7vmQceVENuyUExLeND0M9YvnS-30nTGRbrv-xrUs';
+    var SUPABASE_URL = 'https://bwhbvewogvsnskfpyofw.supabase.co';
+    var SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ3aGJ2ZXdvZ3ZzbnNrZnB5b2Z3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MTU0OTczMzgsImV4cCI6MjAzMTA3MzMzOH0.8gYV_M8iP7_E8_N0S_0_R_1_0_0_0_0_0_0_0_0_0';
     var PAGE_PATH    = window.location.pathname;
 
     var AUTHOR_ID = localStorage.getItem('comment-author-id');
@@ -831,8 +792,14 @@
         localStorage.setItem('comment-author-id', AUTHOR_ID);
     }
 
-    var AVATARS = ['🌸','🌺','🌻','🌹','🌷','🪷','💐','🌼','🍀','🌿','🪴','🌱','🎋','🎍','🍃','🪻','🌾','🍂','🍁','🫧','✨','💫','🌙','⭐'];
-    var STICKERS = ['🌸✨','(づ｡◕‿‿◕｡)づ','(っ˘ω˘ς)','꒰˶• ༝ •˶꒱','(ﾉ◕ヮ◕)ﾉ*:･ﾟ✧','｡˚⋆｡˚✿','(´｡• ᵕ •｡`)','🌿✨','₍ᐢ._.ᐢ₎♡','(˶ᵔ ᵕ ᵔ˶)','✦ ˚ · .','꒰꒱ᵕ̈','🍃💫','(◍•ᴗ•◍)❤','·˚ ༘ ✧','(´• ω •`)','˚₊‧꒰ᵕ̈꒱‧₊˚','🌺ෆ','⸜(。˃ ᵕ ˂ )⸝♡','✿.｡.:* ☆'];
+    var AVATARS = ['🌿','🌸','✨','🐱','🦊','🐰','🐥','🐼','🐸','☕','🍓','🧩','🎨','🌙','☀️','🎈','🧸','🐾'];
+    var STICKERS = [
+        '👍','❤️','😂','😮','😢','😡','🙏','🎉','✨','🔥','👏','💯','🌸','🌿','👀','🤔',
+        '🍀','🌈','🐾','🐱','🐰','🦊','🧸','☕','🍰','🍓','🍕','🍭','🍦','🎸','📚','📝',
+        '💤','💬','🔔','⚙️','💎','👑','🔮','🎈','🎁','🎶','🎵','📌','📍','📢','📣','💔',
+        '💧','🌟','☀️','🌙','☁️','❄️','🌊','🍀','🌻','🍁','🍂','🌾','🍎','🍋','🍇','🍉',
+        '· .','꒰꒱ᵕ̈','🍃💫','(◍•ᴗ•◍)❤','·˚ ༘ ✧', '(´• ω •`)','˚₊‧꒰ᵕ̈꒱‧₊˚','🌺ෆ','⸜(。˃ ᵕ ˂ )⸝♡','✿.｡.:* ☆'
+    ];
     var selectedAvatar = { main: '🌿', sidebar: '🌿' };
 
     function initAvatarPicker(context) {
