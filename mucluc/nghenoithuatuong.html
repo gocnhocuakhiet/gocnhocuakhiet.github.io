@@ -246,11 +246,6 @@
         body.dark-mode .main-comment-form input:focus,
         body.dark-mode .main-comment-form textarea:focus { border-color: #4a6b5d; background: #1b2420; }
         body.dark-mode .main-comment-item { background: #1e2b24; border-color: #2e3d36; }
-        body.dark-mode .comment-author { color: #8fae9f; }
-        body.dark-mode .comment-text { color: #dae5e0; }
-        body.dark-mode .replies-list { border-left-color: #2e3d36; }
-        body.dark-mode .reply-item { background: #232e29; }
-        body.dark-mode .reply-form textarea { background: #161e1b; border-color: #2e3d36; color: #dae5e0; }
         body.dark-mode .action-btn { background: #1b2420; color: #8fae9f; border-color: #4a6b5d; }
         body.dark-mode .action-btn:hover { background-color: #232e29; }
         body.dark-mode .action-btn.liked { background-color: #2a1e22; border-color: #7a3a4a; color: #e08090; }
@@ -384,7 +379,6 @@
         @media (max-width: 480px) {
             .story-container { padding: 15px; margin: 20px auto; }
             .nav-btn { padding: 8px 14px; font-size: 0.8rem; }
-            .comment-sidebar { width: 100%; right: -100%; }
             .discussion-stats { gap: 6px; }
             .stat-card { min-width: 70px; padding: 8px; }
         }
@@ -600,31 +594,6 @@ function changeFontSize(delta) {
 </div>
 
 <!-- ── SIDEBAR BÌNH LUẬN THEO ĐOẠN ── -->
-<div id="comment-sidebar" class="comment-sidebar">
-    <div class="sidebar-header">
-        <h4 id="sidebar-title">Bình luận đoạn văn</h4>
-        <button class="close-sidebar-btn" onclick="closeSidebar()">✕</button>
-    </div>
-    <div class="sidebar-body">
-        <div class="quoted-paragraph-box" id="sidebar-quote"></div>
-        <div class="sidebar-comment-form">
-            <div class="author-row">
-                <div class="author-avatar-preview" id="sidebar-avatar-preview">🌿</div>
-                <input type="text" id="sidebar-author" placeholder="Tên của bạn" maxlength="30">
-            </div>
-            <div class="avatar-picker-label">Chọn hình đại diện:</div>
-            <div class="avatar-picker" id="sidebar-avatar-picker"></div>
-            <textarea id="sidebar-content" placeholder="Bình luận về đoạn này..." rows="3" maxlength="1000"></textarea>
-            <div class="sticker-picker-label">Chèn nhãn dán:</div>
-            <div class="sticker-picker" id="sidebar-sticker-picker"></div>
-            <button class="sidebar-submit-btn" onclick="submitSidebarComment()" style="margin-top:4px;">Gửi 🌸</button>
-        </div>
-        <div class="sidebar-comments-list" id="sidebar-comments-list">
-            <div class="loading-text">Đang tải…</div>
-        </div>
-    </div>
-</div>
-<div id="sidebar-overlay" class="sidebar-overlay" onclick="closeSidebar()"></div>
 
 <!-- ── SCRIPT CHÍNH ── -->
 <script>
@@ -663,53 +632,14 @@ async function sbFetch(path, method, body) {
 // ══════════════════════════════════════════════
 // BADGE — HIỂN THỊ SỐ BÌNH LUẬN TỪNG ĐOẠN
 // ══════════════════════════════════════════════
-var paraCommentCounts = {};
-var currentParaIndex  = null;
-
-async function loadParaCounts() {
-    try {
-        var rows = await sbFetch(
-            'comments?select=para_index&page_path=eq.' + encodeURIComponent(PAGE_PATH) +
-            '&para_index=not.is.null'
-        );
-        rows.forEach(function(r) {
-            paraCommentCounts[r.para_index] = (paraCommentCounts[r.para_index] || 0) + 1;
-        });
-        document.querySelectorAll('.comment-badge').forEach(function(badge) {
-            var idx = parseInt(badge.dataset.para);
-            var cnt = paraCommentCounts[idx] || 0;
-            badge.querySelector('.badge-count').textContent = cnt > 0 ? cnt : '';
-            badge.querySelector('.badge-icon').textContent  = '💬';
-        });
-    } catch(e) { console.warn('loadParaCounts:', e); }
-}
 
 document.addEventListener('DOMContentLoaded', function() {
-    // Wrap từng đoạn với badge
-    var paragraphs = document.querySelectorAll('.story-content p');
-    paragraphs.forEach(function(p, index) {
-        var paraNum = index + 1;
-        var row = document.createElement('div');
-        row.className = 'comment-row';
-        p.parentNode.insertBefore(row, p);
-        row.appendChild(p);
 
-        var badge = document.createElement('button');
-        badge.className    = 'comment-badge';
-        badge.dataset.para = paraNum;
-        badge.title        = 'Bình luận về đoạn này';
-        badge.innerHTML    = '<span class="badge-icon">💬</span><span class="badge-count"></span>';
-        badge.onclick      = function() { openSidebar(p.innerText.trim().substring(0, 130), paraNum); };
-        row.appendChild(badge);
-    });
-
-    loadParaCounts();
     loadMainComments();
     initLike();
     initAvatarPicker('main');
-    initAvatarPicker('sidebar');
+
     initStickerPicker('main');
-    initStickerPicker('sidebar');
 
     // Char counter
     document.getElementById('main-content').addEventListener('input', function() {
@@ -720,7 +650,7 @@ document.addEventListener('DOMContentLoaded', function() {
     var savedName = localStorage.getItem('comment-author-name');
     if (savedName) {
         document.getElementById('main-author').value   = savedName;
-        document.getElementById('sidebar-author').value = savedName;
+    
     }
     var savedAvatar = localStorage.getItem('comment-avatar');
     if (savedAvatar) {
@@ -732,56 +662,6 @@ document.addEventListener('DOMContentLoaded', function() {
 // ══════════════════════════════════════════════
 // SIDEBAR BÌNH LUẬN THEO ĐOẠN
 // ══════════════════════════════════════════════
-function openSidebar(previewText, paraIndex) {
-    document.getElementById('sidebar-title').textContent  = 'Đoạn ' + paraIndex;
-    document.getElementById('sidebar-quote').textContent  = '"' + previewText + (previewText.length >= 130 ? '…' : '') + '"';
-    document.getElementById('comment-sidebar').classList.add('active');
-    document.getElementById('sidebar-overlay').classList.add('active');
-
-    if (currentParaIndex === paraIndex) return;
-    currentParaIndex = paraIndex;
-    loadSidebarComments(paraIndex);
-}
-
-function closeSidebar() {
-    document.getElementById('comment-sidebar').classList.remove('active');
-    document.getElementById('sidebar-overlay').classList.remove('active');
-}
-
-async function loadSidebarComments(paraIndex) {
-    var list = document.getElementById('sidebar-comments-list');
-    list.innerHTML = '<div class="loading-text">Đang tải…</div>';
-    try {
-        var rows = await sbFetch(
-            'comments?page_path=eq.' + encodeURIComponent(PAGE_PATH) +
-            '&para_index=eq.' + paraIndex +
-            '&order=created_at.asc'
-        );
-        renderSidebarComments(rows, list, paraIndex);
-    } catch(e) {
-        list.innerHTML = '<div class="empty-text">Không thể tải bình luận.</div>';
-    }
-}
-
-function renderSidebarComments(rows, container, paraIndex) {
-    if (!rows.length) {
-        container.innerHTML = '<div class="empty-text">Chưa có bình luận nào. Hãy là người đầu tiên! 🌸</div>';
-        return;
-    }
-    // Tách root vs reply
-    var roots   = rows.filter(function(r) { return !r.parent_id; });
-    var replies  = rows.filter(function(r) { return !!r.parent_id; });
-    var replyMap = {};
-    replies.forEach(function(r) {
-        if (!replyMap[r.parent_id]) replyMap[r.parent_id] = [];
-        replyMap[r.parent_id].push(r);
-    });
-
-    container.innerHTML = '';
-    roots.forEach(function(c) {
-        container.appendChild(buildCommentEl(c, replyMap, true, paraIndex));
-    });
-}
 
 function buildCommentEl(c, replyMap, isSidebar, paraIndex) {
     var el = document.createElement('div');
@@ -823,29 +703,6 @@ function buildCommentEl(c, replyMap, isSidebar, paraIndex) {
         repliesHtml;
 
     return el;
-}
-
-async function submitSidebarComment() {
-    var name    = document.getElementById('sidebar-author').value.trim();
-    var content = document.getElementById('sidebar-content').value.trim();
-    if (!name)    { alert('Vui lòng nhập tên của bạn.'); return; }
-    if (!content) { alert('Vui lòng nhập nội dung bình luận.'); return; }
-    localStorage.setItem('comment-author-name', name);
-
-    var btn = document.querySelector('.sidebar-submit-btn');
-    btn.disabled = true; btn.textContent = 'Đang gửi…';
-    try {
-        await sbFetch('comments', 'POST', {
-            page_path: PAGE_PATH, para_index: currentParaIndex,
-            author_name: selectedAvatar['sidebar'] + ' ' + name, author_id: AUTHOR_ID, content: content
-        });
-        document.getElementById('sidebar-content').value = '';
-        paraCommentCounts[currentParaIndex] = (paraCommentCounts[currentParaIndex] || 0) + 1;
-        updateBadge(currentParaIndex);
-        loadSidebarComments(currentParaIndex);
-        loadStats();
-    } catch(e) { alert('Gửi thất bại, thử lại nhé!'); }
-    btn.disabled = false; btn.textContent = 'Gửi';
 }
 
 // ══════════════════════════════════════════════
@@ -960,7 +817,7 @@ async function deleteComment(id, context, paraIndex) {
             loadMainComments();
         }
         loadStats();
-        loadParaCounts();
+    
     } catch(e) { alert('Xoá thất bại!'); }
 }
 
@@ -987,12 +844,6 @@ async function loadStats() {
 // ══════════════════════════════════════════════
 // BADGE UPDATE
 // ══════════════════════════════════════════════
-function updateBadge(paraIndex) {
-    var badge = document.querySelector('.comment-badge[data-para="' + paraIndex + '"]');
-    if (!badge) return;
-    var cnt = paraCommentCounts[paraIndex] || 0;
-    badge.querySelector('.badge-count').textContent = cnt > 0 ? cnt : '';
-}
 
 // ══════════════════════════════════════════════
 // LIKE (localStorage — đơn giản)
