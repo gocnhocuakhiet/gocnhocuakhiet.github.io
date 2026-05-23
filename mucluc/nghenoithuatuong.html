@@ -993,6 +993,153 @@ function fmtDate(iso) {
            d.getDate() + '/' + (d.getMonth()+1) + '/' + d.getFullYear();
 }
 </script>
+<!-- ════════════════════════════════════════════════
+     SCRIPT DANH SÁCH CHƯƠNG + PHÂN TRANG
+     ════════════════════════════════════════════════ -->
+<script>
+/* ── 89 chương chính ── */
+var CHAPTERS = (function() {
+    var list = [];
+    for (var i = 1; i <= 89; i++) {
+        list.push({
+            label: 'Chương ' + i,
+            url: '../nghenoithuatuong/nghenoithuatuong' + i + '.html'
+        });
+    }
+    return list;
+})();
+
+/* ── 20 ngoại truyện ── */
+var NGOAI_TRUYEN = (function() {
+    var list = [];
+    for (var i = 1; i <= 20; i++) {
+        list.push({
+            label: 'Ngoại truyện ' + i,
+            url: '../nghenoithuatuong/nghenoithuatuongnt' + i + '.html'
+        });
+    }
+    return list;
+})();
+
+var PER_PAGE   = 50;
+var totalPages = Math.ceil(CHAPTERS.length / PER_PAGE);
+var currentPage = 1;
+
+/* ── Render lưới ngoại truyện ── */
+function renderNgoaiTruyen() {
+    var grid = document.getElementById('ngoai-truyen-grid');
+    var half = Math.ceil(NGOAI_TRUYEN.length / 2);
+    var left = NGOAI_TRUYEN.slice(0, half);
+    var right = NGOAI_TRUYEN.slice(half);
+    var html = '';
+    for (var i = 0; i < half; i++) {
+        html += '<a href="' + left[i].url + '"><span class="chapter-marker">❖</span>' + left[i].label + '</a>';
+        if (right[i]) {
+            html += '<a href="' + right[i].url + '"><span class="chapter-marker">❖</span>' + right[i].label + '</a>';
+        } else {
+            html += '<span></span>';
+        }
+    }
+    grid.innerHTML = html;
+}
+
+/* ── Render lưới chương (xếp dọc theo cột) ── */
+function renderGrid(page) {
+    var grid  = document.getElementById('chapter-grid');
+    var start = (page - 1) * PER_PAGE;
+    var end   = Math.min(start + PER_PAGE, CHAPTERS.length);
+    var slice = CHAPTERS.slice(start, end);
+
+    var half  = Math.ceil(slice.length / 2);
+    var left  = slice.slice(0, half);
+    var right = slice.slice(half);
+
+    var html = '';
+    for (var i = 0; i < half; i++) {
+        html += '<a href="' + left[i].url + '">'
+              + '<span class="chapter-marker">❖</span>'
+              + left[i].label + '</a>';
+        if (right[i]) {
+            html += '<a href="' + right[i].url + '">'
+                  + '<span class="chapter-marker">❖</span>'
+                  + right[i].label + '</a>';
+        } else {
+            html += '<span></span>';
+        }
+    }
+    grid.innerHTML = html;
+}
+
+/* ── Render thanh phân trang ── */
+function renderPagination(page) {
+    var bar = document.getElementById('pagination-bar');
+    if (totalPages <= 1) { bar.innerHTML = ''; return; }
+    var html = '';
+
+    html += '<button class="page-btn' + (page === 1 ? ' disabled' : '') + '" onclick="goPage(1)" title="Trang đầu">«</button>';
+
+    var rangeStart = Math.max(1, page - 2);
+    var rangeEnd   = Math.min(totalPages, page + 2);
+    if (rangeEnd - rangeStart < 4) {
+        if (rangeStart === 1) rangeEnd = Math.min(totalPages, rangeStart + 4);
+        else rangeStart = Math.max(1, rangeEnd - 4);
+    }
+    for (var p = rangeStart; p <= rangeEnd; p++) {
+        html += '<button class="page-btn' + (p === page ? ' active' : '') + '" onclick="goPage(' + p + ')">' + p + '</button>';
+    }
+
+    html += '<button class="page-btn' + (page === totalPages ? ' disabled' : '') + '" onclick="goPage(' + totalPages + ')" title="Trang cuối">» Cuối</button>';
+
+    html += '<div class="page-jump">'
+          + '<input class="page-input" id="page-input" type="number" min="1" max="' + totalPages + '" placeholder="Số trang…">'
+          + '<button class="page-go-btn" onclick="jumpToPage()">Đi</button>'
+          + '</div>';
+
+    html += '<div class="choose-page-wrap">'
+          + '<button class="choose-page-btn" onclick="togglePageDropdown(event)">Chọn trang ▲</button>'
+          + '<div class="choose-page-dropdown" id="choose-page-dropdown">';
+    for (var q = 1; q <= totalPages; q++) {
+        var s = (q - 1) * PER_PAGE + 1;
+        var e = Math.min(q * PER_PAGE, CHAPTERS.length);
+        html += '<a href="#" class="' + (q === page ? 'active-page' : '') + '" onclick="goPage(' + q + '); closeDropdown(); return false;">'
+              + 'Trang ' + q + ' (' + s + '–' + e + ')</a>';
+    }
+    html += '</div></div>';
+
+    bar.innerHTML = html;
+}
+
+function goPage(p) {
+    if (p < 1 || p > totalPages) return;
+    currentPage = p;
+    renderGrid(p);
+    renderPagination(p);
+    document.querySelector('.chapter-section').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+function jumpToPage() {
+    var input = document.getElementById('page-input');
+    var p = parseInt(input.value, 10);
+    if (p >= 1 && p <= totalPages) goPage(p);
+    else input.value = '';
+}
+function togglePageDropdown(e) {
+    e.stopPropagation();
+    document.getElementById('choose-page-dropdown').classList.toggle('open');
+}
+function closeDropdown() {
+    var dd = document.getElementById('choose-page-dropdown');
+    if (dd) dd.classList.remove('open');
+}
+document.addEventListener('click', closeDropdown);
+
+document.addEventListener('DOMContentLoaded', function() {
+    renderGrid(1);
+    renderPagination(1);
+    renderNgoaiTruyen();
+    initRating();
+    initLike();
+});
+</script>
 
 </body>
 </html>
