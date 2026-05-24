@@ -489,7 +489,6 @@ function changeFontSize(delta) {
     </div>
 
     <!-- KHUNG BÌNH LUẬN -->
-<!-- ── KHUNG THẢO LUẬN TOÀN CHƯƠNG ── -->
 <div class="chapter-discussion-box">
     <div class="discussion-header">
         <h3>🌿Đánh giá và bình luận truyện</h3>
@@ -557,8 +556,6 @@ function changeFontSize(delta) {
     </div>
 </div>
 
-<!-- ── SIDEBAR BÌNH LUẬN THEO ĐOẠN ── -->
-
 <!-- ── SCRIPT CHÍNH ── -->
 <script>
 // ══════════════════════════════════════════════
@@ -594,16 +591,104 @@ async function sbFetch(path, method, body) {
 }
 
 // ══════════════════════════════════════════════
-// BADGE — HIỂN THỊ SỐ BÌNH LUẬN TỪNG ĐOẠN
+// ĐÁNH GIÁ SAO (GitHub Issues)
 // ══════════════════════════════════════════════
+var GH_OWNER     = 'gocnhocuakhiet';
+var GH_REPO      = 'gocnhocuakhiet.github.io';
+var RATING_LABEL = 'rating';
+var RATING_ISSUE_TITLE = 'Đánh giá: Hoạn Quan Quyền Thế Thật Ra Là Trung Thần Lương Tướng';
+var GH_API = 'https://api.github.com/repos/' + GH_OWNER + '/' + GH_REPO;
+var myVoteKey = 'rating-vote-hoanquanquyenthe';
+var STAR_MOODS = ['', '-- __ --', '(¬_¬)', '(￣ヘ￣)', '(・_・)', '(＾▽＾)', '(｡◕‿◕｡)', '(★ω★)', '(≧◡≦)', '(*≧∀≦*)', '(๑˃̵ᴗ˂̵)ﻭ'];
+var totalStars = 0, totalVotes = 0;
+var myVote = parseInt(localStorage.getItem(myVoteKey) || '0', 10);
+
+/* ── Hàm khởi tạo và lắng nghe sự kiện chuột ── */
+function initRating() {
+    var row = document.getElementById('star-row');
+    var tooltip = document.getElementById('star-tooltip');
+    for (var i = 1; i <= 10; i++) {
+        (function(n) {
+            var btn = document.createElement('button');
+            btn.className = 'star-btn'; btn.textContent = '★';
+            btn.setAttribute('aria-label', n + ' sao'); btn.dataset.star = n;
+            btn.addEventListener('mouseenter', function() { highlightStars(n); tooltip.textContent = STAR_MOODS[n]; });
+            btn.addEventListener('click', function() { submitRating(n); });
+            row.appendChild(btn);
+        })(i);
+    }
+    row.addEventListener('mouseleave', function() { resetStars(); tooltip.textContent = myVote ? STAR_MOODS[myVote] : ''; });
+    if (myVote) { tooltip.textContent = STAR_MOODS[myVote]; document.getElementById('voted-badge').style.display = 'inline-block'; }
+    resetStars(); loadRatingData();
+}
+
+/* ── Hiệu ứng sáng sao khi di chuột vào ── */
+function highlightStars(n) {
+    document.querySelectorAll('.star-btn').forEach(function(btn) {
+        var s = parseInt(btn.dataset.star, 10);
+        btn.classList.toggle('hovered', s <= n); btn.classList.remove('voted');
+    });
+}
+
+/* ── Trả các ngôi sao về đúng số điểm thực tế ── */
+function resetStars() {
+    document.querySelectorAll('.star-btn').forEach(function(btn) {
+        var s = parseInt(btn.dataset.star, 10);
+        btn.classList.remove('hovered'); btn.classList.toggle('voted', myVote > 0 && s <= myVote);
+    });
+}
+
+/* ── Xử lý khi người dùng click chọn số sao ── */
+function submitRating(stars) {
+    if (myVote > 0) { alert('Bạn đã đánh giá rồi! (' + myVote + '/10 ⭐)'); return; }
+    myVote = stars; localStorage.setItem(myVoteKey, stars); resetStars();
+    document.getElementById('voted-badge').style.display = 'inline-block';
+    document.getElementById('star-tooltip').textContent = STAR_MOODS[stars];
+    totalStars += stars; totalVotes += 1; updateDisplay();
+}
+
+/* ── Tìm kiếm Issue chứa bình luận đánh giá trên GitHub ── */
+async function findRatingIssue() {
+    try {
+        var q = encodeURIComponent('repo:' + GH_OWNER + '/' + GH_REPO + ' label:' + RATING_LABEL + ' "' + RATING_ISSUE_TITLE + '" in:title is:issue');
+        var r = await fetch('https://api.github.com/search/issues?q=' + q + '&per_page=1', { headers: { Accept: 'application/vnd.github+json' } });
+        var d = await r.json();
+        return (d.items && d.items.length > 0) ? d.items[0].number : null;
+    } catch(e) { return null; }
+}
+
+/* ── Tải dữ liệu các lượt đánh giá cũ từ GitHub về ── */
+async function loadRatingData() {
+    try {
+        var num = await findRatingIssue();
+        if (!num) { updateDisplay(); return; }
+        var r = await fetch(GH_API + '/issues/' + num + '/comments?per_page=100', { headers: { Accept: 'application/vnd.github+json' } });
+        if (!r.ok) { updateDisplay(); return; }
+        var cmts = await r.json(); totalStars = 0; totalVotes = 0;
+        cmts.forEach(function(c) {
+            var m = c.body.match(/\((\d+)\/10\)/);
+            if (m) { var s = parseInt(m[1], 10); if (s >= 1 && s <= 10) { totalStars += s; totalVotes++; } }
+        });
+        updateDisplay();
+    } catch(e) { updateDisplay(); }
+}
+
+/* ── Cập nhật điểm số trung bình ra màn hình chính ── */
+function updateDisplay() {
+    var el = document.getElementById('rating-score-text');
+    if (totalVotes === 0) { el.innerHTML = 'Chưa có đánh giá — hãy là người đầu tiên!'; }
+    else { var avg = (totalStars / totalVotes).toFixed(1); el.innerHTML = 'Đánh giá: <strong>' + avg + '/10</strong> từ <strong>' + totalVotes + '</strong> lượt'; }
+    if (myVote > 0) document.getElementById('voted-badge').style.display = 'inline-block';
+    resetStars();
+}
 
 document.addEventListener('DOMContentLoaded', function() {
 
     loadMainComments();
     initLike();
     initAvatarPicker('main');
-
     initStickerPicker('main');
+    initRating();
 
     // Char counter
     document.getElementById('main-content').addEventListener('input', function() {
@@ -613,8 +698,7 @@ document.addEventListener('DOMContentLoaded', function() {
     // Nhớ tên người dùng
     var savedName = localStorage.getItem('comment-author-name');
     if (savedName) {
-        document.getElementById('main-author').value   = savedName;
-    
+        document.getElementById('main-author').value = savedName;
     }
     var savedAvatar = localStorage.getItem('comment-avatar');
     if (savedAvatar) {
@@ -624,9 +708,8 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 // ══════════════════════════════════════════════
-// SIDEBAR BÌNH LUẬN THEO ĐOẠN
+// BÌNH LUẬN CHÍNH (toàn truyện)
 // ══════════════════════════════════════════════
-
 function buildCommentEl(c, replyMap, isSidebar, paraIndex) {
     var el = document.createElement('div');
     el.className = 'comment-item';
@@ -669,9 +752,6 @@ function buildCommentEl(c, replyMap, isSidebar, paraIndex) {
     return el;
 }
 
-// ══════════════════════════════════════════════
-// BÌNH LUẬN CHÍNH (toàn chương)
-// ══════════════════════════════════════════════
 async function loadMainComments() {
     var list = document.getElementById('main-comments-list');
     list.innerHTML = '<div class="loading-text">Đang tải bình luận…</div>';
@@ -781,7 +861,6 @@ async function deleteComment(id, context, paraIndex) {
             loadMainComments();
         }
         loadStats();
-    
     } catch(e) { alert('Xoá thất bại!'); }
 }
 
@@ -806,11 +885,7 @@ async function loadStats() {
 }
 
 // ══════════════════════════════════════════════
-// BADGE UPDATE
-// ══════════════════════════════════════════════
-
-// ══════════════════════════════════════════════
-// LIKE (localStorage — đơn giản)
+// LIKE (localStorage)
 // ══════════════════════════════════════════════
 function initLike() {
     var key   = 'like-' + PAGE_PATH;
@@ -861,10 +936,6 @@ function copyLink() {
 }
 
 // ══════════════════════════════════════════════
-// TIỆN ÍCH
-// ══════════════════════════════════════════════
-
-// ══════════════════════════════════════════════
 // AVATAR & STICKER
 // ══════════════════════════════════════════════
 var AVATARS = [
@@ -901,7 +972,6 @@ function initAvatarPicker(context) {
             selectedAvatar[context] = av;
             localStorage.setItem('comment-avatar', av);
             document.getElementById(previewId).textContent = av;
-            // sync cả 2 context
             var other = context === 'main' ? 'sidebar' : 'main';
             selectedAvatar[other] = av;
             var otherPreview = document.getElementById(other + '-avatar-preview');
@@ -958,5 +1028,6 @@ function fmtDate(iso) {
 }
 </script>
 
+</main>
 </body>
 </html>
