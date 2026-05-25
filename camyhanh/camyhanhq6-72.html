@@ -1,0 +1,1555 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <link rel="stylesheet" href="../style.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cẩm Y Hành - Chương 72: Hổ mạnh ra khỏi lồng</title>
+
+    <!-- Google Fonts: 8 Vietnamese-supported fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:ital,wght@0,400;0,500;1,400&family=Crimson+Pro:ital,wght@0,400;0,600;1,400&family=Domine:wght@400;500&family=Lexend:wght@300;400;500&family=Lora:ital,wght@0,400;0,500;1,400&family=Mulish:ital,wght@0,400;0,500;1,400&family=Nunito:ital,wght@0,400;0,500;1,400&family=Quicksand:wght@400;500&display=swap" rel="stylesheet">
+
+    <style>
+        /* ══════════════════════════════════════
+           RESET & BASE
+        ══════════════════════════════════════ */
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --bg:           #f1f7f4;
+            --surface:      #ffffff;
+            --border:       #8fae9f;
+            --border-light: #dae5e0;
+            --primary:      #4a6b5d;
+            --primary-dark: #3a5a4d;
+            --text:         #2d3a34;
+            --text-body:    #333333;
+            --text-muted:   #777;
+            --accent-bg:    #eaf2ee;
+            --shadow:       rgba(0,0,0,0.06);
+            --font-size:    1.15rem;
+            --font-family:  inherit;
+            --line-height:  1.9;
+            --letter-spacing: 0em;
+        }
+
+        body {
+            font-family: var(--font-family), 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            line-height: 1.8;
+            transition: background-color 0.3s, color 0.3s;
+        }
+
+        /* ══════════════════════════════════════
+           NAVBAR
+        ══════════════════════════════════════ */
+        .navbar {
+            background-color: var(--surface);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 10%;
+            box-shadow: 0 2px 5px var(--shadow);
+            position: sticky;
+            top: 0;
+            z-index: 900;
+            transition: background-color 0.3s;
+        }
+        .navbar .logo { font-size: 1.2rem; font-weight: bold; color: var(--primary); text-decoration: none; }
+        .nav-links a { color: var(--text-muted); text-decoration: none; font-size: 0.95rem; transition: color 0.3s; }
+        .nav-links a:hover { color: var(--primary); }
+
+        /* ══════════════════════════════════════
+           PROGRESS BAR
+        ══════════════════════════════════════ */
+        #read-progress {
+            position: fixed;
+            top: 0; left: 0;
+            height: 3px;
+            width: 0%;
+            background: linear-gradient(90deg, var(--primary), #8fae9f);
+            z-index: 10001;
+            transition: width 0.15s ease;
+            border-radius: 0 2px 2px 0;
+        }
+
+        /* ══════════════════════════════════════
+           STORY CONTAINER
+        ══════════════════════════════════════ */
+        .story-container {
+            max-width: 700px;
+            margin: 40px auto;
+            padding: 30px;
+            background-color: var(--surface);
+            border-radius: 8px;
+            box-shadow: 0 2px 10px var(--shadow);
+            transition: background-color 0.3s;
+        }
+
+        .story-header {
+            text-align: center;
+            margin-bottom: 35px;
+            border-bottom: 1px dashed var(--border);
+            padding-bottom: 20px;
+        }
+        .story-header .novel-name { font-size: 0.95rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 5px; }
+        .story-header .chapter-title { color: var(--primary); font-size: 1.6rem; font-weight: 600; }
+
+        .story-content {
+            font-size: var(--font-size);
+            font-family: var(--font-family), 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: var(--text-body);
+            text-align: justify;
+            line-height: var(--line-height);
+            letter-spacing: var(--letter-spacing);
+            transition: font-size 0.2s, font-family 0.2s, color 0.3s, line-height 0.2s;
+        }
+        .story-content p { margin-bottom: 22px; text-indent: 25px; }
+
+        .reading-nav {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-top: 50px; padding-top: 25px; border-top: 1px dashed var(--border);
+        }
+        .nav-btn {
+            display: inline-block; padding: 10px 20px;
+            background-color: var(--surface); color: var(--primary);
+            text-decoration: none; border: 1px solid var(--border);
+            border-radius: 20px; font-size: 0.9rem; font-weight: 500;
+            transition: all 0.3s ease;
+        }
+        .nav-btn:hover { background-color: var(--primary); color: #ffffff; border-color: var(--primary); }
+        .nav-btn.disabled { color: #bbb; border-color: #e0e0e0; background-color: #fafafa; pointer-events: none; }
+
+        /* ══════════════════════════════════════
+           DARK MODE
+        ══════════════════════════════════════ */
+        body.dark-mode {
+            --bg:           #131a17;
+            --surface:      #1b2420;
+            --border:       #4a6b5d;
+            --border-light: #2e3d36;
+            --primary:      #8fae9f;
+            --primary-dark: #6a9080;
+            --text:         #dae5e0;
+            --text-body:    #dae5e0;
+            --text-muted:   #8fae9f;
+            --accent-bg:    #25332c;
+            --shadow:       rgba(0,0,0,0.3);
+        }
+        body.dark-mode .nav-btn.disabled { color: #444; border-color: #2e3d36; background-color: #161e1b; }
+        body.dark-mode .nav-links a { color: #aaa; }
+        body.dark-mode .nav-links a:hover { color: #8fae9f; }
+
+        /* ══════════════════════════════════════
+           READER CONTROLS FLOATING PANEL
+        ══════════════════════════════════════ */
+        .reader-controls-wrapper {
+            position: fixed; bottom: 30px; right: 30px;
+            z-index: 10000;
+            display: flex; flex-direction: column; align-items: flex-end; gap: 10px;
+        }
+        .reader-toggle-btn {
+            width: 48px; height: 48px; border-radius: 50%;
+            border: 2px solid var(--border); background: var(--surface); color: var(--primary);
+            font-size: 18px; cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15); transition: all 0.3s;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .reader-toggle-btn:hover { background: var(--primary); color: #fff; transform: scale(1.1); }
+        .reader-toggle-btn.active { background: var(--primary); color: #fff; }
+
+        /* ── Panel popup ── */
+        .reader-panel {
+            background: var(--surface);
+            border: 1px solid var(--border-light);
+            border-radius: 16px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.12);
+            padding: 18px 20px 16px;
+            width: 290px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            overflow: hidden;
+            max-height: 0;
+            opacity: 0;
+            pointer-events: none;
+            transform: translateY(8px) scale(0.97);
+            transform-origin: bottom right;
+            transition: max-height 0.38s cubic-bezier(0.4,0,0.2,1),
+                        opacity 0.3s ease,
+                        transform 0.3s ease,
+                        padding 0.3s ease;
+        }
+        .reader-panel.open {
+            max-height: 600px;
+            opacity: 1;
+            pointer-events: auto;
+            transform: translateY(0) scale(1);
+        }
+
+        .panel-section-label {
+            font-size: 0.72rem;
+            font-weight: 700;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: var(--primary);
+            margin-bottom: 6px;
+            opacity: 0.8;
+        }
+
+        /* ── Font size ── */
+        .font-size-row {
+            display: flex; align-items: center; gap: 10px;
+        }
+        .font-size-btn {
+            width: 34px; height: 34px; border-radius: 50%;
+            border: 1.5px solid var(--border); background: var(--accent-bg); color: var(--primary);
+            font-size: 13px; font-weight: 700; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
+            transition: all 0.2s; flex-shrink: 0;
+        }
+        .font-size-btn:hover { background: var(--primary); color: #fff; }
+        .font-size-value {
+            flex: 1; text-align: center;
+            font-size: 0.82rem; color: var(--text-muted); font-weight: 600;
+        }
+
+        /* ── Line height ── */
+        .line-height-row {
+            display: flex; align-items: center; gap: 8px;
+        }
+        .lh-btn {
+            padding: 4px 10px; border-radius: 12px;
+            border: 1.5px solid var(--border-light); background: var(--accent-bg);
+            color: var(--primary); font-size: 0.78rem; font-weight: 600; cursor: pointer;
+            transition: all 0.2s; white-space: nowrap;
+        }
+        .lh-btn.active, .lh-btn:hover { background: var(--primary); color: #fff; border-color: var(--primary); }
+
+        /* ── Font picker ── */
+        .font-select {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1.5px solid var(--border-light);
+            border-radius: 10px;
+            background: var(--accent-bg);
+            color: var(--primary);
+            font-size: 0.88rem;
+            font-weight: 500;
+            cursor: pointer;
+            outline: none;
+            appearance: none;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%234a6b5d' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 12px center;
+            padding-right: 30px;
+            transition: border-color 0.2s;
+        }
+        .font-select:focus { border-color: var(--primary); }
+        body.dark-mode .font-select { background-color: var(--accent-bg); color: var(--primary); }
+
+        /* ── Auto scroll ── */
+        .autoscroll-row {
+            display: flex; align-items: center; justify-content: space-between; gap: 10px;
+        }
+        .autoscroll-label { font-size: 0.85rem; color: var(--text); font-weight: 500; }
+        .toggle-switch {
+            position: relative; width: 44px; height: 24px; flex-shrink: 0;
+        }
+        .toggle-switch input { opacity: 0; width: 0; height: 0; }
+        .toggle-slider {
+            position: absolute; cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: var(--border-light);
+            border-radius: 34px;
+            transition: background-color 0.3s;
+        }
+        .toggle-slider::before {
+            content: ''; position: absolute;
+            height: 18px; width: 18px; left: 3px; bottom: 3px;
+            background-color: white;
+            border-radius: 50%;
+            transition: transform 0.3s, box-shadow 0.3s;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.18);
+        }
+        .toggle-switch input:checked + .toggle-slider { background-color: var(--primary); }
+        .toggle-switch input:checked + .toggle-slider::before { transform: translateX(20px); }
+
+        .autoscroll-speed-row {
+            display: flex; align-items: center; gap: 10px;
+        }
+        .speed-label { font-size: 0.78rem; color: var(--text-muted); white-space: nowrap; }
+        .speed-slider {
+            flex: 1;
+            -webkit-appearance: none;
+            height: 4px;
+            border-radius: 2px;
+            background: var(--border-light);
+            outline: none;
+            cursor: pointer;
+        }
+        .speed-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 16px; height: 16px;
+            border-radius: 50%;
+            background: var(--primary);
+            cursor: pointer;
+            box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+            transition: transform 0.15s;
+        }
+        .speed-slider::-webkit-slider-thumb:hover { transform: scale(1.2); }
+        .speed-value-label {
+            font-size: 0.78rem; color: var(--primary); font-weight: 700;
+            min-width: 32px; text-align: right;
+        }
+
+        /* ── Dark mode toggle ── */
+        .dark-row {
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        .dark-label { font-size: 0.85rem; color: var(--text); font-weight: 500; }
+
+        /* ══════════════════════════════════════
+           AUTO SCROLL INDICATOR
+        ══════════════════════════════════════ */
+        #scroll-indicator {
+            position: fixed;
+            top: 8px; left: 50%;
+            transform: translateX(-50%) translateY(-40px);
+            background: var(--primary);
+            color: #fff;
+            font-size: 0.7rem;
+            font-weight: 600;
+            padding: 3px 10px;
+            border-radius: 0 0 10px 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.18);
+            opacity: 0;
+            transition: opacity 0.3s, transform 0.3s;
+            pointer-events: none;
+            z-index: 9999;
+            letter-spacing: 0.02em;
+            white-space: nowrap;
+        }
+        #scroll-indicator.visible {
+            opacity: 0.85;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        /* ══════════════════════════════════════
+           COMMENT ROWS & BADGES
+        ══════════════════════════════════════ */
+        .comment-row {
+            display: flex; justify-content: space-between;
+            align-items: flex-start; gap: 15px;
+            margin-bottom: 22px; width: 100%;
+        }
+        .comment-row p { flex: 1; margin-bottom: 0 !important; }
+        .comment-badge {
+            cursor: pointer; flex-shrink: 0; margin-top: 6px;
+            min-width: 32px; height: 28px; border-radius: 14px;
+            background-color: var(--accent-bg); color: var(--primary);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 0.78rem; font-weight: 600; line-height: 1;
+            gap: 3px; padding: 0 7px;
+            transition: all 0.2s ease; user-select: none; border: none;
+        }
+        .comment-badge:hover { background-color: var(--primary); color: #ffffff; transform: scale(1.08); }
+        .comment-badge .badge-icon { font-size: 0.75rem; }
+        .comment-badge .badge-count { font-size: 0.75rem; }
+
+        /* ══════════════════════════════════════
+           SIDEBAR
+        ══════════════════════════════════════ */
+        .comment-sidebar {
+            position: fixed; top: 0; right: -440px; width: 420px; height: 100%;
+            background: var(--surface);
+            box-shadow: -5px 0 20px rgba(0,0,0,0.08);
+            z-index: 100000;
+            transition: right 0.4s cubic-bezier(0.25,0.8,0.25,1);
+            display: flex; flex-direction: column; box-sizing: border-box;
+        }
+        .comment-sidebar.active { right: 0; }
+        .sidebar-header {
+            display: flex; justify-content: space-between; align-items: center;
+            border-bottom: 1px solid var(--border-light); padding: 16px 20px;
+            flex-shrink: 0;
+        }
+        .sidebar-header h4 { color: var(--primary); margin: 0; font-size: 1rem; }
+        .close-sidebar-btn { background: none; border: none; font-size: 1.2rem; color: #999; cursor: pointer; padding: 4px; }
+        .sidebar-body { flex: 1; overflow-y: auto; padding: 16px 20px; display: flex; flex-direction: column; gap: 14px; }
+        .quoted-paragraph-box {
+            background: var(--accent-bg); border-left: 3px solid var(--border);
+            border-radius: 0 4px 4px 0; padding: 10px 14px;
+            font-size: 0.88rem; color: var(--primary); font-style: italic; line-height: 1.5;
+            flex-shrink: 0;
+        }
+        .sidebar-comment-form { display: flex; flex-direction: column; gap: 8px; flex-shrink: 0; }
+        .sidebar-comment-form input,
+        .sidebar-comment-form textarea {
+            width: 100%; padding: 9px 12px;
+            border: 1px solid var(--border-light); border-radius: 8px;
+            font-family: inherit; font-size: 0.9rem; color: var(--text-body);
+            background: var(--bg); outline: none; resize: vertical;
+            transition: border-color 0.2s, background-color 0.3s;
+        }
+        .sidebar-comment-form input:focus,
+        .sidebar-comment-form textarea:focus { border-color: var(--primary); background: var(--surface); }
+        .sidebar-submit-btn {
+            align-self: flex-end; padding: 8px 20px;
+            background: var(--primary); color: #fff; border: none;
+            border-radius: 20px; font-size: 0.88rem; font-weight: 600;
+            cursor: pointer; transition: all 0.2s;
+        }
+        .sidebar-submit-btn:hover { background: var(--primary-dark); }
+        .sidebar-submit-btn:disabled { background: #aaa; cursor: not-allowed; }
+        .sidebar-comments-list { display: flex; flex-direction: column; gap: 12px; }
+        .comment-item {
+            background: var(--bg); border-radius: 8px; padding: 12px;
+            border: 1px solid var(--border-light);
+        }
+        .comment-item-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+        .comment-author { font-weight: 600; font-size: 0.88rem; color: var(--primary); }
+        .comment-time { font-size: 0.78rem; color: #aaa; }
+        .comment-text { font-size: 0.9rem; color: var(--text-body); line-height: 1.6; }
+        .comment-actions { display: flex; gap: 10px; margin-top: 8px; }
+        .comment-reply-btn, .comment-delete-btn {
+            background: none; border: none; font-size: 0.78rem;
+            color: var(--border); cursor: pointer; padding: 0; transition: color 0.2s;
+        }
+        .comment-reply-btn:hover { color: var(--primary); }
+        .comment-delete-btn:hover { color: #c0556a; }
+        .reply-form { margin-top: 10px; display: flex; flex-direction: column; gap: 6px; }
+        .reply-form textarea {
+            width: 100%; padding: 8px 10px;
+            border: 1px solid var(--border-light); border-radius: 6px;
+            font-family: inherit; font-size: 0.88rem; resize: vertical;
+            background: var(--surface); outline: none; color: var(--text-body);
+        }
+        .reply-submit-btn {
+            align-self: flex-end; padding: 5px 14px;
+            background: var(--primary); color: #fff; border: none;
+            border-radius: 14px; font-size: 0.82rem; cursor: pointer;
+        }
+        .reply-submit-btn:hover { background: var(--primary-dark); }
+        .replies-list { margin-top: 10px; padding-left: 14px; border-left: 2px solid var(--border-light); display: flex; flex-direction: column; gap: 10px; }
+        .reply-item { background: var(--accent-bg); border-radius: 6px; padding: 9px 10px; }
+        .loading-text { text-align: center; padding: 20px; color: #aaa; font-size: 0.9rem; font-style: italic; }
+        .empty-text { text-align: center; padding: 20px 0; color: #bbb; font-size: 0.88rem; }
+        .sidebar-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.2); z-index: 99999; display: none;
+        }
+        .sidebar-overlay.active { display: block; }
+
+        /* ══════════════════════════════════════
+           DISCUSSION BOX
+        ══════════════════════════════════════ */
+        .chapter-discussion-box {
+            max-width: 700px; margin: 30px auto 50px auto;
+            padding: 25px; background-color: var(--surface);
+            border-radius: 8px; box-shadow: 0 2px 10px var(--shadow);
+        }
+        .discussion-header {
+            display: flex; justify-content: space-between; align-items: center;
+            margin-bottom: 16px; border-bottom: 1px dashed var(--border-light); padding-bottom: 14px;
+        }
+        .discussion-header h3 { color: var(--primary); font-size: 1.1rem; margin: 0; }
+        .discussion-stats { display: flex; gap: 10px; margin-bottom: 20px; flex-wrap: wrap; }
+        .stat-card {
+            flex: 1; min-width: 100px; background: var(--bg);
+            border: 1px solid var(--border-light); border-radius: 8px; padding: 12px 14px;
+            text-align: center;
+        }
+        .stat-label { font-size: 0.78rem; color: #888; margin-bottom: 4px; }
+        .stat-value { font-size: 1.3rem; font-weight: 700; color: var(--primary); }
+        .main-comment-form { display: flex; flex-direction: column; gap: 10px; margin-bottom: 24px; }
+        .main-comment-form input,
+        .main-comment-form textarea {
+            width: 100%; padding: 10px 14px;
+            border: 1px solid var(--border-light); border-radius: 8px;
+            font-family: inherit; font-size: 0.95rem; color: var(--text-body);
+            background: var(--bg); outline: none; resize: vertical;
+            transition: border-color 0.2s;
+        }
+        .main-comment-form input:focus,
+        .main-comment-form textarea:focus { border-color: var(--primary); background: var(--surface); }
+        .char-count { font-size: 0.78rem; color: #aaa; text-align: right; }
+        .main-submit-btn {
+            align-self: flex-end; padding: 9px 24px;
+            background: var(--primary); color: #fff; border: none;
+            border-radius: 20px; font-size: 0.92rem; font-weight: 600;
+            cursor: pointer; transition: all 0.2s;
+        }
+        .main-submit-btn:hover { background: var(--primary-dark); box-shadow: 0 3px 8px rgba(74,107,93,0.3); }
+        .main-submit-btn:disabled { background: #aaa; cursor: not-allowed; box-shadow: none; }
+        .main-comments-list { display: flex; flex-direction: column; gap: 16px; }
+        .main-comment-item {
+            background: var(--bg); border-radius: 10px; padding: 14px 16px;
+            border: 1px solid var(--border-light);
+        }
+        .discussion-actions { display: flex; gap: 10px; }
+        .action-btn {
+            display: flex; align-items: center; gap: 6px;
+            padding: 7px 14px; border-radius: 20px; border: 1px solid var(--border);
+            background: var(--surface); color: var(--primary);
+            font-size: 0.85rem; font-weight: 500; cursor: pointer;
+            transition: all 0.25s ease;
+        }
+        .action-btn:hover { background-color: var(--accent-bg); }
+        .action-btn.liked { background-color: #fff0f3; border-color: #e8a0b0; color: #c0556a; }
+
+        /* Share modal */
+        .share-modal-overlay {
+            position: fixed; inset: 0; background: rgba(0,0,0,0.35);
+            z-index: 200000; display: none; align-items: center; justify-content: center;
+        }
+        .share-modal-overlay.active { display: flex; }
+        .share-modal {
+            background: var(--surface); border-radius: 12px;
+            padding: 28px 24px 22px; width: 380px; max-width: 92vw;
+            box-shadow: 0 12px 40px rgba(0,0,0,0.18);
+        }
+        .share-modal h4 { color: var(--primary); font-size: 1.05rem; margin-bottom: 16px; text-align: center; }
+        .share-link-row { display: flex; gap: 8px; }
+        .share-link-input {
+            flex: 1; padding: 9px 12px; border: 1px solid var(--border-light); border-radius: 8px;
+            font-size: 0.85rem; color: var(--text-muted); background: var(--bg); outline: none;
+            overflow: hidden; white-space: nowrap; text-overflow: ellipsis;
+        }
+        .copy-link-btn {
+            padding: 9px 16px; border-radius: 8px;
+            background: var(--primary); color: #fff; border: none;
+            font-size: 0.85rem; font-weight: 600; cursor: pointer;
+        }
+        .copy-link-btn:hover { background: var(--primary-dark); }
+        .copy-link-btn.copied { background: #6aaa88; }
+        .share-modal-close {
+            display: block; width: 100%; margin-top: 14px;
+            padding: 8px; background: none; border: none;
+            color: #999; font-size: 0.85rem; cursor: pointer;
+        }
+
+        /* Avatar & Sticker pickers */
+        .avatar-picker-label, .sticker-picker-label { font-size: 0.82rem; color: var(--text-muted); margin-bottom: 5px; }
+        .avatar-picker { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 2px; }
+        .avatar-option {
+            width: 34px; height: 34px; border-radius: 50%;
+            background: var(--accent-bg); border: 2px solid transparent;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.1rem; cursor: pointer; transition: all 0.18s; user-select: none;
+        }
+        .avatar-option:hover { background: var(--border-light); transform: scale(1.12); }
+        .avatar-option.selected { border-color: var(--primary); background: var(--border-light); transform: scale(1.15); }
+        .sticker-picker { display: flex; flex-wrap: wrap; gap: 5px; }
+        .sticker-btn {
+            padding: 4px 9px; background: var(--accent-bg);
+            border: 1px solid var(--border-light); border-radius: 8px;
+            font-size: 0.82rem; cursor: pointer; transition: all 0.15s;
+            color: var(--text-body); user-select: none;
+        }
+        .sticker-btn:hover { background: var(--primary); color: #fff; border-color: var(--primary); transform: scale(1.05); }
+        .author-row { display: flex; align-items: center; gap: 8px; }
+        .author-row input { flex: 1; }
+        .author-avatar-preview {
+            width: 34px; height: 34px; border-radius: 50%; background: var(--accent-bg);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.1rem; flex-shrink: 0; border: 2px solid var(--border-light);
+        }
+
+        /* ══════════════════════════════════════
+           RESPONSIVE
+        ══════════════════════════════════════ */
+        @media (max-width: 480px) {
+            .story-container { padding: 15px; margin: 20px auto; }
+            .nav-btn { padding: 8px 14px; font-size: 0.8rem; }
+            .comment-sidebar { width: 100%; right: -100%; }
+            .discussion-stats { gap: 6px; }
+            .stat-card { min-width: 70px; padding: 8px; }
+            .reader-panel { width: 260px; }
+            .reader-controls-wrapper { bottom: 20px; right: 16px; }
+        }
+
+        /* Font preview in select */
+        option[data-font="Be Vietnam Pro"] { font-family: 'Be Vietnam Pro', sans-serif; }
+        option[data-font="Nunito"] { font-family: 'Nunito', sans-serif; }
+        option[data-font="Lexend"] { font-family: 'Lexend', sans-serif; }
+        option[data-font="Mulish"] { font-family: 'Mulish', sans-serif; }
+        option[data-font="Quicksand"] { font-family: 'Quicksand', sans-serif; }
+        option[data-font="Crimson Pro"] { font-family: 'Crimson Pro', serif; }
+        option[data-font="Lora"] { font-family: 'Lora', serif; }
+        option[data-font="Domine"] { font-family: 'Domine', serif; }
+    </style>
+</head>
+<body>
+
+<!-- ── PROGRESS BAR ── -->
+<div id="read-progress"></div>
+
+<!-- ── SCROLL INDICATOR ── -->
+<div id="scroll-indicator">⏩ Đang cuộn tự động</div>
+
+<!-- ── FLOATING READER PANEL ── -->
+<div class="reader-controls-wrapper">
+    <div class="reader-panel" id="reader-panel">
+
+        <!-- Font chữ -->
+        <div>
+            <div class="panel-section-label">Phông chữ</div>
+            <select class="font-select" id="font-select" onchange="changeFont(this.value)">
+                <option value="" data-font="">Mặc định (hệ thống)</option>
+                <option value="Be Vietnam Pro" data-font="Be Vietnam Pro">Be Vietnam Pro</option>
+                <option value="Nunito" data-font="Nunito">Nunito</option>
+                <option value="Lexend" data-font="Lexend">Lexend</option>
+                <option value="Mulish" data-font="Mulish">Mulish</option>
+                <option value="Quicksand" data-font="Quicksand">Quicksand</option>
+                <option value="Crimson Pro" data-font="Crimson Pro">Crimson Pro</option>
+                <option value="Lora" data-font="Lora">Lora</option>
+                <option value="Domine" data-font="Domine">Domine</option>
+            </select>
+        </div>
+
+        <!-- Cỡ chữ -->
+        <div>
+            <div class="panel-section-label">Cỡ chữ</div>
+            <div class="font-size-row">
+                <button class="font-size-btn" onclick="changeFontSize(-1)" title="Thu nhỏ">A−</button>
+                <span class="font-size-value" id="font-size-display">18px</span>
+                <button class="font-size-btn" onclick="changeFontSize(1)" title="Phóng to">A+</button>
+            </div>
+        </div>
+
+        <!-- Giãn dòng -->
+        <div>
+            <div class="panel-section-label">Giãn dòng</div>
+            <div class="line-height-row">
+                <button class="lh-btn" data-lh="1.6" onclick="changeLineHeight(1.6)">Chật</button>
+                <button class="lh-btn active" data-lh="1.9" onclick="changeLineHeight(1.9)">Vừa</button>
+                <button class="lh-btn" data-lh="2.3" onclick="changeLineHeight(2.3)">Thoáng</button>
+                <button class="lh-btn" data-lh="2.7" onclick="changeLineHeight(2.7)">Rộng</button>
+            </div>
+        </div>
+
+        <!-- Tự động cuộn -->
+        <div>
+            <div class="panel-section-label">Tự động cuộn</div>
+            <div class="autoscroll-row">
+                <span class="autoscroll-label" id="autoscroll-label">Tắt</span>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="autoscroll-toggle" onchange="toggleAutoScroll()">
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+            <div class="autoscroll-speed-row" style="margin-top:8px;">
+                <span class="speed-label">Tốc độ:</span>
+                <input type="range" class="speed-slider" id="speed-slider"
+                    min="1" max="10" value="4" oninput="updateScrollSpeed(this.value)">
+                <span class="speed-value-label" id="speed-value">×4</span>
+            </div>
+        </div>
+
+        <!-- Giao diện sáng/tối -->
+        <div>
+            <div class="panel-section-label">Giao diện</div>
+            <div class="dark-row">
+                <span class="dark-label" id="dark-label">🌙 Nền tối</span>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="dark-toggle" onchange="toggleDarkMode()">
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+        </div>
+
+    </div>
+    <button class="reader-toggle-btn" id="reader-toggle" onclick="togglePanel()" title="Tuỳ chỉnh đọc">⚙️</button>
+</div>
+
+<script>
+/* ══════════════════════════════════
+   PANEL TOGGLE
+══════════════════════════════════ */
+function togglePanel() {
+    var panel = document.getElementById('reader-panel');
+    var btn   = document.getElementById('reader-toggle');
+    var open  = panel.classList.toggle('open');
+    btn.classList.toggle('active', open);
+    btn.textContent = open ? '✕' : '⚙️';
+}
+
+/* ══════════════════════════════════
+   DARK MODE
+══════════════════════════════════ */
+function toggleDarkMode() {
+    var isDark = document.getElementById('dark-toggle').checked;
+    document.body.classList.toggle('dark-mode', isDark);
+    localStorage.setItem('night-mode', isDark ? 'on' : 'off');
+    document.getElementById('dark-label').textContent = isDark ? '☀️ Nền sáng' : '🌙 Nền tối';
+}
+(function() {
+    if (localStorage.getItem('night-mode') === 'on') {
+        document.body.classList.add('dark-mode');
+        document.getElementById('dark-toggle').checked = true;
+        setTimeout(function() {
+            var l = document.getElementById('dark-label');
+            if (l) l.textContent = '☀️ Nền sáng';
+        }, 50);
+    }
+})();
+
+/* ══════════════════════════════════
+   FONT PICKER
+══════════════════════════════════ */
+var FONT_MAP = {
+    'Be Vietnam Pro': "'Be Vietnam Pro', sans-serif",
+    'Nunito':         "'Nunito', sans-serif",
+    'Lexend':         "'Lexend', sans-serif",
+    'Mulish':         "'Mulish', sans-serif",
+    'Quicksand':      "'Quicksand', sans-serif",
+    'Crimson Pro':    "'Crimson Pro', serif",
+    'Lora':           "'Lora', serif",
+    'Domine':         "'Domine', serif"
+};
+
+function changeFont(val) {
+    var content = document.querySelector('.story-content');
+    if (!content) return;
+    if (val && FONT_MAP[val]) {
+        content.style.fontFamily = FONT_MAP[val];
+        document.documentElement.style.setProperty('--font-family', FONT_MAP[val]);
+    } else {
+        content.style.fontFamily = "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif";
+        document.documentElement.style.setProperty('--font-family', "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif");
+    }
+    localStorage.setItem('reader-font', val);
+}
+
+/* ══════════════════════════════════
+   FONT SIZE
+══════════════════════════════════ */
+var currentFontPx = 18;
+function changeFontSize(delta) {
+    currentFontPx = Math.min(28, Math.max(12, currentFontPx + delta));
+    document.documentElement.style.setProperty('--font-size', currentFontPx + 'px');
+    document.querySelector('.story-content').style.fontSize = currentFontPx + 'px';
+    document.getElementById('font-size-display').textContent = currentFontPx + 'px';
+    localStorage.setItem('reader-fontsize', currentFontPx);
+}
+
+/* ══════════════════════════════════
+   LINE HEIGHT
+══════════════════════════════════ */
+function changeLineHeight(val) {
+    document.documentElement.style.setProperty('--line-height', val);
+    document.querySelector('.story-content').style.lineHeight = val;
+    document.querySelectorAll('.lh-btn').forEach(function(b) {
+        b.classList.toggle('active', parseFloat(b.dataset.lh) === val);
+    });
+    localStorage.setItem('reader-lineheight', val);
+}
+
+/* ══════════════════════════════════
+   AUTO SCROLL
+══════════════════════════════════ */
+var scrollInterval = null;
+var scrollSpeedMultiplier = 4;
+
+function getScrollPixelsPerTick() {
+    // speed 1–10 maps to ~0.3–3.0 px/tick (tick = 16ms ≈ 60fps)
+    return scrollSpeedMultiplier * 0.28;
+}
+
+var scrollAccum = 0;
+function startAutoScroll() {
+    if (scrollInterval) return;
+    document.getElementById('scroll-indicator').classList.add('visible');
+    var lastTime = null;
+    function tick(ts) {
+        if (!document.getElementById('autoscroll-toggle').checked) return;
+        if (lastTime !== null) {
+            var dt = ts - lastTime;
+            scrollAccum += (scrollSpeedMultiplier * 0.018 * dt);
+            if (scrollAccum >= 1) {
+                var px = Math.floor(scrollAccum);
+                window.scrollBy(0, px);
+                scrollAccum -= px;
+            }
+        }
+        lastTime = ts;
+        scrollInterval = requestAnimationFrame(tick);
+    }
+    scrollInterval = requestAnimationFrame(tick);
+}
+
+function stopAutoScroll() {
+    if (scrollInterval) {
+        cancelAnimationFrame(scrollInterval);
+        scrollInterval = null;
+    }
+    scrollAccum = 0;
+    document.getElementById('scroll-indicator').classList.remove('visible');
+}
+
+function toggleAutoScroll() {
+    var on = document.getElementById('autoscroll-toggle').checked;
+    document.getElementById('autoscroll-label').textContent = on ? 'Bật' : 'Tắt';
+    if (on) startAutoScroll(); else stopAutoScroll();
+}
+
+function updateScrollSpeed(val) {
+    scrollSpeedMultiplier = parseInt(val);
+    document.getElementById('speed-value').textContent = '×' + val;
+    localStorage.setItem('reader-scrollspeed', val);
+}
+
+/* ══════════════════════════════════
+   PROGRESS BAR
+══════════════════════════════════ */
+window.addEventListener('scroll', function() {
+    var scrollTop    = window.scrollY || document.documentElement.scrollTop;
+    var docHeight    = document.documentElement.scrollHeight - window.innerHeight;
+    var pct          = docHeight > 0 ? Math.min(100, (scrollTop / docHeight) * 100) : 0;
+    document.getElementById('read-progress').style.width = pct + '%';
+});
+
+/* ══════════════════════════════════
+   RESTORE SAVED SETTINGS
+══════════════════════════════════ */
+(function restoreSettings() {
+    // Font
+    var savedFont = localStorage.getItem('reader-font');
+    if (savedFont !== null) {
+        document.getElementById('font-select').value = savedFont;
+        changeFont(savedFont);
+    }
+    // Font size
+    var savedSize = parseInt(localStorage.getItem('reader-fontsize') || '18');
+    currentFontPx = savedSize;
+    document.documentElement.style.setProperty('--font-size', savedSize + 'px');
+    document.getElementById('font-size-display').textContent = savedSize + 'px';
+    // Line height
+    var savedLH = parseFloat(localStorage.getItem('reader-lineheight') || '1.9');
+    changeLineHeight(savedLH);
+    // Scroll speed
+    var savedSpeed = parseInt(localStorage.getItem('reader-scrollspeed') || '4');
+    scrollSpeedMultiplier = savedSpeed;
+    document.getElementById('speed-slider').value = savedSpeed;
+    document.getElementById('speed-value').textContent = '×' + savedSpeed;
+})();
+</script>
+
+<!-- ── NAVBAR ── -->
+<header class="navbar">
+    <a href="../index.html" class="logo">🌿 Góc nhỏ của Khiết</a>
+    <nav class="nav-links"><a href="../index.html">Trang Chủ</a></nav>
+</header>
+
+<!-- ── KHUNG ĐỌC ── -->
+<main class="story-container">
+    <div class="story-header">
+        <p class="novel-name">Cẩm Y Hành - Quyển 6</p>
+        <h1 class="chapter-title">Chương 72: Hổ mạnh ra khỏi lồng</h1>
+    </div>
+
+    <article class="story-content">
+        <p>Mạnh Kiếm Khanh nhanh chóng hiểu ra ý của Cao Thiên hộ.</p>
+        <p>Ba ngày sau, khi vòng cuối tuyển tú nữ của phủ Thái tử diễn ra, muội muội của Mạnh Kiếm Khanh là Mạnh Kiếm Hồng đã xảy ra xung đột với một tú nữ khác.</p>
+        <p>Trong cơn tức giận, nàng đánh trọng thương đối phương, bị Trắc phi của Thái tử chủ trì tuyển chọn phê phán là “đàn bà hung dữ” và loại khỏi danh sách.</p>
+        <p>May là uy danh Mạnh Kiếm Khanh vẫn còn giá trị, lại do tú nữ kia xúc phạm danh dự Mạnh Kiếm Hồng trước, nên nàng chỉ bị đưa về nhà mà không bị trừng phạt.</p>
+        <p>Khi tin Mạnh Kiếm Hồng bị loại truyền đến, Cao Thiên hộ đang cùng Mạnh Kiếm Khanh làm thủ tục bàn giao. Vốn nhiệm vụ bảo vệ Quốc Tử Giám trước đây do Cao Thiên hộ phụ trách, nhưng gần đây vì công việc ở phủ Thái tử quá bận rộn, Thẩm Quang Lễ đã ra lệnh tạm thời chuyển giao cho Mạnh Kiếm Khanh.</p>
+        <p>Nghe tin, khóe miệng Mạnh Kiếm Khanh giật giật, Cao Thiên hộ thở dài: “Xin chia buồn cùng Mạnh Bách hộ. Muội muội của ngài tài sắc vẹn toàn, chút sai sót nhỏ chẳng đáng kể gì.”</p>
+        <p>Dù từ “xin chia buồn” nghe khá chói tai, nhưng sự đồng cảm của Cao Thiên hộ có vẻ chân thành. Mạnh Kiếm Khanh mỉm cười: “Đa tạ lời vàng ngọc của Cao Thiên hộ. Đời người sớm nắng chiều mưa, gặp chuyện này cũng đành bấm bụng mà chịu vậy.”</p>
+        <p>Nhưng ngay sau đó, một tin khác truyền đến: con gái của Cao Thiên hộ bị ma ma khám thân phát hiện có mùi hôi nách, cũng bị loại ngay lập tức.</p>
+        <p>Sắc mặt Cao Thiên hộ lập tức tối sầm. Mạnh Kiếm Khanh đã chuẩn bị chiêu này từ khi nào? Cái cớ mùi hôi nách này… hết sức lộ liễu!</p>
+        <p>Mạnh Kiếm Khanh nhìn ông với ánh mắt cười như có như không, vừa lật giấy tờ vừa thở dài: “Xem ra cô nương hai nhà chúng ta đều không có duyên với Thái tử điện hạ rồi.”</p>
+        <p>Trong đại sảnh, bầu không khí ngột ngạt đến mức tất cả thuộc hạ đều cúi đầu im lặng.</p>
+        <p>Cuộc bàn giao giữa Cao Thiên hộ và Mạnh Kiếm Khanh kéo dài suốt mười ngày với đủ lý do.</p>
+        <p>Nào là sổ sách không khớp, nào là văn kiện sai sót, khi thì Cao Thiên hộ bận công vụ, lúc thì Mạnh Kiếm Khanh có việc gấp không thể tiếp tục.</p>
+        <p>Khi hoàn tất, thuộc hạ hai bên đều thở phào nhẹ nhõm.</p>
+        <p>Thẩm Quang Lễ nghe báo cáo về cuộc “chiến tranh lạnh” này chỉ mỉm cười bình thản.</p>
+        <p>Khi tiết xuân sang, nước sông ấm lên cũng là lúc cá nóc vào mùa. Thẩm Quang Lễ sai người mời cả hai đến dự tiệc tại Lâm Giang Các bên hồ Huyền Vũ nổi tiếng với món cá nóc.</p>
+        <p>Mọi người đều mặc thường phục, trong phòng riêng chỉ có ba người, lính vệ canh gác phòng bên. Từ song cửa phóng tầm mắt, mặt hồ mênh mông gợn sóng lăn tăn, gió xuân nhè nhẹ lướt qua. Quả thực là thắng địa hiếm có.</p>
+        <p>Cao Thiên hộ và Mạnh Kiếm Khanh lần lượt kính Thẩm Quang Lễ một chén, sau đó mới chúc nhau. Cao Thiên hộ tươi cười niềm nở, Mạnh Kiếm Khanh giữ thái độ cung kính, dù sao chức vụ và thâm niên của Cao Thiên hộ đều cao hơn.</p>
+        <p>Khi họ ngồi xuống, Thẩm Quang Lễ mỉm cười: “Hôm nay là tiệc riêng, không bàn chuyện công.”</p>
+        <p>Quả nhiên Thẩm Quang Lễ chỉ nói chuyện gia đình, nhưng dần dà dẫn đề tài đến Mạnh Kiếm Hồng và con gái Cao Thiên Hộ.</p>
+        <p>Mạnh Kiếm Khanh và Cao Thiên hộ đều hiểu, hôm nay phải giải quyết cho xong chuyện này.</p>
+        <p>Nhưng tiếng ồn ào bên ngoài ngày càng lớn, Thẩm Quang Lễ nhíu mày. Mạnh Kiếm Khanh lắng nghe một lúc rồi nói: “Là giám sinh Quốc Tử Giám đang tranh chỗ ngồi.”</p>
+        <p>Cao Thiên hộ mỉm cười: “Mạnh Bách hộ trẻ tuổi trí nhớ tốt, vừa nhận nhiệm vụ đã nhận ra tiếng giám sinh Quốc Tử Giám.”</p>
+        <p>Mạnh Kiếm Khanh cũng cười đáp: “Cao Thiên hộ quá khen. Ta nghe ra giọng mấy học sinh vùng biển, khẩu âm của họ rất đặc biệt.”</p>
+        <p>Hắn đứng dậy mở cửa, nhìn qua hành lang thấy rõ màn hỗn chiến đối diện.</p>
+        <p>Khách khứa và phụ bàn đã tản ra xa, để lại đám giám sinh Quốc Tử Giám đang hỗn chiến. Bảy học trò vùng biển nổi bật với làn da nâu bóng, dáng người gầy guộc nhưng dẻo dai, bộ áo quần sang trọng cùng những đường quyền cước chính xác đến kinh ngạc. Trong khi đó, nhóm bảy tám giám sinh bản địa đối đầu với họ đã bắt đầu đuối sức, lộ rõ vẻ thất thế.</p>
+        <p>Nhưng ánh mắt ba người đều đổ dồn về một người ngồi yên ở góc.</p>
+        <p>Thiếu niên áo vải giản dị, khuôn mặt thanh tú, đôi mắt đen láy lấp lánh, an nhiên ngồi xem chiến sự.</p>
+        <p>Thẩm Quang Lễ chăm chú nhìn hồi lâu rồi quay sang hai thuộc hạ, ánh mắt dò hỏi. Cao Thiên hộ lắc đầu tỏ ý không biết, đã nhiều tháng nay ông bận hộ tống Thái tử tuần biên, chẳng quan tâm đến Quốc Tử Giám. Mãi đến lúc ấy, Mạnh Kiếm Khanh mới chậm rãi thông báo: “Đó là Sở Bích Thiên.”</p>
+        <p>Sở Bích Thiên là con trai út của Hội trưởng Hoa thương Lữ Tống, đồng thời là sư đệ của Vân Yên Kiều. Mẹ của hắn là con gái của phiên vương Lữ Tống, nên từ khi nhập học đã bị Cẩm Y Vệ lập hồ sơ. Chỉ có điều, cả Thẩm Quang Lễ lẫn Cao Thiên hộ đều chưa từng gặp mặt.</p>
+        <p>Thẩm Quang Lễ ừ một tiếng, vừa quan sát Sở Bích Thiên vừa để ý thái độ kỳ lạ của Mạnh Kiếm Khanh, hắn dường như không vội ngăn cuộc ẩu đả.</p>
+        <p>Cũng vì ba vị quan lớn im lặng, đám lính vệ dưới quyền cũng chẳng dám tự ý hành động. Bởi lẽ, những giám sinh này phần lớn là con cháu nhà quan, thậm chí có cả con cháu nhà thổ ty, đụng vào dễ sinh phiền phức.</p>
+        <p>Hay Mạnh Kiếm Khanh đang cố ý quan sát bản chất thật của bọn giám sinh?</p>
+        <p>Đang suy nghĩ, một tiếng hét vang lên từ tầng dưới: “Đại ca! Bọn chúng ở trên này! Mau lên!”</p>
+        <p>Mấy tên giám sinh mới xông lên lầu nhanh như cắt, vừa nhập cuộc đã khiến bảy học trò vùng biển lập tức rối loạn. Trong nhóm mới đến, có một tên đánh vừa nhanh vừa mạnh khác thường, nổi bật hẳn lên.</p>
+        <p>Cao Thiên hộ liền giới thiệu: “Đó là Đoạn Tư Minh, hậu duệ hoàng tộc Đại Lý, vừa có tài văn võ, lại gia thế hiển hách, nên tính tình kiêu ngạo khác thường. Giám sinh các tộc Vân Quý đều xem hắn làm thủ lĩnh. Dĩ nhiên, số lần hắn gây sự cũng tăng theo, thành đối tượng trọng điểm của Cẩm Y Vệ.”</p>
+        <p>Tình thế đã nghiêng hẳn một phía, nhưng Sở Bích Thiên vẫn khoanh tay đứng xem. Thẩm Quang Lễ và Cao Thiên hộ đều nhìn Mạnh Kiếm Khanh. Sở Bích Thiên ngoan ngoãn như vậy, phải chăng đã bị Mạnh Kiếm Khanh cảnh cáo không được gây rối?</p>
+        <p>Khi Đoạn Tư Minh quăng một học sinh vùng biển sang bên, hắn khinh bỉ nhìn Sở Bích Thiên đang ngồi thù lù một góc.</p>
+        <p>Hầu như cả Quốc Tử Giám đều biết Sở Bích Thiên, một là vì gia đình cực kỳ giàu có, hai là vì sự ngoan ngoãn khác thường, ngày ngày chỉ biết theo tiên sinh nghe giảng, chưa từng tham gia ẩu đả. Một công tử nhà giàu được nuông chiều như hắn, đứng trước cảnh hỗn loạn này, tất nhiên chỉ biết co ro trong góc mà thôi.</p>
+        <p>Một học trò vùng biển bị hai đối thủ vây công, liên tiếp ăn mấy quả đấm cùng cú đá bay vào người. Hắn giả vờ kêu rống lên rồi lao thẳng về phía Đoạn Tư Minh, trong bụng nghĩ, dù không quật ngã được thằng khốn kiêu ngạo này, ít nhất cũng làm nó sưng mặt bầm mày cho bõ ghét!</p>
+        <p>Đoạn Tư Minh đang khinh bỉ nhìn Sở Bích Thiên ở góc phòng, không đề phòng kẻ xông tới. Hắn nhíu mày né người sang bên, tay phải như cánh diều vồ lấy cánh tay phải của tên đang toan tính xấu, xoắn mạnh ra sau lưng rồi tung một cước đá phăng thẳng, hất văng hắn đi xa.</p>
+        <p>Nhưng cú đá của Đoạn Tư Minh lần này khác hẳn lúc trước. Tên học trò vùng biển bị hất văng thẳng ra cửa sổ lầu, tiếng kêu lần này hoàn toàn thật sự, hắn vừa gào thét vừa giãy giụa giữa không trung.</p>
+        <p>Chính Đoạn Tư Minh cũng giật mình. Nếu rơi từ độ cao này mà bị thương nặng hay mất mạng thì rắc rối sẽ không nhỏ. Hắn tự trách mình sao lại lơ đễnh, sao lại ra đòn quá tay như thế?</p>
+        <p>Đoạn Tư Minh bực bội nhảy qua chiếc bàn, trong lòng nghĩ, dù sao cũng phải thử cứu, còn nước còn tát!</p>
+        <p>Nhưng có người đã nhanh chân hơn hắn. Một bóng người lao tới bên cửa sổ, kịp thời túm chặt cổ chân trái tên học trò kia, giật mạnh hắn vào trong. Một tay đỡ lấy eo, nhẹ nhàng đặt xuống sàn nhà an toàn.</p>
+        <p>Tên học trò thở hồng hộc, ngước mặt lên nhìn, suýt ngất khi nhận ra kẻ vừa cứu mình lại chính là Sở Bích Thiên. Một tiếng thét kinh hãi lại vang lên.</p>
+        <p>Đoạn Tư Minh đứng chết trân, ánh mắt lạnh như băng quét Sở Bích Thiên từ đầu tới chân, sự khinh bỉ trong mắt hắn giờ còn gấp bội lúc trước.</p>
+        <p>Đoạn Tư Minh càng nghĩ càng tức, nếu tên tiểu tử này trốn sau vì võ nghệ kém cỏi thì còn có thể thông cảm. Nhưng rõ ràng có bản lĩnh mà lại không chịu ra tay, đúng là đáng ghét!</p>
+        <p>Sở Bích Thiên lúc này mới giật mình nhận ra hành động của mình. Mặt hắn thoáng đỏ lên vì ngượng, đôi mắt đen nháy liếc quanh tìm lối thoát. Nhưng chưa kịp mở miệng, tiếng quát chát chúa của Đoạn Tư Minh đã nổ ra: “Tất cả im ngay!”</p>
+        <p>Khi Đoạn Tư Minh nghiêm mặt lên, uy nghiêm toát ra khiến cả đám đánh nhau phải im bặt. Ngay cả Sở Bích Thiên cũng đứng chôn chân tại chỗ, không dám nhúc nhích.</p>
+        <p>Hắn bước sát tới, ngón tay trỏ chĩa thẳng cách mũi Sở Bích Thiên chỉ một tấc, từng chữ nặng như đinh đóng cột: “Ngươi đấu với ta! Thắng, chỗ này nhường cho các ngươi! Thua, cả lũ cút ngay!”</p>
+        <p>Trừ tên học trò vừa được Sở Bích Thiên cứu, tất cả đều há hốc mồm.</p>
+        <p>Đoàn lão đại lại muốn đấu tay đôi với Sở Bích Thiên?</p>
+        <p>Nhưng điều khiến họ còn kinh ngạc hơn là thái độ của Sở Bích Thiên. Hắn đứng im quan sát Đoạn Tư Minh từ đầu tới chân, bất ngờ nở nụ cười tươi rói, gật đầu đồng ý: “Được.”</p>
+        <p>Đoạn Tư Minh từ từ hạ thấp trọng tâm, tư thế vững như bàn thạch, rõ ràng nhường Sở Bích Thiên ra đòn trước. Chẳng ngờ Sở Bích Thiên cũng chẳng khách sáo, phóng người tới như cắt. Bề ngoài hắn có vẻ thư sinh, nhưng động tác lại nhanh nhẹn như con vượn lì lợm, ngay đòn đầu đã vồ thẳng vào mặt Đoạn Tư Minh.</p>
+        <p>Kiểu đánh đường phố này khiến đám thuộc hạ Đoạn Tư Minh đồng loạt xì lên tỏ ý khinh bỉ. Đoạn Tư Minh đưa tay trái lên đỡ, đồng thời phóng một quyền vào ngực đối phương. Sở Bích Thiên biến chiêu cực nhanh, tay trái co lại chém vào cổ tay phải Đoạn Tư Minh.</p>
+        <p>Đoạn Tư Minh thuận thế xoay cổ tay đẩy lòng bàn tay trái hắn ra, quyền phải vẫn đánh tới ngực. Sở Bích Thiên hơi hít vào, ngực lõm vào trong một cách kỳ lạ, quyền của Đoạn Tư Minh chỉ cách áo một sợi tóc, không thể tiến thêm.</p>
+        <p>Hai người nhìn nhau, đều lộ vẻ kinh ngạc.</p>
+        <p>Đoạn Tư Minh thầm nghĩ, cổ tay mình bị chém đau rát thế này? Không ngờ tên tiểu tử này ra đòn lợi hại đến vậy!</p>
+        <p>Còn Sở Bích Thiên thì bất ngờ hơn, mình dùng tới một nửa sức lực mà hắn như không hề hấn gì? Ha! Đúng là đối thủ xứng tầm... phải cẩn thận kẻo lại dọa hắn chạy mất…</p>
+        <p>Sở Bích Thiên nhảy lùi vài bước, mắt không rời Đoạn Tư Minh. Bất chợt, nụ cười tươi tắn lại nở trên môi hắn, gật đầu hài lòng rồi lao tới như gió.</p>
+        <p>Lần này không còn là những đòn tay loạn xạ nữa. Hắn chuyển sang liên hoàn cước sát đất, những cú đá nhanh tựa chớp giật liên tiếp quất vào chân Đoạn Tư Minh.</p>
+        <p>Mấy phát trúng liền khiến ống chân Đoạn Tư Minh đau điếng. Tức giận, hắn nhảy phắt lên bàn, tay rút đoản đao từ trong ủng, chỉ thẳng mặt Sở Bích Thiên: “Ta không muốn động đao, nhưng xem ra ngươi cũng đáng mặt đối thủ, đấu không?”</p>
+        <p>Sở Bích Thiên chăm chú nhìn đoản đao trong tay Đoạn Tư Minh: “Đoản đao của ngươi, phải chăng làm bằng thép Miến Điện? Nếu ta thắng, ngươi có chịu nhường nó cho ta không?”</p>
+        <p>Đoạn Tư Minh cười lạnh: “Đợi khi nào thắng được ta rồi hãy nói, binh khí của ngươi đâu?”</p>
+        <p>Sở Bích Thiên rút từ trong áo ra một sợi xích vàng óng quấn quanh eo. Cả tầng lầu vang lên những tiếng hít hà kinh ngạc.Đúng là con nhà giàu, vũ khí lại là một dây xích tinh xảo làm bằng vàng ròng, mấu khóa còn khảm hai viên ngọc lam lấp lánh.</p>
+        <p>Sở Bích Thiên nghiêng đầu cười: “Ta thua, binh khí này cũng nhường ngươi.”</p>
+        <p>Lời còn chưa dứt, sợi xích vàng đã vút ra xé gió. Đoạn Tư Minh vung đao chém xuống, xích vàng như rắn cuộn quấn chặt lấy lưỡi dao. Hắn nhanh như chớp giật mạnh đao về. Nếu là xích sắt thường đã đứt lìa, nhưng xích vàng dẻo dai chỉ nghe xoảng xoảng rồi vẫn nguyên vẹn trở về tay chủ.</p>
+        <p>Sở Bích Thiên vừa đánh vừa hét lớn: “Đao pháp của ngươi không tồi!”</p>
+        <p>Mặt hắn đỏ bừng phấn khích. Lưỡi đao sắc lẹm dù chỉ lướt nhẹ cũng để lại vài vệt máu trên người hắn.</p>
+        <p>Đoạn Tư Minh cũng chẳng sướng gì hơn, chỗ nào bị xích vàng quất trúng thì xương cốt rêm rời như muốn vỡ tan.</p>
+        <p>Bọn giám sinh đi theo chia thành hai phe, hò hét cổ vũ, dậm chân ầm ầm khiến sàn lầu rung chuyển.</p>
+        <p>Thẩm Quang Lễ ngồi đối diện, chăm chú quan sát trận đấu, thầm nhíu mày. Cao Thiên hộ cười nói: “Mạnh Bách hộ, hai con hổ đánh nhau, chắc chắn một con sẽ bị thương.”</p>
+        <p>Mạnh Kiếm Khanh mỉm cười, quay người bước ra.</p>
+        <p>Khi đoản đao Miến Điện và xích vàng của Sở Bích Thiên sắp chạm nhau lần nữa, bỗng bị đao Bách Chiết của Mạnh Kiếm Khanh gạt ra.</p>
+        <p>Sở Bích Thiên thấy hắn thì giật mình vội thu xích vàng, cười ngượng nghịu lùi lại. Đoạn Tư Minh không ngờ có người có thể một đao đẩy lùi cả hai vũ khí của mình và Sở Bích Thiên, nhíu mày định hỏi, nhưng Mạnh Kiếm Khanh đã giơ lên một tấm thẻ bài.</p>
+        <p>Đoạn Tư Minh từng tiếp xúc với Cẩm Y Vệ, nhận ra thân phận của hắn, chỉ chần chừ một chút, liền rút đoản đao Miến Điện cắm trở lại vào ống bốt.</p>
+        <p>Đám giám sinh Quốc Tử Giám vốn đang hò reo náo nhiệt, giờ đều im bặt, ngơ ngác nhìn Mạnh Kiếm Khanh.</p>
+        <p>Hắn không nói nhiều, chỉ bắt họ bồi thường thiệt hại cho chủ quán rồi cho phép rời đi. Khi Đoạn Tư Minh và Sở Bích Thiên xuống lầu, hai người liếc nhìn nhau, trong lòng đều nôn nao không yên, không biết sẽ bị trừng phạt thế nào. Cảm giác cùng chung cảnh ngộ khiến họ bỗng thấy đối phương dễ chịu hơn, không còn chút oán hận nào sau trận đấu.</p>
+        <p>Ba người trên lầu quan sát cảnh tượng ấy. Thẩm Quang Lễ mỉm cười: “Đoạn Tư Minh này tuy kiêu ngạo nhưng thẳng thắn phóng khoáng, không khó sống chung. Gia thế nhân phẩm đều tốt, nghe nói cũng chưa hôn phối. Kiếm Khanh thấy thế nào?”</p>
+        <p>Mạnh Kiếm Khanh giật mình. Cao Thiên hộ đã cười nói: “Gần đây đại nhân rất hứng thú mai mối nhỉ.”</p>
+        <p>Chỉ trong khoảnh khắc đó, Mạnh Kiếm Khanh đã kịp trấn định, cúi đầu đáp:  “Đoạn Tư Minh quả thật rất tốt. Nếu được đại nhân ra mặt làm mối, Kiếm Khanh xin tuân lệnh.”</p>
+        <p>Thẩm Quang Lễ lại hỏi: “Cao Bình, ngươi không nghĩ ta thiên vị chứ?”</p>
+        <p>Cao Thiên Hộ cười đáp: “Không dám. Con gái của hạ quan nếu so với tiểu thư Mạnh gia thì yếu đuối quá, không xứng với Đoạn Tư Minh.”</p>
+        <p>Mạnh Kiếm Khanh liếc nhìn ông. Câu này nghe như ám chỉ danh hiệu “hung dữ” của Mạnh Kiếm Hồng.</p>
+        <p>Thẩm Quang Lễ cười nói: “Con gái ngươi yếu đuối thì nên chọn nhà thư hương. Đoạn Tư Minh có người anh họ tên Đoạn Tư Thông, là một tài tử nổi tiếng xứ Vân Nam, mấy năm nay vẫn du học xa, sắp tới cũng vào Quốc Tử Giám. Ngươi có thể xem qua, nếu ưng ý, ta sẵn lòng làm mai lần nữa. Hai ngươi đều là tâm phúc của ta, đương nhiên phải công bằng, để khỏi bị thiên hạ chê cười, có phải không?”</p>
+        <p>Thẩm Quang Lễ nói ra những lời nửa đùa nửa thật đầy ẩn ý, khiến Mạnh Kiếm Khanh và Cao Thiên hộ buộc phải nâng chén tỏ vẻ hòa hợp. Bề ngoài tưởng chừng như họ đã thực sự hòa giải, bỏ qua hiềm khích cũ.</p>
+        <p>Nhưng trong thâm tâm, cả hai đều hiểu rõ: việc Thẩm đại nhân cố ý gả con gái hai nhà về cùng một nơi, tương lai chắc chắn sẽ nảy sinh mâu thuẫn. Có lẽ đây chính là điều vị Thẩm đại nhân này mong muốn.</p>
+        <p>Xét theo quan niệm thông thường, cả hai hôn sự này đều là “con gái bên gả được nâng đỡ”.</p>
+        <p>Nếu không có uy tín của Thẩm Quang Lễ đứng ra làm mối, họ khó lòng kết thông gia với những gia tộc danh giá như Đoạn gia…</p>
+        <p>Cao Thiên hộ xin phép rút lui sớm vì còn phải đi tuần tra phủ Thái tử, không dám uống nhiều rượu. Sau khi ông đi khỏi, Thẩm Quang Lễ quay sang nhìn Mạnh Kiếm Khanh, nói thẳng: “Có gì muốn nói cứ nói.”</p>
+        <p>Mạnh Kiếm Khanh khẽ cười: “Hạ quan tưởng đại nhân sẽ chọn Sở Bích Thiên  làm chỗ dựa cho Cao Thiên hộ.”</p>
+        <p>Nếu đã muốn giữ thế cân bằng... sao chỉ để mỗi hắn gắn chặt quan hệ với thế lực Hải Thượng Tiên Sơn.</p>
+        <p>Thẩm Quang Lễ bình thản đáp: “Con gái của Cao Bình tuy có chút danh tiếng văn chương, cũng coi như xứng với Đoạn Tư Thông, nhưng muốn kết đôi với Sở Bích Thiên văn võ song toàn, tiền đồ vô lượng thì vẫn còn kém xa.”</p>
+        <p>Ông chuyển ánh mắt nhìn Mạnh Kiếm Khanh, nói rành rọt: “Muốn chiêu mộ nhân tài hạng nhất, phải cho hắn thứ tốt nhất, người tốt nhất.”</p>
+        <p>Ngụ ý rõ ràng: Mạnh Kiếm Khanh chính là nhân tài xuất chúng nhất dưới tay Thẩm Quang Lễ, nên mới được dùng để kết thân với Vân gia. Hoặc nói cách khác, chính vì Mạnh Kiếm Khanh đủ tài năng, Thẩm Quang Lễ mới chịu đích thân đến Vân gia hỏi cưới.</p>
+        <p>Thẩm Quang Lễ hiếm khi trực tiếp khen ngợi thuộc hạ như vậy. Mạnh Kiếm Khanh bối rối không biết ứng đáp thế nào, đành im lặng.</p>
+        <p>Nhưng Thẩm Quang Lễ đột ngột chuyển giọng: “Trò mèo lần này của ngươi và Cao Bình, đừng tưởng không ai biết.”</p>
+        <p>Mạnh Kiếm Khanh lạnh sống lưng, vốn định biện bạch nhưng kịp nghĩ lại, chỉ cúi đầu nói nhỏ: “Hạ quan biết lỗi.”</p>
+        <p>Hắn biết Thẩm Quang Lễ cực ghét thuộc hạ dối trá.</p>
+        <p>Thẩm Quang Lễ nhìn chằm chằm vào Mạnh Kiếm Khanh một lúc lâu, khẽ thở dài: “Hai năm nay ngươi quá thuận lợi nên mới sinh lòng kiêu ngạo chăng?”</p>
+        <p>Mạnh Kiếm Khanh hiểu việc Thẩm Quang Lễ trực tiếp nói ra những lời này nghĩa là sẽ không xử phạt thêm. Hắn thầm thở phào, ngẩng đầu đáp: “Đại nhân thấu suốt, Kiếm Khanh thực sự cần rèn luyện thêm.”</p>
+        <p>Thẩm Quang Lễ xoay chén rượu trong tay, lại thở dài: “Có lẽ ta hai năm nay cũng già đi, lòng trở nên mềm yếu. Nếu là trước đây, ngươi và Cao Bình giờ đã ở Thẩm Hình Ty rồi.”</p>
+        <p>Mạnh Kiếm Khanh im bặt, không dám nói thêm lời nào.</p>
+        <p>Sau khi tiễn Thẩm Quang Lễ, hắn chợt nhớ mình còn một thắc mắc chưa hỏi.</p>
+        <p>Đoạn Tư Minh là con cháu thổ ty, triều đình vốn ưu đãi các thế lực địa phương này. Nếu Đoạn Tư Minh không nể mặt Thẩm Quang Lễ, liệu ông có dám lấy quyền thế áp chế không? Vậy tại sao Thẩm Quang Lễ lại tự tin đến vậy?</p>
+        <p>Chẳng mấy chốc, câu trả lời đã đến.</p>
+        <p>Nửa tháng sau, cùng với Đoạn Tư Thông nhập học Quốc Tử Giám còn có nhóm con cháu các phiên vương vùng Tây Bắc. Trong số đó nổi bật là Giang Vô Cực, cháu ruột của Lạc Hà Khương Vương.</p>
+        <p>Triều đình phong một số con gái quan lại làm Huyện chúa, gả cho các con cháu của thổ ty và phiên vương chưa hôn phối, bao gồm Giang Vô Cực, Đoạn Tư Minh và Đoạn Tư Thông.</p>
+        <p>Được gả cho Giang Vô Cực đương nhiên là Thẩm Mộ Trần.</p>
+        <p>Nghe nói khi Hoàng đế xem danh sách đã cười bảo: “Thẩm hòa thượng lần này cũng biết lo cho con gái, vừa được việc công lại vừa được việc tư!”</p>
+        <p>Lời nhận xét nhạy cảm này tất nhiên không ai dám lan truyền.</p>
+        <p>Chỉ đến lúc này, Mạnh Kiếm Khanh mới thực sự thở phào nhẹ nhõm. Hắn đoán chắc Cao Thiên hộ cũng cảm thấy như vậy.</p>
+        <p>Trong lòng Mạnh Kiếm Khanh không khỏi nảy sinh nghi vấn, lần này Thẩm Quang Lễ rốt cuộc đang tính toán gì? Tại sao lại có những sắp xếp trái với thông lệ như vậy?</p>
+        <p>Chiếu chỉ ban hôn bất ngờ khiến Đoạn Tư Minh choáng váng, trong khi Sở Bích Thiên lại vui mừng vì tình bạn với hắn càng thêm thân thiết.</p>
+        <p>Còn Đoạn Tư Minh bực bội vì bản thân không có quyền lựa chọn, trì hoãn mãi cuối cùng lại bị ép kết hôn, đồng thời cũng khó hiểu vì theo nguồn tin riêng, muội muội có dung mạo xuất chúng của Mạnh Kiếm Khanh vốn nằm trong danh sách tuyển chọn của phủ Thái tử, không hiểu sao giờ lại rơi vào tay mình?</p>
+        <p>Phải chăng có ai đó đã chèn ép? Với thủ đoạn của Mạnh Kiếm Khanh, sao có thể để muội muội bị gạt khỏi con đường thăng tiến tốt nhất?</p>
+        <p>Chỉ ba ngày sau chiếu chỉ, tin tức Thái tử Chu Tiêu nguy kịch bắt đầu lan truyền. Đến tháng Tư, Thái tử qua đời.</p>
+        <p>Phản ứng đầu tiên của Đoạn Tư Minh: “Thái tử mất, tình hình Đại Minh chắc chắn đại loạn.”</p>
+        <p>Còn Sở Bích Thiên lại nghĩ khác: “May mà Mạnh Kiếm Khanh gả muội muội cho Đoạn Tư Minh, không thì giờ đã thành góa phụ. Không biết đây có phải trong họa có phúc không?”</p>
+        <p>Nhưng cú sốc tiếp theo còn kinh khủng hơn.</p>
+        <p>Hồng Vũ Đế ra chiếu chỉ: tất cả tỳ thiếp trong phủ Thái tử không có con đều phải tuẫn táng.</p>
+        <p>Tuẫn táng? Tục lệ dã man này ở Trung Nguyên không phải đã bị bãi bỏ từ lâu sao? Ngay cả Khổng Tử cũng từng nói, dùng tượng gỗ thế mạng còn là tội ác, huống chi là người thật?</p>
+        <p>Kỳ lạ thay, Đoạn Tư Minh chợt nảy ra ý nghĩ: với mạng lưới tình báo của Mạnh Kiếm Khanh, phải chăng hắn đã biết trước Thái tử sắp gặp nạn, nên mới chịu thiệt thòi để đưa muội muội ra khỏi danh sách?</p>
+        <p>Khi nhìn sang Sở Bích Thiên, rõ ràng hắn cũng đang nghĩ tương tự.</p>
+        <p>Nếu đúng như vậy, Mạnh Kiếm Khanh quả thật quá to gan. Giả sử Hồng Vũ Đế biết được việc này, ắt sẽ bị hiểu rằng hắn đã biết trước Thái tử sắp chết nên mới tìm cách đưa muội muội ra khỏi danh sách. Trong lúc đau buồn, Hoàng đế chắc chắn sẽ trừng phạt tàn khốc.</p>
+        <p>Đoạn Tư Minh và Sở Bích Thiên nhìn nhau, im lặng dừng lại không dám suy diễn thêm.</p>
+        <p>Việc tổ chức tang lễ Thái tử trở thành quốc sự trọng đại, toàn bộ Cẩm Y Vệ đều được huy động, mọi công việc khác đều tạm ngưng. Nhân lúc cùng tuần tra ca trước sau với Cao Thiên hộ, nửa đêm thay phiên, hai người chạm mắt nhau trong giây lát.</p>
+        <p>Cao Thiên Hộ lên tiếng trước: “Muội muội nhà ngài sắp xuất giá, bao giờ mời bọn ta uống rượu mừng?”</p>
+        <p>Mạnh Kiếm Khanh đáp: “Chén rượu của Cao Thiên hộ, đương nhiên không thể quên.”</p>
+        <p>Cao Thiên hộ nheo mắt nhìn hắn: “Một chén rượu đã đủ tạ ơn ta sao?”</p>
+        <p>Mạnh Kiếm Khanh khẽ mỉm cười: “Ta sẽ tiếp tục làm tốt vai trò... đối thủ của Cao Thiên hộ.”</p>
+        <p>Cao thiên hộ sửng sốt, nhìn chằm chằm hồi lâu rồi bỗng thở dài: “Phải! Đúng là có việc phải nhờ đối thủ mới xong được!”</p>
+        <p>Khi bóng dáng Cao Thiên hộ khuất sau cửa, Mạnh Kiếm Khanh ngả người tựa vào thành ghế, thở dài nhìn lên xà nhà. Ánh đèn chập chờn, in những vệt bóng mờ lên khuôn mặt hắn.</p>
+        <p>Thái tử băng hà, không biết sẽ kéo theo bao nhiêu sóng ngầm.</p>
+        <p>Mưa núi sắp đến, gió tràn khắp lầu.</p>
+        <p>Tháng 9 năm Hồng Vũ thứ 25: Hồng Vũ Đế lập cháu đích tôn Chu Doãn Văn là con trai trưởng của Thái tử làm Hoàng thái tôn. Chỉ huy sứ Cẩm Y Vệ Thẩm Quang Lễ tự nguyện xuất gia, lên núi tuyết Tây Tạng tu hành để cầu phúc cho Thái tôn. Động thái “buông tay đúng lúc” này của Thẩm Quang Lễ đã phá hỏng âm mưu của vô số phe phái.</p>
+        <p>Năm Hồng Vũ thứ 26: Tân Chỉ huy sứ Cẩm Y Vệ Tưởng Nghiệp tố cáo đại tướng Lam Ngọc mưu phản, liên đới xử tử hơn mười lăm ngàn người. Hồng Vũ Đế ban chiếu: “Từ nay mọi vụ án đều do Pháp ty xử lý, Cẩm Y Vệ không được can thiệp”. Thế lực từng lẫy lừng một thời của Cẩm Y Vệ chính thức chấm dứt.</p>
+        <p>Năm 27: Hồng Vũ Đế xử tử Định Viễn Hầu Vương Bật, Vĩnh Bình Hầu Tạ Thành, Dĩnh quốc công Phó Hữu Đức.</p>
+        <p>Năm 28: Xử tử Tống quốc công Phùng Thắng. Những công thần quyền lực, khó kiểm soát đều bị thanh trừng sạch sẽ.</p>
+        <p>Tháng 5 năm Hồng Vũ thứ 31: Hồng Vũ Đế băng hà, Thái tôn lên ngôi, đổi niên hiệu thành Kiến Văn.</p>
+        <p>Ngay từ khi Thẩm Quang Lễ xuất gia, Tưởng Nghiệp lên thay chức, Mạnh Kiếm Khanh đã bị điều sang chỗ Tần Hữu Danh giúp ông quản lý kho hồ sơ, mà thực ra là bị “xếp xó”, không còn việc quan trọng.</p>
+        <p>Chuyện này chẳng ai lấy làm lạ.</p>
+        <p>“Một triều vua, một triều thần”</p>
+        <p>Mạnh Kiếm Khanh vốn là tâm phúc của Thẩm Quang Lễ, lại chưa từng có giao tình với Tưởng Nghiệp, thì việc bị cho ra rìa là lẽ đương nhiên.</p>
+        <p>Tuy nhiên, Tưởng Nghiệp vẫn giữ chút thể diện cho Thẩm Quang Lễ. Ông điều Mạnh Kiếm Khanh về dưới quyền Tần Hữu Danh vốn thân thiết với Mạnh Kiếm Khanh và chắc chắn sẽ không gây khó dễ cho hắn.</p>
+        <p>Khi Cẩm Y Vệ bị giải tán, toàn bộ kho hồ sơ được bàn giao cho Phủ Hậu quân Đô đốc của phủ Ứng Thiên.</p>
+        <p>Đến khi Kiến Văn Đế lên ngôi, Tần Hữu Danh vì tuổi cao bệnh nặng xin từ chức, Mạnh Kiếm Khanh được kế nhiệm, thăng lên chức Thiên hộ.</p>
+        <p>Cùng thời điểm đó, Chương Đại Thịnh cũng được thăng làm Đô đốc tiền quân, còn Vân Yên Nhiên chính thức đảm nhiệm chức Đề đốc thủy quân Phúc Kiến.</p>
+        <p>Khi chiếu thăng chức vừa ban xuống, Yên vương ở Bắc Bình bất ngờ khởi binh, treo cờ hiệu dẹp loạn gian thần bên cạnh vua. Cuộc chiến Tĩnh Nan chính thức bắt đầu.</p>
+        <p>Vân Yên Nhiên chỉ một lòng huấn luyện thủy quân, sau khi vào triều báo cáo công việc xong thì lại vội vã trở về Phúc Kiến, hoàn toàn không lên tiếng bàn bạc gì về việc quân nơi tiền tuyến.</p>
+        <p>Mạnh Kiếm Khanh vẫn an phận ở kho hồ sơ, lặng lẽ quan sát đại quân Yên vương từ phương Bắc đánh thẳng xuống, quét sạch đất Tề, đất Lỗ, thế như chẻ tre.</p>
+        <p>Mùa xuân năm Kiến Văn thứ hai, sau nhiều trận thảm bại của quân triều đình, Binh bộ trong cơn rối ren mới đề nghị với Kiến Văn Đế khôi phục việc dùng Cẩm Y Vệ. Tuy Cẩm Y Vệ không phải là quân chính quy, nhưng binh pháp vốn trọng mưu kế; với vai trò quân kỳ tập kích, họ vẫn rất đáng để trông cậy.</p>
+        <p>Kiến Văn Đế do dự rất lâu rồi ra lệnh: không được dùng danh hiệu “Cẩm Y Vệ”.</p>
+        <p>Cái tên ấy từng khiến người trong thiên hạ nghe qua là khiếp đảm, trong mắt Hoàng đế cũng chẳng phải thứ gì tốt đẹp.</p>
+        <p>Binh bộ lĩnh ý, lập tức sắp xếp công việc.</p>
+        <p>Tên của Mạnh Kiếm Khanh vốn im ắng suốt mấy năm, được nhắc đến đầu tiên.</p>
+        <p>Các Cẩm Y Vệ khác tuy giàu kinh nghiệm nhưng đã quá dè dặt, Mạnh Kiếm Khanh từng lập chiến công hiển hách, chứng tỏ có đủ dũng khí phá trận, chém tướng; mà so với lớp tướng trẻ đầy tham vọng, hắn lại có bề dày kinh nghiệm mà họ còn thiếu.</p>
+        <p>Nhận được thánh chỉ, Mạnh Kiếm Khanh bước ra khỏi kho hồ sơ, ngẩng nhìn bầu trời mênh mông, mây trắng thênh thang, đàn nhạn phương Bắc đang sải cánh bay về Nam; trong khoảnh khắc ấy, hắn thấy lòng mình rộng mở như chính vòm trời kia.</p>
+        <p>Vị Binh bộ Tả thị lang đến truyền chỉ nhìn thần sắc điềm tĩnh, cùng ánh sáng rực rỡ trong đôi mắt hắn, bất giác trong lòng thoáng hiện hai câu chẳng hề liên quan: Hổ mạnh ra khỏi lồng, chim bay giữa trời cao.</p>
+    </article>
+
+    <div class="reading-nav">
+        <a href="camyhanhq6-71.html" class="nav-btn">⬅️ Chương trước</a>
+        <a href="../mucluc/camyhanh.html" class="nav-btn">📋 Mục lục</a>
+        <a href="camyhanhq6-73.html" class="nav-btn">Chương sau ➡️</a>
+    </div>
+</main>
+
+<!-- ── KHUNG THẢO LUẬN TOÀN CHƯƠNG ── -->
+<div class="chapter-discussion-box">
+    <div class="discussion-header">
+        <h3>🌿 Thảo luận của chương này</h3>
+        <div class="discussion-actions">
+            <button class="action-btn" id="like-btn" onclick="toggleLike()">
+                <span id="like-icon">🤍</span>
+                <span id="like-count">0</span>
+            </button>
+            <button class="action-btn" onclick="openShareModal()">🔗 Chia sẻ</button>
+        </div>
+    </div>
+    <div class="discussion-stats">
+        <div class="stat-card"><div class="stat-label">Tổng thảo luận</div><div class="stat-value" id="stat-total">—</div></div>
+        <div class="stat-card"><div class="stat-label">Bình luận gốc</div><div class="stat-value" id="stat-root">—</div></div>
+        <div class="stat-card"><div class="stat-label">Phản hồi</div><div class="stat-value" id="stat-replies">—</div></div>
+        <div class="stat-card"><div class="stat-label">Người tham gia</div><div class="stat-value" id="stat-users">—</div></div>
+    </div>
+    <div class="main-comment-form">
+        <div class="author-row">
+            <div class="author-avatar-preview" id="main-avatar-preview">🌿</div>
+            <input type="text" id="main-author" placeholder="Tên của bạn" maxlength="30">
+        </div>
+        <div class="avatar-picker-label">Chọn hình đại diện:</div>
+        <div class="avatar-picker" id="main-avatar-picker"></div>
+        <textarea id="main-content" placeholder="Viết cảm nhận của bạn về chương này..." rows="4" maxlength="2000"></textarea>
+        <div class="sticker-picker-label">Chèn nhãn dán:</div>
+        <div class="sticker-picker" id="main-sticker-picker"></div>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-top:4px;">
+            <span class="char-count"><span id="main-char-count">0</span>/2000 ký tự</span>
+            <button class="main-submit-btn" onclick="submitMainComment()">Gửi bình luận 🌸</button>
+        </div>
+    </div>
+    <div class="main-comments-list" id="main-comments-list">
+        <div class="loading-text">Đang tải bình luận…</div>
+    </div>
+</div>
+
+<!-- ── SHARE MODAL ── -->
+<div class="share-modal-overlay" id="share-modal-overlay" onclick="if(event.target===this)closeShareModal()">
+    <div class="share-modal">
+        <h4>🔗 Chia sẻ chương này</h4>
+        <div class="share-link-row">
+            <input class="share-link-input" id="share-link-input" type="text" readonly>
+            <button class="copy-link-btn" id="copy-link-btn" onclick="copyLink()">Sao chép</button>
+        </div>
+        <button class="share-modal-close" onclick="closeShareModal()">Đóng</button>
+    </div>
+</div>
+
+<!-- ── SIDEBAR BÌNH LUẬN THEO ĐOẠN ── -->
+<div id="comment-sidebar" class="comment-sidebar">
+    <div class="sidebar-header">
+        <h4 id="sidebar-title">Bình luận đoạn văn</h4>
+        <button class="close-sidebar-btn" onclick="closeSidebar()">✕</button>
+    </div>
+    <div class="sidebar-body">
+        <div class="quoted-paragraph-box" id="sidebar-quote"></div>
+        <div class="sidebar-comment-form">
+            <div class="author-row">
+                <div class="author-avatar-preview" id="sidebar-avatar-preview">🌿</div>
+                <input type="text" id="sidebar-author" placeholder="Tên của bạn" maxlength="30">
+            </div>
+            <div class="avatar-picker-label">Chọn hình đại diện:</div>
+            <div class="avatar-picker" id="sidebar-avatar-picker"></div>
+            <textarea id="sidebar-content" placeholder="Bình luận về đoạn này..." rows="3" maxlength="1000"></textarea>
+            <div class="sticker-picker-label">Chèn nhãn dán:</div>
+            <div class="sticker-picker" id="sidebar-sticker-picker"></div>
+            <button class="sidebar-submit-btn" onclick="submitSidebarComment()" style="margin-top:4px;">Gửi 🌸</button>
+        </div>
+        <div class="sidebar-comments-list" id="sidebar-comments-list">
+            <div class="loading-text">Đang tải…</div>
+        </div>
+    </div>
+</div>
+<div id="sidebar-overlay" class="sidebar-overlay" onclick="closeSidebar()"></div>
+
+<!-- ── SCRIPT CHÍNH ── -->
+<script>
+var SUPABASE_URL = 'https://ibxxdvbdpsmcyufilnoh.supabase.co';
+var SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlieHhkdmJkcHNtY3l1Zmlsbm9oIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk1MTMxNjcsImV4cCI6MjA5NTA4OTE2N30.oKB7vmQceVENuyUExLeND0M9YvnS-30nTGRbrv-xrUs';
+var PAGE_PATH = window.location.pathname;
+
+var AUTHOR_ID = localStorage.getItem('comment-author-id');
+if (!AUTHOR_ID) {
+    AUTHOR_ID = 'anon-' + Math.random().toString(36).substr(2, 12);
+    localStorage.setItem('comment-author-id', AUTHOR_ID);
+}
+
+async function sbFetch(path, method, body) {
+    var opts = {
+        method: method || 'GET',
+        headers: {
+            'apikey': SUPABASE_KEY,
+            'Authorization': 'Bearer ' + SUPABASE_KEY,
+            'Content-Type': 'application/json',
+            'Prefer': method === 'POST' ? 'return=representation' : ''
+        }
+    };
+    if (body) opts.body = JSON.stringify(body);
+    var res = await fetch(SUPABASE_URL + '/rest/v1/' + path, opts);
+    if (!res.ok) { var err = await res.text(); throw new Error(err); }
+    var text = await res.text();
+    return text ? JSON.parse(text) : [];
+}
+
+var paraCommentCounts = {};
+var currentParaIndex = null;
+
+async function loadParaCounts() {
+    try {
+        var rows = await sbFetch(
+            'comments?select=para_index&page_path=eq.' + encodeURIComponent(PAGE_PATH) +
+            '&para_index=not.is.null'
+        );
+        rows.forEach(function(r) {
+            paraCommentCounts[r.para_index] = (paraCommentCounts[r.para_index] || 0) + 1;
+        });
+        document.querySelectorAll('.comment-badge').forEach(function(badge) {
+            var idx = parseInt(badge.dataset.para);
+            var cnt = paraCommentCounts[idx] || 0;
+            badge.querySelector('.badge-count').textContent = cnt > 0 ? cnt : '';
+            badge.querySelector('.badge-icon').textContent = '💬';
+        });
+    } catch(e) { console.warn('loadParaCounts:', e); }
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    var paragraphs = document.querySelectorAll('.story-content p');
+    paragraphs.forEach(function(p, index) {
+        var paraNum = index + 1;
+        var row = document.createElement('div');
+        row.className = 'comment-row';
+        p.parentNode.insertBefore(row, p);
+        row.appendChild(p);
+
+        var badge = document.createElement('button');
+        badge.className = 'comment-badge';
+        badge.dataset.para = paraNum;
+        badge.title = 'Bình luận về đoạn này';
+        badge.innerHTML = '<span class="badge-icon">💬</span><span class="badge-count"></span>';
+        badge.onclick = function() { openSidebar(p.innerText.trim().substring(0, 130), paraNum); };
+        row.appendChild(badge);
+    });
+
+    loadParaCounts();
+    loadMainComments();
+    initLike();
+    initAvatarPicker('main');
+    initAvatarPicker('sidebar');
+    initStickerPicker('main');
+    initStickerPicker('sidebar');
+
+    document.getElementById('main-content').addEventListener('input', function() {
+        document.getElementById('main-char-count').textContent = this.value.length;
+    });
+
+    var savedName = localStorage.getItem('comment-author-name');
+    if (savedName) {
+        document.getElementById('main-author').value = savedName;
+        document.getElementById('sidebar-author').value = savedName;
+    }
+    var savedAvatar = localStorage.getItem('comment-avatar');
+    if (savedAvatar) {
+        selectedAvatar['main'] = savedAvatar;
+        selectedAvatar['sidebar'] = savedAvatar;
+    }
+
+    // Apply saved font to story content
+    var savedFont = localStorage.getItem('reader-font');
+    if (savedFont) {
+        document.getElementById('font-select').value = savedFont;
+        changeFont(savedFont);
+    }
+    var savedSize = parseInt(localStorage.getItem('reader-fontsize') || '18');
+    currentFontPx = savedSize;
+    var content = document.querySelector('.story-content');
+    if (content) content.style.fontSize = savedSize + 'px';
+    document.getElementById('font-size-display').textContent = savedSize + 'px';
+});
+
+function openSidebar(previewText, paraIndex) {
+    document.getElementById('sidebar-title').textContent = 'Đoạn ' + paraIndex;
+    document.getElementById('sidebar-quote').textContent = '"' + previewText + (previewText.length >= 130 ? '…' : '') + '"';
+    document.getElementById('comment-sidebar').classList.add('active');
+    document.getElementById('sidebar-overlay').classList.add('active');
+    if (currentParaIndex === paraIndex) return;
+    currentParaIndex = paraIndex;
+    loadSidebarComments(paraIndex);
+}
+
+function closeSidebar() {
+    document.getElementById('comment-sidebar').classList.remove('active');
+    document.getElementById('sidebar-overlay').classList.remove('active');
+}
+
+async function loadSidebarComments(paraIndex) {
+    var list = document.getElementById('sidebar-comments-list');
+    list.innerHTML = '<div class="loading-text">Đang tải…</div>';
+    try {
+        var rows = await sbFetch(
+            'comments?page_path=eq.' + encodeURIComponent(PAGE_PATH) +
+            '&para_index=eq.' + paraIndex + '&order=created_at.asc'
+        );
+        renderSidebarComments(rows, list, paraIndex);
+    } catch(e) {
+        list.innerHTML = '<div class="empty-text">Không thể tải bình luận.</div>';
+    }
+}
+
+function renderSidebarComments(rows, container, paraIndex) {
+    if (!rows.length) {
+        container.innerHTML = '<div class="empty-text">Chưa có bình luận nào. Hãy là người đầu tiên! 🌸</div>';
+        return;
+    }
+    var roots = rows.filter(function(r) { return !r.parent_id; });
+    var replies = rows.filter(function(r) { return !!r.parent_id; });
+    var replyMap = {};
+    replies.forEach(function(r) {
+        if (!replyMap[r.parent_id]) replyMap[r.parent_id] = [];
+        replyMap[r.parent_id].push(r);
+    });
+    container.innerHTML = '';
+    roots.forEach(function(c) {
+        container.appendChild(buildCommentEl(c, replyMap, true, paraIndex));
+    });
+}
+
+function buildCommentEl(c, replyMap, isSidebar, paraIndex) {
+    var el = document.createElement('div');
+    el.className = 'comment-item';
+    el.id = 'comment-' + c.id;
+    var childReplies = (replyMap && replyMap[c.id]) ? replyMap[c.id] : [];
+    var isOwner = c.author_id === AUTHOR_ID;
+    var repliesHtml = '';
+    if (childReplies.length) {
+        repliesHtml = '<div class="replies-list">' +
+            childReplies.map(function(r) {
+                var isReplyOwner = r.author_id === AUTHOR_ID;
+                return '<div class="reply-item" id="comment-' + r.id + '">' +
+                    '<div class="comment-item-header">' +
+                    '<span class="comment-author">💬 ' + escHtml(r.author_name) + '</span>' +
+                    '<span class="comment-time">' + fmtDate(r.created_at) + '</span></div>' +
+                    '<div class="comment-text">' + escHtml(r.content) + '</div>' +
+                    (isReplyOwner ? '<div class="comment-actions"><button class="comment-delete-btn" onclick="deleteComment(\'' + r.id + '\',\'' + (isSidebar ? 'sidebar' : 'main') + '\',' + (paraIndex||'null') + ')">🗑 Xoá</button></div>' : '') +
+                    '</div>';
+            }).join('') +
+        '</div>';
+    }
+    el.innerHTML =
+        '<div class="comment-item-header">' +
+        '<span class="comment-author">🌿 ' + escHtml(c.author_name) + '</span>' +
+        '<span class="comment-time">' + fmtDate(c.created_at) + '</span></div>' +
+        '<div class="comment-text">' + escHtml(c.content) + '</div>' +
+        '<div class="comment-actions">' +
+        '<button class="comment-reply-btn" onclick="toggleReplyForm(\'' + c.id + '\',\'' + (isSidebar ? 'sidebar' : 'main') + '\',' + (paraIndex||'null') + ')">↩ Trả lời</button>' +
+        (isOwner ? '<button class="comment-delete-btn" onclick="deleteComment(\'' + c.id + '\',\'' + (isSidebar ? 'sidebar' : 'main') + '\',' + (paraIndex||'null') + ')">🗑 Xoá</button>' : '') +
+        '</div>' +
+        '<div id="reply-form-' + c.id + '" class="reply-form" style="display:none;">' +
+        '<textarea placeholder="Trả lời ' + escHtml(c.author_name) + '…" rows="2" id="reply-text-' + c.id + '"></textarea>' +
+        '<button class="reply-submit-btn" onclick="submitReply(\'' + c.id + '\',\'' + (isSidebar ? 'sidebar' : 'main') + '\',' + (paraIndex||'null') + ')">Gửi</button>' +
+        '</div>' + repliesHtml;
+    return el;
+}
+
+async function submitSidebarComment() {
+    var name = document.getElementById('sidebar-author').value.trim();
+    var content = document.getElementById('sidebar-content').value.trim();
+    if (!name) { alert('Vui lòng nhập tên của bạn.'); return; }
+    if (!content) { alert('Vui lòng nhập nội dung bình luận.'); return; }
+    localStorage.setItem('comment-author-name', name);
+    var btn = document.querySelector('.sidebar-submit-btn');
+    btn.disabled = true; btn.textContent = 'Đang gửi…';
+    try {
+        await sbFetch('comments', 'POST', {
+            page_path: PAGE_PATH, para_index: currentParaIndex,
+            author_name: selectedAvatar['sidebar'] + ' ' + name, author_id: AUTHOR_ID, content: content
+        });
+        document.getElementById('sidebar-content').value = '';
+        paraCommentCounts[currentParaIndex] = (paraCommentCounts[currentParaIndex] || 0) + 1;
+        updateBadge(currentParaIndex);
+        loadSidebarComments(currentParaIndex);
+        loadStats();
+    } catch(e) { alert('Gửi thất bại, thử lại nhé!'); }
+    btn.disabled = false; btn.textContent = 'Gửi';
+}
+
+async function loadMainComments() {
+    var list = document.getElementById('main-comments-list');
+    list.innerHTML = '<div class="loading-text">Đang tải bình luận…</div>';
+    try {
+        var rows = await sbFetch(
+            'comments?page_path=eq.' + encodeURIComponent(PAGE_PATH) +
+            '&para_index=is.null&order=created_at.asc'
+        );
+        renderMainComments(rows, list);
+        loadStats();
+    } catch(e) {
+        list.innerHTML = '<div class="empty-text">Không thể tải bình luận.</div>';
+    }
+}
+
+function renderMainComments(rows, container) {
+    if (!rows.length) {
+        container.innerHTML = '<div class="empty-text">Chưa có bình luận nào. Hãy để lại cảm nhận nhé! 🌸</div>';
+        return;
+    }
+    var roots = rows.filter(function(r) { return !r.parent_id; });
+    var replies = rows.filter(function(r) { return !!r.parent_id; });
+    var replyMap = {};
+    replies.forEach(function(r) {
+        if (!replyMap[r.parent_id]) replyMap[r.parent_id] = [];
+        replyMap[r.parent_id].push(r);
+    });
+    container.innerHTML = '';
+    roots.forEach(function(c) {
+        var el = buildCommentEl(c, replyMap, false, null);
+        el.className = 'main-comment-item';
+        container.appendChild(el);
+    });
+}
+
+async function submitMainComment() {
+    var name = document.getElementById('main-author').value.trim();
+    var content = document.getElementById('main-content').value.trim();
+    if (!name) { alert('Vui lòng nhập tên của bạn.'); return; }
+    if (!content) { alert('Vui lòng nhập nội dung bình luận.'); return; }
+    localStorage.setItem('comment-author-name', name);
+    var btn = document.querySelector('.main-submit-btn');
+    btn.disabled = true; btn.textContent = 'Đang gửi…';
+    try {
+        await sbFetch('comments', 'POST', {
+            page_path: PAGE_PATH, para_index: null,
+            author_name: selectedAvatar['main'] + ' ' + name, author_id: AUTHOR_ID, content: content
+        });
+        document.getElementById('main-content').value = '';
+        document.getElementById('main-char-count').textContent = '0';
+        loadMainComments();
+    } catch(e) { alert('Gửi thất bại, thử lại nhé!'); }
+    btn.disabled = false; btn.textContent = 'Gửi bình luận';
+}
+
+function toggleReplyForm(commentId, context, paraIndex) {
+    var form = document.getElementById('reply-form-' + commentId);
+    form.style.display = form.style.display === 'none' ? 'flex' : 'none';
+    form.style.flexDirection = 'column';
+}
+
+async function submitReply(parentId, context, paraIndex) {
+    var savedName = localStorage.getItem('comment-author-name');
+    var name = savedName ||
+        (context === 'sidebar' ? document.getElementById('sidebar-author').value.trim()
+                               : document.getElementById('main-author').value.trim());
+    var textarea = document.getElementById('reply-text-' + parentId);
+    var content = textarea.value.trim();
+    if (!name) { alert('Vui lòng nhập tên ở form bên trên trước.'); return; }
+    if (!content) return;
+    try {
+        await sbFetch('comments', 'POST', {
+            page_path: PAGE_PATH,
+            para_index: paraIndex !== null ? paraIndex : null,
+            author_name: name, author_id: AUTHOR_ID,
+            content: content, parent_id: parentId
+        });
+        textarea.value = '';
+        if (context === 'sidebar') loadSidebarComments(paraIndex);
+        else loadMainComments();
+        loadStats();
+    } catch(e) { alert('Gửi thất bại!'); }
+}
+
+async function deleteComment(id, context, paraIndex) {
+    if (!confirm('Xoá bình luận này?')) return;
+    try {
+        await fetch(SUPABASE_URL + '/rest/v1/comments?id=eq.' + id, {
+            method: 'DELETE',
+            headers: {
+                'apikey': SUPABASE_KEY,
+                'Authorization': 'Bearer ' + SUPABASE_KEY,
+                'Content-Profile': 'public'
+            }
+        });
+        if (context === 'sidebar') loadSidebarComments(paraIndex);
+        else loadMainComments();
+        loadStats();
+        loadParaCounts();
+    } catch(e) { alert('Xoá thất bại!'); }
+}
+
+async function loadStats() {
+    try {
+        var all = await sbFetch(
+            'comments?select=id,para_index,parent_id,author_id&page_path=eq.' + encodeURIComponent(PAGE_PATH)
+        );
+        var total = all.length;
+        var roots = all.filter(function(r) { return !r.parent_id; }).length;
+        var replies = all.filter(function(r) { return !!r.parent_id; }).length;
+        var users = new Set(all.map(function(r) { return r.author_id; })).size;
+        document.getElementById('stat-total').textContent = total;
+        document.getElementById('stat-root').textContent = roots;
+        document.getElementById('stat-replies').textContent = replies;
+        document.getElementById('stat-users').textContent = users;
+    } catch(e) {}
+}
+
+function updateBadge(paraIndex) {
+    var badge = document.querySelector('.comment-badge[data-para="' + paraIndex + '"]');
+    if (!badge) return;
+    var cnt = paraCommentCounts[paraIndex] || 0;
+    badge.querySelector('.badge-count').textContent = cnt > 0 ? cnt : '';
+}
+
+function initLike() {
+    var key = 'like-' + PAGE_PATH;
+    var liked = localStorage.getItem(key) === '1';
+    var count = parseInt(localStorage.getItem('likecount-' + PAGE_PATH) || '0', 10);
+    updateLikeUI(liked, count);
+}
+function toggleLike() {
+    var key = 'like-' + PAGE_PATH;
+    var liked = localStorage.getItem(key) === '1';
+    var count = parseInt(localStorage.getItem('likecount-' + PAGE_PATH) || '0', 10);
+    liked = !liked;
+    count = liked ? count + 1 : Math.max(0, count - 1);
+    localStorage.setItem(key, liked ? '1' : '0');
+    localStorage.setItem('likecount-' + PAGE_PATH, count);
+    updateLikeUI(liked, count);
+}
+function updateLikeUI(liked, count) {
+    document.getElementById('like-icon').textContent = liked ? '❤️' : '🤍';
+    document.getElementById('like-count').textContent = count;
+    var btn = document.getElementById('like-btn');
+    liked ? btn.classList.add('liked') : btn.classList.remove('liked');
+}
+
+function openShareModal() {
+    document.getElementById('share-link-input').value = window.location.href;
+    document.getElementById('copy-link-btn').textContent = 'Sao chép';
+    document.getElementById('copy-link-btn').classList.remove('copied');
+    document.getElementById('share-modal-overlay').classList.add('active');
+}
+function closeShareModal() {
+    document.getElementById('share-modal-overlay').classList.remove('active');
+}
+function copyLink() {
+    var input = document.getElementById('share-link-input');
+    var btn = document.getElementById('copy-link-btn');
+    navigator.clipboard.writeText(input.value).then(function() {
+        btn.textContent = '✓ Đã sao chép'; btn.classList.add('copied');
+        setTimeout(function() { btn.textContent = 'Sao chép'; btn.classList.remove('copied'); }, 2000);
+    }).catch(function() {
+        input.select(); document.execCommand('copy');
+        btn.textContent = '✓ Đã sao chép'; btn.classList.add('copied');
+        setTimeout(function() { btn.textContent = 'Sao chép'; btn.classList.remove('copied'); }, 2000);
+    });
+}
+
+var AVATARS = ['🌸','🌺','🌻','🌹','🌷','🪷','💐','🌼','🍀','🌿','🪴','🌱','🎋','🎍','🍃','🪻','🌾','🍂','🍁','🫧','✨','💫','🌙','⭐'];
+var STICKERS = ['🌸✨','(づ｡◕‿‿◕｡)づ','(っ˘ω˘ς)','꒰˶• ༝ •˶꒱','(ﾉ◕ヮ◕)ﾉ*:･ﾟ✧','｡˚⋆｡˚✿','(´｡• ᵕ •｡`)','🌿✨','₍ᐢ._.ᐢ₎♡','(˶ᵔ ᵕ ᵔ˶)','✦ ˚ · .','꒰꒱ᵕ̈','🍃💫','(◍•ᴗ•◍)❤','·˚ ༘ ✧','(´• ω •`)','˚₊‧꒰ᵕ̈꒱‧₊˚','🌺ෆ','⸜(。˃ ᵕ ˂ )⸝♡','✿.｡.:* ☆'];
+var selectedAvatar = { main: '🌿', sidebar: '🌿' };
+
+function initAvatarPicker(context) {
+    var pickerId = context + '-avatar-picker';
+    var previewId = context + '-avatar-preview';
+    var picker = document.getElementById(pickerId);
+    if (!picker) return;
+    var saved = localStorage.getItem('comment-avatar');
+    if (saved) selectedAvatar[context] = saved;
+    document.getElementById(previewId).textContent = selectedAvatar[context];
+    AVATARS.forEach(function(av) {
+        var btn = document.createElement('span');
+        btn.className = 'avatar-option' + (av === selectedAvatar[context] ? ' selected' : '');
+        btn.textContent = av; btn.title = av;
+        btn.onclick = function() {
+            selectedAvatar[context] = av;
+            localStorage.setItem('comment-avatar', av);
+            document.getElementById(previewId).textContent = av;
+            var other = context === 'main' ? 'sidebar' : 'main';
+            selectedAvatar[other] = av;
+            var otherPreview = document.getElementById(other + '-avatar-preview');
+            if (otherPreview) otherPreview.textContent = av;
+            picker.querySelectorAll('.avatar-option').forEach(function(b) { b.classList.remove('selected'); });
+            btn.classList.add('selected');
+            var otherPicker = document.getElementById(other + '-avatar-picker');
+            if (otherPicker) {
+                otherPicker.querySelectorAll('.avatar-option').forEach(function(b) {
+                    b.classList.toggle('selected', b.textContent === av);
+                });
+            }
+        };
+        picker.appendChild(btn);
+    });
+}
+
+function initStickerPicker(context) {
+    var pickerId = context + '-sticker-picker';
+    var contentId = context === 'main' ? 'main-content' : 'sidebar-content';
+    var picker = document.getElementById(pickerId);
+    if (!picker) return;
+    STICKERS.forEach(function(st) {
+        var btn = document.createElement('span');
+        btn.className = 'sticker-btn'; btn.textContent = st;
+        btn.onclick = function() {
+            var ta = document.getElementById(contentId);
+            var pos = ta.selectionStart;
+            var val = ta.value;
+            ta.value = val.slice(0, pos) + st + val.slice(pos);
+            ta.selectionStart = ta.selectionEnd = pos + st.length;
+            ta.focus();
+            if (contentId === 'main-content') {
+                document.getElementById('main-char-count').textContent = ta.value.length;
+            }
+        };
+        picker.appendChild(btn);
+    });
+}
+
+function escHtml(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function fmtDate(iso) {
+    var d = new Date(iso);
+    return d.getHours().toString().padStart(2,'0') + ':' +
+           d.getMinutes().toString().padStart(2,'0') + ':' +
+           d.getSeconds().toString().padStart(2,'0') + ' ' +
+           d.getDate() + '/' + (d.getMonth()+1) + '/' + d.getFullYear();
+}
+</script>
+
+</body>
+</html>
