@@ -984,45 +984,71 @@ async function loadUpdates() {
 }
 
 /* ── Bình luận — Supabase ── */
-const SUPABASE_URL = 'https://eimtkfufkqoknekqpqan.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVpbXRrZnVma3Fva25la3FwcWFuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDc4MjgwMDgsImV4cCI6MjA2MzQwNDAwOH0.A0hBanWkBzFfD7RflCKPBPfU2V0sLXZ15lbH1FbsPrc';
+const SUPABASE_URL = 'https://ibxxdvbdpsmcyufilnoh.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlieHhkdmJkcHNtY3l1Zmlsbm9oIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk1MTMxNjcsImV4cCI6MjA5NTA4OTE2N30.oKB7vmQceVENuyUExLeND0M9YvnS-30nTGRbrv-xrUs';
 
 async function loadComments() {
     const el = document.getElementById('comment-feed');
-    try {
-        const r = await fetch(
-            `${SUPABASE_URL}/rest/v1/comments?select=author_name,content,created_at&order=created_at.desc&limit=6`,
-            { headers: {
-                'apikey': SUPABASE_KEY,
-                'Authorization': `Bearer ${SUPABASE_KEY}`,
-                'Content-Type': 'application/json'
-            }}
-        );
-        if (!r.ok) throw new Error(`HTTP ${r.status}`);
-        const cmts = await r.json();
-        if (!Array.isArray(cmts) || !cmts.length) {
-            el.innerHTML = '<p class="muted-note">Chưa có bình luận.</p>'; return;
+
+    /* Thử tự động khám phá đúng tên cột */
+    const COLUMNS = ['author_name,content,created_at', 'author,content,created_at', 'name,content,created_at', 'user_name,body,created_at'];
+
+    for (const cols of COLUMNS) {
+        try {
+            const url = `${SUPABASE_URL}/rest/v1/comments?select=${cols}&order=created_at.desc&limit=6`;
+            const r = await fetch(url, {
+                headers: {
+                    'apikey': SUPABASE_KEY,
+                    'Authorization': `Bearer ${SUPABASE_KEY}`,
+                    'Content-Type': 'application/json'
+                }
+            });
+
+            if (!r.ok) {
+                const txt = await r.text();
+                console.warn(`loadComments [${cols}] HTTP ${r.status}:`, txt);
+                /* Nếu lỗi do tên cột sai → thử cột khác; nếu lỗi khác → dừng */
+                if (r.status !== 400) throw new Error(`HTTP ${r.status}: ${txt}`);
+                continue; /* thử bộ cột kế tiếp */
+            }
+
+            const cmts = await r.json();
+            if (!Array.isArray(cmts) || !cmts.length) {
+                el.innerHTML = '<p class="muted-note">Chưa có bình luận.</p>'; return;
+            }
+
+            /* Xác định tên cột thực tế từ response */
+            const first  = cmts[0];
+            const colArr = cols.split(',');
+            const authorCol  = colArr.find(c => first[c] !== undefined && c !== 'created_at' && c !== colArr[1]) || colArr[0];
+            const contentCol = colArr[1];
+
+            if (lastCmtId !== null && first.created_at !== lastCmtId)
+                showToast(first[authorCol] || 'Độc giả', first[contentCol] || '');
+            lastCmtId = first.created_at;
+
+            el.innerHTML = cmts.map(c => {
+                const author = c[authorCol] || 'Độc giả';
+                const body   = c[contentCol] || '';
+                const short  = body.length > 55 ? body.substring(0,55)+'…' : body;
+                const time   = c.created_at ? fmtAgo(c.created_at) : '';
+                return `<div class="feed-item">
+                    <div class="feed-top">
+                        <span class="feed-author">🌿 ${author}</span>
+                        <span class="feed-time">${time}</span>
+                    </div>
+                    <div class="feed-msg">"${short}"</div>
+                </div>`;
+            }).join('');
+            return; /* Thành công → thoát */
+
+        } catch(e) {
+            console.error('loadComments error:', e);
+            el.innerHTML = '<p class="muted-note">Không thể kết nối.<br><small style="font-size:.7rem;opacity:.6">Supabase có thể đang pause.</small></p>';
+            return;
         }
-        if (lastCmtId !== null && cmts[0].created_at !== lastCmtId)
-            showToast(cmts[0].author_name || 'Độc giả', cmts[0].content || '');
-        lastCmtId = cmts[0].created_at;
-        el.innerHTML = cmts.map(c => {
-            const author = c.author_name || 'Độc giả';
-            const body   = c.content || '';
-            const short  = body.length > 55 ? body.substring(0,55)+'…' : body;
-            const time   = c.created_at ? fmtAgo(c.created_at) : '';
-            return `<div class="feed-item">
-                <div class="feed-top">
-                    <span class="feed-author">🌿 ${author}</span>
-                    <span class="feed-time">${time}</span>
-                </div>
-                <div class="feed-msg">"${short}"</div>
-            </div>`;
-        }).join('');
-    } catch(e) {
-        console.error('loadComments:', e);
-        el.innerHTML = '<p class="muted-note">Không thể kết nối.</p>';
     }
+    el.innerHTML = '<p class="muted-note">Chưa có bình luận.</p>';
 }
 
 function showToast(author, msg) {
