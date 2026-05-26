@@ -882,12 +882,46 @@
 
     function renderPagination(page) {
         var bar = document.getElementById('pagination-bar');
-        var html = '<button class="page-btn' + (page === 1 ? ' disabled' : '') + '" onclick="goPage(1)" title="Trang đầu">« Đầu</button>';
-        for (var p = 1; p <= totalPages; p++) {
+        var html = '';
+
+        // Nút « Đầu và ‹ Trước
+        html += '<button class="page-btn' + (page === 1 ? ' disabled' : '') + '" onclick="goPage(1)">«</button>';
+        html += '<button class="page-btn' + (page === 1 ? ' disabled' : '') + '" onclick="goPage(' + (page - 1) + ')">‹</button>';
+
+        // Tính range hiển thị: tối đa 5 nút xung quanh trang hiện tại
+        var delta = 2;
+        var rangeStart = Math.max(1, page - delta);
+        var rangeEnd   = Math.min(totalPages, page + delta);
+
+        // Giữ đủ 5 nút nếu có thể
+        if (rangeEnd - rangeStart < delta * 2) {
+            if (rangeStart === 1) rangeEnd = Math.min(totalPages, 1 + delta * 2);
+            else rangeStart = Math.max(1, totalPages - delta * 2);
+        }
+
+        // Dấu ... đầu
+        if (rangeStart > 1) {
+            html += '<button class="page-btn" onclick="goPage(1)">1</button>';
+            if (rangeStart > 2) html += '<span class="page-btn" style="border:none;cursor:default;color:#aaa;">…</span>';
+        }
+
+        // Các nút trang
+        for (var p = rangeStart; p <= rangeEnd; p++) {
             html += '<button class="page-btn' + (p === page ? ' active' : '') + '" onclick="goPage(' + p + ')">' + p + '</button>';
         }
-        html += '<button class="page-btn' + (page === totalPages ? ' disabled' : '') + '" onclick="goPage(' + totalPages + ')" title="Trang cuối">» Cuối</button>';
-        html += '<div class="page-jump"><input class="page-input" id="page-input" type="number" min="1" max="' + totalPages + '" placeholder="Số trang…"><button class="page-go-btn" onclick="jumpToPage()">Đi</button></div>';
+
+        // Dấu ... cuối
+        if (rangeEnd < totalPages) {
+            if (rangeEnd < totalPages - 1) html += '<span class="page-btn" style="border:none;cursor:default;color:#aaa;">…</span>';
+            html += '<button class="page-btn" onclick="goPage(' + totalPages + ')">' + totalPages + '</button>';
+        }
+
+        // Nút › Sau và » Cuối
+        html += '<button class="page-btn' + (page === totalPages ? ' disabled' : '') + '" onclick="goPage(' + (page + 1) + ')">›</button>';
+        html += '<button class="page-btn' + (page === totalPages ? ' disabled' : '') + '" onclick="goPage(' + totalPages + ')">»</button>';
+
+        // Jump + Chọn trang
+        html += '<div class="page-jump"><input class="page-input" id="page-input" type="number" min="1" max="' + totalPages + '" placeholder="Trang…"><button class="page-go-btn" onclick="jumpToPage()">Đi</button></div>';
         html += '<div class="choose-page-wrap"><button class="choose-page-btn" onclick="togglePageDropdown(event)">Chọn trang ▲</button><div class="choose-page-dropdown" id="choose-page-dropdown">';
         for (var q = 1; q <= totalPages; q++) {
             var s = (q - 1) * PER_PAGE + 1;
