@@ -945,32 +945,49 @@ function renderPagination(totalPages) {
 async function loadUpdates() {
     const el = document.getElementById('updates-list');
     try {
-        const r = await fetch(`${GH_API}/commits?per_page=30`,
-            { headers: { Accept: 'application/vnd.github+json' } });
-        if (!r.ok) throw new Error();
-        const commits = await r.json();
-        const seen = new Set(), result = [];
-        for (const cm of commits) {
-            if (result.length >= 5) break;
+        /* Lấy danh sách file mới nhất từ mỗi folder truyện — chỉ 1 request/folder,
+           không bị rate limit như commits API */
+        const headers = { Accept: 'application/vnd.github+json' };
+        const results = [];
+
+        await Promise.all(CHAPTER_FOLDERS.map(async folder => {
             try {
-                const d = await fetch(`${GH_API}/commits/${cm.sha}`,
-                    { headers: { Accept: 'application/vnd.github+json' } });
-                if (!d.ok) continue;
-                const data = await d.json();
-                for (const file of (data.files || [])) {
-                    if (!file.filename.endsWith('.html')) continue;
-                    const parts = file.filename.split('/');
-                    const folder = parts[0], fname = parts[parts.length-1];
-                    if (!CHAPTER_FOLDERS.includes(folder)) continue;
-                    if (seen.has(file.filename)) continue;
-                    seen.add(file.filename);
-                    result.push({ folder, name: fname, path: file.filename, date: cm.commit.committer.date });
-                    if (result.length >= 5) break;
-                }
+                const r = await fetch(`${GH_API}/commits?path=${folder}&per_page=3`, { headers });
+                if (!r.ok) return;
+                const commits = await r.json();
+                if (!commits.length) return;
+                const cm = commits[0];
+                /* Lấy file mới nhất trong folder từ commit đó */
+                const d = await fetch(`${GH_API}/contents/${folder}`, { headers });
+                if (!d.ok) return;
+                const files = await d.json();
+                const htmlFiles = Array.isArray(files)
+                    ? files.filter(f => f.name.endsWith('.html') && f.name !== 'index.html')
+                        .sort((a, b) => {
+                            const na = parseInt(a.name) || 0, nb = parseInt(b.name) || 0;
+                            return nb - na;
+                        })
+                    : [];
+                if (!htmlFiles.length) return;
+                const latest = htmlFiles[0];
+                results.push({
+                    folder,
+                    name: latest.name,
+                    path: latest.path,
+                    date: cm.commit.committer.date
+                });
             } catch(_) {}
+        }));
+
+        if (!results.length) {
+            el.innerHTML = '<li><span class="muted-note">Chưa có cập nhật.</span></li>'; return;
         }
-        if (!result.length) { el.innerHTML = '<li><span class="muted-note">Chưa có cập nhật.</span></li>'; return; }
-        el.innerHTML = result.map(f => {
+
+        /* Sắp xếp theo ngày commit mới nhất */
+        results.sort((a, b) => new Date(b.date) - new Date(a.date));
+        const top5 = results.slice(0, 5);
+
+        el.innerHTML = top5.map(f => {
             const novel = guessName(f.name), chap = guessChap(f.name);
             const label = chap ? `${novel} – ${chap}` : novel;
             return `<li><a href="${f.path}">
