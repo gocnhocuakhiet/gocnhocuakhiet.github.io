@@ -711,6 +711,79 @@
         @media (max-width: 400px) {
             .novel-grid { grid-template-columns: repeat(3, 1fr); }
         }
+
+        /* compact pill moi cap nhat */
+        .updates-pill-wrap {
+            margin-top: 22px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 14px 16px 16px;
+        }
+        .updates-pill-header {
+            display: flex; align-items: baseline; gap: 8px;
+            margin-bottom: 12px;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 10px;
+        }
+        .updates-pill-title {
+            font-family: Lora, serif;
+            font-size: .85rem; font-weight: 600;
+            color: var(--text); letter-spacing: .2px;
+        }
+        .updates-pill-sub {
+            font-size: .72rem; color: var(--text-faint); font-style: italic;
+        }
+        .updates-pill-wrap .updates-list {
+            list-style: none;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 7px 12px;
+        }
+        .updates-pill-wrap .updates-list li { border-bottom: none !important; }
+        .upill-loading { grid-column: 1 / -1; }
+        .upill-item {
+            display: flex; align-items: center; gap: 7px;
+            padding: 6px 10px;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 30px;
+            text-decoration: none; color: var(--text);
+            transition: background .15s, border-color .15s, transform .15s;
+            min-width: 0; overflow: hidden;
+        }
+        .upill-item:hover {
+            background: var(--green-pale);
+            border-color: var(--green-light);
+            color: var(--green);
+            transform: translateY(-1px);
+        }
+        .upill-new {
+            flex-shrink: 0;
+            font-size: .6rem; font-weight: 700; letter-spacing: .4px;
+            background: #ef4444; color: #fff;
+            padding: 1px 5px; border-radius: 4px;
+            line-height: 1.6; text-transform: uppercase;
+        }
+        .upill-name {
+            flex: 1; font-size: .75rem; font-weight: 500;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .upill-chap {
+            flex-shrink: 0;
+            font-size: .7rem; font-weight: 600;
+            color: var(--green);
+            background: var(--green-pale);
+            padding: 1px 7px; border-radius: 10px;
+            border: 1px solid var(--green-light);
+            white-space: nowrap;
+        }
+        .upill-item:hover .upill-chap {
+            background: var(--green); color: #fff; border-color: var(--green);
+        }
+        @media (max-width: 600px) {
+            .updates-pill-wrap .updates-list { grid-template-columns: 1fr; }
+        }
     </style>
 </head>
 <body>
@@ -875,6 +948,17 @@
         <div class="result-info" id="result-info"></div>
         <div class="novel-grid" id="novel-grid"></div>
         <div class="pagination"  id="pagination"></div>
+
+        <!-- Mới cập nhật — Compact pill -->
+        <div class="updates-pill-wrap">
+            <div class="updates-pill-header">
+                <span class="updates-pill-title">⚡ Mới cập nhật</span>
+                <span class="updates-pill-sub">Chương vừa lên</span>
+            </div>
+            <ul class="updates-list" id="updates-list">
+                <li class="upill-loading"><span class="muted-note">Đang tải…</span></li>
+            </ul>
+        </div>
     </main>
 
     <!-- SIDEBAR PHẢI -->
@@ -887,14 +971,6 @@
                 <div class="profile-avatar">🌿</div>
                 <p class="profile-intro">Một ngôi nhà nhỏ đăng những truyện dịch theo sở thích, ngôn tình lẫn đam mỹ, nếu truyện không hợp gu thì xin lướt qua, đừng buông lời cay đắng.🌸</p>
             </div>
-        </div>
-
-        <!-- Mới cập nhật -->
-        <div class="sidebar-card">
-            <h3>Mới cập nhật</h3>
-            <ul class="updates-list" id="updates-list">
-                <li><span class="muted-note">Đang tải…</span></li>
-            </ul>
         </div>
 
         <!-- Hoạt động gần đây -->
@@ -1325,20 +1401,17 @@ async function loadUpdates() {
 
         /* Sắp xếp theo ngày commit mới nhất */
         results.sort((a, b) => new Date(b.date) - new Date(a.date));
-        const top5 = results.slice(0, 5);
 
-        el.innerHTML = top5.map(f => {
-            const novelId = f.folder;
+
+        /* top 4 chương — 2 cột x 2 hàng */
+        const top4 = results.slice(0, 4);
+        el.innerHTML = top4.map((f, i) => {
             const novel = guessName(f.name), chap = guessChap(f.name);
-            const novelData = NOVELS.find(n => n.id === novelId);
-            const thumb = novelData ? `<img src="${novelData.cover}" alt="" onerror="this.style.display='none'">` : '';
-            return `<li><a class="update-item" href="${f.path}">
-                <div class="update-thumb">${thumb || '📖'}</div>
-                <div class="update-info">
-                    <div class="update-title">${novel}</div>
-                    <div class="update-chap">${chap}</div>
-                    <div class="update-time">${fmtDate(f.date)}</div>
-                </div>
+            const isNew = i < 2; /* 2 mục mới nhất hiện badge MỚI */
+            return `<li><a class="upill-item" href="${f.path}">
+                ${isNew ? '<span class="upill-new">MỚI</span>' : ''}
+                <span class="upill-name">${novel}</span>
+                <span class="upill-chap">${chap}</span>
             </a></li>`;
         }).join('');
     } catch(_) {
