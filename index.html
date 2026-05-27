@@ -823,6 +823,56 @@
         @media (max-width: 600px) {
             .updates-pill-wrap .updates-list { grid-template-columns: 1fr; }
         }
+
+        /* ══ KHUNG BÌNH LUẬN NHANH ══ */
+        .quick-comment-wrap {
+            margin-top: 4px;
+            border-top: 1px solid var(--border);
+            padding-top: 12px;
+        }
+        .qc-login-note {
+            font-size: .79rem; color: var(--text-faint);
+            font-style: italic; text-align: center; padding: 6px 0;
+        }
+        .qc-login-note a {
+            color: var(--green); text-decoration: none; cursor: pointer; font-style: normal; font-weight: 500;
+        }
+        .qc-login-note a:hover { text-decoration: underline; }
+        .qc-user-row {
+            display: flex; align-items: center; gap: 7px; margin-bottom: 8px;
+        }
+        .qc-avatar {
+            width: 26px; height: 26px; border-radius: 50%;
+            background: linear-gradient(135deg, var(--green), var(--green-light));
+            color: #fff; font-size: .75rem; font-weight: 700;
+            display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+        }
+        .qc-username { font-size: .82rem; font-weight: 500; color: var(--green); }
+        .qc-textarea {
+            width: 100%; padding: 9px 11px;
+            border: 1.5px solid var(--border); border-radius: var(--radius-md);
+            background: var(--bg); color: var(--text);
+            font-size: .82rem; font-family: 'Be Vietnam Pro', sans-serif;
+            resize: none; outline: none; line-height: 1.5;
+            transition: border-color .2s; min-height: 68px;
+        }
+        .qc-textarea::placeholder { color: var(--text-faint); }
+        .qc-textarea:focus { border-color: var(--green-light); }
+        .qc-footer {
+            display: flex; justify-content: flex-end; align-items: center;
+            margin-top: 6px; gap: 8px;
+        }
+        .qc-char { font-size: .72rem; color: var(--text-faint); }
+        .qc-send-btn {
+            padding: 6px 16px; border-radius: 20px;
+            background: var(--green); color: #fff; border: none;
+            font-size: .8rem; font-weight: 600;
+            font-family: 'Be Vietnam Pro', sans-serif;
+            transition: .2s;
+        }
+        .qc-send-btn:hover { background: var(--green-dark); }
+        .qc-send-btn:disabled { opacity: .5; cursor: default; }
+        .qc-msg { font-size: .78rem; color: var(--green); text-align: center; margin-top: 6px; min-height: 16px; }
     </style>
 </head>
 <body>
@@ -973,7 +1023,7 @@
             <div class="section-tools">
                 <div class="search-wrap">
                     <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-                    <input type="text" id="search-input" placeholder="Tìm tên truyện…">
+                    <input type="text" id="search-input" placeholder="Tìm tên truyện…" autocomplete="off">
                 </div>
                 <select class="sort-sel" id="sort-sel">
                     <option value="new">Mới nhất</option>
@@ -1017,6 +1067,10 @@
             <h3>💬 Hoạt động gần đây</h3>
             <div id="comment-feed">
                 <p class="muted-note">Đang kết nối…</p>
+            </div>
+            <!-- Khung bình luận nhanh -->
+            <div class="quick-comment-wrap" id="qc-wrap">
+                <!-- Nội dung render bởi JS tuỳ trạng thái đăng nhập -->
             </div>
         </div>
 
@@ -1791,13 +1845,82 @@ function renderNavAuth(user) {
         area.innerHTML = `
             <div class="nav-user" id="nav-user-wrap">
                 <button class="nav-avatar" onclick="toggleUserMenu(event)" title="${name}">${initials}</button>
-                <span class="nav-user-name">${name}</span>
+                <a href="profile.html" class="nav-user-name" style="text-decoration:none;color:inherit">${name}</a>
                 <div class="nav-user-menu" id="nav-user-menu">
+                    <button class="nav-user-menu-item" onclick="window.location.href='profile.html'">👤 Hồ sơ của tôi</button>
                     <button class="nav-user-menu-item logout" onclick="doLogout()">🚪 Đăng xuất</button>
                 </div>
             </div>`;
     } else {
         area.innerHTML = `<button class="nav-auth-btn" onclick="openAuthModal('login')">🌿 Đăng nhập</button>`;
+    }
+    renderQuickComment(user);
+}
+
+/* Render khung bình luận nhanh */
+function renderQuickComment(user) {
+    const wrap = document.getElementById('qc-wrap');
+    if (!wrap) return;
+    if (!user) {
+        wrap.innerHTML = `<p class="qc-login-note">
+            <a onclick="openAuthModal('login')">Đăng nhập</a> để để lại bình luận~
+        </p>`;
+        return;
+    }
+    const name     = user.user_metadata?.display_name || user.email.split('@')[0];
+    const initials = name.charAt(0).toUpperCase();
+    wrap.innerHTML = `
+        <div class="qc-user-row">
+            <div class="qc-avatar">${initials}</div>
+            <span class="qc-username">${name}</span>
+        </div>
+        <textarea class="qc-textarea" id="qc-text" placeholder="Nhắn nhủ gì đó…" maxlength="300"
+            oninput="document.getElementById('qc-char').textContent=this.value.length+'/300'"></textarea>
+        <div class="qc-footer">
+            <span class="qc-char" id="qc-char">0/300</span>
+            <button class="qc-send-btn" onclick="submitQuickComment('${name}')">Gửi ✨</button>
+        </div>
+        <div class="qc-msg" id="qc-msg"></div>`;
+}
+
+/* Gửi bình luận nhanh từ trang chủ */
+async function submitQuickComment(authorName) {
+    const ta  = document.getElementById('qc-text');
+    const msg = document.getElementById('qc-msg');
+    const btn = document.querySelector('.qc-send-btn');
+    if (!ta || !ta.value.trim()) return;
+
+    btn.disabled = true;
+    if (msg) msg.textContent = '';
+
+    try {
+        const { data: { session } } = await supabaseClient.auth.getSession();
+        const payload = {
+            author_name : authorName,
+            content     : ta.value.trim(),
+            page_path   : '/',
+            user_id     : session?.user?.id ?? null
+        };
+        const r = await fetch(`${SUPABASE_URL}/rest/v1/comments`, {
+            method : 'POST',
+            headers: {
+                'apikey'       : SUPABASE_KEY,
+                'Authorization': `Bearer ${SUPABASE_KEY}`,
+                'Content-Type' : 'application/json',
+                'Prefer'       : 'return=minimal'
+            },
+            body: JSON.stringify(payload)
+        });
+        if (!r.ok) throw new Error(await r.text());
+        ta.value = '';
+        if (document.getElementById('qc-char')) document.getElementById('qc-char').textContent = '0/300';
+        if (msg) { msg.textContent = '🌿 Đã gửi!'; setTimeout(() => { if(msg) msg.textContent=''; }, 3000); }
+        setTimeout(loadComments, 800); /* Tải lại feed sau khi gửi */
+    } catch(e) {
+        console.error('submitQuickComment:', e);
+        if (msg) msg.textContent = '❌ Gửi thất bại, thử lại nhé!';
+    } finally {
+        if (btn) btn.disabled = false;
     }
 }
 
