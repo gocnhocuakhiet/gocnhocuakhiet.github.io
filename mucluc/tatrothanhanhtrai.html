@@ -1903,13 +1903,23 @@ var _authClient = (typeof supabase !== 'undefined') ? supabase.createClient(SUPA
     });
 })();
 
-function renderNavAuth(user) {
+async function renderNavAuth(user) {
     var loginShortcut = document.getElementById('nav-login-shortcut');
     var authArea = document.getElementById('nav-auth-area');
     if (user) {
         var name = (user.user_metadata && user.user_metadata.display_name) || user.email.split('@')[0];
         var initial = name.charAt(0).toUpperCase();
-        var avatarUrl = user.user_metadata && user.user_metadata.avatar_url;
+        /* Lấy avatar_url từ bảng profiles (giống index.html) */
+        var avatarUrl = '';
+        try {
+            var _url = 'https://ibxxdvbdpsmcyufilnoh.supabase.co';
+            var _key = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlieHhkdmJkcHNtY3l1Zmlsbm9oIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk1MTMxNjcsImV4cCI6MjA5NTA4OTE2N30.oKB7vmQceVENuyUExLeND0M9YvnS-30nTGRbrv-xrUs';
+            var pr = await fetch(_url + '/rest/v1/profiles?user_id=eq.' + user.id + '&select=avatar_url', {
+                headers: { 'apikey': _key, 'Authorization': 'Bearer ' + _key }
+            });
+            var pd = await pr.json();
+            if (pd && pd[0]) avatarUrl = pd[0].avatar_url || '';
+        } catch(e) {}
         var avatarContent = avatarUrl
             ? '<img src="' + avatarUrl + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%">'
             : initial;
