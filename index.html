@@ -374,59 +374,6 @@
         .chatroom-send-btn:hover { background: var(--green-dark); }
         .chatroom-send-btn:disabled { opacity: .5; cursor: default; }
 
-        /* ── CHAT GUEST NAME BAR ── */
-        .chat-name-bar {
-            display: flex; align-items: center; gap: 6px;
-            padding: 6px 10px; border-top: 1px solid var(--border);
-            background: var(--bg);
-        }
-        .chat-name-label {
-            font-size: .75rem; color: var(--text-faint); white-space: nowrap; flex-shrink: 0;
-        }
-        .chat-name-display {
-            font-size: .78rem; font-weight: 600; color: var(--green);
-            flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
-        }
-        .chat-name-change {
-            font-size: .72rem; color: var(--text-faint); border: none; background: none;
-            font-family: inherit; text-decoration: underline; cursor: pointer; flex-shrink: 0;
-            padding: 0;
-        }
-        .chat-name-change:hover { color: var(--green); }
-        /* Modal nhập tên */
-        .chat-name-overlay {
-            position: fixed; inset: 0; background: rgba(0,0,0,.35);
-            z-index: 99998; display: flex; align-items: center; justify-content: center;
-            opacity: 0; visibility: hidden; transition: .2s;
-        }
-        .chat-name-overlay.open { opacity: 1; visibility: visible; }
-        .chat-name-modal {
-            background: var(--bg-card); border: 1px solid var(--border);
-            border-radius: var(--radius-lg); padding: 24px 20px; width: 280px;
-            box-shadow: 0 12px 40px rgba(0,0,0,.15);
-            display: flex; flex-direction: column; gap: 12px;
-        }
-        .chat-name-modal h4 {
-            font-family: 'Lora', serif; font-size: .95rem; font-weight: 500;
-            color: var(--text); text-align: center;
-        }
-        .chat-name-modal p { font-size: .8rem; color: var(--text-muted); text-align: center; }
-        .chat-name-field {
-            width: 100%; padding: 10px 14px; font-size: .88rem;
-            font-family: 'Be Vietnam Pro', sans-serif;
-            border: 1.5px solid var(--border); border-radius: var(--radius-md);
-            background: var(--bg); color: var(--text); outline: none;
-            transition: border-color .2s;
-        }
-        .chat-name-field:focus { border-color: var(--green); }
-        .chat-name-confirm {
-            width: 100%; padding: 10px; border-radius: 30px;
-            background: var(--green); color: #fff; border: none;
-            font-size: .88rem; font-weight: 600; font-family: inherit;
-            transition: .2s;
-        }
-        .chat-name-confirm:hover { background: var(--green-dark); }
-
         /* ── EMOJI PICKER ── */
         .emoji-btn {
             width: 32px; height: 32px; border-radius: 50%;
@@ -1235,12 +1182,6 @@
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
                 </button>
             </div>
-            <!-- Thanh tên khách — chỉ hiện khi chưa đăng nhập -->
-            <div class="chat-name-bar" id="chat-name-bar" style="display:none">
-                <span class="chat-name-label">Tên của bạn:</span>
-                <span class="chat-name-display" id="chat-name-display">Độc giả</span>
-                <button class="chat-name-change" onclick="openNameModal()">đổi tên</button>
-            </div>
         </div>
     </aside>
 </div>
@@ -1728,12 +1669,22 @@ async function loadComments() {
             const authorCol  = colArr.find(c => first[c] !== undefined && c !== 'created_at' && c !== colArr[1]) || colArr[0];
             const contentCol = colArr[1];
 
-            if (lastCmtId !== null && first.created_at !== lastCmtId)
-                showToast(first[authorCol] || 'Độc giả', first[contentCol] || '');
+            if (lastCmtId !== null && first.created_at !== lastCmtId) {
+                const rawA = first[authorCol] || 'Độc giả';
+                const pA   = rawA.indexOf('|');
+                const cleanA = (pA > 0 && rawA.substring(0,pA).startsWith('http')) ? rawA.substring(pA+1) : rawA;
+                showToast(cleanA, first[contentCol] || '');
+            }
             lastCmtId = first.created_at;
 
             el.innerHTML = cmts.map(c => {
-                const author = c[authorCol] || 'Độc giả';
+                const rawAuthor = c[authorCol] || 'Độc giả';
+                const pipeIdx   = rawAuthor.indexOf('|');
+                const hasUrl    = pipeIdx > 0 && rawAuthor.substring(0, pipeIdx).startsWith('http');
+                const author    = hasUrl ? rawAuthor.substring(pipeIdx + 1) : rawAuthor;
+                const avatarHtml = hasUrl
+                    ? `<img src="${rawAuthor.substring(0, pipeIdx)}" alt="av" style="width:18px;height:18px;object-fit:cover;border-radius:50%;vertical-align:middle;margin-right:4px;">`
+                    : (rawAuthor.split(' ').length > 1 ? rawAuthor.split(' ')[0] + ' ' : '🌿 ');
                 const body   = c[contentCol] || '';
                 const short  = body.length > 55 ? body.substring(0,55)+'…' : body;
                 const time   = c.created_at ? fmtAgo(c.created_at) : '';
@@ -1744,7 +1695,7 @@ async function loadComments() {
                 const badge  = isOwner ? `<span class="owner-badge">🌸 Chủ Gác</span>` : '';
                 return `<${tag} class="feed-item${path ? ' feed-item--link' : ''}">
                     <div class="feed-top">
-                        <span class="feed-author">🌿 ${author}${badge}</span>
+                        <span class="feed-author">${avatarHtml}${author}${badge}</span>
                         <span class="feed-time">${time}</span>
                     </div>
                     <div class="feed-msg">"${short}"</div>
@@ -2018,23 +1969,36 @@ function escHtml(s) {
 
 async function sendChatMessage() {
     const input = document.getElementById('chatroom-input');
+    const btn   = document.querySelector('.chatroom-send-btn');
     const text  = input?.value.trim();
     if (!text) return;
 
     /* Xác định tên */
-    let authorName;
+    let authorName = 'Độc giả';
     if (chatCurrentUser) {
         authorName = chatCurrentUser.user_metadata?.display_name || chatCurrentUser.email.split('@')[0];
-    } else {
-        authorName = getGuestName();
-        if (!authorName) {
-            /* Chưa có tên → mở modal, lưu tin nhắn lại */
-            openNameModal(text);
-            return;
-        }
     }
 
-    await doSendToSupabase(authorName, text);
+    btn.disabled = true;
+    try {
+        const r = await fetch(`${SUPABASE_URL}/rest/v1/chatroom`, {
+            method : 'POST',
+            headers: {
+                'apikey'       : SUPABASE_KEY,
+                'Authorization': `Bearer ${SUPABASE_KEY}`,
+                'Content-Type' : 'application/json',
+                'Prefer'       : 'return=minimal'
+            },
+            body: JSON.stringify({ author_name: authorName, content: text })
+        });
+        if (r.ok) {
+            input.value = '';
+            await loadChatMessages();
+            const el = document.getElementById('chatroom-messages');
+            if (el) el.scrollTop = el.scrollHeight;
+        }
+    } catch(e) { console.warn('sendChatMessage:', e); }
+    finally { btn.disabled = false; input.focus(); }
 }
 
 /* Enter để gửi */
@@ -2181,7 +2145,6 @@ async function fetchAvatarUrl(userId) {
 /* Cập nhật navbar */
 async function renderNavAuth(user) {
     chatCurrentUser = user; /* lưu để chatroom dùng */
-    setTimeout(updateChatNameBar, 100); /* cập nhật thanh tên */
     const area = document.getElementById('nav-auth-area');
     if (!area) return;
     if (user) {
@@ -2402,119 +2365,6 @@ document.addEventListener('keydown', function(e) {
     const loginPanel = document.getElementById('panel-login');
     if (loginPanel.style.display !== 'none') doLogin();
     else doRegister();
-});
-</script>
-
-<!-- ══ MODAL NHẬP TÊN KHÁCH ══ -->
-<div class="chat-name-overlay" id="chat-name-overlay" onclick="handleNameOverlayClick(event)">
-    <div class="chat-name-modal">
-        <h4>🌿 Bạn tên gì?</h4>
-        <p>Nhập tên để mọi người biết bạn là ai nhé~</p>
-        <input class="chat-name-field" id="chat-name-input" type="text" placeholder="Tên hiển thị của bạn…" maxlength="30" autocomplete="off">
-        <button class="chat-name-confirm" onclick="confirmGuestName()">Xác nhận ✨</button>
-    </div>
-</div>
-
-<script>
-/* ══ GUEST NAME LOGIC ══ */
-const GUEST_NAME_KEY = 'chat-guest-name';
-let pendingMessage = null; /* lưu tin nhắn đang chờ xác nhận tên */
-
-function getGuestName() {
-    return localStorage.getItem(GUEST_NAME_KEY) || null;
-}
-function setGuestName(name) {
-    localStorage.setItem(GUEST_NAME_KEY, name);
-    updateChatNameBar();
-}
-
-function updateChatNameBar() {
-    /* Chỉ hiện thanh tên khi chưa đăng nhập */
-    if (chatCurrentUser) {
-        const bar = document.getElementById('chat-name-bar');
-        if (bar) bar.style.display = 'none';
-        return;
-    }
-    const bar = document.getElementById('chat-name-bar');
-    const display = document.getElementById('chat-name-display');
-    if (!bar || !display) return;
-    const name = getGuestName();
-    bar.style.display = 'flex';
-    display.textContent = name || 'Chưa đặt tên';
-}
-
-function openNameModal(pending) {
-    if (pending) pendingMessage = pending;
-    const overlay = document.getElementById('chat-name-overlay');
-    const input   = document.getElementById('chat-name-input');
-    if (!overlay) return;
-    /* Điền tên cũ nếu có */
-    if (input) {
-        input.value = getGuestName() || '';
-        setTimeout(() => input.focus(), 100);
-    }
-    overlay.classList.add('open');
-}
-
-function handleNameOverlayClick(e) {
-    if (e.target === document.getElementById('chat-name-overlay')) {
-        document.getElementById('chat-name-overlay').classList.remove('open');
-        pendingMessage = null;
-    }
-}
-
-async function confirmGuestName() {
-    const input = document.getElementById('chat-name-input');
-    const name  = input?.value.trim();
-    if (!name) { input?.focus(); return; }
-    setGuestName(name);
-    document.getElementById('chat-name-overlay').classList.remove('open');
-    /* Nếu có tin nhắn đang chờ → gửi luôn */
-    if (pendingMessage) {
-        const msg = pendingMessage;
-        pendingMessage = null;
-        await doSendToSupabase(name, msg);
-    }
-}
-
-/* Enter trong modal tên */
-document.getElementById('chat-name-input')?.addEventListener('keydown', e => {
-    if (e.key === 'Enter') confirmGuestName();
-});
-
-/* Tách logic gửi tin ra riêng */
-async function doSendToSupabase(authorName, text) {
-    const btn = document.querySelector('.chatroom-send-btn');
-    if (btn) btn.disabled = true;
-    try {
-        const r = await fetch(`${SUPABASE_URL}/rest/v1/chatroom`, {
-            method : 'POST',
-            headers: {
-                'apikey'       : SUPABASE_KEY,
-                'Authorization': `Bearer ${SUPABASE_KEY}`,
-                'Content-Type' : 'application/json',
-                'Prefer'       : 'return=minimal'
-            },
-            body: JSON.stringify({ author_name: authorName, content: text })
-        });
-        if (r.ok) {
-            const chatInput = document.getElementById('chatroom-input');
-            if (chatInput) chatInput.value = '';
-            await loadChatMessages();
-            const el = document.getElementById('chatroom-messages');
-            if (el) el.scrollTop = el.scrollHeight;
-        }
-    } catch(e) { console.warn('doSendToSupabase:', e); }
-    finally {
-        if (btn) btn.disabled = false;
-        const chatInput = document.getElementById('chatroom-input');
-        if (chatInput) chatInput.focus();
-    }
-}
-
-/* Khởi tạo thanh tên khi trang load */
-document.addEventListener('DOMContentLoaded', () => {
-    setTimeout(updateChatNameBar, 300);
 });
 </script>
 </html>
