@@ -616,9 +616,34 @@
         .toast-body { font-size: .82rem; color: var(--text-muted); line-height: 1.4; }
 
         footer {
-            text-align: center; padding: 20px;
+            text-align: center; padding: 20px 20px 24px;
             font-size: .8rem; color: var(--text-faint);
             border-top: 1px solid var(--border);
+        }
+        .footer-stats {
+            display: inline-flex; align-items: center; gap: 16px;
+            margin-top: 10px; flex-wrap: wrap; justify-content: center;
+        }
+        .footer-stat {
+            display: flex; align-items: center; gap: 5px;
+            background: var(--bg-card); border: 1px solid var(--border);
+            border-radius: 20px; padding: 4px 12px;
+            font-size: .75rem; color: var(--text-muted);
+            transition: border-color .2s;
+        }
+        .footer-stat-dot {
+            width: 6px; height: 6px; border-radius: 50%;
+            background: #22c55e;
+            box-shadow: 0 0 0 2px rgba(34,197,94,.25);
+            animation: onlinePulse 2s ease-in-out infinite;
+            flex-shrink: 0;
+        }
+        @keyframes onlinePulse {
+            0%,100% { box-shadow: 0 0 0 2px rgba(34,197,94,.25); }
+            50%      { box-shadow: 0 0 0 4px rgba(34,197,94,.1); }
+        }
+        .footer-stat-val {
+            font-weight: 600; color: var(--green);
         }
 
         /* ══ AUTH MODAL ══ */
@@ -1015,6 +1040,16 @@
 
 <footer>
     <p>© 2026 Góc nhỏ của Khiết · Lưu trữ miễn phí trên GitHub Pages</p>
+    <div class="footer-stats">
+        <div class="footer-stat">
+            <span class="footer-stat-dot"></span>
+            <span id="stat-online">–</span>&nbsp;<span>người đang online</span>
+        </div>
+        <div class="footer-stat">
+            <span>👁</span>
+            <span class="footer-stat-val" id="stat-pageviews">–</span>&nbsp;<span>lượt truy cập</span>
+        </div>
+    </div>
 </footer>
 
 <!-- ══ AUTH MODAL ══ -->
@@ -1549,6 +1584,7 @@ document.addEventListener('DOMContentLoaded', () => {
     loadUpdates();
     loadComments();
     setInterval(loadComments, 60000);
+    initSiteStats();
 
     /* Mobile genre chips */
     document.getElementById('mobile-genre-bar').addEventListener('click', e => {
@@ -1567,6 +1603,60 @@ document.addEventListener('DOMContentLoaded', () => {
         sortMode = e.target.value; currentPage = 1; renderGrid();
     });
 });
+
+/* ── Stats: online presence + pageview tích luỹ dùng Firebase ── */
+function initSiteStats() {
+    /* --- Pageview: tăng 1 mỗi lần load trang --- */
+    const pvRef = db.ref('siteStats/pageviews');
+    pvRef.transaction(cur => (cur || 0) + 1);
+    pvRef.on('value', snap => {
+        const v = snap.val() || 0;
+        const el = document.getElementById('stat-pageviews');
+        if (el) el.textContent = fmtViews(v);
+    });
+
+    /* --- Online presence: mỗi tab = 1 node, tự xoá khi đóng tab --- */
+    const sessionRef = db.ref('siteStats/online').push();
+    sessionRef.set(true);
+    sessionRef.onDisconnect().remove(); /* Firebase tự xoá khi mất kết nối */
+
+    db.ref('siteStats/online').on('value', snap => {
+        const count = snap.numChildren();
+        const el = document.getElementById('stat-online');
+        if (el) {
+            el.textContent = count;
+            el.style.fontWeight = '600';
+            el.style.color = 'var(--green)';
+        }
+    });
+}
+
+/* ── Stats: online presence + pageview tích luỹ dùng Firebase ── */
+function initSiteStats() {
+    /* Pageview: tăng 1 mỗi lần load trang */
+    const pvRef = db.ref('siteStats/pageviews');
+    pvRef.transaction(cur => (cur || 0) + 1);
+    pvRef.on('value', snap => {
+        const v = snap.val() || 0;
+        const el = document.getElementById('stat-pageviews');
+        if (el) el.textContent = fmtViews(v);
+    });
+
+    /* Online presence: mỗi tab = 1 node, tự xoá khi đóng tab */
+    const sessionRef = db.ref('siteStats/online').push();
+    sessionRef.set(true);
+    sessionRef.onDisconnect().remove();
+
+    db.ref('siteStats/online').on('value', snap => {
+        const count = snap.numChildren();
+        const el = document.getElementById('stat-online');
+        if (el) {
+            el.textContent = count;
+            el.style.fontWeight = '600';
+            el.style.color = 'var(--green)';
+        }
+    });
+}
 
 function toggleDark() {
     document.body.classList.toggle('dark-mode');
