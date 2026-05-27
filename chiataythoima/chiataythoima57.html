@@ -1152,12 +1152,28 @@ window.addEventListener('scroll', function() {
             <button class="action-btn" onclick="openShareModal()">🔗 Chia sẻ</button>
         </div>
     </div>
+
+    <!-- Thống kê -->
     <div class="discussion-stats">
-        <div class="stat-card"><div class="stat-label">Tổng thảo luận</div><div class="stat-value" id="stat-total">—</div></div>
-        <div class="stat-card"><div class="stat-label">Bình luận gốc</div><div class="stat-value" id="stat-root">—</div></div>
-        <div class="stat-card"><div class="stat-label">Phản hồi</div><div class="stat-value" id="stat-replies">—</div></div>
-        <div class="stat-card"><div class="stat-label">Người tham gia</div><div class="stat-value" id="stat-users">—</div></div>
+        <div class="stat-card">
+            <div class="stat-label">Tổng thảo luận</div>
+            <div class="stat-value" id="stat-total">—</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Bình luận gốc</div>
+            <div class="stat-value" id="stat-root">—</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Phản hồi</div>
+            <div class="stat-value" id="stat-replies">—</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-label">Người tham gia</div>
+            <div class="stat-value" id="stat-users">—</div>
+        </div>
     </div>
+
+    <!-- Form bình luận chính -->
     <div class="main-comment-form">
         <div class="author-row">
             <div class="author-avatar-preview" id="main-avatar-preview">🌿</div>
@@ -1175,6 +1191,8 @@ window.addEventListener('scroll', function() {
             <button class="main-submit-btn" onclick="submitMainComment()">Gửi bình luận 🌸</button>
         </div>
     </div>
+
+    <!-- Danh sách bình luận chính -->
     <div class="main-comments-list" id="main-comments-list">
         <div class="loading-text">Đang tải bình luận…</div>
     </div>
@@ -1223,16 +1241,21 @@ window.addEventListener('scroll', function() {
 
 <!-- ── SCRIPT CHÍNH ── -->
 <script>
+// ══════════════════════════════════════════════
+// CẤU HÌNH SUPABASE
+// ══════════════════════════════════════════════
 var SUPABASE_URL = 'https://ibxxdvbdpsmcyufilnoh.supabase.co';
 var SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlieHhkdmJkcHNtY3l1Zmlsbm9oIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk1MTMxNjcsImV4cCI6MjA5NTA4OTE2N30.oKB7vmQceVENuyUExLeND0M9YvnS-30nTGRbrv-xrUs';
-var PAGE_PATH = window.location.pathname;
+var PAGE_PATH    = window.location.pathname;
 
+// ── Author ID (ẩn danh, lưu localStorage) ──
 var AUTHOR_ID = localStorage.getItem('comment-author-id');
 if (!AUTHOR_ID) {
     AUTHOR_ID = 'anon-' + Math.random().toString(36).substr(2, 12);
     localStorage.setItem('comment-author-id', AUTHOR_ID);
 }
 
+// ── Helper gọi Supabase REST API ──
 async function sbFetch(path, method, body) {
     var opts = {
         method: method || 'GET',
@@ -1250,8 +1273,11 @@ async function sbFetch(path, method, body) {
     return text ? JSON.parse(text) : [];
 }
 
+// ══════════════════════════════════════════════
+// BADGE — HIỂN THỊ SỐ BÌNH LUẬN TỪNG ĐOẠN
+// ══════════════════════════════════════════════
 var paraCommentCounts = {};
-var currentParaIndex = null;
+var currentParaIndex  = null;
 
 async function loadParaCounts() {
     try {
@@ -1266,12 +1292,13 @@ async function loadParaCounts() {
             var idx = parseInt(badge.dataset.para);
             var cnt = paraCommentCounts[idx] || 0;
             badge.querySelector('.badge-count').textContent = cnt > 0 ? cnt : '';
-            badge.querySelector('.badge-icon').textContent = '💬';
+            badge.querySelector('.badge-icon').textContent  = '💬';
         });
     } catch(e) { console.warn('loadParaCounts:', e); }
 }
 
 document.addEventListener('DOMContentLoaded', function() {
+    // Wrap từng đoạn với badge
     var paragraphs = document.querySelectorAll('.story-content p');
     paragraphs.forEach(function(p, index) {
         var paraNum = index + 1;
@@ -1281,11 +1308,11 @@ document.addEventListener('DOMContentLoaded', function() {
         row.appendChild(p);
 
         var badge = document.createElement('button');
-        badge.className = 'comment-badge';
+        badge.className    = 'comment-badge';
         badge.dataset.para = paraNum;
-        badge.title = 'Bình luận về đoạn này';
-        badge.innerHTML = '<span class="badge-icon">💬</span><span class="badge-count"></span>';
-        badge.onclick = function() { openSidebar(p.innerText.trim().substring(0, 130), paraNum); };
+        badge.title        = 'Bình luận về đoạn này';
+        badge.innerHTML    = '<span class="badge-icon">💬</span><span class="badge-count"></span>';
+        badge.onclick      = function() { openSidebar(p.innerText.trim().substring(0, 130), paraNum); };
         row.appendChild(badge);
     });
 
@@ -1297,6 +1324,7 @@ document.addEventListener('DOMContentLoaded', function() {
     initStickerPicker('main');
     initStickerPicker('sidebar');
 
+    // Char counter
     document.getElementById('main-content').addEventListener('input', function() {
         document.getElementById('main-char-count').textContent = this.value.length;
     });
@@ -1304,7 +1332,6 @@ document.addEventListener('DOMContentLoaded', function() {
     /* Ưu tiên: nếu đã đăng nhập thì dùng tên tài khoản */
     (async function() {
         try {
-            /* Lấy token từ localStorage Supabase (không cần SDK) */
             var sbKey = Object.keys(localStorage).find(function(k) {
                 return k.startsWith('sb-') && k.endsWith('-auth-token');
             });
@@ -1315,7 +1342,6 @@ document.addEventListener('DOMContentLoaded', function() {
             }
             if (token) {
                 var profileName = '', profileAvatar = '';
-                /* Lấy user id từ token */
                 var userRes = await fetch(SUPABASE_URL + '/auth/v1/user', {
                     headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + token }
                 });
@@ -1324,7 +1350,6 @@ document.addEventListener('DOMContentLoaded', function() {
                     var userId = userData.id;
                     var metaName = userData.user_metadata && userData.user_metadata.display_name;
                     var emailName = userData.email ? userData.email.split('@')[0] : '';
-                    /* Lấy display_name + avatar_url từ bảng profiles */
                     try {
                         var pr = await fetch(SUPABASE_URL + '/rest/v1/profiles?user_id=eq.' + userId + '&select=display_name,avatar_url', {
                             headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
@@ -1348,11 +1373,11 @@ document.addEventListener('DOMContentLoaded', function() {
                             if (profileAvatar) { sprevEl.innerHTML = '<img src="' + profileAvatar + '" alt="avatar" style="width:100%;height:100%;object-fit:cover;border-radius:50%;display:block;">'; }
                             else { sprevEl.textContent = name.charAt(0).toUpperCase(); }
                         }
-                        /* Ẩn phần chọn emoji avatar vì đã có ảnh tài khoản */
                         var pw = document.getElementById('main-avatar-picker-wrap');
                         if (pw) pw.style.display = 'none';
                         var spw = document.getElementById('sidebar-avatar-picker-wrap');
                         if (spw) spw.style.display = 'none';
+                        if (profileAvatar) loggedInAvatarUrl = profileAvatar;
                         return;
                     }
                 }
@@ -1361,34 +1386,26 @@ document.addEventListener('DOMContentLoaded', function() {
         /* Fallback: chưa đăng nhập → dùng tên từ localStorage */
         var savedName = localStorage.getItem('comment-author-name');
         if (savedName) {
-            document.getElementById('main-author').value = savedName;
+            document.getElementById('main-author').value   = savedName;
             document.getElementById('sidebar-author').value = savedName;
         }
     })();
     var savedAvatar = localStorage.getItem('comment-avatar');
     if (savedAvatar) {
-        selectedAvatar['main'] = savedAvatar;
+        selectedAvatar['main']    = savedAvatar;
         selectedAvatar['sidebar'] = savedAvatar;
     }
-
-    // Apply saved font to story content
-    var savedFont = localStorage.getItem('reader-font');
-    if (savedFont) {
-        document.getElementById('font-select').value = savedFont;
-        changeFont(savedFont);
-    }
-    var savedSize = parseInt(localStorage.getItem('reader-fontsize') || '18');
-    currentFontPx = savedSize;
-    var content = document.querySelector('.story-content');
-    if (content) content.style.fontSize = savedSize + 'px';
-    document.getElementById('font-size-display').textContent = savedSize + 'px';
 });
 
+// ══════════════════════════════════════════════
+// SIDEBAR BÌNH LUẬN THEO ĐOẠN
+// ══════════════════════════════════════════════
 function openSidebar(previewText, paraIndex) {
-    document.getElementById('sidebar-title').textContent = 'Đoạn ' + paraIndex;
-    document.getElementById('sidebar-quote').textContent = '"' + previewText + (previewText.length >= 130 ? '…' : '') + '"';
+    document.getElementById('sidebar-title').textContent  = 'Đoạn ' + paraIndex;
+    document.getElementById('sidebar-quote').textContent  = '"' + previewText + (previewText.length >= 130 ? '…' : '') + '"';
     document.getElementById('comment-sidebar').classList.add('active');
     document.getElementById('sidebar-overlay').classList.add('active');
+
     if (currentParaIndex === paraIndex) return;
     currentParaIndex = paraIndex;
     loadSidebarComments(paraIndex);
@@ -1405,7 +1422,8 @@ async function loadSidebarComments(paraIndex) {
     try {
         var rows = await sbFetch(
             'comments?page_path=eq.' + encodeURIComponent(PAGE_PATH) +
-            '&para_index=eq.' + paraIndex + '&order=created_at.asc'
+            '&para_index=eq.' + paraIndex +
+            '&order=created_at.asc'
         );
         renderSidebarComments(rows, list, paraIndex);
     } catch(e) {
@@ -1418,13 +1436,15 @@ function renderSidebarComments(rows, container, paraIndex) {
         container.innerHTML = '<div class="empty-text">Chưa có bình luận nào. Hãy là người đầu tiên! 🌸</div>';
         return;
     }
-    var roots = rows.filter(function(r) { return !r.parent_id; });
-    var replies = rows.filter(function(r) { return !!r.parent_id; });
+    // Tách root vs reply
+    var roots   = rows.filter(function(r) { return !r.parent_id; });
+    var replies  = rows.filter(function(r) { return !!r.parent_id; });
     var replyMap = {};
     replies.forEach(function(r) {
         if (!replyMap[r.parent_id]) replyMap[r.parent_id] = [];
         replyMap[r.parent_id].push(r);
     });
+
     container.innerHTML = '';
     roots.forEach(function(c) {
         container.appendChild(buildCommentEl(c, replyMap, true, paraIndex));
@@ -1435,8 +1455,10 @@ function buildCommentEl(c, replyMap, isSidebar, paraIndex) {
     var el = document.createElement('div');
     el.className = 'comment-item';
     el.id = 'comment-' + c.id;
+
     var childReplies = (replyMap && replyMap[c.id]) ? replyMap[c.id] : [];
-    var isOwner = c.author_id === AUTHOR_ID;
+    var isOwner      = c.author_id === AUTHOR_ID;
+
     var repliesHtml = '';
     if (childReplies.length) {
         repliesHtml = '<div class="replies-list">' +
@@ -1444,7 +1466,7 @@ function buildCommentEl(c, replyMap, isSidebar, paraIndex) {
                 var isReplyOwner = r.author_id === AUTHOR_ID;
                 return '<div class="reply-item" id="comment-' + r.id + '">' +
                     '<div class="comment-item-header">' +
-                    '<span class="comment-author">💬 ' + escHtml(r.author_name) + '</span>' +
+                    '<span class="comment-author">' + renderAuthor(r.author_name) + '</span>' +
                     '<span class="comment-time">' + fmtDate(r.created_at) + '</span></div>' +
                     '<div class="comment-text">' + escHtml(r.content) + '</div>' +
                     (isReplyOwner ? '<div class="comment-actions"><button class="comment-delete-btn" onclick="deleteComment(\'' + r.id + '\',\'' + (isSidebar ? 'sidebar' : 'main') + '\',' + (paraIndex||'null') + ')">🗑 Xoá</button></div>' : '') +
@@ -1452,9 +1474,10 @@ function buildCommentEl(c, replyMap, isSidebar, paraIndex) {
             }).join('') +
         '</div>';
     }
+
     el.innerHTML =
         '<div class="comment-item-header">' +
-        '<span class="comment-author">🌿 ' + escHtml(c.author_name) + '</span>' +
+        '<span class="comment-author">' + renderAuthor(c.author_name) + '</span>' +
         '<span class="comment-time">' + fmtDate(c.created_at) + '</span></div>' +
         '<div class="comment-text">' + escHtml(c.content) + '</div>' +
         '<div class="comment-actions">' +
@@ -1464,22 +1487,25 @@ function buildCommentEl(c, replyMap, isSidebar, paraIndex) {
         '<div id="reply-form-' + c.id + '" class="reply-form" style="display:none;">' +
         '<textarea placeholder="Trả lời ' + escHtml(c.author_name) + '…" rows="2" id="reply-text-' + c.id + '"></textarea>' +
         '<button class="reply-submit-btn" onclick="submitReply(\'' + c.id + '\',\'' + (isSidebar ? 'sidebar' : 'main') + '\',' + (paraIndex||'null') + ')">Gửi</button>' +
-        '</div>' + repliesHtml;
+        '</div>' +
+        repliesHtml;
+
     return el;
 }
 
 async function submitSidebarComment() {
-    var name = document.getElementById('sidebar-author').value.trim();
+    var name    = document.getElementById('sidebar-author').value.trim();
     var content = document.getElementById('sidebar-content').value.trim();
-    if (!name) { alert('Vui lòng nhập tên của bạn.'); return; }
+    if (!name)    { alert('Vui lòng nhập tên của bạn.'); return; }
     if (!content) { alert('Vui lòng nhập nội dung bình luận.'); return; }
     localStorage.setItem('comment-author-name', name);
+
     var btn = document.querySelector('.sidebar-submit-btn');
     btn.disabled = true; btn.textContent = 'Đang gửi…';
     try {
         await sbFetch('comments', 'POST', {
             page_path: PAGE_PATH, para_index: currentParaIndex,
-            author_name: selectedAvatar['sidebar'] + ' ' + name, author_id: AUTHOR_ID, content: content
+            author_name: (loggedInAvatarUrl ? loggedInAvatarUrl + '|' : selectedAvatar['sidebar'] + ' ') + name, author_id: AUTHOR_ID, content: content
         });
         document.getElementById('sidebar-content').value = '';
         paraCommentCounts[currentParaIndex] = (paraCommentCounts[currentParaIndex] || 0) + 1;
@@ -1490,6 +1516,9 @@ async function submitSidebarComment() {
     btn.disabled = false; btn.textContent = 'Gửi';
 }
 
+// ══════════════════════════════════════════════
+// BÌNH LUẬN CHÍNH (toàn chương)
+// ══════════════════════════════════════════════
 async function loadMainComments() {
     var list = document.getElementById('main-comments-list');
     list.innerHTML = '<div class="loading-text">Đang tải bình luận…</div>';
@@ -1510,13 +1539,14 @@ function renderMainComments(rows, container) {
         container.innerHTML = '<div class="empty-text">Chưa có bình luận nào. Hãy để lại cảm nhận nhé! 🌸</div>';
         return;
     }
-    var roots = rows.filter(function(r) { return !r.parent_id; });
-    var replies = rows.filter(function(r) { return !!r.parent_id; });
+    var roots   = rows.filter(function(r) { return !r.parent_id; });
+    var replies  = rows.filter(function(r) { return !!r.parent_id; });
     var replyMap = {};
     replies.forEach(function(r) {
         if (!replyMap[r.parent_id]) replyMap[r.parent_id] = [];
         replyMap[r.parent_id].push(r);
     });
+
     container.innerHTML = '';
     roots.forEach(function(c) {
         var el = buildCommentEl(c, replyMap, false, null);
@@ -1526,17 +1556,18 @@ function renderMainComments(rows, container) {
 }
 
 async function submitMainComment() {
-    var name = document.getElementById('main-author').value.trim();
+    var name    = document.getElementById('main-author').value.trim();
     var content = document.getElementById('main-content').value.trim();
-    if (!name) { alert('Vui lòng nhập tên của bạn.'); return; }
+    if (!name)    { alert('Vui lòng nhập tên của bạn.'); return; }
     if (!content) { alert('Vui lòng nhập nội dung bình luận.'); return; }
     localStorage.setItem('comment-author-name', name);
+
     var btn = document.querySelector('.main-submit-btn');
     btn.disabled = true; btn.textContent = 'Đang gửi…';
     try {
         await sbFetch('comments', 'POST', {
             page_path: PAGE_PATH, para_index: null,
-            author_name: selectedAvatar['main'] + ' ' + name, author_id: AUTHOR_ID, content: content
+            author_name: (loggedInAvatarUrl ? loggedInAvatarUrl + '|' : selectedAvatar['main'] + ' ') + name, author_id: AUTHOR_ID, content: content
         });
         document.getElementById('main-content').value = '';
         document.getElementById('main-char-count').textContent = '0';
@@ -1545,6 +1576,7 @@ async function submitMainComment() {
     btn.disabled = false; btn.textContent = 'Gửi bình luận';
 }
 
+// ── Reply ──
 function toggleReplyForm(commentId, context, paraIndex) {
     var form = document.getElementById('reply-form-' + commentId);
     form.style.display = form.style.display === 'none' ? 'flex' : 'none';
@@ -1557,9 +1589,10 @@ async function submitReply(parentId, context, paraIndex) {
         (context === 'sidebar' ? document.getElementById('sidebar-author').value.trim()
                                : document.getElementById('main-author').value.trim());
     var textarea = document.getElementById('reply-text-' + parentId);
-    var content = textarea.value.trim();
-    if (!name) { alert('Vui lòng nhập tên ở form bên trên trước.'); return; }
+    var content  = textarea.value.trim();
+    if (!name)    { alert('Vui lòng nhập tên ở form bên trên trước.'); return; }
     if (!content) return;
+
     try {
         await sbFetch('comments', 'POST', {
             page_path: PAGE_PATH,
@@ -1568,12 +1601,16 @@ async function submitReply(parentId, context, paraIndex) {
             content: content, parent_id: parentId
         });
         textarea.value = '';
-        if (context === 'sidebar') loadSidebarComments(paraIndex);
-        else loadMainComments();
+        if (context === 'sidebar') {
+            loadSidebarComments(paraIndex);
+        } else {
+            loadMainComments();
+        }
         loadStats();
     } catch(e) { alert('Gửi thất bại!'); }
 }
 
+// ── Xoá ──
 async function deleteComment(id, context, paraIndex) {
     if (!confirm('Xoá bình luận này?')) return;
     try {
@@ -1585,29 +1622,39 @@ async function deleteComment(id, context, paraIndex) {
                 'Content-Profile': 'public'
             }
         });
-        if (context === 'sidebar') loadSidebarComments(paraIndex);
-        else loadMainComments();
+        if (context === 'sidebar') {
+            loadSidebarComments(paraIndex);
+        } else {
+            loadMainComments();
+        }
         loadStats();
         loadParaCounts();
     } catch(e) { alert('Xoá thất bại!'); }
 }
 
+// ══════════════════════════════════════════════
+// THỐNG KÊ
+// ══════════════════════════════════════════════
 async function loadStats() {
     try {
         var all = await sbFetch(
             'comments?select=id,para_index,parent_id,author_id&page_path=eq.' + encodeURIComponent(PAGE_PATH)
         );
-        var total = all.length;
-        var roots = all.filter(function(r) { return !r.parent_id; }).length;
+        var total   = all.length;
+        var roots   = all.filter(function(r) { return !r.parent_id; }).length;
         var replies = all.filter(function(r) { return !!r.parent_id; }).length;
-        var users = new Set(all.map(function(r) { return r.author_id; })).size;
-        document.getElementById('stat-total').textContent = total;
-        document.getElementById('stat-root').textContent = roots;
+        var users   = new Set(all.map(function(r) { return r.author_id; })).size;
+
+        document.getElementById('stat-total').textContent   = total;
+        document.getElementById('stat-root').textContent    = roots;
         document.getElementById('stat-replies').textContent = replies;
-        document.getElementById('stat-users').textContent = users;
+        document.getElementById('stat-users').textContent   = users;
     } catch(e) {}
 }
 
+// ══════════════════════════════════════════════
+// BADGE UPDATE
+// ══════════════════════════════════════════════
 function updateBadge(paraIndex) {
     var badge = document.querySelector('.comment-badge[data-para="' + paraIndex + '"]');
     if (!badge) return;
@@ -1615,14 +1662,17 @@ function updateBadge(paraIndex) {
     badge.querySelector('.badge-count').textContent = cnt > 0 ? cnt : '';
 }
 
+// ══════════════════════════════════════════════
+// LIKE (localStorage — đơn giản)
+// ══════════════════════════════════════════════
 function initLike() {
-    var key = 'like-' + PAGE_PATH;
+    var key   = 'like-' + PAGE_PATH;
     var liked = localStorage.getItem(key) === '1';
     var count = parseInt(localStorage.getItem('likecount-' + PAGE_PATH) || '0', 10);
     updateLikeUI(liked, count);
 }
 function toggleLike() {
-    var key = 'like-' + PAGE_PATH;
+    var key   = 'like-' + PAGE_PATH;
     var liked = localStorage.getItem(key) === '1';
     var count = parseInt(localStorage.getItem('likecount-' + PAGE_PATH) || '0', 10);
     liked = !liked;
@@ -1638,6 +1688,9 @@ function updateLikeUI(liked, count) {
     liked ? btn.classList.add('liked') : btn.classList.remove('liked');
 }
 
+// ══════════════════════════════════════════════
+// SHARE MODAL
+// ══════════════════════════════════════════════
 function openShareModal() {
     document.getElementById('share-link-input').value = window.location.href;
     document.getElementById('copy-link-btn').textContent = 'Sao chép';
@@ -1649,7 +1702,7 @@ function closeShareModal() {
 }
 function copyLink() {
     var input = document.getElementById('share-link-input');
-    var btn = document.getElementById('copy-link-btn');
+    var btn   = document.getElementById('copy-link-btn');
     navigator.clipboard.writeText(input.value).then(function() {
         btn.textContent = '✓ Đã sao chép'; btn.classList.add('copied');
         setTimeout(function() { btn.textContent = 'Sao chép'; btn.classList.remove('copied'); }, 2000);
@@ -1660,24 +1713,46 @@ function copyLink() {
     });
 }
 
-var AVATARS = ['🌸','🌺','🌻','🌹','🌷','🪷','💐','🌼','🍀','🌿','🪴','🌱','🎋','🎍','🍃','🪻','🌾','🍂','🍁','🫧','✨','💫','🌙','⭐'];
-var STICKERS = ['🌸✨','(づ｡◕‿‿◕｡)づ','(っ˘ω˘ς)','꒰˶• ༝ •˶꒱','(ﾉ◕ヮ◕)ﾉ*:･ﾟ✧','｡˚⋆｡˚✿','(´｡• ᵕ •｡`)','🌿✨','₍ᐢ._.ᐢ₎♡','(˶ᵔ ᵕ ᵔ˶)','✦ ˚ · .','꒰꒱ᵕ̈','🍃💫','(◍•ᴗ•◍)❤','·˚ ༘ ✧','(´• ω •`)','˚₊‧꒰ᵕ̈꒱‧₊˚','🌺ෆ','⸜(。˃ ᵕ ˂ )⸝♡','✿.｡.:* ☆'];
+// ══════════════════════════════════════════════
+// TIỆN ÍCH
+// ══════════════════════════════════════════════
+
+// ══════════════════════════════════════════════
+// AVATAR & STICKER
+// ══════════════════════════════════════════════
+var AVATARS = [
+    '🌸','🌺','🌻','🌹','🌷','🪷','💐','🌼',
+    '🍀','🌿','🪴','🌱','🎋','🎍','🍃','🪻',
+    '🌾','🍂','🍁','🫧','✨','💫','🌙','⭐'
+];
+
+var STICKERS = [
+    '🌸✨','(づ｡◕‿‿◕｡)づ','(っ˘ω˘ς)','꒰˶• ༝ •˶꒱','(ﾉ◕ヮ◕)ﾉ*:･ﾟ✧',
+    '｡˚⋆｡˚✿','(´｡• ᵕ •｡`)','🌿✨','₍ᐢ._.ᐢ₎♡','(˶ᵔ ᵕ ᵔ˶)',
+    '✦ ˚ · .','꒰꒱ᵕ̈','🍃💫','(◍•ᴗ•◍)❤','·˚ ༘ ✧',
+    '(´• ω •`)','˚₊‧꒰ᵕ̈꒱‧₊˚','🌺ෆ','⸜(。˃ ᵕ ˂ )⸝♡','✿.｡.:* ☆'
+];
+
 var selectedAvatar = { main: '🌿', sidebar: '🌿' };
+var loggedInAvatarUrl = '';
 
 function initAvatarPicker(context) {
-    var pickerId = context + '-avatar-picker';
+    var pickerId  = context + '-avatar-picker';
     var previewId = context + '-avatar-preview';
-    var picker = document.getElementById(pickerId);
+    var picker    = document.getElementById(pickerId);
     if (!picker) return;
+
     var saved = localStorage.getItem('comment-avatar');
     if (saved) selectedAvatar[context] = saved;
     /* Chỉ ghi emoji nếu preview chưa có ảnh tài khoản */
     var _pv = document.getElementById(previewId);
     if (_pv && !_pv.querySelector('img')) { _pv.textContent = selectedAvatar[context]; }
+
     AVATARS.forEach(function(av) {
         var btn = document.createElement('span');
         btn.className = 'avatar-option' + (av === selectedAvatar[context] ? ' selected' : '');
-        btn.textContent = av; btn.title = av;
+        btn.textContent = av;
+        btn.title = av;
         btn.onclick = function() {
             selectedAvatar[context] = av;
             localStorage.setItem('comment-avatar', av);
@@ -1687,7 +1762,7 @@ function initAvatarPicker(context) {
             var other = context === 'main' ? 'sidebar' : 'main';
             selectedAvatar[other] = av;
             var otherPreview = document.getElementById(other + '-avatar-preview');
-            if (otherPreview && !otherPreview.querySelector('img')) { otherPreview.textContent = av; };
+            if (otherPreview && !otherPreview.querySelector('img')) { otherPreview.textContent = av; }
             picker.querySelectorAll('.avatar-option').forEach(function(b) { b.classList.remove('selected'); });
             btn.classList.add('selected');
             var otherPicker = document.getElementById(other + '-avatar-picker');
@@ -1702,13 +1777,15 @@ function initAvatarPicker(context) {
 }
 
 function initStickerPicker(context) {
-    var pickerId = context + '-sticker-picker';
+    var pickerId  = context + '-sticker-picker';
     var contentId = context === 'main' ? 'main-content' : 'sidebar-content';
-    var picker = document.getElementById(pickerId);
+    var picker    = document.getElementById(pickerId);
     if (!picker) return;
+
     STICKERS.forEach(function(st) {
         var btn = document.createElement('span');
-        btn.className = 'sticker-btn'; btn.textContent = st;
+        btn.className = 'sticker-btn';
+        btn.textContent = st;
         btn.onclick = function() {
             var ta = document.getElementById(contentId);
             var pos = ta.selectionStart;
@@ -1724,8 +1801,19 @@ function initStickerPicker(context) {
     });
 }
 
+function renderAuthor(authorName) {
+    var sep = authorName ? authorName.indexOf('|') : -1;
+    if (sep > 0 && authorName.substring(0, sep).startsWith('http')) {
+        var url  = escHtml(authorName.substring(0, sep));
+        var name = escHtml(authorName.substring(sep + 1));
+        return '<img src="' + url + '" alt="avatar" style="width:20px;height:20px;object-fit:cover;border-radius:50%;vertical-align:middle;margin-right:5px;">' + name;
+    }
+    return escHtml(authorName);
+}
 function escHtml(s) {
-    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    return String(s)
+        .replace(/&/g,'&amp;').replace(/</g,'&lt;')
+        .replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 }
 function fmtDate(iso) {
     var d = new Date(iso);
@@ -1735,7 +1823,6 @@ function fmtDate(iso) {
            d.getDate() + '/' + (d.getMonth()+1) + '/' + d.getFullYear();
 }
 </script>
-
 
 </body>
 </html>
