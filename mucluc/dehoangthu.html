@@ -284,15 +284,17 @@
         .volume-body { padding: 0 20px 16px; display: block; }
         .volume-body.collapsed { display: none; }
 
-        /* ── Chapter columns: 25 per column ── */
+        /* ── Chapter columns: 4 equal columns ── */
         .chapter-grid {
-            display: flex; flex-wrap: wrap; gap: 0 16px; margin-bottom: 0;
+            display: flex; flex-wrap: nowrap; gap: 0; margin-bottom: 0;
         }
         .chapter-col {
-            flex: 1 1 200px; min-width: 180px;
-            border-right: 1px dashed #dae5e0; padding-right: 8px;
+            flex: 1 1 0; width: 25%;
+            border-right: 1px dashed #dae5e0; padding: 0 10px 0 6px;
+            min-width: 0;
         }
-        .chapter-col:last-child { border-right: none; padding-right: 0; }
+        .chapter-col:first-child { padding-left: 2px; }
+        .chapter-col:last-child { border-right: none; padding-right: 2px; }
         .chapter-grid a {
             display: flex; align-items: center; gap: 6px;
             text-decoration: none; color: #3a3a3a; font-size: 0.875rem;
@@ -982,8 +984,8 @@
         toggle.classList.toggle('open', !collapsed);
     }
 
-    /* ── Tạo link chương tự động (xếp theo cột, 25 chương/cột) ── */
-    var COL_SIZE = 25;
+    /* ── Tạo link chương tự động (xếp đều 4 cột) ── */
+    var NUM_COLS = 4;
 
     function renderChapGrid(gridId, total, urlFn) {
         var grid = document.getElementById(gridId);
@@ -992,9 +994,16 @@
         for (var i = 1; i <= total; i++) {
             items.push({ label: 'Chương ' + i, url: urlFn(i) });
         }
+        /* Chia đều: tính số chương mỗi cột, cột đầu nhận phần dư */
+        var cols = Math.min(NUM_COLS, total);
+        var base = Math.floor(total / cols);
+        var extra = total % cols; /* số cột đầu có thêm 1 chương */
         var html = '';
-        for (var c = 0; c < items.length; c += COL_SIZE) {
-            var col = items.slice(c, c + COL_SIZE);
+        var idx = 0;
+        for (var c = 0; c < cols; c++) {
+            var size = base + (c < extra ? 1 : 0);
+            var col = items.slice(idx, idx + size);
+            idx += size;
             html += '<div class="chapter-col">';
             for (var k = 0; k < col.length; k++) {
                 html += '<a href="' + col[k].url + '"><span class="chapter-marker">✦</span>' + col[k].label + '</a>';
