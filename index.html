@@ -304,6 +304,20 @@
         .feed-msg    { font-size: .79rem; color: var(--text-muted); line-height: 1.4;
                        display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
         .muted-note  { font-size: .8rem; color: var(--text-faint); font-style: italic; }
+        .feed-item--link {
+            display: block; text-decoration: none; color: inherit;
+            border-radius: var(--radius-sm);
+            margin: 0 -6px; padding: 7px 6px;
+            transition: background .15s;
+        }
+        .feed-item--link:hover { background: var(--green-pale); }
+        .feed-item--link:hover .feed-author { color: var(--green-dark); }
+        .feed-item--link:hover .feed-msg { color: var(--text); }
+        .feed-goto {
+            font-size: .68rem; color: var(--green); margin-top: 3px;
+            opacity: 0; transition: opacity .15s;
+        }
+        .feed-item--link:hover .feed-goto { opacity: 1; }
 
         .chat-card {
             background: var(--bg-card); border: 1px solid var(--border);
@@ -930,7 +944,7 @@
 
         <!-- Header section -->
         <div class="section-header">
-            <span class="section-title">📚 Gác sách</span>
+            <span class="section-title">📚 Tủ truyện</span>
             <div class="section-tools">
                 <div class="search-wrap">
                     <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
@@ -1427,7 +1441,7 @@ async function loadComments() {
     const el = document.getElementById('comment-feed');
 
     /* Thử tự động khám phá đúng tên cột */
-    const COLUMNS = ['author_name,content,created_at', 'author,content,created_at', 'name,content,created_at', 'user_name,body,created_at'];
+    const COLUMNS = ['author_name,content,created_at,page_path', 'author,content,created_at,page_path', 'name,content,created_at,page_path', 'user_name,body,created_at,page_path'];
 
     for (const cols of COLUMNS) {
         try {
@@ -1468,13 +1482,17 @@ async function loadComments() {
                 const body   = c[contentCol] || '';
                 const short  = body.length > 55 ? body.substring(0,55)+'…' : body;
                 const time   = c.created_at ? fmtAgo(c.created_at) : '';
-                return `<div class="feed-item">
+                const path   = c.page_path || '';
+                const tag    = path ? `a href="${path}" title="Đến trang bình luận"` : 'div';
+                const close  = path ? 'a' : 'div';
+                return `<${tag} class="feed-item${path ? ' feed-item--link' : ''}">
                     <div class="feed-top">
                         <span class="feed-author">🌿 ${author}</span>
                         <span class="feed-time">${time}</span>
                     </div>
                     <div class="feed-msg">"${short}"</div>
-                </div>`;
+                    ${path ? '<div class="feed-goto">Đến trang →</div>' : ''}
+                </${close}>`;
             }).join('');
             return; /* Thành công → thoát */
 
