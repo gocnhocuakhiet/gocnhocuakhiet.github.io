@@ -1606,25 +1606,31 @@ document.addEventListener('DOMContentLoaded', () => {
 
 /* ── Stats: online presence + pageview tích luỹ dùng Firebase ── */
 function initSiteStats() {
-    /* --- Pageview: tăng 1 mỗi lần load trang --- */
-    const pvRef = db.ref('siteStats/pageviews');
-    pvRef.transaction(cur => (cur || 0) + 1);
-    pvRef.on('value', snap => {
-        const v = snap.val() || 0;
+    /* --- Pageview: chỉ tính 1 lần mỗi session (không tăng khi refresh) --- */
+    if (!sessionStorage.getItem('pv-counted')) {
+        sessionStorage.setItem('pv-counted', '1');
+        const pvRef = db.ref('siteStats/pageviews');
+        pvRef.transaction(cur => (cur || 0) + 1);
+    }
+    db.ref('siteStats/pageviews').on('value', snap => {
         const el = document.getElementById('stat-pageviews');
-        if (el) el.textContent = fmtViews(v);
+        if (el) el.textContent = fmtViews(snap.val() || 0);
     });
 
-    /* --- Online presence: mỗi tab = 1 node, tự xoá khi đóng tab --- */
-    const sessionRef = db.ref('siteStats/online').push();
+    /* --- Online presence: dùng sessionId cố định để tránh nhân bản khi refresh --- */
+    let sid = sessionStorage.getItem('online-sid');
+    if (!sid) {
+        sid = Math.random().toString(36).slice(2);
+        sessionStorage.setItem('online-sid', sid);
+    }
+    const sessionRef = db.ref('siteStats/online/' + sid);
     sessionRef.set(true);
-    sessionRef.onDisconnect().remove(); /* Firebase tự xoá khi mất kết nối */
+    sessionRef.onDisconnect().remove();
 
     db.ref('siteStats/online').on('value', snap => {
-        const count = snap.numChildren();
         const el = document.getElementById('stat-online');
         if (el) {
-            el.textContent = count;
+            el.textContent = snap.numChildren();
             el.style.fontWeight = '600';
             el.style.color = 'var(--green)';
         }
