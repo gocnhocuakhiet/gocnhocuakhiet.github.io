@@ -13,7 +13,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-database-compat.js"></script>
     <!-- Supabase JS SDK -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 
     <style>
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
@@ -1361,16 +1361,16 @@ document.addEventListener('DOMContentLoaded', function() {
 
 <script>
 /* ══ SUPABASE AUTH ══ */
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+const supabaseClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 /* Khởi động — kiểm tra session hiện tại */
 (async () => {
-    const { data: { session } } = await supabase.auth.getSession();
+    const { data: { session } } = await supabaseClient.auth.getSession();
     renderNavAuth(session?.user ?? null);
 })();
 
 /* Lắng nghe thay đổi auth */
-supabase.auth.onAuthStateChange((_event, session) => {
+supabaseClient.auth.onAuthStateChange((_event, session) => {
     renderNavAuth(session?.user ?? null);
 });
 
@@ -1456,7 +1456,7 @@ async function doLogin() {
     const pass  = document.getElementById('login-password').value;
     if (!email || !pass) { setMsg('login-msg', 'Vui lòng điền đầy đủ thông tin.', 'error'); return; }
     setMsg('login-msg', 'Đang đăng nhập…', '');
-    const { error } = await supabase.auth.signInWithPassword({ email, password: pass });
+    const { error } = await supabaseClient.auth.signInWithPassword({ email, password: pass });
     if (error) { setMsg('login-msg', authErrVi(error.message), 'error'); return; }
     setMsg('login-msg', '🌿 Đăng nhập thành công! Chào mừng trở lại~', 'success');
     setTimeout(closeAuthModal, 1200);
@@ -1472,7 +1472,7 @@ async function doRegister() {
     if (pass !== pass2) { setMsg('register-msg', 'Hai mật khẩu không khớp nhau!', 'error'); return; }
     if (pass.length < 6) { setMsg('register-msg', 'Mật khẩu phải có ít nhất 6 ký tự.', 'error'); return; }
     setMsg('register-msg', 'Đang tạo tài khoản…', '');
-    const { error } = await supabase.auth.signUp({
+    const { error } = await supabaseClient.auth.signUp({
         email, password: pass,
         options: {
             data: { display_name: name },
@@ -1485,7 +1485,7 @@ async function doRegister() {
 
 /* Đăng xuất */
 async function doLogout() {
-    await supabase.auth.signOut();
+    await supabaseClient.auth.signOut();
     const menu = document.getElementById('nav-user-menu');
     if (menu) menu.classList.remove('open');
 }
@@ -1494,7 +1494,7 @@ async function doLogout() {
 async function doForgotPassword() {
     const email = document.getElementById('login-email').value.trim();
     if (!email) { setMsg('login-msg', 'Nhập email của bạn vào ô trên trước nhé!', 'error'); return; }
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    const { error } = await supabaseClient.auth.resetPasswordForEmail(email, {
         redirectTo: window.location.href
     });
     if (error) { setMsg('login-msg', authErrVi(error.message), 'error'); return; }
