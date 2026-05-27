@@ -1604,37 +1604,113 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 
-/* ── Stats: online presence + pageview tích luỹ dùng Firebase ── */
+/* ── Stats: online presence + pageview dùng Firebase REST API (không cần SDK rules) ── */
+const FB_URL = 'https://novelhot-1e5e2-default-rtdb.firebaseio.com';
+const FB_KEY  = 'AIzaSyAZqTj2Ji4peUcL7-sQEcgUJ38CoYnCi-o';
+
+async function fbGet(path) {
+    const r = await fetch(`${FB_URL}${path}.json?key=${FB_KEY}`);
+    if (!r.ok) throw new Error('Firebase GET lỗi: ' + r.status);
+    return r.json();
+}
+async function fbSet(path, val) {
+    const r = await fetch(`${FB_URL}${path}.json?key=${FB_KEY}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(val)
+    });
+    if (!r.ok) throw new Error('Firebase SET lỗi: ' + r.status);
+    return r.json();
+}
+async function fbPatch(path, val) {
+    const r = await fetch(`${FB_URL}${path}.json?key=${FB_KEY}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(val)
+    });
+    if (!r.ok) throw new Error('Firebase PATCH lỗi: ' + r.status);
+    return r.json();
+}
+async function fbDelete(path) {
+    await fetch(`${FB_URL}${path}.json?key=${FB_KEY}`, { method: 'DELETE' });
+}
+
 function initSiteStats() {
-    /* --- Pageview: chỉ tính 1 lần mỗi session (không tăng khi refresh) --- */
-    if (!sessionStorage.getItem('pv-counted')) {
-        sessionStorage.setItem('pv-counted', '1');
-        const pvRef = db.ref('siteStats/pageviews');
-        pvRef.transaction(cur => (cur || 0) + 1);
-    }
-    db.ref('siteStats/pageviews').on('value', snap => {
-        const el = document.getElementById('stat-pageviews');
-        if (el) el.textContent = fmtViews(snap.val() || 0);
-    });
+    /* --- Pageview: chỉ tính 1 lần mỗi session --- */
+    (async () => {
+        try {
+            if (!sessionStorage.getItem('pv-counted')) {
+                sessionStorage.setItem('pv-counted', '1');
+                const cur = await fbGet('/siteStats/pageviews') || 0;
+                await fbSet('/siteStats/pageviews', cur + 1);
+            }
+            const pv = await fbGet('/siteStats/pageviews') || 0;
+            const el = document.getElementById('stat-pageviews');
+            if (el) el.textContent = fmtViews(pv);
 
-    /* --- Online presence: dùng sessionId cố định để tránh nhân bản khi refresh --- */
-    let sid = sessionStorage.getItem('online-sid');
-    if (!sid) {
-        sid = Math.random().toString(36).slice(2);
-        sessionStorage.setItem('online-sid', sid);
-    }
-    const sessionRef = db.ref('siteStats/online/' + sid);
-    sessionRef.set(true);
-    sessionRef.onDisconnect().remove();
-
-    db.ref('siteStats/online').on('value', snap => {
-        const el = document.getElementById('stat-online');
-        if (el) {
-            el.textContent = snap.numChildren();
-            el.style.fontWeight = '600';
-            el.style.color = 'var(--green)';
+            /* Poll mỗi 30s để cập nhật */
+            setInterval(async () => {
+                const v = await fbGet('/siteStats/pageviews') || 0;
+                const e = document.getElementById('stat-pageviews');
+                if (e) e.textContent = fmtViews(v);
+            }, 30000);
+        } catch(e) {
+            console.warn('Stats pageview lỗi:', e.message);
         }
-    });
+    })();
+
+    /* --- Online presence: dùng sessionId cố định, poll mỗi 20s --- */
+    (async () => {
+        try {
+            let sid = sessionStorage.getItem('online-sid');
+            if (!sid) {
+                sid = 'u_' + Math.random().toString(36).slice(2, 10);
+                sessionStorage.setItem('online-sid', sid);
+            }
+            const ts = Date.now();
+            await fbSet('/siteStats/online/' + sid, ts);
+
+            /* Dọn node cũ (>60s) rồi đếm */
+            async function refreshPresence() {
+                const now = Date.now();
+                await fbSet('/siteStats/online/' + sid, now);
+
+                /* Đọc tất cả nodes, xóa node hết hạn (>90s không ping) */
+                const all = await fbGet('/siteStats/online') || {};
+                const deletes = {};
+                let count = 0;
+                for (const [k, v] of Object.entries(all)) {
+                    if (now - v > 90000) {
+                        deletes[k] = null; /* null = xóa trong PATCH */
+                    } else {
+                        count++;
+                    }
+                }
+                if (Object.keys(deletes).length) {
+                    await fbPatch('/siteStats/online', deletes);
+                }
+                const el = document.getElementById('stat-online');
+                if (el) {
+                    el.textContent = count;
+                    el.style.fontWeight = '600';
+                    el.style.color = 'var(--green)';
+                }
+            }
+
+            await refreshPresence();
+            setInterval(refreshPresence, 20000);
+
+            /* Xóa node khi đóng tab */
+            window.addEventListener('beforeunload', () => {
+                navigator.sendBeacon(
+                    `${FB_URL}/siteStats/online/${sid}.json?key=${FB_KEY}`,
+                    new Blob(['null'], { type: 'application/json' })
+                );
+            });
+        } catch(e) {
+            console.warn('Stats online lỗi:', e.message);
+        }
+    })();
 }
 
 function toggleDark() {
