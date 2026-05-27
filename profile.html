@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hồ sơ thành viên – Góc nhỏ của Khiết</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600&family=Lora:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --green:       #4a6b5d;
+            --green-light: #8fae9f;
+            --green-pale:  #eaf2ee;
+            --green-dark:  #3d594d;
+            --bg:          #f4f8f5;
+            --bg-card:     #ffffff;
+            --text:        #2d3a34;
+            --text-muted:  #7a8f85;
+            --text-faint:  #b0c0b8;
+            --border:      #dae5e0;
+            --shadow:      rgba(74,107,93,.08);
+            --radius-sm:   6px;
+            --radius-md:   10px;
+            --radius-lg:   16px;
+        }
+        body.dark-mode {
+            --bg:          #111a16;
+            --bg-card:     #1b2420;
+            --text:        #dae5e0;
+            --text-muted:  #8fae9f;
+            --text-faint:  #4a6b5d;
+            --border:      #2e3d36;
+            --shadow:      rgba(0,0,0,.25);
+        }
+
+        body {
+            font-family: 'Be Vietnam Pro', sans-serif;
+            background: var(--bg); color: var(--text);
+            line-height: 1.7; min-height: 100vh;
+            transition: background .3s, color .3s;
+        }
+
+        /* NAVBAR */
+        .navbar {
+            position: sticky; top: 0; z-index: 100;
+            background: var(--bg-card); border-bottom: 1px solid var(--border);
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 0 5%; height: 52px;
+        }
+        .logo {
+            font-family: 'Lora', serif; font-size: 1rem;
+            color: var(--green); text-decoration: none;
+        }
+        .nav-back {
+            font-size: .83rem; color: var(--text-muted); text-decoration: none;
+            display: flex; align-items: center; gap: 5px; transition: color .15s;
+        }
+        .nav-back:hover { color: var(--green); }
+
+        /* MAIN LAYOUT */
+        .profile-wrapper {
+            max-width: 860px; margin: 0 auto;
+            padding: 28px 20px 60px;
+            display: grid;
+            grid-template-columns: 240px 1fr;
+            gap: 24px; align-items: start;
+        }
+
+        /* LEFT COLUMN */
+        .profile-left { display: flex; flex-direction: column; gap: 16px; }
+
+        .avatar-card {
+            background: var(--bg-card); border: 1px solid var(--border);
+            border-radius: var(--radius-lg); padding: 28px 20px 20px;
+            display: flex; flex-direction: column; align-items: center; gap: 14px;
+            text-align: center;
+        }
+        .avatar-wrap {
+            position: relative; width: 96px; height: 96px;
+        }
+        .avatar-img {
+            width: 96px; height: 96px; border-radius: 50%;
+            object-fit: cover; border: 3px solid var(--green-light);
+            background: var(--green-pale);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 2.4rem;
+        }
+        .avatar-img-tag {
+            width: 96px; height: 96px; border-radius: 50%;
+            object-fit: cover; border: 3px solid var(--green-light);
+        }
+        .avatar-edit-btn {
+            position: absolute; bottom: 2px; right: 2px;
+            width: 28px; height: 28px; border-radius: 50%;
+            background: var(--green); color: #fff; border: 2px solid var(--bg-card);
+            font-size: .75rem; display: flex; align-items: center; justify-content: center;
+            cursor: pointer; transition: .2s;
+        }
+        .avatar-edit-btn:hover { background: var(--green-dark); transform: scale(1.1); }
+        #avatar-file-input { display: none; }
+
+        .user-display-name {
+            font-family: 'Lora', serif; font-size: 1.1rem;
+            color: var(--text); font-weight: 500;
+        }
+        .user-email { font-size: .78rem; color: var(--text-faint); }
+        .user-joined { font-size: .75rem; color: var(--text-faint); margin-top: -6px; }
+
+        .profile-nav { display: flex; flex-direction: column; gap: 2px; }
+        .profile-nav-btn {
+            display: flex; align-items: center; gap: 10px;
+            padding: 10px 14px; border-radius: var(--radius-md);
+            border: none; background: none; font-family: 'Be Vietnam Pro', sans-serif;
+            font-size: .85rem; color: var(--text-muted); cursor: pointer;
+            transition: .15s; text-align: left; width: 100%;
+        }
+        .profile-nav-btn:hover { background: var(--green-pale); color: var(--green); }
+        .profile-nav-btn.active { background: var(--green-pale); color: var(--green); font-weight: 600; }
+        .profile-nav-btn .nav-icon { font-size: 1rem; width: 20px; text-align: center; }
+
+        /* RIGHT COLUMN */
+        .profile-right { display: flex; flex-direction: column; gap: 20px; }
+
+        .profile-panel {
+            background: var(--bg-card); border: 1px solid var(--border);
+            border-radius: var(--radius-lg); padding: 24px;
+            display: none;
+        }
+        .profile-panel.active { display: block; }
+
+        .panel-title {
+            font-family: 'Lora', serif; font-size: 1rem;
+            color: var(--text); margin-bottom: 20px;
+            padding-bottom: 12px; border-bottom: 1px solid var(--border);
+            display: flex; align-items: center; gap: 8px;
+        }
+
+        /* FORM */
+        .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin-bottom: 14px; }
+        .form-row.single { grid-template-columns: 1fr; }
+        .form-group { display: flex; flex-direction: column; gap: 5px; }
+        .form-group label {
+            font-size: .72rem; font-weight: 600; letter-spacing: .5px;
+            text-transform: uppercase; color: var(--text-muted);
+        }
+        .form-group input, .form-group select {
+            padding: 10px 13px;
+            border: 1.5px solid var(--border); border-radius: var(--radius-md);
+            background: var(--bg); color: var(--text);
+            font-size: .88rem; font-family: 'Be Vietnam Pro', sans-serif;
+            outline: none; transition: border-color .2s;
+        }
+        .form-group input:focus, .form-group select:focus { border-color: var(--green); }
+        .form-group input::placeholder { color: var(--text-faint); }
+
+        .save-btn {
+            padding: 10px 28px; border-radius: 24px;
+            background: var(--green); color: #fff; border: none;
+            font-size: .88rem; font-weight: 600;
+            font-family: 'Be Vietnam Pro', sans-serif;
+            cursor: pointer; transition: .2s; margin-top: 6px;
+        }
+        .save-btn:hover { background: var(--green-dark); transform: translateY(-1px); }
+        .save-btn:disabled { opacity: .5; cursor: default; transform: none; }
+        .save-msg { font-size: .8rem; color: var(--green); margin-top: 8px; min-height: 16px; }
+        .save-msg.error { color: #e53e3e; }
+
+        /* AVATAR upload area */
+        .avatar-upload-area {
+            border: 2px dashed var(--border); border-radius: var(--radius-md);
+            padding: 20px; text-align: center; cursor: pointer;
+            transition: .2s; margin-bottom: 14px;
+        }
+        .avatar-upload-area:hover { border-color: var(--green-light); background: var(--green-pale); }
+        .avatar-upload-area .up-icon { font-size: 2rem; margin-bottom: 6px; }
+        .avatar-upload-area p { font-size: .82rem; color: var(--text-muted); }
+        .avatar-preview-row {
+            display: flex; align-items: center; gap: 12px; margin-bottom: 16px;
+        }
+        .avatar-preview-large {
+            width: 72px; height: 72px; border-radius: 50%;
+            border: 3px solid var(--green-light);
+            object-fit: cover; background: var(--green-pale);
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.8rem; flex-shrink: 0;
+        }
+        .avatar-preview-large img { width: 100%; height: 100%; object-fit: cover; border-radius: 50%; }
+        .avatar-preview-info { font-size: .8rem; color: var(--text-muted); }
+        .avatar-preview-info strong { color: var(--text); }
+
+        /* FAVORITES */
+        .fav-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            gap: 14px;
+        }
+        .fav-card {
+            border: 1px solid var(--border); border-radius: var(--radius-md);
+            overflow: hidden; text-decoration: none; color: var(--text);
+            transition: .2s; position: relative;
+            display: flex; flex-direction: column;
+        }
+        .fav-card:hover { border-color: var(--green-light); transform: translateY(-2px); box-shadow: 0 6px 20px var(--shadow); }
+        .fav-cover {
+            width: 100%; aspect-ratio: 2/3; object-fit: cover;
+            background: var(--green-pale);
+        }
+        .fav-cover-placeholder {
+            width: 100%; aspect-ratio: 2/3;
+            background: var(--green-pale);
+            display: flex; align-items: center; justify-content: center; font-size: 2rem;
+        }
+        .fav-info { padding: 8px; }
+        .fav-title {
+            font-size: .75rem; font-weight: 500; line-height: 1.3;
+            display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+        }
+        .fav-remove {
+            position: absolute; top: 5px; right: 5px;
+            width: 22px; height: 22px; border-radius: 50%;
+            background: rgba(0,0,0,.5); color: #fff; border: none;
+            font-size: .7rem; cursor: pointer; display: none;
+            align-items: center; justify-content: center;
+            transition: .15s;
+        }
+        .fav-card:hover .fav-remove { display: flex; }
+        .fav-remove:hover { background: #e53e3e; }
+
+        .fav-empty {
+            grid-column: 1/-1; text-align: center;
+            padding: 40px 0; color: var(--text-faint);
+        }
+        .fav-empty span { font-size: 2.2rem; display: block; margin-bottom: 8px; }
+
+        /* NOT LOGGED IN */
+        .not-logged {
+            text-align: center; padding: 60px 20px;
+        }
+        .not-logged .icon { font-size: 3rem; margin-bottom: 16px; }
+        .not-logged h2 { font-family: 'Lora', serif; font-size: 1.2rem; color: var(--green); margin-bottom: 8px; }
+        .not-logged p { font-size: .88rem; color: var(--text-muted); margin-bottom: 20px; }
+        .login-cta {
+            padding: 11px 32px; border-radius: 30px;
+            background: var(--green); color: #fff; border: none;
+            font-size: .9rem; font-weight: 600;
+            font-family: 'Be Vietnam Pro', sans-serif;
+            cursor: pointer; transition: .2s;
+        }
+        .login-cta:hover { background: var(--green-dark); }
+
+        /* AUTH MODAL (copy from index) */
+        .auth-overlay {
+            position: fixed; inset: 0;
+            background: rgba(0,0,0,.45); backdrop-filter: blur(4px);
+            z-index: 99990; display: flex; align-items: center; justify-content: center;
+            opacity: 0; visibility: hidden; transition: opacity .25s, visibility .25s;
+        }
+        .auth-overlay.open { opacity: 1; visibility: visible; }
+        .auth-modal {
+            background: var(--bg-card); border-radius: 20px;
+            width: 92%; max-width: 420px; padding: 32px 28px 28px;
+            box-shadow: 0 24px 64px rgba(0,0,0,.2);
+            position: relative;
+        }
+        .auth-close {
+            position: absolute; top: 14px; right: 18px;
+            background: none; border: none; font-size: 1.2rem; color: var(--text-faint);
+        }
+        .auth-close:hover { color: var(--text); }
+        .auth-tabs { display: flex; border-bottom: 2px solid var(--border); margin-bottom: 22px; }
+        .auth-tab {
+            flex: 1; padding: 10px; background: none; border: none;
+            font-size: .85rem; font-weight: 600; text-transform: uppercase;
+            color: var(--text-muted); border-bottom: 2px solid transparent; margin-bottom: -2px;
+            transition: .2s; font-family: 'Be Vietnam Pro', sans-serif;
+        }
+        .auth-tab.active { color: var(--green); border-bottom-color: var(--green); }
+        .auth-title { text-align: center; font-family: 'Lora', serif; font-size: 1.1rem; color: var(--green); margin-bottom: 20px; }
+        .auth-field { margin-bottom: 14px; }
+        .auth-field label { display: block; font-size: .72rem; font-weight: 600; letter-spacing: .5px; text-transform: uppercase; color: var(--text-muted); margin-bottom: 6px; }
+        .auth-field input {
+            width: 100%; padding: 12px 16px;
+            border: 1.5px solid var(--border); border-radius: 10px;
+            background: var(--bg); color: var(--text);
+            font-size: .9rem; font-family: 'Be Vietnam Pro', sans-serif; outline: none; transition: .2s;
+        }
+        .auth-field input:focus { border-color: var(--green); }
+        .auth-btn {
+            width: 100%; padding: 13px; background: linear-gradient(135deg, var(--green), var(--green-light));
+            color: #fff; border: none; border-radius: 30px; font-size: .9rem; font-weight: 600;
+            font-family: 'Be Vietnam Pro', sans-serif; cursor: pointer; margin-top: 6px;
+        }
+        .auth-msg { text-align: center; font-size: .82rem; margin-top: 10px; min-height: 18px; }
+        .auth-msg.error { color: #e53e3e; }
+        .auth-msg.success { color: var(--green); }
+        .auth-divider { text-align: center; color: var(--text-faint); font-size: .78rem; margin-top: 14px; }
+        .auth-divider a { color: var(--green); text-decoration: none; cursor: pointer; }
+
+        /* RESPONSIVE */
+        @media (max-width: 680px) {
+            .profile-wrapper { grid-template-columns: 1fr; padding: 14px 14px 50px; }
+            .profile-left { flex-direction: row; flex-wrap: wrap; }
+            .avatar-card { flex: 1; min-width: 200px; }
+            .profile-nav { flex-direction: row; overflow-x: auto; }
+            .profile-nav-btn { white-space: nowrap; }
+            .form-row { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+
+<header class="navbar">
+    <a href="index.html" class="logo">🌿 Góc nhỏ của Khiết</a>
+    <a href="index.html" class="nav-back">← Trang chủ</a>
+</header>
+
+<!-- NỘI DUNG CHÍNH -->
+<div id="page-root"></div>
+
+<!-- AUTH MODAL -->
+<div class="auth-overlay" id="auth-overlay" onclick="handleOverlayClick(event)">
+    <div class="auth-modal">
+        <button class="auth-close" onclick="closeAuthModal()">✕</button>
+        <div class="auth-tabs">
+            <button class="auth-tab active" id="tab-login" onclick="switchAuthTab('login')">Đăng nhập</button>
+            <button class="auth-tab" id="tab-register" onclick="switchAuthTab('register')">Đăng ký</button>
+        </div>
+        <div id="panel-login">
+            <div class="auth-field"><label>✉️ Email:</label><input type="email" id="login-email" placeholder="name@gmail.com"></div>
+            <div class="auth-field"><label>🔑 Mật khẩu:</label><input type="password" id="login-password" placeholder="Mật khẩu…"></div>
+            <button class="auth-btn" onclick="doLogin()">Đăng nhập</button>
+            <p class="auth-msg" id="login-msg"></p>
+            <p class="auth-divider">Chưa có tài khoản? <a onclick="switchAuthTab('register')">Đăng ký ngay</a></p>
+        </div>
+        <div id="panel-register" style="display:none">
+            <div class="auth-field"><label>🌿 Tên hiển thị:</label><input type="text" id="reg-name" placeholder="Nickname…"></div>
+            <div class="auth-field"><label>✉️ Email:</label><input type="email" id="reg-email" placeholder="name@gmail.com"></div>
+            <div class="auth-field"><label>🔑 Mật khẩu:</label><input type="password" id="reg-password" placeholder="Tối thiểu 6 ký tự…"></div>
+            <div class="auth-field"><label>🔒 Xác nhận:</label><input type="password" id="reg-password2" placeholder="Nhập lại…"></div>
+            <button class="auth-btn" onclick="doRegister()">Đăng ký ngay</button>
+            <p class="auth-msg" id="register-msg"></p>
+        </div>
+    </div>
+</div>
+
+<script>
+/* ══ CONFIG ══ */
+const SUPABASE_URL = 'https://ibxxdvbdpsmcyufilnoh.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlieHhkdmJkcHNtY3l1Zmlsbm9oIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk1MTMxNjcsImV4cCI6MjA5NTA4OTE2N30.oKB7vmQceVENuyUExLeND0M9YvnS-30nTGRbrv-xrUs';
+const sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+const NOVELS = [
+    { id:'dehoangthu',        title:'Đế Hoàng Thư',                                       cover:'images/dehoangthu.jpg',        link:'mucluc/dehoangthu.html',        emoji:'👑' },
+    { id:'toimuondinguocgio', title:'Tôi Muốn Đi Ngược Gió',                              cover:'images/toimuondinguocgio.png',  link:'mucluc/toimuondinguocgio.html', emoji:'🌬️' },
+    { id:'quyphi',            title:'Quý Phi Mỗi Ngày Chỉ Muốn Làm Cá Muối',             cover:'images/quyphi.png',             link:'mucluc/quyphi.html',           emoji:'🐟' },
+    { id:'camyhanh',          title:'Cẩm Y Hành',                                         cover:'images/camyhanh.png',           link:'mucluc/camyhanh.html',         emoji:'⚔️' },
+    { id:'hoanquanquyenthe',  title:'Hoạn Quan Quyền Thế',                                cover:'images/hoanquan.png',           link:'mucluc/hoanquanquyenthe.html', emoji:'⚔️' },
+    { id:'tatrothanhanhtrai', title:'Ta Trở Thành Anh Trai Của Nữ Chính Ngược Văn',       cover:'images/tatrothanhanhtrai.png',  link:'mucluc/tatrothanhanhtrai.html',emoji:'🌸' },
+    { id:'nghenoithuatuong',  title:'Nghe Nói Thừa Tướng Quyền Thế Muốn Hoàn Lương',     cover:'images/nghenoithuatuong.png',   link:'mucluc/nghenoithuatuong.html', emoji:'🏯' },
+    { id:'olongkyduyen',      title:'Ô Long Kỳ Duyên',                                    cover:'images/olongkyduyen.png',       link:'mucluc/olongkyduyen.html',     emoji:'🐉' },
+    { id:'chiataythoima',     title:'Chia Tay Thôi Mà',                                   cover:'images/chiataythoima.png',      link:'mucluc/chiataythoima.html',    emoji:'💔' },
+    { id:'duonglennui',       title:'Đường Lên Núi',                                      cover:'images/duonglennui.png',        link:'mucluc/duonglennui.html',      emoji:'🏔️' },
+];
+
+let currentUser = null;
+let profileData = {};
+let activePanel = 'info';
+let pendingAvatarFile = null;
+let favNovelIds = [];
+
+/* ══ INIT ══ */
+(async () => {
+    const { data: { session } } = await sb.auth.getSession();
+    currentUser = session?.user ?? null;
+    renderPage();
+})();
+
+sb.auth.onAuthStateChange((_e, session) => {
+    currentUser = session?.user ?? null;
+    renderPage();
+});
+
+/* ══ RENDER ══ */
+function renderPage() {
+    const root = document.getElementById('page-root');
+    if (!currentUser) {
+        root.innerHTML = `
+        <div style="max-width:500px;margin:60px auto;padding:0 20px">
+            <div class="not-logged">
+                <div class="icon">🌿</div>
+                <h2>Bạn chưa đăng nhập</h2>
+                <p>Đăng nhập để xem và chỉnh sửa hồ sơ, lưu truyện yêu thích.</p>
+                <button class="login-cta" onclick="openAuthModal('login')">🌿 Đăng nhập ngay</button>
+            </div>
+        </div>`;
+        return;
+    }
+    const name = currentUser.user_metadata?.display_name || currentUser.email.split('@')[0];
+    const initials = name.charAt(0).toUpperCase();
+    const joinDate = new Date(currentUser.created_at).toLocaleDateString('vi-VN');
+
+    root.innerHTML = `
+    <div class="profile-wrapper">
+        <aside class="profile-left">
+            <div class="avatar-card">
+                <div class="avatar-wrap">
+                    <div class="avatar-img" id="avatar-display">${initials}</div>
+                    <button class="avatar-edit-btn" onclick="switchPanel('avatar')" title="Đổi ảnh">✏️</button>
+                </div>
+                <div class="user-display-name" id="disp-name">${name}</div>
+                <div class="user-email">${currentUser.email}</div>
+                <div class="user-joined">Tham gia: ${joinDate}</div>
+            </div>
+            <nav class="profile-nav">
+                <button class="profile-nav-btn active" id="nav-info" onclick="switchPanel('info')"><span class="nav-icon">👤</span>Thông tin</button>
+                <button class="profile-nav-btn" id="nav-avatar" onclick="switchPanel('avatar')"><span class="nav-icon">🖼️</span>Ảnh đại diện</button>
+                <button class="profile-nav-btn" id="nav-fav" onclick="switchPanel('fav')"><span class="nav-icon">❤️</span>Yêu thích</button>
+                <button class="profile-nav-btn" style="color:#e53e3e" onclick="doLogout()"><span class="nav-icon">🚪</span>Đăng xuất</button>
+            </nav>
+        </aside>
+
+        <div class="profile-right">
+            <!-- Panel Thông tin -->
+            <div class="profile-panel active" id="panel-info">
+                <div class="panel-title">👤 Thông tin cá nhân</div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Tên hiển thị</label>
+                        <input type="text" id="f-name" placeholder="Nickname…" maxlength="30">
+                    </div>
+                    <div class="form-group">
+                        <label>Giới tính</label>
+                        <select id="f-gender">
+                            <option value="">-- Chọn --</option>
+                            <option value="female">Nữ 🌸</option>
+                            <option value="male">Nam 🌿</option>
+                            <option value="other">Khác ✨</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Ngày sinh</label>
+                        <input type="date" id="f-birthday">
+                    </div>
+                    <div class="form-group">
+                        <label>Thể loại yêu thích</label>
+                        <select id="f-fav-genre">
+                            <option value="">-- Chọn --</option>
+                            <option value="nt">Ngôn tình 🌸</option>
+                            <option value="dm">Đam mỹ ✨</option>
+                            <option value="dn">Đồng nhân 🎭</option>
+                            <option value="all">Tất cả 📚</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row single">
+                    <div class="form-group">
+                        <label>Giới thiệu bản thân</label>
+                        <input type="text" id="f-bio" placeholder="Một câu giới thiệu ngắn…" maxlength="100">
+                    </div>
+                </div>
+                <button class="save-btn" onclick="saveProfile()">💾 Lưu thay đổi</button>
+                <div class="save-msg" id="info-msg"></div>
+            </div>
+
+            <!-- Panel Avatar -->
+            <div class="profile-panel" id="panel-avatar">
+                <div class="panel-title">🖼️ Ảnh đại diện</div>
+                <div class="avatar-preview-row">
+                    <div class="avatar-preview-large" id="avatar-preview-large">?</div>
+                    <div class="avatar-preview-info">
+                        <strong id="preview-name">Xem trước</strong><br>
+                        <span id="preview-hint" style="font-size:.75rem;color:var(--text-faint)">Chọn ảnh để xem trước</span>
+                    </div>
+                </div>
+                <div class="avatar-upload-area" onclick="document.getElementById('avatar-file-input').click()">
+                    <div class="up-icon">📷</div>
+                    <p>Nhấn để chọn ảnh từ máy tính<br><span style="font-size:.73rem;color:var(--text-faint)">JPG, PNG, WebP — tối đa 2MB</span></p>
+                </div>
+                <input type="file" id="avatar-file-input" accept="image/*" onchange="previewAvatar(event)">
+                <button class="save-btn" onclick="uploadAvatar()" id="upload-btn" disabled>☁️ Tải lên & Lưu</button>
+                <div class="save-msg" id="avatar-msg"></div>
+            </div>
+
+            <!-- Panel Yêu thích -->
+            <div class="profile-panel" id="panel-fav">
+                <div class="panel-title">❤️ Truyện yêu thích</div>
+                <div class="fav-grid" id="fav-grid">
+                    <div class="fav-empty"><span>⏳</span>Đang tải…</div>
+                </div>
+            </div>
+        </div>
+    </div>`;
+
+    loadProfile();
+    loadFavorites();
+    loadCurrentAvatar();
+}
+
+function switchPanel(name) {
+    activePanel = name;
+    document.querySelectorAll('.profile-panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.profile-nav-btn').forEach(b => b.classList.remove('active'));
+    const panel = document.getElementById('panel-' + name);
+    const btn   = document.getElementById('nav-' + name);
+    if (panel) panel.classList.add('active');
+    if (btn)   btn.classList.add('active');
+}
+
+/* ══ PROFILE LOAD / SAVE ══ */
+async function loadProfile() {
+    if (!currentUser) return;
+    try {
+        const r = await fetch(`${SUPABASE_URL}/rest/v1/profiles?user_id=eq.${currentUser.id}&select=*`, {
+            headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
+        });
+        const data = await r.json();
+        if (data && data.length) {
+            profileData = data[0];
+            const n  = document.getElementById('f-name');
+            const g  = document.getElementById('f-gender');
+            const b  = document.getElementById('f-birthday');
+            const fg = document.getElementById('f-fav-genre');
+            const bi = document.getElementById('f-bio');
+            if (n)  n.value  = profileData.display_name || currentUser.user_metadata?.display_name || '';
+            if (g)  g.value  = profileData.gender || '';
+            if (b)  b.value  = profileData.birthday || '';
+            if (fg) fg.value = profileData.fav_genre || '';
+            if (bi) bi.value = profileData.bio || '';
+            if (profileData.avatar_url) renderAvatarFromUrl(profileData.avatar_url);
+        } else {
+            const n = document.getElementById('f-name');
+            if (n) n.value = currentUser.user_metadata?.display_name || '';
+        }
+    } catch(e) {}
+}
+
+async function saveProfile() {
+    if (!currentUser) return;
+    const btn = document.querySelector('.save-btn');
+    const msg = document.getElementById('info-msg');
+    btn.disabled = true;
+    const payload = {
+        user_id      : currentUser.id,
+        display_name : document.getElementById('f-name').value.trim(),
+        gender       : document.getElementById('f-gender').value,
+        birthday     : document.getElementById('f-birthday').value || null,
+        fav_genre    : document.getElementById('f-fav-genre').value,
+        bio          : document.getElementById('f-bio').value.trim(),
+        updated_at   : new Date().toISOString()
+    };
+    try {
+        const r = await fetch(`${SUPABASE_URL}/rest/v1/profiles?user_id=eq.${currentUser.id}`, {
+            method : 'PATCH',
+            headers: {
+                'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`,
+                'Content-Type': 'application/json', 'Prefer': 'return=minimal'
+            },
+            body: JSON.stringify(payload)
+        });
+        if (r.status === 404 || r.status === 200 && (await r.text()) === '') {
+            /* Nếu chưa có row thì INSERT */
+            await fetch(`${SUPABASE_URL}/rest/v1/profiles`, {
+                method : 'POST',
+                headers: {
+                    'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`,
+                    'Content-Type': 'application/json', 'Prefer': 'return=minimal'
+                },
+                body: JSON.stringify(payload)
+            });
+        }
+        /* Cũng cập nhật display_name trong user metadata */
+        if (payload.display_name) {
+            await sb.auth.updateUser({ data: { display_name: payload.display_name } });
+            const d = document.getElementById('disp-name');
+            if (d) d.textContent = payload.display_name;
+        }
+        msg.textContent = '✅ Đã lưu thành công!';
+        msg.className = 'save-msg';
+        setTimeout(() => { msg.textContent = ''; }, 3000);
+    } catch(e) {
+        msg.textContent = '❌ Lưu thất bại, thử lại nhé!';
+        msg.className = 'save-msg error';
+    } finally {
+        btn.disabled = false;
+    }
+}
+
+/* ══ UPSERT helper (PATCH rồi POST nếu không có row) ══ */
+async function upsertProfile(payload) {
+    /* Thử PATCH trước */
+    const r = await fetch(`${SUPABASE_URL}/rest/v1/profiles?user_id=eq.${currentUser.id}`, {
+        method : 'PATCH',
+        headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json', 'Prefer': 'return=representation' },
+        body: JSON.stringify(payload)
+    });
+    const updated = await r.json();
+    if (!updated || !updated.length) {
+        await fetch(`${SUPABASE_URL}/rest/v1/profiles`, {
+            method : 'POST',
+            headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`, 'Content-Type': 'application/json', 'Prefer': 'return=minimal' },
+            body: JSON.stringify({ ...payload, user_id: currentUser.id })
+        });
+    }
+}
+
+/* ══ AVATAR ══ */
+function previewAvatar(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    if (file.size > 2 * 1024 * 1024) {
+        document.getElementById('avatar-msg').textContent = '❌ Ảnh quá lớn (tối đa 2MB)!';
+        return;
+    }
+    pendingAvatarFile = file;
+    const url = URL.createObjectURL(file);
+    const prev = document.getElementById('avatar-preview-large');
+    prev.innerHTML = `<img src="${url}" alt="preview">`;
+    document.getElementById('preview-hint').textContent = file.name;
+    document.getElementById('upload-btn').disabled = false;
+    document.getElementById('avatar-msg').textContent = '';
+}
+
+async function uploadAvatar() {
+    if (!pendingAvatarFile || !currentUser) return;
+    const btn = document.getElementById('upload-btn');
+    const msg = document.getElementById('avatar-msg');
+    btn.disabled = true;
+    msg.textContent = '⏳ Đang tải lên…';
+
+    try {
+        const ext      = pendingAvatarFile.name.split('.').pop();
+        const filePath = `avatars/${currentUser.id}.${ext}`;
+
+        /* Upload lên Supabase Storage bucket "avatars" */
+        const { error } = await sb.storage.from('avatars').upload(filePath, pendingAvatarFile, {
+            upsert: true, contentType: pendingAvatarFile.type
+        });
+        if (error) throw error;
+
+        const { data: { publicUrl } } = sb.storage.from('avatars').getPublicUrl(filePath);
+
+        /* Lưu URL vào bảng profiles */
+        await upsertProfile({ avatar_url: publicUrl, updated_at: new Date().toISOString() });
+
+        renderAvatarFromUrl(publicUrl);
+        msg.textContent = '✅ Đã cập nhật ảnh đại diện!';
+        msg.className = 'save-msg';
+        setTimeout(() => { msg.textContent = ''; }, 3000);
+    } catch(e) {
+        console.error(e);
+        msg.textContent = '❌ Tải lên thất bại! Hãy tạo bucket "avatars" trong Supabase Storage (public).';
+        msg.className = 'save-msg error';
+    } finally {
+        btn.disabled = false;
+    }
+}
+
+function renderAvatarFromUrl(url) {
+    const d = document.getElementById('avatar-display');
+    if (d) d.innerHTML = `<img class="avatar-img-tag" src="${url}" alt="avatar">`;
+    const p = document.getElementById('avatar-preview-large');
+    if (p) p.innerHTML = `<img src="${url}" alt="avatar">`;
+}
+
+function loadCurrentAvatar() {
+    /* Nếu đã có profileData.avatar_url thì hiển thị */
+    if (profileData && profileData.avatar_url) renderAvatarFromUrl(profileData.avatar_url);
+}
+
+/* ══ FAVORITES ══ */
+async function loadFavorites() {
+    if (!currentUser) return;
+    const grid = document.getElementById('fav-grid');
+    try {
+        const r = await fetch(`${SUPABASE_URL}/rest/v1/favorites?user_id=eq.${currentUser.id}&select=novel_id`, {
+            headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
+        });
+        const data = await r.json();
+        favNovelIds = Array.isArray(data) ? data.map(d => d.novel_id) : [];
+        renderFavGrid();
+    } catch(e) {
+        if (grid) grid.innerHTML = '<div class="fav-empty"><span>😅</span>Không thể tải.</div>';
+    }
+}
+
+function renderFavGrid() {
+    const grid = document.getElementById('fav-grid');
+    if (!grid) return;
+    const favNovels = NOVELS.filter(n => favNovelIds.includes(n.id));
+    if (!favNovels.length) {
+        grid.innerHTML = '<div class="fav-empty"><span>🤍</span>Chưa có truyện yêu thích.<br><small style="font-size:.75rem">Nhấn ❤️ trên trang truyện để thêm vào đây!</small></div>';
+        return;
+    }
+    grid.innerHTML = favNovels.map(n => `
+        <a class="fav-card" href="${n.link}">
+            ${n.cover
+                ? `<img class="fav-cover" src="${n.cover}" alt="${n.title}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
+                  + `<div class="fav-cover-placeholder" style="display:none">${n.emoji}</div>`
+                : `<div class="fav-cover-placeholder">${n.emoji}</div>`}
+            <div class="fav-info"><div class="fav-title">${n.title}</div></div>
+            <button class="fav-remove" onclick="removeFav(event,'${n.id}')" title="Bỏ yêu thích">✕</button>
+        </a>`).join('');
+}
+
+async function removeFav(e, novelId) {
+    e.preventDefault(); e.stopPropagation();
+    if (!currentUser) return;
+    try {
+        await fetch(`${SUPABASE_URL}/rest/v1/favorites?user_id=eq.${currentUser.id}&novel_id=eq.${novelId}`, {
+            method : 'DELETE',
+            headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` }
+        });
+        favNovelIds = favNovelIds.filter(id => id !== novelId);
+        renderFavGrid();
+    } catch(e) {}
+}
+
+/* ══ AUTH ══ */
+function openAuthModal(tab) {
+    switchAuthTab(tab || 'login');
+    document.getElementById('auth-overlay').classList.add('open');
+}
+function closeAuthModal() { document.getElementById('auth-overlay').classList.remove('open'); }
+function handleOverlayClick(e) { if (e.target.id === 'auth-overlay') closeAuthModal(); }
+function switchAuthTab(tab) {
+    document.getElementById('panel-login').style.display    = tab === 'login'    ? '' : 'none';
+    document.getElementById('panel-register').style.display = tab === 'register' ? '' : 'none';
+    document.getElementById('tab-login').classList.toggle('active',    tab === 'login');
+    document.getElementById('tab-register').classList.toggle('active', tab === 'register');
+}
+function setMsg(id, text, type) {
+    const el = document.getElementById(id);
+    if (el) { el.textContent = text; el.className = 'auth-msg ' + (type||''); }
+}
+function authErrVi(msg) {
+    if (!msg) return 'Có lỗi xảy ra.';
+    if (msg.includes('already registered')) return 'Email đã được đăng ký.';
+    if (msg.includes('Invalid login credentials')) return 'Email hoặc mật khẩu không đúng.';
+    if (msg.includes('Password should be at least')) return 'Mật khẩu phải có ít nhất 6 ký tự.';
+    return 'Có lỗi xảy ra.';
+}
+async function doLogin() {
+    const email = document.getElementById('login-email').value.trim();
+    const pass  = document.getElementById('login-password').value;
+    if (!email || !pass) { setMsg('login-msg','Vui lòng điền đầy đủ.','error'); return; }
+    const { error } = await sb.auth.signInWithPassword({ email, password: pass });
+    if (error) { setMsg('login-msg', authErrVi(error.message), 'error'); return; }
+    setMsg('login-msg','🌿 Đăng nhập thành công!','success');
+    setTimeout(closeAuthModal, 1000);
+}
+async function doRegister() {
+    const name  = document.getElementById('reg-name').value.trim();
+    const email = document.getElementById('reg-email').value.trim();
+    const pass  = document.getElementById('reg-password').value;
+    const pass2 = document.getElementById('reg-password2').value;
+    if (!name||!email||!pass||!pass2) { setMsg('register-msg','Điền đầy đủ nhé!','error'); return; }
+    if (pass !== pass2) { setMsg('register-msg','Hai mật khẩu không khớp!','error'); return; }
+    const { error } = await sb.auth.signUp({ email, password: pass, options: { data: { display_name: name } } });
+    if (error) { setMsg('register-msg', authErrVi(error.message), 'error'); return; }
+    setMsg('register-msg','📧 Kiểm tra email để xác nhận tài khoản!','success');
+}
+async function doLogout() {
+    await sb.auth.signOut();
+}
+</script>
+</body>
+</html>
