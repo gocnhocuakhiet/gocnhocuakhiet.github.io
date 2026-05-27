@@ -943,7 +943,7 @@
                     <input type="text" id="main-author" placeholder="Tên của bạn" maxlength="30">
                 </div>
 
-                <div>
+                <div id="main-avatar-picker-wrap">
                     <div class="avatar-picker-label">Chọn biểu tượng của bạn:</div>
                     <div class="avatar-options-grid" id="main-avatar-picker"></div>
                 </div>
@@ -1068,6 +1068,9 @@
                                 prevEl.textContent = name.charAt(0).toUpperCase();
                             }
                         }
+                        /* Ẩn phần chọn emoji avatar vì đã có ảnh tài khoản */
+                        var pickerWrap = document.getElementById('main-avatar-picker-wrap');
+                        if (pickerWrap) pickerWrap.style.display = 'none';
                         return;
                     }
                 }
@@ -1192,7 +1195,11 @@
 
         var saved = localStorage.getItem('comment-avatar');
         if (saved) selectedAvatar[context] = saved;
-        document.getElementById(previewId).textContent = selectedAvatar[context];
+        /* Chỉ ghi emoji nếu preview chưa có ảnh tài khoản */
+        var prevEl = document.getElementById(previewId);
+        if (prevEl && !prevEl.querySelector('img')) {
+            prevEl.textContent = selectedAvatar[context];
+        }
 
         AVATARS.forEach(function(av) {
             var btn = document.createElement('span');
@@ -1202,7 +1209,11 @@
                 selectedAvatar['main'] = av;
                 selectedAvatar['sidebar'] = av;
                 localStorage.setItem('comment-avatar', av);
-                document.getElementById('main-avatar-preview').textContent = av;
+                /* Chỉ ghi emoji nếu preview chưa có ảnh tài khoản */
+                var prevEl = document.getElementById('main-avatar-preview');
+                if (prevEl && !prevEl.querySelector('img')) {
+                    prevEl.textContent = av;
+                }
                 document.querySelectorAll('.avatar-option').forEach(function(x) {
                     x.classList.toggle('selected', x.textContent === av);
                 });
