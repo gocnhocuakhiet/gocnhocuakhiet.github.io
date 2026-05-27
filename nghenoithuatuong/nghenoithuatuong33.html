@@ -1178,6 +1178,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         if (pw) pw.style.display = 'none';
                         var spw = document.getElementById('sidebar-avatar-picker-wrap');
                         if (spw) spw.style.display = 'none';
+                        if (profileAvatar) loggedInAvatarUrl = profileAvatar;
                         return;
                     }
                 }
@@ -1266,7 +1267,7 @@ function buildCommentEl(c, replyMap, isSidebar, paraIndex) {
                 var isReplyOwner = r.author_id === AUTHOR_ID;
                 return '<div class="reply-item" id="comment-' + r.id + '">' +
                     '<div class="comment-item-header">' +
-                    '<span class="comment-author">💬 ' + escHtml(r.author_name) + '</span>' +
+                    '<span class="comment-author">' + renderAuthor(r.author_name) + '</span>' +
                     '<span class="comment-time">' + fmtDate(r.created_at) + '</span></div>' +
                     '<div class="comment-text">' + escHtml(r.content) + '</div>' +
                     (isReplyOwner ? '<div class="comment-actions"><button class="comment-delete-btn" onclick="deleteComment(\'' + r.id + '\',\'' + (isSidebar ? 'sidebar' : 'main') + '\',' + (paraIndex||'null') + ')">🗑 Xoá</button></div>' : '') +
@@ -1277,7 +1278,7 @@ function buildCommentEl(c, replyMap, isSidebar, paraIndex) {
 
     el.innerHTML =
         '<div class="comment-item-header">' +
-        '<span class="comment-author">🌿 ' + escHtml(c.author_name) + '</span>' +
+        '<span class="comment-author">' + renderAuthor(c.author_name) + '</span>' +
         '<span class="comment-time">' + fmtDate(c.created_at) + '</span></div>' +
         '<div class="comment-text">' + escHtml(c.content) + '</div>' +
         '<div class="comment-actions">' +
@@ -1305,7 +1306,7 @@ async function submitSidebarComment() {
     try {
         await sbFetch('comments', 'POST', {
             page_path: PAGE_PATH, para_index: currentParaIndex,
-            author_name: selectedAvatar['sidebar'] + ' ' + name, author_id: AUTHOR_ID, content: content
+            author_name: (loggedInAvatarUrl ? loggedInAvatarUrl + '|' : selectedAvatar['sidebar'] + ' ') + name, author_id: AUTHOR_ID, content: content
         });
         document.getElementById('sidebar-content').value = '';
         paraCommentCounts[currentParaIndex] = (paraCommentCounts[currentParaIndex] || 0) + 1;
@@ -1367,7 +1368,7 @@ async function submitMainComment() {
     try {
         await sbFetch('comments', 'POST', {
             page_path: PAGE_PATH, para_index: null,
-            author_name: selectedAvatar['main'] + ' ' + name, author_id: AUTHOR_ID, content: content
+            author_name: (loggedInAvatarUrl ? loggedInAvatarUrl + '|' : selectedAvatar['main'] + ' ') + name, author_id: AUTHOR_ID, content: content
         });
         document.getElementById('main-content').value = '';
         document.getElementById('main-char-count').textContent = '0';
@@ -1534,6 +1535,7 @@ var STICKERS = [
 ];
 
 var selectedAvatar = { main: '🌿', sidebar: '🌿' };
+var loggedInAvatarUrl = '';
 
 function initAvatarPicker(context) {
     var pickerId  = context + '-avatar-picker';
@@ -1600,6 +1602,15 @@ function initStickerPicker(context) {
     });
 }
 
+function renderAuthor(authorName) {
+    var sep = authorName ? authorName.indexOf('|') : -1;
+    if (sep > 0 && authorName.substring(0, sep).startsWith('http')) {
+        var url  = escHtml(authorName.substring(0, sep));
+        var name = escHtml(authorName.substring(sep + 1));
+        return '<img src="' + url + '" alt="avatar" style="width:20px;height:20px;object-fit:cover;border-radius:50%;vertical-align:middle;margin-right:5px;">' + name;
+    }
+    return escHtml(authorName);
+}
 function escHtml(s) {
     return String(s)
         .replace(/&/g,'&amp;').replace(/</g,'&lt;')
