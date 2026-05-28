@@ -1551,6 +1551,11 @@
                             if (finalAvatar) { prevEl.innerHTML = '<img src="' + finalAvatar + '" alt="avatar" style="width:100%;height:100%;object-fit:cover;border-radius:50%;display:block;">'; }
                             else { prevEl.textContent = name.charAt(0).toUpperCase(); }
                         }
+                        /* Lưu avatar URL vào selectedAvatar để author_name = "url|Name" */
+                        if (finalAvatar) {
+                            selectedAvatar['main'] = finalAvatar + '|';
+                            selectedAvatar['sidebar'] = finalAvatar + '|';
+                        }
                         var pickerWrap = document.getElementById('main-avatar-picker-wrap');
                         if (pickerWrap) pickerWrap.style.display = 'none';
                         return;
@@ -1580,13 +1585,21 @@
         if (childReplies.length) {
             repliesHtml = '<div class="replies-list">' + childReplies.map(function(r) {
                 var rOwner = r.author_id === AUTHOR_ID;
-                var parts = (r.author_name || '').split(' ');
-                var rAv = parts[0] || '🌿';
-                var rName = parts.slice(1).join(' ') || 'Ẩn danh';
+                var rRaw = r.author_name || '';
+                var rAv, rName;
+                if (rRaw.includes('|')) {
+                    var rPipe = rRaw.indexOf('|');
+                    rAv = rRaw.substring(0, rPipe).trim();
+                    rName = rRaw.substring(rPipe + 1).trim() || 'Ẩn danh';
+                } else {
+                    var rParts = rRaw.split(' ');
+                    rAv = rParts[0] || '🌿';
+                    rName = rParts.slice(1).join(' ') || 'Ẩn danh';
+                }
                 return '<div class="reply-item" id="comment-' + r.id + '">' +
                        '  <div class="comment-header">' +
                        '    <div class="comment-meta">' +
-                       '      <span class="comment-avatar">' + escHtml(rAv) + '</span>' +
+                       '      <span class="comment-avatar">' + (rAv.startsWith('http') ? '<img src="' + escHtml(rAv) + '" style="width:1.5rem;height:1.5rem;border-radius:50%;object-fit:cover;vertical-align:middle;">' : escHtml(rAv)) + '</span>' +
                        '      <span class="comment-author">' + escHtml(rName) + '</span>' +
                        '      <span class="comment-date">' + fmtDate(r.created_at) + '</span>' +
                        '    </div>' +
@@ -1597,14 +1610,22 @@
             }).join('') + '</div>';
         }
 
-        var parts = (c.author_name || '').split(' ');
-        var av = parts[0] || '🌿';
-        var name = parts.slice(1).join(' ') || 'Ẩn danh';
+        var cRaw = c.author_name || '';
+        var av, name;
+        if (cRaw.includes('|')) {
+            var cPipe = cRaw.indexOf('|');
+            av = cRaw.substring(0, cPipe).trim();
+            name = cRaw.substring(cPipe + 1).trim() || 'Ẩn danh';
+        } else {
+            var cParts = cRaw.split(' ');
+            av = cParts[0] || '🌿';
+            name = cParts.slice(1).join(' ') || 'Ẩn danh';
+        }
 
         el.innerHTML =
             '<div class="comment-header">' +
             '  <div class="comment-meta">' +
-            '    <span class="comment-avatar">' + escHtml(av) + '</span>' +
+            '    <span class="comment-avatar">' + (av.startsWith('http') ? '<img src="' + escHtml(av) + '" style="width:1.5rem;height:1.5rem;border-radius:50%;object-fit:cover;vertical-align:middle;">' : escHtml(av)) + '</span>' +
             '    <span class="comment-author">' + escHtml(name) + '</span>' +
             '    <span class="comment-date">' + fmtDate(c.created_at) + '</span>' +
             '  </div>' +
@@ -1694,11 +1715,17 @@
         var loggedInName = mainAuthorEl && mainAuthorEl.readOnly ? mainAuthorEl.value.trim() : '';
         var savedName = loggedInName || localStorage.getItem('comment-author-name') || '';
         var isLoggedIn = !!loggedInName;
+        // Lấy avatar hiện tại (URL hoặc emoji)
+        var curAvatar = selectedAvatar['main'] || selectedAvatar['sidebar'] || '🌿';
+        var avatarHtml = curAvatar.startsWith('http')
+            ? '<img src="' + escHtml(curAvatar.replace(/\|$/, '')) + '" style="width:1.8rem;height:1.8rem;border-radius:50%;object-fit:cover;flex-shrink:0;">'
+            : '<span style="font-size:1.2rem;line-height:1;">' + curAvatar + '</span>';
 
         container.innerHTML =
             '<div class="inline-reply-form">' +
             '  <textarea id="reply-text-' + parentId + '" placeholder="Nhập phản hồi của bạn…" maxlength="500"></textarea>' +
             '  <div class="inline-form-row">' +
+            '    ' + avatarHtml +
             '    <input type="text" class="inline-author-input" id="reply-author-' + parentId + '" placeholder="Tên của bạn" value="' + escHtml(savedName) + '" maxlength="30"' + (isLoggedIn ? ' readonly title="Tên tài khoản của bạn" style="background:#eaf2ee;color:#4a6b5d;"' : '') + '>' +
             '    <button class="inline-reply-btn" onclick="submitInlineReply(\'' + parentId + '\',\'' + context + '\',' + paraIndex + ')">Gửi</button>' +
             '  </div>' +
