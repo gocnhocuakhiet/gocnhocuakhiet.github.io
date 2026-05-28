@@ -1689,13 +1689,18 @@
         if (!container) return;
         if (container.innerHTML !== '') { container.innerHTML = ''; return; }
 
-        var savedName = localStorage.getItem('comment-author-name') || '';
+        // Ưu tiên: tên từ main-author (đã điền khi đăng nhập) → localStorage → trống
+        var mainAuthorEl = document.getElementById('main-author');
+        var loggedInName = mainAuthorEl && mainAuthorEl.readOnly ? mainAuthorEl.value.trim() : '';
+        var savedName = loggedInName || localStorage.getItem('comment-author-name') || '';
+        var isLoggedIn = !!loggedInName;
+
         container.innerHTML =
             '<div class="inline-reply-form">' +
             '  <textarea id="reply-text-' + parentId + '" placeholder="Nhập phản hồi của bạn…" maxlength="500"></textarea>' +
             '  <div class="inline-form-row">' +
-            '    <input type="text" class="inline-author-input" id="reply-author-' + parentId + '" placeholder="Tên của bạn" value="' + escHtml(savedName) + '" maxlength="30">' +
-            '    <button class="inline-reply-btn" onclick="submitInlineReply(' + parentId + ',\'' + context + '\',' + paraIndex + ')">Gửi</button>' +
+            '    <input type="text" class="inline-author-input" id="reply-author-' + parentId + '" placeholder="Tên của bạn" value="' + escHtml(savedName) + '" maxlength="30"' + (isLoggedIn ? ' readonly title="Tên tài khoản của bạn" style="background:#eaf2ee;color:#4a6b5d;"' : '') + '>' +
+            '    <button class="inline-reply-btn" onclick="submitInlineReply(\'' + parentId + '\',\'' + context + '\',' + paraIndex + ')">Gửi</button>' +
             '  </div>' +
             '</div>';
         container.querySelector('textarea').focus();
