@@ -1388,6 +1388,7 @@ function buildCommentEl(c, replyMap, isSidebar, paraIndex) {
     var el = document.createElement('div');
     el.className = 'comment-item';
     el.id = 'comment-' + c.id;
+    el.dataset.authorId = c.author_id || '';
 
     var childReplies = (replyMap && replyMap[c.id]) ? replyMap[c.id] : [];
     var isOwner      = c.author_id === AUTHOR_ID;
@@ -1516,6 +1517,20 @@ function toggleReplyForm(commentId, context, paraIndex) {
     form.style.flexDirection = 'column';
 }
 
+async function sendReplyNotification(recipientAuthorId, senderName, commentContent, chapterTitle, chapterPath) {
+    if (!recipientAuthorId || recipientAuthorId === AUTHOR_ID) return; // không tự gửi cho mình
+    try {
+        await sbFetch('notifications', 'POST', {
+            recipient_author_id: recipientAuthorId,
+            sender_name: senderName,
+            comment_content: commentContent.substring(0, 200),
+            chapter_title: chapterTitle,
+            chapter_path: chapterPath,
+            is_read: false
+        });
+    } catch(e) { console.warn('Không gửi được thông báo:', e); }
+}
+
 async function submitReply(parentId, context, paraIndex) {
     var savedName = localStorage.getItem('comment-author-name');
     var name = savedName ||
@@ -1534,6 +1549,21 @@ async function submitReply(parentId, context, paraIndex) {
             content: content, parent_id: parentId
         });
         textarea.value = '';
+
+        // Gửi thông báo cho chủ bình luận gốc
+        var parentEl = document.getElementById('comment-' + parentId);
+        var recipientAuthorId = parentEl ? (parentEl.dataset.authorId || '') : '';
+        var chapterTitle = (document.querySelector('.chapter-title') || {}).textContent || document.title;
+        if (recipientAuthorId) {
+            await sendReplyNotification(
+                recipientAuthorId,
+                name,
+                content,
+                chapterTitle,
+                window.location.pathname
+            );
+        }
+
         if (context === 'sidebar') {
             loadSidebarComments(paraIndex);
         } else {
