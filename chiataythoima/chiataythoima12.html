@@ -581,7 +581,93 @@
         option[data-font="Crimson Pro"] { font-family: 'Crimson Pro', serif; }
         option[data-font="Lora"] { font-family: 'Lora', serif; }
         option[data-font="Domine"] { font-family: 'Domine', serif; }
+    
+        /* ══ Auth navbar ══ */
+        .nav-auth-btn {
+            padding: 6px 16px; border-radius: 20px;
+            border: 1.5px solid var(--primary); color: var(--primary);
+            background: none; font-size: .83rem; font-weight: 600;
+            transition: .2s; white-space: nowrap; cursor: pointer;
+        }
+        .nav-auth-btn:hover { background: var(--primary); color: #fff; }
+        .nav-user { display: flex; align-items: center; gap: 8px; position: relative; }
+        .nav-avatar {
+            width: 32px; height: 32px; border-radius: 50%;
+            background: var(--primary); color: #fff;
+            font-size: .85rem; font-weight: 600;
+            display: flex; align-items: center; justify-content: center;
+            border: none; cursor: pointer; flex-shrink: 0;
+        }
+        .nav-user-name { font-size: .84rem; max-width: 100px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .nav-user-menu {
+            position: absolute; top: calc(100% + 10px); right: 0;
+            background: #fff; border: 1px solid #dae5e0;
+            border-radius: 10px; box-shadow: 0 8px 24px rgba(74,107,93,.12);
+            min-width: 160px; z-index: 99999; overflow: hidden; display: none;
+        }
+        .nav-user-menu.open { display: block; }
+        .nav-user-menu-item {
+            display: block; width: 100%; padding: 10px 16px;
+            text-align: left; background: none; border: none;
+            font-size: .84rem; transition: .15s; cursor: pointer;
+        }
+        .nav-user-menu-item:hover { background: #eaf2ee; color: var(--primary); }
+        .nav-user-menu-item.logout { color: #e53e3e; }
+        .nav-user-menu-item.logout:hover { background: #fff5f5; }
+        /* ══ Auth modal ══ */
+        .auth-overlay {
+            position: fixed; inset: 0;
+            background: rgba(0,0,0,.45); backdrop-filter: blur(4px);
+            z-index: 99990; display: flex; align-items: center; justify-content: center;
+            opacity: 0; visibility: hidden; transition: opacity .25s, visibility .25s;
+        }
+        .auth-overlay.open { opacity: 1; visibility: visible; }
+        .auth-modal {
+            background: #fff; border-radius: 20px;
+            width: 92%; max-width: 420px; padding: 32px 28px 28px;
+            box-shadow: 0 24px 64px rgba(0,0,0,.3);
+            position: relative; transform: translateY(12px);
+            transition: transform .3s cubic-bezier(.175,.885,.32,1.275);
+        }
+        .auth-overlay.open .auth-modal { transform: translateY(0); }
+        .auth-close { position: absolute; top: 14px; right: 18px; background: none; border: none; font-size: 1.2rem; color: #aaa; cursor: pointer; }
+        .auth-close:hover { color: #333; }
+        .auth-tabs { display: flex; border-bottom: 2px solid #dae5e0; margin-bottom: 22px; }
+        .auth-tab {
+            flex: 1; padding: 10px; background: none; border: none;
+            font-size: .85rem; font-weight: 600; letter-spacing: .5px;
+            text-transform: uppercase; color: #7a8f85;
+            border-bottom: 2px solid transparent; margin-bottom: -2px;
+            transition: .2s; cursor: pointer;
+        }
+        .auth-tab.active { color: var(--primary); border-bottom-color: var(--primary); }
+        .auth-field { margin-bottom: 14px; }
+        .auth-field label { display: block; font-size: .72rem; font-weight: 600; letter-spacing: .5px; text-transform: uppercase; color: #7a8f85; margin-bottom: 6px; }
+        .auth-field input {
+            width: 100%; padding: 12px 16px; box-sizing: border-box;
+            border: 1.5px solid #dae5e0; border-radius: 10px;
+            background: #f4f8f5; color: #2d3a34; font-size: .9rem;
+            outline: none; transition: border-color .2s;
+        }
+        .auth-field input::placeholder { color: #b0c0b8; }
+        .auth-field input:focus { border-color: var(--primary); }
+        .auth-btn {
+            width: 100%; padding: 13px;
+            background: var(--primary); color: #fff;
+            border: none; border-radius: 30px;
+            font-size: .9rem; font-weight: 600; letter-spacing: .5px; text-transform: uppercase;
+            box-shadow: 0 4px 16px rgba(74,107,93,.3); transition: .25s; margin-top: 6px; cursor: pointer;
+        }
+        .auth-btn:hover { background: var(--primary-dark); transform: translateY(-1px); }
+        .auth-msg { text-align: center; font-size: .82rem; margin-top: 10px; min-height: 18px; }
+        .auth-msg.error { color: #e53e3e; }
+        .auth-msg.success { color: var(--primary); }
+        .auth-divider { text-align: center; color: #b0c0b8; font-size: .78rem; margin: 14px 0 0; }
+        .auth-divider a { color: var(--primary); text-decoration: none; cursor: pointer; }
+        .auth-divider a:hover { text-decoration: underline; }
+
     </style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 </head>
 <body>
 
@@ -842,7 +928,7 @@ window.addEventListener('scroll', function() {
 <!-- ── NAVBAR ── -->
 <header class="navbar">
     <a href="../index.html" class="logo">🌿 Góc nhỏ của Khiết</a>
-    <nav class="nav-links"><a href="../index.html">Trang Chủ</a></nav>
+    <div id="nav-auth-area"></div>
 </header>
 
 <!-- ── KHUNG ĐỌC ── -->
@@ -960,7 +1046,7 @@ window.addEventListener('scroll', function() {
         <div class="sticker-picker" id="main-sticker-picker"></div>
         <div style="display:flex; justify-content:space-between; align-items:center; margin-top:4px;">
             <span class="char-count"><span id="main-char-count">0</span>/2000 ký tự</span>
-            <button class="main-submit-btn" onclick="submitMainComment()">Gửi bình luận 🌸</button>
+            <div style="display:flex;gap:8px;align-items:center"><button id="login-btn-main" class="main-submit-btn" onclick="openAuthModal('login')" style="">Đăng nhập</button><button class="main-submit-btn" onclick="submitMainComment()">Gửi bình luận 🌸</button></div>
         </div>
     </div>
 
@@ -1002,7 +1088,7 @@ window.addEventListener('scroll', function() {
             <textarea id="sidebar-content" placeholder="Bình luận về đoạn này..." rows="3" maxlength="1000"></textarea>
             <div class="sticker-picker-label">Chèn nhãn dán:</div>
             <div class="sticker-picker" id="sidebar-sticker-picker"></div>
-            <button class="sidebar-submit-btn" onclick="submitSidebarComment()" style="margin-top:4px;">Gửi 🌸</button>
+            <div style="display:flex;gap:8px;margin-top:4px"><button id="login-btn-sidebar" class="sidebar-submit-btn" onclick="openAuthModal('login')" style="">Đăng nhập</button><button class="sidebar-submit-btn" onclick="submitSidebarComment()">Gửi 🌸</button></div>
         </div>
         <div class="sidebar-comments-list" id="sidebar-comments-list">
             <div class="loading-text">Đang tải…</div>
@@ -1434,31 +1520,67 @@ function updateBadge(paraIndex) {
     badge.querySelector('.badge-count').textContent = cnt > 0 ? cnt : '';
 }
 
-// ══════════════════════════════════════════════
-// LIKE (localStorage — đơn giản)
-// ══════════════════════════════════════════════
-function initLike() {
-    var key   = 'like-' + PAGE_PATH;
-    var liked = localStorage.getItem(key) === '1';
-    var count = parseInt(localStorage.getItem('likecount-' + PAGE_PATH) || '0', 10);
-    updateLikeUI(liked, count);
-}
-function toggleLike() {
-    var key   = 'like-' + PAGE_PATH;
-    var liked = localStorage.getItem(key) === '1';
-    var count = parseInt(localStorage.getItem('likecount-' + PAGE_PATH) || '0', 10);
-    liked = !liked;
-    count = liked ? count + 1 : Math.max(0, count - 1);
-    localStorage.setItem(key, liked ? '1' : '0');
-    localStorage.setItem('likecount-' + PAGE_PATH, count);
-    updateLikeUI(liked, count);
-}
-function updateLikeUI(liked, count) {
-    document.getElementById('like-icon').textContent = liked ? '❤️' : '🤍';
-    document.getElementById('like-count').textContent = count;
-    var btn = document.getElementById('like-btn');
-    liked ? btn.classList.add('liked') : btn.classList.remove('liked');
-}
+/* ══ FAVORITES / LIKE — Supabase ══ */
+    var NOVEL_ID = 'chiataythoima';
+    var _sbClient = null;
+    function getSB() {
+        if (_sbClient) return _sbClient;
+        if (typeof supabase !== 'undefined') _sbClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        return _sbClient;
+    }
+    async function initLike() {
+        try {
+            var r = await fetch(SUPABASE_URL+'/rest/v1/favorites?novel_id=eq.'+NOVEL_ID+'&select=id',
+                {headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY}});
+            var data = await r.json();
+            var total = Array.isArray(data) ? data.length : 0;
+            var liked = false;
+            var sb = getSB();
+            if (sb) {
+                var sess = await sb.auth.getSession();
+                var user = sess.data.session ? sess.data.session.user : null;
+                if (user) {
+                    var r2 = await fetch(SUPABASE_URL+'/rest/v1/favorites?user_id=eq.'+user.id+'&novel_id=eq.'+NOVEL_ID+'&select=id',
+                        {headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY}});
+                    var d2 = await r2.json();
+                    liked = Array.isArray(d2) && d2.length > 0;
+                }
+            }
+            updateLikeUI(liked, total);
+        } catch(e) {
+            updateLikeUI(false, 0);
+        }
+    }
+    async function toggleLike() {
+        var sb = getSB();
+        if (!sb) { alert('Đang kết nối...'); return; }
+        var sess = await sb.auth.getSession();
+        var user = sess.data.session ? sess.data.session.user : null;
+        if (!user) {
+            if (confirm('Bạn cần đăng nhập để thêm vào yêu thích!\nNhấn OK để đến trang đăng nhập.'))
+                window.location.href = '../profile.html';
+            return;
+        }
+        var r = await fetch(SUPABASE_URL+'/rest/v1/favorites?user_id=eq.'+user.id+'&novel_id=eq.'+NOVEL_ID+'&select=id',
+            {headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY}});
+        var ex = await r.json();
+        if (Array.isArray(ex) && ex.length > 0) {
+            await fetch(SUPABASE_URL+'/rest/v1/favorites?user_id=eq.'+user.id+'&novel_id=eq.'+NOVEL_ID,
+                {method:'DELETE',headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY}});
+        } else {
+            await fetch(SUPABASE_URL+'/rest/v1/favorites',{method:'POST',
+                headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':'application/json','Prefer':'return=minimal'},
+                body:JSON.stringify({user_id:user.id,novel_id:NOVEL_ID})});
+        }
+        await initLike();
+    }
+    function updateLikeUI(liked, count) {
+        var btn = document.getElementById('like-btn');
+        if (!btn) return;
+        btn.querySelector('#like-icon').textContent = liked ? '❤️' : '🤍';
+        document.getElementById('like-count').textContent = count;
+        liked ? btn.classList.add('liked') : btn.classList.remove('liked');
+    }
 
 // ══════════════════════════════════════════════
 // SHARE MODAL
@@ -1594,6 +1716,148 @@ function fmtDate(iso) {
            d.getSeconds().toString().padStart(2,'0') + ' ' +
            d.getDate() + '/' + (d.getMonth()+1) + '/' + d.getFullYear();
 }
+</script>
+
+
+<!-- ══ AUTH MODAL ══ -->
+<div class="auth-overlay" id="auth-overlay" onclick="handleOverlayClick(event)">
+    <div class="auth-modal">
+        <button class="auth-close" onclick="closeAuthModal()">✕</button>
+        <div class="auth-tabs">
+            <button class="auth-tab active" id="tab-login" onclick="switchAuthTab('login')">Đăng nhập</button>
+            <button class="auth-tab" id="tab-register" onclick="switchAuthTab('register')">Đăng ký</button>
+        </div>
+        <div id="panel-login">
+            <div class="auth-field"><label>✉️ Địa chỉ Gmail:</label><input type="email" id="login-email" placeholder="name@gmail.com" autocomplete="email"></div>
+            <div class="auth-field"><label>🔑 Mật khẩu:</label><input type="password" id="login-password" placeholder="Nhập mật khẩu…" autocomplete="current-password"></div>
+            <button class="auth-btn" onclick="doLogin()">Đăng nhập</button>
+            <p class="auth-msg" id="login-msg"></p>
+            <p class="auth-divider">Chưa có tài khoản? <a onclick="switchAuthTab('register')">Đăng ký ngay</a> · <a onclick="doForgotPassword()">Quên mật khẩu?</a></p>
+        </div>
+        <div id="panel-register" style="display:none">
+            <div class="auth-field"><label>🌿 Tên hiển thị:</label><input type="text" id="reg-name" placeholder="Nickname của bạn…" autocomplete="nickname"></div>
+            <div class="auth-field"><label>✉️ Địa chỉ Gmail:</label><input type="email" id="reg-email" placeholder="name@gmail.com" autocomplete="email"></div>
+            <div class="auth-field"><label>🔑 Mật khẩu:</label><input type="password" id="reg-password" placeholder="Tối thiểu 6 ký tự…" autocomplete="new-password"></div>
+            <div class="auth-field"><label>🔒 Xác nhận:</label><input type="password" id="reg-password2" placeholder="Nhập lại mật khẩu…" autocomplete="new-password"></div>
+            <button class="auth-btn" onclick="doRegister()">Đăng ký ngay</button>
+            <p class="auth-msg" id="register-msg"></p>
+            <p class="auth-divider">Đã có tài khoản? <a onclick="switchAuthTab('login')">Đăng nhập</a></p>
+        </div>
+    </div>
+</div>
+
+<script>
+/* ══ SUPABASE AUTH ══ */
+var _sb = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+(async function(){
+    var s = await _sb.auth.getSession();
+    await renderNavAuth(s.data.session ? s.data.session.user : null);
+    _sb.auth.onAuthStateChange(async function(_e, session){
+        await renderNavAuth(session ? session.user : null);
+    });
+})();
+
+async function fetchAvatarUrl(userId) {
+    try {
+        var r = await fetch(SUPABASE_URL + '/rest/v1/profiles?user_id=eq.' + userId + '&select=avatar_url', {
+            headers: { 'apikey': SUPABASE_KEY, 'Authorization': 'Bearer ' + SUPABASE_KEY }
+        });
+        var rows = await r.json();
+        return (rows && rows[0] && rows[0].avatar_url) ? rows[0].avatar_url : '';
+    } catch(e) { return ''; }
+}
+
+async function renderNavAuth(user) {
+    var authArea   = document.getElementById('nav-auth-area');
+    var btnMain    = document.getElementById('login-btn-main');
+    var btnSidebar = document.getElementById('login-btn-sidebar');
+    if (user) {
+        var name = (user.user_metadata && user.user_metadata.display_name) || user.email.split('@')[0];
+        var avatarUrl = await fetchAvatarUrl(user.id);
+        var avatarContent = avatarUrl
+            ? '<img src="' + avatarUrl + '" alt="' + name + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%;display:block;">'
+            : name.charAt(0).toUpperCase();
+        if (authArea) authArea.innerHTML =
+            '<div class="nav-user">' +
+            '<button class="nav-avatar" onclick="toggleUserMenu(event)" style="' + (avatarUrl ? 'padding:0;overflow:hidden;' : '') + '">' + avatarContent + '</button>' +
+            '<span class="nav-user-name">' + name + '</span>' +
+            '<div class="nav-user-menu" id="nav-user-menu">' +
+            '<button class="nav-user-menu-item" onclick="location.href=\'../profile.html\'">👤 Hồ sơ của tôi</button>' +
+            '<button class="nav-user-menu-item logout" onclick="doLogout()">🚪 Đăng xuất</button>' +
+            '</div></div>';
+        if (btnMain)    btnMain.style.display    = 'none';
+        if (btnSidebar) btnSidebar.style.display = 'none';
+    } else {
+        if (authArea) authArea.innerHTML = '<button class="nav-auth-btn" onclick="openAuthModal(\'login\')">🌿 Đăng nhập</button>';
+        if (btnMain)    btnMain.style.display    = '';
+        if (btnSidebar) btnSidebar.style.display = '';
+    }
+}
+
+function openAuthModal(tab){ switchAuthTab(tab||'login'); document.getElementById('auth-overlay').classList.add('open'); }
+function closeAuthModal(){ document.getElementById('auth-overlay').classList.remove('open'); clearAuthMsgs(); }
+function handleOverlayClick(e){ if(e.target===document.getElementById('auth-overlay')) closeAuthModal(); }
+function clearAuthMsgs(){ ['login-msg','register-msg'].forEach(function(id){ var el=document.getElementById(id); if(el){el.textContent='';el.className='auth-msg';} }); }
+function switchAuthTab(tab){
+    document.getElementById('panel-login').style.display    = tab==='login'    ? '' : 'none';
+    document.getElementById('panel-register').style.display = tab==='register' ? '' : 'none';
+    document.getElementById('tab-login').classList.toggle('active',    tab==='login');
+    document.getElementById('tab-register').classList.toggle('active', tab==='register');
+    clearAuthMsgs();
+}
+function setMsg(id,text,type){ var el=document.getElementById(id); if(!el)return; el.textContent=text; el.className='auth-msg '+(type||''); }
+function errVi(msg){
+    if(!msg) return 'Có lỗi xảy ra.';
+    if(msg.includes('already registered')) return 'Email này đã được đăng ký rồi.';
+    if(msg.includes('Invalid login')||msg.includes('invalid_credentials')) return 'Email hoặc mật khẩu không đúng.';
+    if(msg.includes('Email not confirmed')) return 'Chưa xác nhận email. Kiểm tra hộp thư nhé!';
+    if(msg.includes('Password should')) return 'Mật khẩu phải có ít nhất 6 ký tự.';
+    if(msg.includes('rate limit')) return 'Thử lại sau ít phút nhé.';
+    return 'Có lỗi xảy ra. Vui lòng thử lại.';
+}
+async function doLogin(){
+    var email=document.getElementById('login-email').value.trim();
+    var pass=document.getElementById('login-password').value;
+    if(!email||!pass){ setMsg('login-msg','Vui lòng điền đầy đủ thông tin.','error'); return; }
+    setMsg('login-msg','Đang đăng nhập…');
+    var r=await _sb.auth.signInWithPassword({email:email,password:pass});
+    if(r.error){ setMsg('login-msg',errVi(r.error.message),'error'); return; }
+    setMsg('login-msg','🌿 Đăng nhập thành công!','success');
+    setTimeout(closeAuthModal,1200);
+}
+async function doRegister(){
+    var name=document.getElementById('reg-name').value.trim();
+    var email=document.getElementById('reg-email').value.trim();
+    var pass=document.getElementById('reg-password').value;
+    var pass2=document.getElementById('reg-password2').value;
+    if(!name||!email||!pass||!pass2){ setMsg('register-msg','Vui lòng điền đầy đủ.','error'); return; }
+    if(pass!==pass2){ setMsg('register-msg','Hai mật khẩu không khớp!','error'); return; }
+    if(pass.length<6){ setMsg('register-msg','Mật khẩu phải có ít nhất 6 ký tự.','error'); return; }
+    setMsg('register-msg','Đang tạo tài khoản…');
+    var r=await _sb.auth.signUp({email:email,password:pass,options:{data:{display_name:name},emailRedirectTo:window.location.href}});
+    if(r.error){ setMsg('register-msg',errVi(r.error.message),'error'); return; }
+    setMsg('register-msg','📧 Đăng ký thành công! Kiểm tra email để xác nhận nhé~','success');
+}
+async function doLogout(){
+    await _sb.auth.signOut();
+    var m=document.getElementById('nav-user-menu'); if(m) m.classList.remove('open');
+}
+async function doForgotPassword(){
+    var email=document.getElementById('login-email').value.trim();
+    if(!email){ setMsg('login-msg','Nhập email vào ô trên trước nhé!','error'); return; }
+    var r=await _sb.auth.resetPasswordForEmail(email,{redirectTo:window.location.href});
+    if(r.error){ setMsg('login-msg',errVi(r.error.message),'error'); return; }
+    setMsg('login-msg','📧 Đã gửi link đặt lại mật khẩu!','success');
+}
+function toggleUserMenu(e){ e.stopPropagation(); document.getElementById('nav-user-menu').classList.toggle('open'); }
+document.addEventListener('click',function(){ var m=document.getElementById('nav-user-menu'); if(m) m.classList.remove('open'); });
+document.addEventListener('keydown',function(e){
+    if(e.key!=='Enter') return;
+    var ov=document.getElementById('auth-overlay');
+    if(!ov||!ov.classList.contains('open')) return;
+    if(document.getElementById('panel-login').style.display!=='none') doLogin(); else doRegister();
+});
 </script>
 
 </body>
