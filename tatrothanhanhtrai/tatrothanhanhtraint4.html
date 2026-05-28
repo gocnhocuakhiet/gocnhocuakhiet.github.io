@@ -1373,7 +1373,14 @@ function buildCommentEl(c, replyMap, isSidebar, paraIndex) {
                     '<span class="comment-author">' + renderAuthor(r.author_name) + '</span>' +
                     '<span class="comment-time">' + fmtDate(r.created_at) + '</span></div>' +
                     '<div class="comment-text">' + escHtml(r.content) + '</div>' +
-                    (isReplyOwner ? '<div class="comment-actions"><button class="comment-delete-btn" onclick="deleteComment(\'' + r.id + '\',\'' + (isSidebar ? 'sidebar' : 'main') + '\',' + (paraIndex||'null') + ')">🗑 Xoá</button></div>' : '') +
+                    '<div class="comment-actions">' +
+                    '<button class="comment-reply-btn" onclick="toggleReplyForm(\'' + r.id + '\',\'' + (isSidebar ? 'sidebar' : 'main') + '\',' + (paraIndex||'null') + ')">↩ Trả lời</button>' +
+                    (isReplyOwner ? '<button class="comment-delete-btn" onclick="deleteComment(\'' + r.id + '\',\'' + (isSidebar ? 'sidebar' : 'main') + '\',' + (paraIndex||'null') + ')">🗑 Xoá</button>' : '') +
+                    '</div>' +
+                    '<div id="reply-form-' + r.id + '" class="reply-form" style="display:none;">' +
+                    '<textarea placeholder="Trả lời ' + escHtml(r.author_name) + '…" rows="2" id="reply-text-' + r.id + '"></textarea>' +
+                    '<button class="reply-submit-btn" onclick="submitReply(\'' + c.id + '\',\'' + (isSidebar ? 'sidebar' : 'main') + '\',' + (paraIndex||'null') + ')">Gửi</button>' +
+                    '</div>' +
                     '</div>';
             }).join('') +
         '</div>';
@@ -1501,7 +1508,7 @@ async function submitReply(parentId, context, paraIndex) {
         await sbFetch('comments', 'POST', {
             page_path: PAGE_PATH,
             para_index: paraIndex !== null ? paraIndex : null,
-            author_name: name, author_id: AUTHOR_ID,
+            author_name: (loggedInAvatarUrl ? loggedInAvatarUrl + '|' : selectedAvatar[context] + ' ') + name, author_id: AUTHOR_ID,
             content: content, parent_id: parentId
         });
         textarea.value = '';
