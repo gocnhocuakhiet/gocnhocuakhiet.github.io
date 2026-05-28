@@ -1571,6 +1571,7 @@
         var el = document.createElement('div');
         el.className = 'comment-item';
         el.id = 'comment-' + c.id;
+        el.dataset.authorId = c.author_id || '';
 
         var childReplies = (replyMap && replyMap[c.id]) ? replyMap[c.id] : [];
         var isOwner = c.author_id === AUTHOR_ID;
@@ -1589,7 +1590,7 @@
                        '      <span class="comment-author">' + escHtml(rName) + '</span>' +
                        '      <span class="comment-date">' + fmtDate(r.created_at) + '</span>' +
                        '    </div>' +
-                       (rOwner ? '    <a class="comment-action-link delete-link" onclick="deleteComment(\'' + r.id + '\',\'' + (isSidebar?'sidebar':'main') + '\',' + paraIndex + ')">Xoá</a>' : '') +
+                       (rOwner ? '    <a class="comment-action-link delete-link" onclick="deleteComment(' + r.id + ',\'' + (isSidebar?'sidebar':'main') + '\',' + paraIndex + ')">Xoá</a>' : '') +
                        '  </div>' +
                        '  <div class="comment-content">' + escHtml(r.content) + '</div>' +
                        '</div>';
@@ -1607,11 +1608,11 @@
             '    <span class="comment-author">' + escHtml(name) + '</span>' +
             '    <span class="comment-date">' + fmtDate(c.created_at) + '</span>' +
             '  </div>' +
-            (isOwner ? '  <a class="comment-action-link delete-link" onclick="deleteComment(\'' + c.id + '\',\'' + (isSidebar?'sidebar':'main') + '\',' + paraIndex + ')">Xoá</a>' : '') +
+            (isOwner ? '  <a class="comment-action-link delete-link" onclick="deleteComment(' + c.id + ',\'' + (isSidebar?'sidebar':'main') + '\',' + paraIndex + ')">Xoá</a>' : '') +
             '</div>' +
             '<div class="comment-content">' + escHtml(c.content) + '</div>' +
             '<div class="comment-footer-actions">' +
-            '  <a class="comment-action-link" onclick="showInlineReplyForm(\'' + c.id + '\',\'' + (isSidebar?'sidebar':'main') + '\',' + (paraIndex||'null') + ')">Phản hồi</a>' +
+            '  <a class="comment-action-link" onclick="showInlineReplyForm(' + c.id + ',\'' + (isSidebar?'sidebar':'main') + '\',' + (paraIndex||'null') + ')">Phản hồi</a>' +
             '</div>' +
             '<div id="reply-form-container-' + c.id + '"></div>' + repliesHtml;
 
@@ -1694,10 +1695,24 @@
             '  <textarea id="reply-text-' + parentId + '" placeholder="Nhập phản hồi của bạn…" maxlength="500"></textarea>' +
             '  <div class="inline-form-row">' +
             '    <input type="text" class="inline-author-input" id="reply-author-' + parentId + '" placeholder="Tên của bạn" value="' + escHtml(savedName) + '" maxlength="30">' +
-            '    <button class="inline-reply-btn" onclick="submitInlineReply(\'' + parentId + '\',\'' + context + '\',' + paraIndex + ')">Gửi</button>' +
+            '    <button class="inline-reply-btn" onclick="submitInlineReply(' + parentId + ',\'' + context + '\',' + paraIndex + ')">Gửi</button>' +
             '  </div>' +
             '</div>';
         container.querySelector('textarea').focus();
+    }
+
+    async function sendReplyNotification(recipientAuthorId, senderName, commentContent, chapterTitle, chapterPath) {
+        if (!recipientAuthorId || recipientAuthorId === AUTHOR_ID) return;
+        try {
+            await sbFetch('notifications', 'POST', {
+                recipient_author_id: recipientAuthorId,
+                sender_name: senderName,
+                comment_content: commentContent.substring(0, 200),
+                chapter_title: chapterTitle,
+                chapter_path: chapterPath,
+                is_read: false
+            });
+        } catch(e) { console.warn('Không gửi được thông báo:', e); }
     }
 
     async function submitInlineReply(parentId, context, paraIndex) {
@@ -1716,6 +1731,21 @@
                 author_id: AUTHOR_ID,
                 content: txt
             });
+
+            // Gửi thông báo cho chủ bình luận gốc
+            var parentEl = document.getElementById('comment-' + parentId);
+            var recipientAuthorId = parentEl ? (parentEl.dataset.authorId || '') : '';
+            var chapterTitle = (document.querySelector('.chapter-title') || {}).textContent || document.title;
+            if (recipientAuthorId) {
+                await sendReplyNotification(
+                    recipientAuthorId,
+                    aut,
+                    txt,
+                    chapterTitle,
+                    window.location.pathname
+                );
+            }
+
             if (context === 'sidebar') {
                 loadSidebarComments(paraIndex);
             } else {
