@@ -1307,6 +1307,10 @@ document.addEventListener('DOMContentLoaded', function() {
                         if (pd && pd[0]) { profileName = pd[0].display_name || ''; profileAvatar = pd[0].avatar_url || ''; }
                     } catch(e) {}
                     var name = profileName || metaName || emailName;
+                    if (userId) {
+                        AUTHOR_ID = userId;
+                        localStorage.setItem('comment-author-id', AUTHOR_ID);
+                    }
                     if (name) {
                         var ai = document.getElementById('main-author');
                         if (ai) { ai.value = name; ai.readOnly = true; ai.title = 'Tên tài khoản của bạn'; ai.style.background = '#eaf2ee'; ai.style.color = '#4a6b5d'; }
@@ -1569,11 +1573,14 @@ async function submitReply(parentId, context, paraIndex) {
         }
         if (recipientAuthorId && recipientAuthorId !== AUTHOR_ID) {
             try {
+                var chapterTitle = (document.querySelector('.chapter-title') || document.querySelector('h1') || {}).textContent || document.title;
                 await sbFetch('notifications', 'POST', {
-                    recipient_id: recipientAuthorId,
+                    recipient_author_id: recipientAuthorId,
                     sender_name: name,
-                    content: content,
-                    page_path: PAGE_PATH,
+                    comment_content: content,
+                    chapter_title: chapterTitle.trim(),
+                    chapter_path: PAGE_PATH,
+                    is_read: false,
                     created_at: new Date().toISOString()
                 });
             } catch(ne) { /* thông báo thất bại không ảnh hưởng comment */ }
@@ -1816,13 +1823,29 @@ function initStickerPicker(context) {
 }
 
 function renderAuthor(authorName) {
-    var sep = authorName ? authorName.indexOf('|') : -1;
+    if (!authorName) return '';
+    // Trường hợp có ảnh: "https://...url...|Tên"
+    var sep = authorName.indexOf('|');
     if (sep > 0 && authorName.substring(0, sep).startsWith('http')) {
         var url  = escHtml(authorName.substring(0, sep));
         var name = escHtml(authorName.substring(sep + 1));
-        return '<img src="' + url + '" alt="avatar" style="width:20px;height:20px;object-fit:cover;border-radius:50%;vertical-align:middle;margin-right:5px;">' + name;
+        return '<img src="' + url + '" alt="avatar" style="width:26px;height:26px;object-fit:cover;border-radius:50%;vertical-align:middle;margin-right:6px;">' + name;
     }
-    return escHtml(authorName);
+    // Trường hợp có emoji: "🌿 Tên" (ký tự đầu không phải chữ/số Latin)
+    var firstChar = authorName.codePointAt(0);
+    var isEmoji = firstChar > 127;
+    if (isEmoji) {
+        // Tách emoji khỏi tên (emoji có thể 1-2 code units)
+        var emojiLen = firstChar > 0xFFFF ? 2 : 1;
+        var emoji = authorName.substring(0, emojiLen);
+        var rest  = authorName.substring(emojiLen).trim();
+        return '<span style="font-size:18px;vertical-align:middle;margin-right:5px;">' + escHtml(emoji) + '</span>' + escHtml(rest);
+    }
+    // Trường hợp không có avatar (data cũ): hiện hình tròn chữ cái đầu
+    var initial = authorName.trim().charAt(0).toUpperCase();
+    var colors = ['#7fb5a0','#a07fb5','#b5a07f','#7f9eb5','#b57f7f','#7fb57f'];
+    var colorIdx = authorName.charCodeAt(0) % colors.length;
+    return '<span style="display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:50%;background:' + colors[colorIdx] + ';color:#fff;font-size:13px;font-weight:bold;vertical-align:middle;margin-right:6px;">' + escHtml(initial) + '</span>' + escHtml(authorName);
 }
 function escHtml(s) {
     return String(s)
