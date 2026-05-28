@@ -1608,6 +1608,9 @@
                        (rOwner ? '    <a class="comment-action-link delete-link" onclick="deleteComment(\'' + r.id + '\',' + '\'' + (isSidebar?'sidebar':'main') + '\',' + paraIndex + ')">Xoá</a>' : '') +
                        '  </div>' +
                        '  <div class="comment-content">' + escHtml(r.content) + '</div>' +
+                       '  <div class="comment-footer-actions">' +
+                       '    <a class="comment-action-link" onclick="showInlineReplyForm(\'' + c.id + '\',\'' + (isSidebar?'sidebar':'main') + '\',' + (paraIndex||'null') + ', \'' + escHtml(rName) + '\')">Phản hồi</a>' +
+                       '  </div>' +
                        '</div>';
             }).join('') + '</div>';
         }
@@ -1707,10 +1710,12 @@
         }
     }
 
-    function showInlineReplyForm(parentId, context, paraIndex) {
+    function showInlineReplyForm(parentId, context, paraIndex, mentionName) {
         var container = document.getElementById('reply-form-container-' + parentId);
         if (!container) return;
-        if (container.innerHTML !== '') { container.innerHTML = ''; return; }
+        // Nếu đang mở form cho cùng mention thì đóng lại, khác mention thì mở form mới
+        if (container.innerHTML !== '' && container.dataset.mention === (mentionName||'')) { container.innerHTML = ''; return; }
+        container.dataset.mention = mentionName || '';
 
         // Ưu tiên: tên từ main-author (đã điền khi đăng nhập) → localStorage → trống
         var mainAuthorEl = document.getElementById('main-author');
@@ -1723,16 +1728,19 @@
             ? '<img src="' + escHtml(curAvatar.replace(/\|$/, '')) + '" style="width:1.8rem;height:1.8rem;border-radius:50%;object-fit:cover;flex-shrink:0;">'
             : '<span style="font-size:1.2rem;line-height:1;">' + curAvatar + '</span>';
 
+        var mentionPrefix = mentionName ? '@' + mentionName + ' ' : '';
         container.innerHTML =
             '<div class="inline-reply-form">' +
-            '  <textarea id="reply-text-' + parentId + '" placeholder="Nhập phản hồi của bạn…" maxlength="500"></textarea>' +
+            '  <textarea id="reply-text-' + parentId + '" placeholder="Nhập phản hồi của bạn…" maxlength="500">' + escHtml(mentionPrefix) + '</textarea>' +
             '  <div class="inline-form-row">' +
             '    ' + avatarHtml +
             '    <input type="text" class="inline-author-input" id="reply-author-' + parentId + '" placeholder="Tên của bạn" value="' + escHtml(savedName) + '" maxlength="30"' + (isLoggedIn ? ' readonly title="Tên tài khoản của bạn" style="background:#eaf2ee;color:#4a6b5d;"' : '') + '>' +
             '    <button class="inline-reply-btn" onclick="submitInlineReply(\'' + parentId + '\',\'' + context + '\',' + paraIndex + ')">Gửi</button>' +
             '  </div>' +
             '</div>';
-        container.querySelector('textarea').focus();
+        var ta = container.querySelector('textarea');
+        ta.focus();
+        ta.setSelectionRange(ta.value.length, ta.value.length);
     }
 
     async function sendReplyNotification(recipientAuthorId, senderName, commentContent, chapterTitle, chapterPath) {
