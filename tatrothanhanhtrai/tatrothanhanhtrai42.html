@@ -1377,7 +1377,6 @@ function buildCommentEl(c, replyMap, isSidebar, paraIndex) {
     var el = document.createElement('div');
     el.className = 'comment-item';
     el.id = 'comment-' + c.id;
-    el.dataset.authorId = c.author_id || '';
 
     var childReplies = (replyMap && replyMap[c.id]) ? replyMap[c.id] : [];
     var isOwner      = c.author_id === AUTHOR_ID;
@@ -1506,20 +1505,6 @@ function toggleReplyForm(commentId, context, paraIndex) {
     form.style.flexDirection = 'column';
 }
 
-async function sendReplyNotification(recipientAuthorId, senderName, commentContent, chapterTitle, chapterPath) {
-    if (!recipientAuthorId || recipientAuthorId === AUTHOR_ID) return; // không tự gửi cho mình
-    try {
-        await sbFetch('notifications', 'POST', {
-            recipient_author_id: recipientAuthorId,
-            sender_name: senderName,
-            comment_content: commentContent.substring(0, 200),
-            chapter_title: chapterTitle,
-            chapter_path: chapterPath,
-            is_read: false
-        });
-    } catch(e) { console.warn('Không gửi được thông báo:', e); }
-}
-
 async function submitReply(parentId, context, paraIndex) {
     var savedName = localStorage.getItem('comment-author-name');
     var name = savedName ||
@@ -1538,21 +1523,6 @@ async function submitReply(parentId, context, paraIndex) {
             content: content, parent_id: parentId
         });
         textarea.value = '';
-
-        // Gửi thông báo cho chủ bình luận gốc
-        var parentEl = document.getElementById('comment-' + parentId);
-        var recipientAuthorId = parentEl ? (parentEl.dataset.authorId || '') : '';
-        var chapterTitle = (document.querySelector('.chapter-title') || {}).textContent || document.title;
-        if (recipientAuthorId) {
-            await sendReplyNotification(
-                recipientAuthorId,
-                name,
-                content,
-                chapterTitle,
-                window.location.pathname
-            );
-        }
-
         if (context === 'sidebar') {
             loadSidebarComments(paraIndex);
         } else {
@@ -1614,31 +1584,67 @@ function updateBadge(paraIndex) {
     badge.querySelector('.badge-count').textContent = cnt > 0 ? cnt : '';
 }
 
-// ══════════════════════════════════════════════
-// LIKE (localStorage — đơn giản)
-// ══════════════════════════════════════════════
-function initLike() {
-    var key   = 'like-' + PAGE_PATH;
-    var liked = localStorage.getItem(key) === '1';
-    var count = parseInt(localStorage.getItem('likecount-' + PAGE_PATH) || '0', 10);
-    updateLikeUI(liked, count);
-}
-function toggleLike() {
-    var key   = 'like-' + PAGE_PATH;
-    var liked = localStorage.getItem(key) === '1';
-    var count = parseInt(localStorage.getItem('likecount-' + PAGE_PATH) || '0', 10);
-    liked = !liked;
-    count = liked ? count + 1 : Math.max(0, count - 1);
-    localStorage.setItem(key, liked ? '1' : '0');
-    localStorage.setItem('likecount-' + PAGE_PATH, count);
-    updateLikeUI(liked, count);
-}
-function updateLikeUI(liked, count) {
-    document.getElementById('like-icon').textContent = liked ? '❤️' : '🤍';
-    document.getElementById('like-count').textContent = count;
-    var btn = document.getElementById('like-btn');
-    liked ? btn.classList.add('liked') : btn.classList.remove('liked');
-}
+/* ══ FAVORITES / LIKE — Supabase ══ */
+    var NOVEL_ID = 'tatrothanhanhtrai';
+    var _sbClient = null;
+    function getSB() {
+        if (_sbClient) return _sbClient;
+        if (typeof supabase !== 'undefined') _sbClient = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        return _sbClient;
+    }
+    async function initLike() {
+        try {
+            var r = await fetch(SUPABASE_URL+'/rest/v1/favorites?novel_id=eq.'+NOVEL_ID+'&select=id',
+                {headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY}});
+            var data = await r.json();
+            var total = Array.isArray(data) ? data.length : 0;
+            var liked = false;
+            var sb = getSB();
+            if (sb) {
+                var sess = await sb.auth.getSession();
+                var user = sess.data.session ? sess.data.session.user : null;
+                if (user) {
+                    var r2 = await fetch(SUPABASE_URL+'/rest/v1/favorites?user_id=eq.'+user.id+'&novel_id=eq.'+NOVEL_ID+'&select=id',
+                        {headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY}});
+                    var d2 = await r2.json();
+                    liked = Array.isArray(d2) && d2.length > 0;
+                }
+            }
+            updateLikeUI(liked, total);
+        } catch(e) {
+            updateLikeUI(false, 0);
+        }
+    }
+    async function toggleLike() {
+        var sb = getSB();
+        if (!sb) { alert('Đang kết nối...'); return; }
+        var sess = await sb.auth.getSession();
+        var user = sess.data.session ? sess.data.session.user : null;
+        if (!user) {
+            if (confirm('Bạn cần đăng nhập để thêm vào yêu thích!\nNhấn OK để đến trang đăng nhập.'))
+                window.location.href = '../profile.html';
+            return;
+        }
+        var r = await fetch(SUPABASE_URL+'/rest/v1/favorites?user_id=eq.'+user.id+'&novel_id=eq.'+NOVEL_ID+'&select=id',
+            {headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY}});
+        var ex = await r.json();
+        if (Array.isArray(ex) && ex.length > 0) {
+            await fetch(SUPABASE_URL+'/rest/v1/favorites?user_id=eq.'+user.id+'&novel_id=eq.'+NOVEL_ID,
+                {method:'DELETE',headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY}});
+        } else {
+            await fetch(SUPABASE_URL+'/rest/v1/favorites',{method:'POST',
+                headers:{'apikey':SUPABASE_KEY,'Authorization':'Bearer '+SUPABASE_KEY,'Content-Type':'application/json','Prefer':'return=minimal'},
+                body:JSON.stringify({user_id:user.id,novel_id:NOVEL_ID})});
+        }
+        await initLike();
+    }
+    function updateLikeUI(liked, count) {
+        var btn = document.getElementById('like-btn');
+        if (!btn) return;
+        btn.querySelector('#like-icon').textContent = liked ? '❤️' : '🤍';
+        document.getElementById('like-count').textContent = count;
+        liked ? btn.classList.add('liked') : btn.classList.remove('liked');
+    }
 
 // ══════════════════════════════════════════════
 // SHARE MODAL
