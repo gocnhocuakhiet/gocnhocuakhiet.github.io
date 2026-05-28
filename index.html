@@ -968,6 +968,74 @@
             vertical-align: middle;
             margin-left: 5px;
         }
+    
+        /* ══ NOTIFICATION PANEL ══ */
+        .notif-wrapper { position: relative; }
+        .notif-panel {
+            position: absolute; top: calc(100% + 8px); right: 0;
+            width: 340px; max-height: 480px;
+            background: var(--bg-card); border: 1px solid var(--border);
+            border-radius: var(--radius-lg); box-shadow: 0 12px 36px rgba(0,0,0,0.14);
+            z-index: 99999; overflow: hidden; display: flex; flex-direction: column;
+            opacity: 0; visibility: hidden; transform: translateY(-8px);
+            transition: opacity .2s, transform .2s, visibility .2s;
+        }
+        .notif-panel.open {
+            opacity: 1; visibility: visible; transform: translateY(0);
+        }
+        .notif-header {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 12px 16px 10px; border-bottom: 1px solid var(--border);
+            flex-shrink: 0;
+        }
+        .notif-header h4 {
+            font-size: .85rem; font-weight: 600; color: var(--text); margin: 0;
+        }
+        .notif-mark-all {
+            font-size: .75rem; color: var(--green); background: none; border: none;
+            cursor: pointer; padding: 2px 6px; border-radius: 4px; transition: .15s;
+        }
+        .notif-mark-all:hover { background: var(--green-pale); }
+        .notif-list {
+            overflow-y: auto; flex: 1;
+        }
+        .notif-empty {
+            text-align: center; padding: 32px 16px;
+            font-size: .83rem; color: var(--text-faint);
+        }
+        .notif-item {
+            display: flex; gap: 10px; align-items: flex-start;
+            padding: 11px 16px; border-bottom: 1px solid var(--border);
+            cursor: pointer; transition: background .15s; text-decoration: none;
+        }
+        .notif-item:last-child { border-bottom: none; }
+        .notif-item:hover { background: var(--green-pale); }
+        .notif-item.unread { background: #f0f7f3; }
+        body.dark-mode .notif-item.unread { background: #1e2d26; }
+        .notif-icon {
+            width: 32px; height: 32px; border-radius: 50%; background: var(--green-pale);
+            display: flex; align-items: center; justify-content: center;
+            font-size: .9rem; flex-shrink: 0; margin-top: 1px;
+        }
+        .notif-body { flex: 1; min-width: 0; }
+        .notif-text {
+            font-size: .82rem; color: var(--text); line-height: 1.45;
+            display: -webkit-box; -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical; overflow: hidden;
+        }
+        .notif-text strong { color: var(--green); }
+        .notif-time {
+            font-size: .72rem; color: var(--text-faint); margin-top: 3px;
+        }
+        .notif-unread-dot {
+            width: 7px; height: 7px; border-radius: 50%;
+            background: var(--green); flex-shrink: 0; margin-top: 6px;
+        }
+        .notif-loading {
+            text-align: center; padding: 20px;
+            font-size: .82rem; color: var(--text-faint);
+        }
+
     </style>
 </head>
 <body>
@@ -1028,9 +1096,20 @@
 
     <!-- RIGHT: search + icons + auth -->
     <div class="nav-right">
-        <button class="nav-icon-btn" title="Thông báo">
-            🔔<span class="badge-dot"></span>
-        </button>
+        <div class="notif-wrapper">
+            <button class="nav-icon-btn" id="notif-bell-btn" title="Thông báo" onclick="toggleNotifPanel(event)">
+                🔔<span class="badge-dot" id="notif-badge-dot" style="display:none"></span>
+            </button>
+            <div class="notif-panel" id="notif-panel">
+                <div class="notif-header">
+                    <h4>🔔 Thông báo</h4>
+                    <button class="notif-mark-all" onclick="markAllRead()">Đánh dấu đã đọc</button>
+                </div>
+                <div class="notif-list" id="notif-list">
+                    <div class="notif-loading">Đang tải…</div>
+                </div>
+            </div>
+        </div>
         <!-- AUTH AREA -->
         <div id="nav-auth-area">
             <button class="nav-auth-btn" onclick="openAuthModal('login')">🌿 Đăng nhập</button>
@@ -1669,22 +1748,12 @@ async function loadComments() {
             const authorCol  = colArr.find(c => first[c] !== undefined && c !== 'created_at' && c !== colArr[1]) || colArr[0];
             const contentCol = colArr[1];
 
-            if (lastCmtId !== null && first.created_at !== lastCmtId) {
-                const rawA = first[authorCol] || 'Độc giả';
-                const pA   = rawA.indexOf('|');
-                const cleanA = (pA > 0 && rawA.substring(0,pA).startsWith('http')) ? rawA.substring(pA+1) : rawA;
-                showToast(cleanA, first[contentCol] || '');
-            }
+            if (lastCmtId !== null && first.created_at !== lastCmtId)
+                showToast(first[authorCol] || 'Độc giả', first[contentCol] || '');
             lastCmtId = first.created_at;
 
             el.innerHTML = cmts.map(c => {
-                const rawAuthor = c[authorCol] || 'Độc giả';
-                const pipeIdx   = rawAuthor.indexOf('|');
-                const hasUrl    = pipeIdx > 0 && rawAuthor.substring(0, pipeIdx).startsWith('http');
-                const author    = hasUrl ? rawAuthor.substring(pipeIdx + 1) : rawAuthor;
-                const avatarHtml = hasUrl
-                    ? `<img src="${rawAuthor.substring(0, pipeIdx)}" alt="av" style="width:18px;height:18px;object-fit:cover;border-radius:50%;vertical-align:middle;margin-right:4px;">`
-                    : (rawAuthor.split(' ').length > 1 ? rawAuthor.split(' ')[0] + ' ' : '🌿 ');
+                const author = c[authorCol] || 'Độc giả';
                 const body   = c[contentCol] || '';
                 const short  = body.length > 55 ? body.substring(0,55)+'…' : body;
                 const time   = c.created_at ? fmtAgo(c.created_at) : '';
@@ -1695,7 +1764,7 @@ async function loadComments() {
                 const badge  = isOwner ? `<span class="owner-badge">🌸 Chủ Gác</span>` : '';
                 return `<${tag} class="feed-item${path ? ' feed-item--link' : ''}">
                     <div class="feed-top">
-                        <span class="feed-author">${avatarHtml}${author}${badge}</span>
+                        <span class="feed-author">🌿 ${author}${badge}</span>
                         <span class="feed-time">${time}</span>
                     </div>
                     <div class="feed-msg">"${short}"</div>
@@ -2145,6 +2214,7 @@ async function fetchAvatarUrl(userId) {
 /* Cập nhật navbar */
 async function renderNavAuth(user) {
     chatCurrentUser = user; /* lưu để chatroom dùng */
+    initNotifications(user?.id ?? null); /* khởi động thông báo */
     const area = document.getElementById('nav-auth-area');
     if (!area) return;
     if (user) {
@@ -2366,5 +2436,206 @@ document.addEventListener('keydown', function(e) {
     if (loginPanel.style.display !== 'none') doLogin();
     else doRegister();
 });
+
+
+/* ══════════════════════════════════════════════════════════
+   HỆ THỐNG THÔNG BÁO
+   - Bảng Supabase: notifications
+     columns: id (uuid pk), recipient_author_id (text),
+              sender_name (text), comment_content (text),
+              chapter_title (text), chapter_path (text),
+              created_at (timestamptz), is_read (bool default false)
+   - Khi ai reply → insert notification cho chủ bình luận gốc
+   - Chuông sáng đỏ khi có unread; click mở panel
+   ══════════════════════════════════════════════════════════ */
+
+let _notifOpen = false;
+let _notifUnreadCount = 0;
+let _notifPollTimer = null;
+let _currentAuthorId = null;   // AUTHOR_ID từ localStorage (anonymous)
+let _currentUserId   = null;   // Supabase user.id (nếu đăng nhập)
+
+/* Gọi sau khi biết user */
+async function initNotifications(userId) {
+    // Ưu tiên userId (logged-in), fallback AUTHOR_ID (anonymous)
+    _currentAuthorId = localStorage.getItem('comment-author-id') || null;
+    _currentUserId   = userId || null;
+
+    await fetchNotifications();
+
+    // Poll mỗi 45 giây
+    if (_notifPollTimer) clearInterval(_notifPollTimer);
+    _notifPollTimer = setInterval(fetchNotifications, 45000);
+}
+
+/* Lấy thông báo từ Supabase */
+async function fetchNotifications() {
+    const id = _currentUserId || _currentAuthorId;
+    if (!id) return;
+
+    try {
+        const res = await fetch(
+            `${SUPABASE_URL}/rest/v1/notifications?recipient_author_id=eq.${encodeURIComponent(id)}&order=created_at.desc&limit=30`,
+            { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } }
+        );
+        if (!res.ok) return;
+        const rows = await res.json();
+        _notifUnreadCount = rows.filter(r => !r.is_read).length;
+        updateBadgeDot(_notifUnreadCount > 0);
+        if (_notifOpen) renderNotifList(rows);
+        else renderNotifList(rows, true); // cache silently
+        window._notifRows = rows;
+    } catch(e) { console.warn('fetchNotifications:', e); }
+}
+
+/* Bật/tắt badge đỏ */
+function updateBadgeDot(show) {
+    const dot = document.getElementById('notif-badge-dot');
+    if (dot) dot.style.display = show ? 'block' : 'none';
+}
+
+/* Mở/đóng panel */
+function toggleNotifPanel(e) {
+    e.stopPropagation();
+    const panel = document.getElementById('notif-panel');
+    if (!panel) return;
+    _notifOpen = !_notifOpen;
+    panel.classList.toggle('open', _notifOpen);
+    if (_notifOpen) {
+        renderNotifList(window._notifRows || []);
+    }
+}
+
+/* Đóng panel khi click ngoài */
+document.addEventListener('click', function(e) {
+    const wrapper = document.querySelector('.notif-wrapper');
+    if (wrapper && !wrapper.contains(e.target)) {
+        const panel = document.getElementById('notif-panel');
+        if (panel) panel.classList.remove('open');
+        _notifOpen = false;
+    }
+});
+
+/* Render danh sách thông báo */
+function renderNotifList(rows, silent) {
+    if (silent) return; // chỉ cache, không render
+    const list = document.getElementById('notif-list');
+    if (!list) return;
+
+    if (!rows || !rows.length) {
+        list.innerHTML = '<div class="notif-empty">🌿 Chưa có thông báo nào</div>';
+        return;
+    }
+
+    list.innerHTML = rows.map(r => {
+        const unread = !r.is_read ? 'unread' : '';
+        const time = fmtNotifDate(r.created_at);
+        const sender = escNotif(r.sender_name || 'Ai đó');
+        const content = escNotif((r.comment_content || '').substring(0, 60));
+        const chapter = escNotif(r.chapter_title || 'một chương');
+        const path = r.chapter_path || '#';
+        return `<a class="notif-item ${unread}" href="${path}" onclick="markOneRead('${r.id}')">
+            <div class="notif-icon">💬</div>
+            <div class="notif-body">
+                <div class="notif-text"><strong>${sender}</strong> đã trả lời bình luận của bạn tại <strong>${chapter}</strong>${content ? ': "' + content + (r.comment_content.length > 60 ? '…' : '') + '"' : ''}</div>
+                <div class="notif-time">${time}</div>
+            </div>
+            ${!r.is_read ? '<div class="notif-unread-dot"></div>' : ''}
+        </a>`;
+    }).join('');
+}
+
+/* Đánh dấu 1 thông báo đã đọc */
+async function markOneRead(id) {
+    try {
+        await fetch(`${SUPABASE_URL}/rest/v1/notifications?id=eq.${id}`, {
+            method: 'PATCH',
+            headers: {
+                'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`,
+                'Content-Type': 'application/json', 'Prefer': 'return=minimal'
+            },
+            body: JSON.stringify({ is_read: true })
+        });
+        if (window._notifRows) {
+            const row = window._notifRows.find(r => r.id === id);
+            if (row) row.is_read = true;
+            _notifUnreadCount = window._notifRows.filter(r => !r.is_read).length;
+            updateBadgeDot(_notifUnreadCount > 0);
+        }
+    } catch(e) {}
+}
+
+/* Đánh dấu tất cả đã đọc */
+async function markAllRead() {
+    const id = _currentUserId || _currentAuthorId;
+    if (!id) return;
+    try {
+        await fetch(
+            `${SUPABASE_URL}/rest/v1/notifications?recipient_author_id=eq.${encodeURIComponent(id)}&is_read=eq.false`,
+            {
+                method: 'PATCH',
+                headers: {
+                    'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`,
+                    'Content-Type': 'application/json', 'Prefer': 'return=minimal'
+                },
+                body: JSON.stringify({ is_read: true })
+            }
+        );
+        if (window._notifRows) window._notifRows.forEach(r => r.is_read = true);
+        _notifUnreadCount = 0;
+        updateBadgeDot(false);
+        renderNotifList(window._notifRows || []);
+    } catch(e) {}
+}
+
+/* Helper: format ngày */
+function fmtNotifDate(iso) {
+    if (!iso) return '';
+    const d = new Date(iso);
+    const now = new Date();
+    const diff = Math.floor((now - d) / 1000);
+    if (diff < 60) return 'Vừa xong';
+    if (diff < 3600) return Math.floor(diff/60) + ' phút trước';
+    if (diff < 86400) return Math.floor(diff/3600) + ' giờ trước';
+    if (diff < 604800) return Math.floor(diff/86400) + ' ngày trước';
+    return d.getDate() + '/' + (d.getMonth()+1) + '/' + d.getFullYear();
+}
+function escNotif(s) {
+    return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+/* ══ GỬI THÔNG BÁO KHI CÓ REPLY ══
+   Gọi hàm này từ các trang chapter khi submit reply.
+   Cần truyền:
+     recipientAuthorId — author_id của bình luận gốc
+     senderName       — tên người reply
+     commentContent   — nội dung reply (preview)
+     chapterTitle     — tiêu đề chương (vd: "Chương 1")
+     chapterPath      — đường dẫn tương đối (vd: "tatrothanhanhtrai/tatrothanhanhtrai1.html")
+*/
+async function sendReplyNotification(recipientAuthorId, senderName, commentContent, chapterTitle, chapterPath) {
+    if (!recipientAuthorId) return;
+    // Không gửi thông báo cho chính mình
+    const myId = _currentUserId || _currentAuthorId || localStorage.getItem('comment-author-id');
+    if (myId === recipientAuthorId) return;
+    try {
+        await fetch(`${SUPABASE_URL}/rest/v1/notifications`, {
+            method: 'POST',
+            headers: {
+                'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}`,
+                'Content-Type': 'application/json', 'Prefer': 'return=minimal'
+            },
+            body: JSON.stringify({
+                recipient_author_id: recipientAuthorId,
+                sender_name:         senderName,
+                comment_content:     commentContent,
+                chapter_title:       chapterTitle,
+                chapter_path:        chapterPath,
+                is_read:             false
+            })
+        });
+    } catch(e) { console.warn('sendReplyNotification:', e); }
+}
+
 </script>
 </html>
