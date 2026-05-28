@@ -1753,7 +1753,11 @@ async function loadComments() {
             lastCmtId = first.created_at;
 
             el.innerHTML = cmts.map(c => {
-                const author = c[authorCol] || 'Độc giả';
+                const rawAuthor = c[authorCol] || 'Độc giả';
+                // author_name có thể là "https://...png|Emily" hoặc "🌿 Emily"
+                const author = rawAuthor.includes('|')
+                    ? rawAuthor.split('|').slice(1).join('|').trim()   // lấy phần sau dấu |
+                    : rawAuthor.replace(/^https?:\/\/\S+\s*/, '').trim() || rawAuthor; // bỏ URL đầu nếu có
                 const body   = c[contentCol] || '';
                 const short  = body.length > 55 ? body.substring(0,55)+'…' : body;
                 const time   = c.created_at ? fmtAgo(c.created_at) : '';
