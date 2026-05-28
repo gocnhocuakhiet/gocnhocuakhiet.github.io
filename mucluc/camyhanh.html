@@ -175,11 +175,11 @@
         body.dark-mode .page-btn { background: #232e29; border-color: #3a5040; color: #8fae9f; }
         body.dark-mode .page-btn.active { background: #4a6b5d; color: white; border-color: #4a6b5d; }
         body.dark-mode .page-btn.disabled { background: #1b2420; color: #3a4a42; border-color: #2a3830; }
-        body.dark-mode .chapter-grid a { color: #aaa; border-bottom-color: #2a3830; border-right-color: #2a3830; }
+        body.dark-mode .chapter-grid a { color: #aaa; border-bottom-color: #2a3830; }
         body.dark-mode .chapter-grid a:hover { color: #8fae9f; background: #1e2b24; }
         body.dark-mode .chapter-marker { color: #4a6b5d; }
         body.dark-mode .chapter-col { border-right-color: #2e3d36; }
-        body.dark-mode .extra-title { color: #8fae9f; border-bottom-color: #2e3d36; border-left-color: #4a6b5d; background: linear-gradient(90deg, #1b2420 0%, #1e2b24 100%); }
+        body.dark-mode .extra-title { color: #8fae9f; border-bottom-color: #2e3d36; background-color: #1b2420; }
         body.dark-mode .action-btn { background: #1b2420; color: #8fae9f; border-color: #4a6b5d; }
         body.dark-mode .share-link-input { background: #232e29; border-color: #3a5040; color: #dae5e0; }
         body.dark-mode .pagination-bar { border-top-color: #2e3d36; }
@@ -411,20 +411,18 @@
         }
 
         .extra-title {
-            font-size: 0.9rem; font-weight: 700; color: #4a6b5d;
-            text-transform: uppercase; letter-spacing: 1px;
-            padding: 10px 16px; margin: 24px 0 0;
-            background: linear-gradient(90deg, #eaf2ee 0%, #f4faf7 100%);
-            border-radius: 8px 8px 0 0;
+            font-size: 0.95rem; font-weight: 700; color: #4a6b5d;
+            text-transform: uppercase; letter-spacing: 0.8px;
+            padding: 8px 12px; margin: 18px 0 6px;
+            background: #eaf2ee; border-radius: 6px;
             border-left: 4px solid #4a6b5d;
-            border-bottom: 2px solid #c8ddd5;
         }
 
-        /* ── Chapter grid: 3 columns clean layout ── */
+        /* ── Chapter columns: 25 per column ── */
         .chapter-grid {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 0;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0 16px;
             margin-bottom: 0;
         }
         .chapter-col {
@@ -437,13 +435,12 @@
         .chapter-grid a {
             display: flex; align-items: center; gap: 6px;
             text-decoration: none; color: #3a3a3a; font-size: 0.875rem;
-            padding: 7px 10px 7px 8px;
-            border-bottom: 1px solid #f0f4f2;
-            border-right: 1px solid #f0f4f2;
+            padding: 5px 8px 5px 4px;
+            border-bottom: 1px dashed #eaeaea;
             transition: color 0.2s, background 0.15s, padding-left 0.2s;
+            border-radius: 3px;
         }
-        .chapter-grid a:nth-child(2n) { border-right: none; }
-        .chapter-grid a:hover { color: #4a6b5d; padding-left: 14px; background: #f4faf7; }
+        .chapter-grid a:hover { color: #4a6b5d; padding-left: 8px; background: #f4faf7; }
         .chapter-marker { color: #8fae9f; font-size: 0.7rem; flex-shrink: 0; }
 
         .special-link-box {
@@ -814,7 +811,8 @@
 
             /* Danh sách chương: 1 cột trên mobile */
             .chapter-grid {
-                grid-template-columns: 1fr !important;
+                flex-direction: column !important;
+                gap: 0 !important;
             }
             .chapter-col {
                 border-right: none !important;
@@ -824,7 +822,6 @@
                 padding-bottom: 4px;
             }
             body.dark-mode .chapter-col { border-bottom-color: #2e3d36; }
-            .chapter-grid a:nth-child(2n) { border-right: none !important; }
 
             /* Chapter links dễ bấm trên mobile */
             .chapter-grid a {
@@ -1583,7 +1580,7 @@
                     rAv = rParts[0] || '🌿';
                     rName = rParts.slice(1).join(' ') || 'Ẩn danh';
                 }
-                return '<div class="reply-item" id="comment-' + r.id + '">' +
+                return '<div class="reply-item" id="comment-' + r.id + '" data-author-id="' + escHtml(r.author_id||'') + '">' +
                        '  <div class="comment-header">' +
                        '    <div class="comment-meta">' +
                        '      <span class="comment-avatar">' + (rAv.startsWith('http') ? '<img src="' + escHtml(rAv) + '" style="width:1.5rem;height:1.5rem;border-radius:50%;object-fit:cover;vertical-align:middle;">' : escHtml(rAv)) + '</span>' +
@@ -1759,11 +1756,17 @@
                 content: txt
             });
 
-            // Gửi thông báo cho chủ bình luận gốc
-            var parentEl = document.getElementById('comment-' + parentId);
-            var recipientAuthorId = parentEl ? (parentEl.dataset.authorId || '') : '';
+            // Gửi thông báo cho đúng người: reply-item (nếu reply vào reply) hoặc root comment
+            var recipientAuthorId = '';
+            var replyEl = document.querySelector('.reply-item#comment-' + parentId);
+            if (replyEl && replyEl.dataset.authorId) {
+                recipientAuthorId = replyEl.dataset.authorId;
+            } else {
+                var rootEl = document.getElementById('comment-' + parentId);
+                recipientAuthorId = rootEl ? (rootEl.dataset.authorId || '') : '';
+            }
             var chapterTitle = (document.querySelector('.chapter-title') || {}).textContent || document.title;
-            if (recipientAuthorId) {
+            if (recipientAuthorId && recipientAuthorId !== AUTHOR_ID) {
                 await sendReplyNotification(
                     recipientAuthorId,
                     aut,

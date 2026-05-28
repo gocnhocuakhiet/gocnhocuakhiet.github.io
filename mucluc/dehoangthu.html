@@ -1640,7 +1640,7 @@
                     rAv = rParts[0] || '🌿';
                     rName = rParts.slice(1).join(' ') || 'Ẩn danh';
                 }
-                return '<div class="reply-item" id="comment-' + r.id + '">' +
+                return '<div class="reply-item" id="comment-' + r.id + '" data-author-id="' + escHtml(r.author_id||'') + '">' +
                        '  <div class="comment-header">' +
                        '    <div class="comment-meta">' +
                        '      <span class="comment-avatar">' + (rAv.startsWith('http') ? '<img src="' + escHtml(rAv) + '" style="width:1.5rem;height:1.5rem;border-radius:50%;object-fit:cover;vertical-align:middle;">' : escHtml(rAv)) + '</span>' +
@@ -1816,11 +1816,17 @@
                 content: txt
             });
 
-            // Gửi thông báo cho chủ bình luận gốc
-            var parentEl = document.getElementById('comment-' + parentId);
-            var recipientAuthorId = parentEl ? (parentEl.dataset.authorId || '') : '';
+            // Gửi thông báo cho đúng người: reply-item (nếu reply vào reply) hoặc root comment
+            var recipientAuthorId = '';
+            var replyEl = document.querySelector('.reply-item#comment-' + parentId);
+            if (replyEl && replyEl.dataset.authorId) {
+                recipientAuthorId = replyEl.dataset.authorId;
+            } else {
+                var rootEl = document.getElementById('comment-' + parentId);
+                recipientAuthorId = rootEl ? (rootEl.dataset.authorId || '') : '';
+            }
             var chapterTitle = (document.querySelector('.chapter-title') || {}).textContent || document.title;
-            if (recipientAuthorId) {
+            if (recipientAuthorId && recipientAuthorId !== AUTHOR_ID) {
                 await sendReplyNotification(
                     recipientAuthorId,
                     aut,
