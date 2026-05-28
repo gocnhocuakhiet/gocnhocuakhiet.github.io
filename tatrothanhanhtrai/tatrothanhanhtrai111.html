@@ -1394,7 +1394,7 @@ function buildCommentEl(c, replyMap, isSidebar, paraIndex) {
         repliesHtml = '<div class="replies-list">' +
             childReplies.map(function(r) {
                 var isReplyOwner = r.author_id === AUTHOR_ID;
-                return '<div class="reply-item" id="comment-' + r.id + '">' +
+                return '<div class="reply-item" id="comment-' + r.id + '" data-author-id="' + (r.author_id||'') + '">' +
                     '<div class="comment-item-header">' +
                     '<span class="comment-author">' + renderAuthor(r.author_name) + '</span>' +
                     '<span class="comment-time">' + fmtDate(r.created_at) + '</span></div>' +
@@ -1531,6 +1531,28 @@ async function submitReply(parentId, context, paraIndex) {
             content: content, parent_id: parentId
         });
         textarea.value = '';
+
+        // ✅ Fix: Lấy đúng author_id của người nhận thông báo
+        var recipientAuthorId = '';
+        var replyEl = document.querySelector('.reply-item[id="comment-' + parentId + '"]');
+        if (replyEl && replyEl.dataset.authorId) {
+            recipientAuthorId = replyEl.dataset.authorId;
+        } else {
+            var rootEl = document.getElementById('comment-' + parentId);
+            if (rootEl) recipientAuthorId = rootEl.dataset.authorId || '';
+        }
+        if (recipientAuthorId && recipientAuthorId !== AUTHOR_ID) {
+            try {
+                await sbFetch('notifications', 'POST', {
+                    recipient_id: recipientAuthorId,
+                    sender_name: name,
+                    content: content,
+                    page_path: PAGE_PATH,
+                    created_at: new Date().toISOString()
+                });
+            } catch(ne) { /* thông báo thất bại không ảnh hưởng comment */ }
+        }
+
         if (context === 'sidebar') {
             loadSidebarComments(paraIndex);
         } else {
