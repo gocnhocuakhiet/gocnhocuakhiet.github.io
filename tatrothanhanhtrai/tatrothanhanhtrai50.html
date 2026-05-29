@@ -1472,6 +1472,121 @@ function buildCommentEl(c, replyMap, isSidebar, paraIndex) {
         ta.setSelectionRange(ta.value.length, ta.value.length);
     }
 
+
+    async function loadMainComments() {
+        var list = document.getElementById('main-comments-list');
+        list.innerHTML = '<div class="loading-text">Đang tải bình luận…</div>';
+        try {
+            var rows = await sbFetch(
+                'comments?page_path=eq.' + encodeURIComponent(PAGE_PATH) + '&para_index=is.null&order=created_at.asc'
+            );
+            renderMainComments(rows, list);
+            loadStats();
+        } catch(e) {
+            list.innerHTML = '<div class="empty-text">Không thể tải bình luận.</div>';
+        }
+    }
+
+    function renderMainComments(rows, container) {
+        if (!rows.length) {
+            container.innerHTML = '<div class="empty-text">Chưa có bình luận nào. Hãy để lại cảm nhận nhé! 🌸</div>';
+            return;
+        }
+        var roots = rows.filter(function(r) { return !r.parent_id; });
+        var replies = rows.filter(function(r) { return !!r.parent_id; });
+        var replyMap = {};
+        replies.forEach(function(r) {
+            if (!replyMap[r.parent_id]) replyMap[r.parent_id] = [];
+            replyMap[r.parent_id].push(r);
+        });
+        container.innerHTML = '';
+        roots.forEach(function(c) {
+            var el = buildCommentEl(c, replyMap, false, null);
+            el.className = 'main-comment-item';
+            container.appendChild(el);
+        });
+    }
+
+    async function submitMainComment() {
+        var name = document.getElementById('main-author').value.trim();
+        var content = document.getElementById('main-content').value.trim();
+        if (!name) { alert('Vui lòng nhập tên của bạn.'); return; }
+        if (!content) { alert('Vui lòng nhập nội dung bình luận.'); return; }
+
+        localStorage.setItem('comment-author-name', name);
+        var btn = document.querySelector('.main-submit-btn');
+        btn.disabled = true;
+        btn.textContent = 'Đang gửi…';
+
+        try {
+            await sbFetch('comments', 'POST', {
+                page_path: PAGE_PATH,
+                para_index: null,
+                author_name: (selectedAvatar['main'] || '🌿') + ' ' + name,
+                author_id: AUTHOR_ID,
+                content: content
+            });
+            document.getElementById('main-content').value = '';
+            document.getElementById('main-char-count').textContent = '0';
+            await loadMainComments();
+        } catch(e) {
+            alert('Gửi thất bại, vui lòng thử lại.');
+        } finally {
+            btn.disabled = false;
+            btn.textContent = 'Gửi bình luận 🌸';
+        }
+    }
+
+    async function submitSidebarComment() {
+        var paraIndex = currentParaIndex;
+        var name = document.getElementById('sidebar-author').value.trim();
+        var content = document.getElementById('sidebar-content').value.trim();
+        if (!name) { alert('Vui lòng nhập tên của bạn.'); return; }
+        if (!content) { alert('Vui lòng nhập nội dung bình luận.'); return; }
+
+        localStorage.setItem('comment-author-name', name);
+        var btn = document.querySelector('.sidebar-submit-btn:not(#login-btn-sidebar)');
+        if (btn) { btn.disabled = true; btn.textContent = 'Đang gửi…'; }
+
+        try {
+            await sbFetch('comments', 'POST', {
+                page_path: PAGE_PATH,
+                para_index: paraIndex ? parseInt(paraIndex, 10) : null,
+                author_name: (selectedAvatar['sidebar'] || selectedAvatar['main'] || '🌿') + ' ' + name,
+                author_id: AUTHOR_ID,
+                content: content
+            });
+            document.getElementById('sidebar-content').value = '';
+            loadSidebarComments(paraIndex);
+            loadStats();
+        } catch(e) {
+            alert('Gửi thất bại, vui lòng thử lại.');
+        } finally {
+            if (btn) { btn.disabled = false; btn.textContent = 'Gửi 🌸'; }
+        }
+    }
+
+    async function loadStats() {
+        try {
+            var all = await sbFetch(
+                'comments?select=id,para_index,parent_id,author_id&page_path=eq.' + encodeURIComponent(PAGE_PATH)
+            );
+            var total = all.length;
+            var roots = all.filter(function(r) { return !r.parent_id; }).length;
+            var replies = all.filter(function(r) { return !!r.parent_id; }).length;
+            var users = new Set(all.map(function(r) { return r.author_id; })).size;
+
+            var elTotal = document.getElementById('stat-total');
+            var elRoot = document.getElementById('stat-root');
+            var elReplies = document.getElementById('stat-replies');
+            var elUsers = document.getElementById('stat-users');
+            if (elTotal) elTotal.textContent = total;
+            if (elRoot) elRoot.textContent = roots;
+            if (elReplies) elReplies.textContent = replies;
+            if (elUsers) elUsers.textContent = users;
+        } catch(e) {}
+    }
+
     async function sendReplyNotification(recipientAuthorId, senderName, commentContent, chapterTitle, chapterPath) {
         if (!recipientAuthorId || recipientAuthorId === AUTHOR_ID) return;
         try {
