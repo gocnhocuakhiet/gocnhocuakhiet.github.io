@@ -1427,8 +1427,9 @@ function buildCommentEl(c, replyMap, isSidebar, paraIndex) {
                        '  </div>' +
                        '  <div class="comment-content">' + escHtml(r.content) + '</div>' +
                        '  <div class="comment-footer-actions">' +
-                       '    <a class="comment-action-link" onclick="showInlineReplyForm(\'' + c.id + '\',\'' + (isSidebar?'sidebar':'main') + '\',' + (paraIndex||'null') + ', \'' + escHtml(rName) + '\')">Phản hồi</a>' +
+                       '    <a class="comment-action-link" onclick="showInlineReplyForm(\'' + r.id + '\',\'' + (isSidebar?'sidebar':'main') + '\',' + (paraIndex||'null') + ', \'' + escHtml(rName) + '\')">Phản hồi</a>' +
                        '  </div>' +
+                       '  <div id="reply-form-container-' + r.id + '"></div>' +
                        '</div>';
             }).join('') + '</div>';
         }
@@ -1515,24 +1516,32 @@ function buildCommentEl(c, replyMap, isSidebar, paraIndex) {
 
         localStorage.setItem('comment-author-name', aut);
         try {
+            // Nếu bấm Phản hồi trên một reply, tìm root comment để lưu parent_id đúng
+            var replyEl = document.querySelector('.reply-item#comment-' + parentId);
+            var actualParentId = parentId;
+            var recipientAuthorId = '';
+            if (replyEl) {
+                // parentId là một reply → lấy author_id của reply đó để gửi thông báo
+                recipientAuthorId = replyEl.dataset.authorId || '';
+                // Tìm root comment chứa reply này (parent của reply)
+                var rootEl = replyEl.closest('.comment-item');
+                if (rootEl) actualParentId = rootEl.id.replace('comment-', '');
+            } else {
+                // parentId là root comment
+                var rootEl2 = document.getElementById('comment-' + parentId);
+                recipientAuthorId = rootEl2 ? (rootEl2.dataset.authorId || '') : '';
+                actualParentId = parentId;
+            }
+
             await sbFetch('comments', 'POST', {
                 page_path: PAGE_PATH,
                 para_index: paraIndex ? parseInt(paraIndex, 10) : null,
-                parent_id: parentId,
-                author_name: selectedAvatar[context] + ' ' + aut,
+                parent_id: actualParentId,
+                author_name: (selectedAvatar[context] || '🌿') + ' ' + aut,
                 author_id: AUTHOR_ID,
                 content: txt
             });
 
-            // Gửi thông báo cho đúng người: reply-item (nếu reply vào reply) hoặc root comment
-            var recipientAuthorId = '';
-            var replyEl = document.querySelector('.reply-item#comment-' + parentId);
-            if (replyEl && replyEl.dataset.authorId) {
-                recipientAuthorId = replyEl.dataset.authorId;
-            } else {
-                var rootEl = document.getElementById('comment-' + parentId);
-                recipientAuthorId = rootEl ? (rootEl.dataset.authorId || '') : '';
-            }
             var chapterTitle = (document.querySelector('.chapter-title') || {}).textContent || document.title;
             if (recipientAuthorId && recipientAuthorId !== AUTHOR_ID) {
                 await sendReplyNotification(
