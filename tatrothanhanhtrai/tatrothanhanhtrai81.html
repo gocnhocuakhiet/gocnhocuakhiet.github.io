@@ -1323,7 +1323,12 @@ document.addEventListener('DOMContentLoaded', function() {
                         if (pw) pw.style.display = 'none';
                         var spw = document.getElementById('sidebar-avatar-picker-wrap');
                         if (spw) spw.style.display = 'none';
-                        if (profileAvatar) loggedInAvatarUrl = profileAvatar;
+                        if (profileAvatar) {
+                            loggedInAvatarUrl = profileAvatar;
+                            /* Lưu URL vào selectedAvatar để author_name = "url|Name" khi gửi bình luận */
+                            selectedAvatar['main']    = profileAvatar + '|';
+                            selectedAvatar['sidebar'] = profileAvatar + '|';
+                        }
                         // Cập nhật AUTHOR_ID thành user.id khi đã đăng nhập
                         AUTHOR_ID = userId;
                         localStorage.setItem('comment-author-id', AUTHOR_ID);
@@ -1991,10 +1996,46 @@ async function renderNavAuth(user) {
             '</div></div>';
         if (btnMain)    btnMain.style.display    = 'none';
         if (btnSidebar) btnSidebar.style.display = 'none';
+        /* Cập nhật selectedAvatar để bình luận mới dùng ảnh thật */
+        if (avatarUrl) {
+            selectedAvatar['main']    = avatarUrl + '|';
+            selectedAvatar['sidebar'] = avatarUrl + '|';
+            loggedInAvatarUrl = avatarUrl;
+        }
+        /* Cập nhật preview avatar trong form */
+        var prevElMain = document.getElementById('main-avatar-preview');
+        if (prevElMain && avatarUrl) prevElMain.innerHTML = '<img src="' + avatarUrl + '" alt="' + name + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%;display:block;">';
+        var prevElSide = document.getElementById('sidebar-avatar-preview');
+        if (prevElSide && avatarUrl) prevElSide.innerHTML = '<img src="' + avatarUrl + '" alt="' + name + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%;display:block;">';
+        /* Ẩn avatar picker khi đã đăng nhập */
+        var pw = document.getElementById('main-avatar-picker-wrap');
+        if (pw) pw.style.display = 'none';
+        var spw = document.getElementById('sidebar-avatar-picker-wrap');
+        if (spw) spw.style.display = 'none';
+        /* Cập nhật tên vào form */
+        var ai = document.getElementById('main-author');
+        if (ai) { ai.value = name; ai.readOnly = true; ai.style.background='#eaf2ee'; ai.style.color='#4a6b5d'; }
+        var si = document.getElementById('sidebar-author');
+        if (si) { si.value = name; si.readOnly = true; si.style.background='#eaf2ee'; si.style.color='#4a6b5d'; }
+        /* Cập nhật AUTHOR_ID */
+        if (user.id) { AUTHOR_ID = user.id; localStorage.setItem('comment-author-id', AUTHOR_ID); }
     } else {
         if (authArea) authArea.innerHTML = '<button class="nav-auth-btn" onclick="openAuthModal(\'login\')">🌿 Đăng nhập</button>';
         if (btnMain)    btnMain.style.display    = '';
         if (btnSidebar) btnSidebar.style.display = '';
+        /* Reset selectedAvatar khi đăng xuất */
+        var savedAv = localStorage.getItem('comment-avatar') || '🌿';
+        selectedAvatar['main']    = savedAv;
+        selectedAvatar['sidebar'] = savedAv;
+        loggedInAvatarUrl = '';
+        var pw2 = document.getElementById('main-avatar-picker-wrap');
+        if (pw2) pw2.style.display = '';
+        var spw2 = document.getElementById('sidebar-avatar-picker-wrap');
+        if (spw2) spw2.style.display = '';
+        var ai2 = document.getElementById('main-author');
+        if (ai2) { ai2.readOnly = false; ai2.style.background=''; ai2.style.color=''; }
+        var si2 = document.getElementById('sidebar-author');
+        if (si2) { si2.readOnly = false; si2.style.background=''; si2.style.color=''; }
     }
 }
 
