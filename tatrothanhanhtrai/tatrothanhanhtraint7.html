@@ -1336,8 +1336,16 @@ function buildCommentEl(c, replyMap, isSidebar, paraIndex) {
                     rName = rRaw.substring(rPipe + 1).trim() || 'Ẩn danh';
                 } else {
                     var rParts = rRaw.split(' ');
-                    rAv = rParts[0] || '🌿';
-                    rName = rParts.slice(1).join(' ') || 'Ẩn danh';
+                    var rFirst = rParts[0] || '';
+                    var rFirstCode = rFirst.codePointAt ? rFirst.codePointAt(0) : 0;
+                    var rIsEmoji = rFirstCode > 127 && rFirst.length <= 4;
+                    if (rIsEmoji) {
+                        rAv = rFirst;
+                        rName = rParts.slice(1).join(' ') || 'Ẩn danh';
+                    } else {
+                        rAv = '🌿';
+                        rName = rRaw || 'Ẩn danh';
+                    }
                 }
                 return '<div class="reply-item" id="comment-' + r.id + '" data-author-id="' + escHtml(r.author_id||'') + '">' +
                        '  <div class="comment-header">' +
@@ -1350,8 +1358,9 @@ function buildCommentEl(c, replyMap, isSidebar, paraIndex) {
                        '  </div>' +
                        '  <div class="comment-content">' + escHtml(r.content) + '</div>' +
                        '  <div class="comment-footer-actions">' +
-                       '    <a class="comment-action-link" onclick="showInlineReplyForm(\'' + c.id + '\',\'' + (isSidebar?'sidebar':'main') + '\',' + (paraIndex||'null') + ', \'' + escHtml(rName) + '\')">Phản hồi</a>' +
+                       '    <a class="comment-action-link" onclick="showInlineReplyForm(\'' + r.id + '\',\'' + (isSidebar?'sidebar':'main') + '\',' + (paraIndex||'null') + ', \'' + escHtml(rName) + '\')">Phản hồi</a>' +
                        '  </div>' +
+                       '  <div id="reply-form-container-' + r.id + '"></div>' +
                        '</div>';
             }).join('') + '</div>';
         }
@@ -1364,8 +1373,16 @@ function buildCommentEl(c, replyMap, isSidebar, paraIndex) {
             name = cRaw.substring(cPipe + 1).trim() || 'Ẩn danh';
         } else {
             var cParts = cRaw.split(' ');
-            av = cParts[0] || '🌿';
-            name = cParts.slice(1).join(' ') || 'Ẩn danh';
+            var cFirst = cParts[0] || '';
+            var cFirstCode = cFirst.codePointAt ? cFirst.codePointAt(0) : 0;
+            var cIsEmoji = cFirstCode > 127 && cFirst.length <= 4;
+            if (cIsEmoji) {
+                av = cFirst;
+                name = cParts.slice(1).join(' ') || 'Ẩn danh';
+            } else {
+                av = '🌿';
+                name = cRaw || 'Ẩn danh';
+            }
         }
 
         el.innerHTML =
@@ -1416,6 +1433,121 @@ function buildCommentEl(c, replyMap, isSidebar, paraIndex) {
         ta.setSelectionRange(ta.value.length, ta.value.length);
     }
 
+
+    async function loadMainComments() {
+        var list = document.getElementById('main-comments-list');
+        list.innerHTML = '<div class="loading-text">Đang tải bình luận…</div>';
+        try {
+            var rows = await sbFetch(
+                'comments?page_path=eq.' + encodeURIComponent(PAGE_PATH) + '&para_index=is.null&order=created_at.asc'
+            );
+            renderMainComments(rows, list);
+            loadStats();
+        } catch(e) {
+            list.innerHTML = '<div class="empty-text">Không thể tải bình luận.</div>';
+        }
+    }
+
+    function renderMainComments(rows, container) {
+        if (!rows.length) {
+            container.innerHTML = '<div class="empty-text">Chưa có bình luận nào. Hãy để lại cảm nhận nhé! 🌸</div>';
+            return;
+        }
+        var roots = rows.filter(function(r) { return !r.parent_id; });
+        var replies = rows.filter(function(r) { return !!r.parent_id; });
+        var replyMap = {};
+        replies.forEach(function(r) {
+            if (!replyMap[r.parent_id]) replyMap[r.parent_id] = [];
+            replyMap[r.parent_id].push(r);
+        });
+        container.innerHTML = '';
+        roots.forEach(function(c) {
+            var el = buildCommentEl(c, replyMap, false, null);
+            el.className = 'main-comment-item';
+            container.appendChild(el);
+        });
+    }
+
+    async function submitMainComment() {
+        var name = document.getElementById('main-author').value.trim();
+        var content = document.getElementById('main-content').value.trim();
+        if (!name) { alert('Vui lòng nhập tên của bạn.'); return; }
+        if (!content) { alert('Vui lòng nhập nội dung bình luận.'); return; }
+
+        localStorage.setItem('comment-author-name', name);
+        var btn = document.querySelector('.main-submit-btn');
+        btn.disabled = true;
+        btn.textContent = 'Đang gửi…';
+
+        try {
+            await sbFetch('comments', 'POST', {
+                page_path: PAGE_PATH,
+                para_index: null,
+                author_name: (selectedAvatar['main'] || '🌿') + ' ' + name,
+                author_id: AUTHOR_ID,
+                content: content
+            });
+            document.getElementById('main-content').value = '';
+            document.getElementById('main-char-count').textContent = '0';
+            await loadMainComments();
+        } catch(e) {
+            alert('Gửi thất bại, vui lòng thử lại.');
+        } finally {
+            btn.disabled = false;
+            btn.textContent = 'Gửi bình luận 🌸';
+        }
+    }
+
+    async function submitSidebarComment() {
+        var paraIndex = currentParaIndex;
+        var name = document.getElementById('sidebar-author').value.trim();
+        var content = document.getElementById('sidebar-content').value.trim();
+        if (!name) { alert('Vui lòng nhập tên của bạn.'); return; }
+        if (!content) { alert('Vui lòng nhập nội dung bình luận.'); return; }
+
+        localStorage.setItem('comment-author-name', name);
+        var btn = document.querySelector('.sidebar-submit-btn:not(#login-btn-sidebar)');
+        if (btn) { btn.disabled = true; btn.textContent = 'Đang gửi…'; }
+
+        try {
+            await sbFetch('comments', 'POST', {
+                page_path: PAGE_PATH,
+                para_index: paraIndex ? parseInt(paraIndex, 10) : null,
+                author_name: (selectedAvatar['sidebar'] || selectedAvatar['main'] || '🌿') + ' ' + name,
+                author_id: AUTHOR_ID,
+                content: content
+            });
+            document.getElementById('sidebar-content').value = '';
+            loadSidebarComments(paraIndex);
+            loadStats();
+        } catch(e) {
+            alert('Gửi thất bại, vui lòng thử lại.');
+        } finally {
+            if (btn) { btn.disabled = false; btn.textContent = 'Gửi 🌸'; }
+        }
+    }
+
+    async function loadStats() {
+        try {
+            var all = await sbFetch(
+                'comments?select=id,para_index,parent_id,author_id&page_path=eq.' + encodeURIComponent(PAGE_PATH)
+            );
+            var total = all.length;
+            var roots = all.filter(function(r) { return !r.parent_id; }).length;
+            var replies = all.filter(function(r) { return !!r.parent_id; }).length;
+            var users = new Set(all.map(function(r) { return r.author_id; })).size;
+
+            var elTotal = document.getElementById('stat-total');
+            var elRoot = document.getElementById('stat-root');
+            var elReplies = document.getElementById('stat-replies');
+            var elUsers = document.getElementById('stat-users');
+            if (elTotal) elTotal.textContent = total;
+            if (elRoot) elRoot.textContent = roots;
+            if (elReplies) elReplies.textContent = replies;
+            if (elUsers) elUsers.textContent = users;
+        } catch(e) {}
+    }
+
     async function sendReplyNotification(recipientAuthorId, senderName, commentContent, chapterTitle, chapterPath) {
         if (!recipientAuthorId || recipientAuthorId === AUTHOR_ID) return;
         try {
@@ -1438,24 +1570,32 @@ function buildCommentEl(c, replyMap, isSidebar, paraIndex) {
 
         localStorage.setItem('comment-author-name', aut);
         try {
+            // Nếu bấm Phản hồi trên một reply, tìm root comment để lưu parent_id đúng
+            var replyEl = document.querySelector('.reply-item#comment-' + parentId);
+            var actualParentId = parentId;
+            var recipientAuthorId = '';
+            if (replyEl) {
+                // parentId là một reply → lấy author_id của reply đó để gửi thông báo
+                recipientAuthorId = replyEl.dataset.authorId || '';
+                // Tìm root comment chứa reply này (parent của reply)
+                var rootEl = replyEl.closest('.comment-item');
+                if (rootEl) actualParentId = rootEl.id.replace('comment-', '');
+            } else {
+                // parentId là root comment
+                var rootEl2 = document.getElementById('comment-' + parentId);
+                recipientAuthorId = rootEl2 ? (rootEl2.dataset.authorId || '') : '';
+                actualParentId = parentId;
+            }
+
             await sbFetch('comments', 'POST', {
                 page_path: PAGE_PATH,
                 para_index: paraIndex ? parseInt(paraIndex, 10) : null,
-                parent_id: parentId,
-                author_name: selectedAvatar[context] + ' ' + aut,
+                parent_id: actualParentId,
+                author_name: (selectedAvatar[context] || '🌿') + ' ' + aut,
                 author_id: AUTHOR_ID,
                 content: txt
             });
 
-            // Gửi thông báo cho đúng người: reply-item (nếu reply vào reply) hoặc root comment
-            var recipientAuthorId = '';
-            var replyEl = document.querySelector('.reply-item#comment-' + parentId);
-            if (replyEl && replyEl.dataset.authorId) {
-                recipientAuthorId = replyEl.dataset.authorId;
-            } else {
-                var rootEl = document.getElementById('comment-' + parentId);
-                recipientAuthorId = rootEl ? (rootEl.dataset.authorId || '') : '';
-            }
             var chapterTitle = (document.querySelector('.chapter-title') || {}).textContent || document.title;
             if (recipientAuthorId && recipientAuthorId !== AUTHOR_ID) {
                 await sendReplyNotification(
