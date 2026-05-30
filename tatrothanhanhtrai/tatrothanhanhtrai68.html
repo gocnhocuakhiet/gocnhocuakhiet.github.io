@@ -1683,6 +1683,104 @@ function initStickerPicker(context) {
     });
 }
 
+
+async function loadMainComments() {
+    var list = document.getElementById('main-comments-list');
+    list.innerHTML = '<div class="loading-text">Đang tải bình luận…</div>';
+    try {
+        var rows = await sbFetch(
+            'comments?page_path=eq.' + encodeURIComponent(PAGE_PATH) + '&para_index=is.null&order=created_at.asc'
+        );
+        renderMainComments(rows, list);
+        loadStats();
+    } catch(e) {
+        list.innerHTML = '<div class="empty-text">Không thể tải bình luận.</div>';
+    }
+}
+
+function renderMainComments(rows, container) {
+    if (!rows.length) {
+        container.innerHTML = '<div class="empty-text">Chưa có bình luận nào. Hãy để lại cảm nhận nhé! 🌸</div>';
+        return;
+    }
+    var roots = rows.filter(function(r) { return !r.parent_id; });
+    var replies = rows.filter(function(r) { return !!r.parent_id; });
+    var replyMap = {};
+    replies.forEach(function(r) {
+        if (!replyMap[r.parent_id]) replyMap[r.parent_id] = [];
+        replyMap[r.parent_id].push(r);
+    });
+    container.innerHTML = '';
+    roots.forEach(function(c) {
+        var el = buildCommentEl(c, replyMap, false, null);
+        el.className = 'main-comment-item';
+        container.appendChild(el);
+    });
+}
+
+async function submitMainComment() {
+    var name    = document.getElementById('main-author').value.trim();
+    var content = document.getElementById('main-content').value.trim();
+    if (!name)    { alert('Vui lòng nhập tên của bạn.'); return; }
+    if (!content) { alert('Vui lòng nhập nội dung bình luận.'); return; }
+    localStorage.setItem('comment-author-name', name);
+    var btn = document.querySelector('.main-submit-btn');
+    btn.disabled = true; btn.textContent = 'Đang gửi…';
+    try {
+        await sbFetch('comments', 'POST', {
+            page_path: PAGE_PATH,
+            para_index: null,
+            author_name: (loggedInAvatarUrl ? loggedInAvatarUrl + '|' : selectedAvatar['main'].replace(/\|$/, '') + '|') + name,
+            author_id: AUTHOR_ID,
+            content: content
+        });
+        document.getElementById('main-content').value = '';
+        document.getElementById('main-char-count').textContent = '0';
+        await loadMainComments();
+        loadParaCounts();
+    } catch(e) { alert('Gửi thất bại, vui lòng thử lại.'); }
+    finally { btn.disabled = false; btn.textContent = 'Gửi bình luận 🌸'; }
+}
+
+async function submitSidebarComment() {
+    var name    = document.getElementById('sidebar-author').value.trim();
+    var content = document.getElementById('sidebar-content').value.trim();
+    if (!name)    { alert('Vui lòng nhập tên của bạn.'); return; }
+    if (!content) { alert('Vui lòng nhập nội dung bình luận.'); return; }
+    localStorage.setItem('comment-author-name', name);
+    var btn = document.querySelector('.sidebar-submit-btn');
+    btn.disabled = true; btn.textContent = 'Đang gửi…';
+    try {
+        await sbFetch('comments', 'POST', {
+            page_path: PAGE_PATH,
+            para_index: currentParaIndex,
+            author_name: (loggedInAvatarUrl ? loggedInAvatarUrl + '|' : selectedAvatar['sidebar'].replace(/\|$/, '') + '|') + name,
+            author_id: AUTHOR_ID,
+            content: content
+        });
+        document.getElementById('sidebar-content').value = '';
+        paraCommentCounts[currentParaIndex] = (paraCommentCounts[currentParaIndex] || 0) + 1;
+        updateBadge(currentParaIndex);
+        loadSidebarComments(currentParaIndex);
+        loadStats();
+    } catch(e) { alert('Gửi thất bại, thử lại nhé!'); }
+    finally { btn.disabled = false; btn.textContent = 'Gửi 🌸'; }
+}
+
+async function sendReplyNotification(recipientAuthorId, senderName, commentContent, chapterTitle, chapterPath) {
+    if (!recipientAuthorId || recipientAuthorId === AUTHOR_ID) return;
+    try {
+        await sbFetch('notifications', 'POST', {
+            recipient_author_id: recipientAuthorId,
+            sender_name: senderName,
+            comment_content: commentContent.substring(0, 200),
+            chapter_title: chapterTitle,
+            chapter_path: chapterPath,
+            is_read: false
+        });
+    } catch(e) { console.warn('Không gửi được thông báo:', e); }
+}
+
 function renderAuthor(authorName) {
     var sep = authorName ? authorName.indexOf('|') : -1;
     if (sep > 0 && authorName.substring(0, sep).startsWith('http')) {
@@ -1699,10 +1797,8 @@ function escHtml(s) {
 }
 function fmtDate(iso) {
     var d = new Date(iso);
-    return d.getHours().toString().padStart(2,'0') + ':' +
-           d.getMinutes().toString().padStart(2,'0') + ':' +
-           d.getSeconds().toString().padStart(2,'0') + ' ' +
-           d.getDate() + '/' + (d.getMonth()+1) + '/' + d.getFullYear();
+    if (isNaN(d.getTime())) return 'Vừa xong';
+    return d.toLocaleDateString('vi-VN') + ' ' + d.toLocaleTimeString('vi-VN', {hour:'2-digit', minute:'2-digit'});
 }
 </script>
 
