@@ -1345,18 +1345,32 @@ function renderSidebarComments(rows, container, paraIndex) {
     });
 }
 
+function looksLikeAvatarToken(s) {
+    s = (s || '').trim();
+    if (!s) return false;
+    if (s.startsWith('http')) return true;
+    // emoji / ký hiệu thường nằm ngoài chữ và số thông thường
+    return !/[A-Za-zÀ-ỹ0-9]/.test(s);
+}
+
 function parseAuthor(raw) {
-    raw = raw || '';
+    raw = (raw || '').trim();
     var av = '🌿', name = 'Ẩn danh';
+    if (!raw) return { avatar: av, name: name };
+
     if (raw.includes('|')) {
         var pipe = raw.indexOf('|');
         av = raw.substring(0, pipe).trim() || '🌿';
         name = raw.substring(pipe + 1).trim() || 'Ẩn danh';
     } else {
-        var parts = raw.split(' ');
-        av = parts[0] || '🌿';
-        name = parts.slice(1).join(' ').trim() || raw || 'Ẩn danh';
-        if (name === av) name = 'Ẩn danh';
+        var parts = raw.split(/\s+/);
+        if (parts.length > 1 && looksLikeAvatarToken(parts[0])) {
+            av = parts[0] || '🌿';
+            name = parts.slice(1).join(' ').trim() || 'Ẩn danh';
+        } else {
+            av = '🌿';
+            name = raw || 'Ẩn danh';
+        }
     }
     return { avatar: av, name: name };
 }
@@ -1377,38 +1391,54 @@ function getParaValue(paraIndex) {
     return (paraIndex === null || paraIndex === undefined || paraIndex === 'null') ? null : parseInt(paraIndex, 10);
 }
 
+function escJs(s) {
+    return String(s || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/\n/g, ' ');
+}
+
+function buildReplyHtml(r, replyMap, isSidebar, paraIndex) {
+    var rOwner = r.author_id === AUTHOR_ID;
+    var rp = parseAuthor(r.author_name || '');
+    var context = isSidebar ? 'sidebar' : 'main';
+    var pi = (paraIndex===null?'null':paraIndex);
+    var nested = renderRepliesHtml(r.id, replyMap, isSidebar, paraIndex);
+    return '<div class="reply-item" id="comment-' + r.id + '" data-author-id="' + escHtml(r.author_id||'') + '">' +
+           '  <div class="comment-header">' +
+           '    <div class="comment-meta">' +
+           '      <span class="comment-avatar">' + avatarMarkup(rp.avatar) + '</span>' +
+           '      <span class="comment-author">' + escHtml(rp.name) + '</span>' +
+           '      <span class="comment-date">' + fmtDate(r.created_at) + '</span>' +
+           '    </div>' +
+           (rOwner ? '    <a class="comment-action-link delete-link" onclick="deleteComment(\'' + r.id + '\',\'' + context + '\',' + pi + ')">Xoá</a>' : '') +
+           '  </div>' +
+           '  <div class="comment-content">' + escHtml(r.content) + '</div>' +
+           '  <div class="comment-footer-actions">' +
+           '    <a class="comment-action-link" onclick="showInlineReplyForm(\'' + r.id + '\',\'' + context + '\',' + pi + ', \'' + escJs(rp.name) + '\')">Phản hồi</a>' +
+           '  </div>' +
+           '  <div id="reply-form-container-' + r.id + '"></div>' +
+           nested +
+           '</div>';
+}
+
+function renderRepliesHtml(parentId, replyMap, isSidebar, paraIndex) {
+    var childReplies = (replyMap && replyMap[parentId]) ? replyMap[parentId] : [];
+    if (!childReplies.length) return '';
+    return '<div class="replies-list">' + childReplies.map(function(r) {
+        return buildReplyHtml(r, replyMap, isSidebar, paraIndex);
+    }).join('') + '</div>';
+}
+
 function buildCommentEl(c, replyMap, isSidebar, paraIndex) {
     var el = document.createElement('div');
     el.className = 'comment-item';
     el.id = 'comment-' + c.id;
     el.dataset.authorId = c.author_id || '';
 
-    var childReplies = (replyMap && replyMap[c.id]) ? replyMap[c.id] : [];
     var isOwner = c.author_id === AUTHOR_ID;
-
-    var repliesHtml = '';
-    if (childReplies.length) {
-        repliesHtml = '<div class="replies-list">' + childReplies.map(function(r) {
-            var rOwner = r.author_id === AUTHOR_ID;
-            var rp = parseAuthor(r.author_name || '');
-            return '<div class="reply-item" id="comment-' + r.id + '" data-author-id="' + escHtml(r.author_id||'') + '">' +
-                   '  <div class="comment-header">' +
-                   '    <div class="comment-meta">' +
-                   '      <span class="comment-avatar">' + avatarMarkup(rp.avatar) + '</span>' +
-                   '      <span class="comment-author">' + escHtml(rp.name) + '</span>' +
-                   '      <span class="comment-date">' + fmtDate(r.created_at) + '</span>' +
-                   '    </div>' +
-                   (rOwner ? '    <a class="comment-action-link delete-link" onclick="deleteComment(\'' + r.id + '\',' + '\'' + (isSidebar?'sidebar':'main') + '\',' + (paraIndex===null?'null':paraIndex) + ')">Xoá</a>' : '') +
-                   '  </div>' +
-                   '  <div class="comment-content">' + escHtml(r.content) + '</div>' +
-                   '  <div class="comment-footer-actions">' +
-                   '    <a class="comment-action-link" onclick="showInlineReplyForm(\'' + c.id + '\',\'' + (isSidebar?'sidebar':'main') + '\',' + (paraIndex===null?'null':paraIndex) + ', \'' + escHtml(rp.name).replace(/'/g, '&#39;') + '\')">Phản hồi</a>' +
-                   '  </div>' +
-                   '</div>';
-        }).join('') + '</div>';
-    }
-
     var cp = parseAuthor(c.author_name || '');
+    var context = isSidebar ? 'sidebar' : 'main';
+    var pi = (paraIndex===null?'null':paraIndex);
+    var repliesHtml = renderRepliesHtml(c.id, replyMap, isSidebar, paraIndex);
+
     el.innerHTML =
         '<div class="comment-header">' +
         '  <div class="comment-meta">' +
@@ -1416,11 +1446,11 @@ function buildCommentEl(c, replyMap, isSidebar, paraIndex) {
         '    <span class="comment-author">' + escHtml(cp.name) + '</span>' +
         '    <span class="comment-date">' + fmtDate(c.created_at) + '</span>' +
         '  </div>' +
-        (isOwner ? '  <a class="comment-action-link delete-link" onclick="deleteComment(\'' + c.id + '\',' + '\'' + (isSidebar?'sidebar':'main') + '\',' + (paraIndex===null?'null':paraIndex) + ')">Xoá</a>' : '') +
+        (isOwner ? '  <a class="comment-action-link delete-link" onclick="deleteComment(\'' + c.id + '\',\'' + context + '\',' + pi + ')">Xoá</a>' : '') +
         '</div>' +
         '<div class="comment-content">' + escHtml(c.content) + '</div>' +
         '<div class="comment-footer-actions">' +
-        '  <a class="comment-action-link" onclick="showInlineReplyForm(\'' + c.id + '\',\'' + (isSidebar?'sidebar':'main') + '\',' + (paraIndex===null?'null':paraIndex) + ')">Phản hồi</a>' +
+        '  <a class="comment-action-link" onclick="showInlineReplyForm(\'' + c.id + '\',\'' + context + '\',' + pi + ')">Phản hồi</a>' +
         '</div>' +
         '<div id="reply-form-container-' + c.id + '"></div>' + repliesHtml;
 
