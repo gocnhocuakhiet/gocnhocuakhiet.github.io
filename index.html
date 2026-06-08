@@ -2075,62 +2075,180 @@ function renderPagination(totalPages) {
 /* ── Mới cập nhật (dùng commits API) ── */
 async function loadUpdates() {
     const el = document.getElementById('updates-list');
+    if (!el) return;
+
+    function safeAttr(s) {
+        return String(s == null ? '' : s).replace(/"/g, '&quot;');
+    }
+
+    function safeText(s) {
+        return String(s == null ? '' : s).replace(/[&<>"']/g, function(ch) {
+            return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[ch];
+        });
+    }
+
+    function getNovelById(id) {
+        return NOVELS.find(n => n.id === id) || null;
+    }
+
+    function getNovelByFolder(folder) {
+        return NOVELS.find(n => n.id === folder) || null;
+    }
+
+    function getChapterHref(n, chapNum) {
+        const num = Number(chapNum || n.chapters || 1);
+
+        /* Quy Phi từ chương 1000 trở đi nằm ở thư mục quyphi2 */
+        if (n.id === 'quyphi' && num >= 1000) {
+            return `quyphi2/quyphi${num}.html`;
+        }
+
+        return `${n.id}/${n.id}${num}.html`;
+    }
+
+    function renderItems(items) {
+        if (!Array.isArray(items) || !items.length) {
+            const fallback = buildFallbackItems();
+            if (!fallback.length) {
+                el.innerHTML = '<li><span class="muted-note">Chưa có cập nhật.</span></li>';
+                return;
+            }
+            items = fallback;
+        }
+
+        el.innerHTML = items.slice(0, 4).map((it, i) => {
+            const title = safeText(it.title || 'Truyện mới cập nhật');
+            const chap = safeText(it.chap || '');
+            const href = safeAttr(it.href || '#');
+            const cover = safeAttr(it.cover || '');
+            const time = safeText(it.time || 'Vừa lên');
+
+            return `<li>
+                <a class="upill-item" href="${href}">
+                    <span class="upill-cover">
+                        ${cover ? `<img src="${cover}" alt="">` : `<span class="upill-cover-fallback">📖</span>`}
+                    </span>
+                    <span class="upill-main">
+                        <span class="upill-name">${title}</span>
+                        <span class="upill-chap">${chap}</span>
+                    </span>
+                    <span class="upill-time">${time}</span>
+                </a>
+            </li>`;
+        }).join('');
+    }
+
+    function buildFallbackItems() {
+        /*
+           Đây là nguồn chắc chắn: dùng ngay dữ liệu NOVELS trong file index.
+           Nhờ vậy mỗi lần vào web đều có "Mới cập nhật", không phụ thuộc GitHub API.
+        */
+        const priority = [
+            'quyphi',
+            'tatrothanhanhtrai',
+            'olongkyduyen',
+            'nghenoithuatuong',
+            'chiataythoima',
+            'camyhanh',
+            'toimuondinguocgio',
+            'hoanquanquyenthe'
+        ];
+
+        return priority
+            .map(id => getNovelById(id))
+            .filter(Boolean)
+            .map(n => ({
+                id: n.id,
+                title: n.title,
+                chap: `Chương ${n.chapters}`,
+                href: getChapterHref(n, n.chapters),
+                cover: n.cover,
+                time: 'Vừa lên'
+            }));
+    }
+
+    function cacheItems(items) {
+        try {
+            localStorage.setItem('latest_updates_cache_v2', JSON.stringify({
+                savedAt: Date.now(),
+                items: items
+            }));
+        } catch(_) {}
+    }
+
+    function readCache() {
+        try {
+            const raw = localStorage.getItem('latest_updates_cache_v2');
+            if (!raw) return [];
+            const obj = JSON.parse(raw);
+            return Array.isArray(obj.items) ? obj.items : [];
+        } catch(_) {
+            return [];
+        }
+    }
+
+    /* Hiện ngay lập tức: ưu tiên cache cũ, không có thì dùng NOVELS */
+    const cached = readCache();
+    renderItems(cached.length ? cached : buildFallbackItems());
+
+    /*
+       Sau đó mới thử GitHub API.
+       Nếu API lỗi/rate limit/chậm thì KHÔNG ghi "Chưa có cập nhật" nữa,
+       mà giữ nguyên danh sách đang hiển thị.
+    */
     try {
-        /* Lấy danh sách file mới nhất từ mỗi folder truyện — chỉ 1 request/folder,
-           không bị rate limit như commits API */
         const headers = { Accept: 'application/vnd.github+json' };
         const results = [];
 
         await Promise.all(CHAPTER_FOLDERS.map(async folder => {
             try {
-                const r = await fetch(`${GH_API}/commits?path=${folder}&per_page=3`, { headers });
+                const r = await fetch(`${GH_API}/commits?path=${folder}&per_page=1`, { headers });
                 if (!r.ok) return;
                 const commits = await r.json();
-                if (!commits.length) return;
+                if (!Array.isArray(commits) || !commits.length) return;
+
                 const cm = commits[0];
-                /* Lấy file mới nhất trong folder từ commit đó */
+
                 const d = await fetch(`${GH_API}/contents/${folder}`, { headers });
                 if (!d.ok) return;
                 const files = await d.json();
+
                 const htmlFiles = Array.isArray(files)
                     ? files.filter(f => f.name.endsWith('.html') && f.name !== 'index.html')
                         .sort((a, b) => {
-                            const na = parseInt(a.name) || 0, nb = parseInt(b.name) || 0;
+                            const na = parseInt((a.name.match(/(\d+)\.html$/) || [0,0])[1], 10) || 0;
+                            const nb = parseInt((b.name.match(/(\d+)\.html$/) || [0,0])[1], 10) || 0;
                             return nb - na;
                         })
                     : [];
+
                 if (!htmlFiles.length) return;
+
                 const latest = htmlFiles[0];
+                const novel = getNovelByFolder(folder);
+                if (!novel) return;
+
+                const chapNum = (latest.name.match(/(\d+)\.html$/) || [null, novel.chapters])[1];
+
                 results.push({
-                    folder,
-                    name: latest.name,
-                    path: latest.path,
-                    date: cm.commit.committer.date
+                    id: novel.id,
+                    title: novel.title,
+                    chap: `Chương ${chapNum}`,
+                    href: latest.path || getChapterHref(novel, chapNum),
+                    cover: novel.cover,
+                    date: cm.commit && cm.commit.committer ? cm.commit.committer.date : '',
+                    time: cm.commit && cm.commit.committer ? fmtAgo(cm.commit.committer.date) : 'Vừa lên'
                 });
             } catch(_) {}
         }));
 
-        if (!results.length) {
-            el.innerHTML = '<li><span class="muted-note">Chưa có cập nhật.</span></li>'; return;
+        if (results.length) {
+            results.sort((a, b) => new Date(b.date || 0) - new Date(a.date || 0));
+            cacheItems(results);
+            renderItems(results);
         }
-
-        /* Sắp xếp theo ngày commit mới nhất */
-        results.sort((a, b) => new Date(b.date) - new Date(a.date));
-
-
-        /* top 4 chương — 2 cột x 2 hàng */
-        const top4 = results.slice(0, 4);
-        el.innerHTML = top4.map((f, i) => {
-            const novel = guessName(f.name), chap = guessChap(f.name);
-            const isNew = i < 2; /* 2 mục mới nhất hiện badge MỚI */
-            return `<li><a class="upill-item" href="${f.path}">
-                ${isNew ? '<span class="upill-new">MỚI</span>' : ''}
-                <span class="upill-name">${novel}</span>
-                <span class="upill-chap">${chap}</span>
-            </a></li>`;
-        }).join('');
     } catch(_) {
-        el.innerHTML = '<li><span class="muted-note">Không thể tải.</span></li>';
+        /* Không làm gì: giữ fallback/cached đang hiển thị */
     }
 }
 
