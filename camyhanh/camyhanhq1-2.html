@@ -410,32 +410,37 @@
             background: var(--bg); border-radius: 8px; padding: 12px;
             border: 1px solid var(--border-light);
         }
-        .comment-item-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
-        .comment-author { font-weight: 600; font-size: 0.88rem; color: var(--primary); }
-        .comment-time { font-size: 0.78rem; color: #aaa; }
-        .comment-text { font-size: 0.9rem; color: var(--text-body); line-height: 1.6; }
-        .comment-actions { display: flex; gap: 10px; margin-top: 8px; }
-        .comment-reply-btn, .comment-delete-btn {
-            background: none; border: none; font-size: 0.78rem;
-            color: var(--border); cursor: pointer; padding: 0; transition: color 0.2s;
+        .comment-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+        .comment-meta { display: flex; align-items: center; gap: 8px; }
+        .comment-avatar { font-size: 1.1rem; line-height: 1; }
+        .comment-author { font-weight: 600; font-size: 0.9rem; color: var(--primary); }
+        .comment-date { font-size: 0.78rem; color: #aaa; }
+        .comment-content { font-size: 0.92rem; color: var(--text-body); word-break: break-word; line-height: 1.6; }
+        .comment-footer-actions { display: flex; gap: 12px; margin-top: 6px; font-size: 0.78rem; }
+        .comment-action-link { color: #7a9a8a; text-decoration: none; cursor: pointer; font-weight: 500; }
+        .comment-action-link:hover { text-decoration: underline; color: var(--primary); }
+        .comment-action-link.delete-link { color: #c07a84; }
+        .comment-action-link.delete-link:hover { color: #a04a54; }
+        .replies-list { margin-top: 10px; padding-left: 18px; border-left: 2px solid var(--border-light); display: flex; flex-direction: column; gap: 12px; }
+        .reply-item { font-size: 0.9rem; }
+        .inline-reply-form { display: flex; flex-direction: column; gap: 6px; margin-top: 10px; padding: 8px 0 4px 0; }
+        .inline-reply-form textarea {
+            width: 100%; height: 48px; padding: 6px 10px; border: 1px solid var(--border-light);
+            border-radius: 4px; font-size: 0.88rem; outline: none; resize: none;
+            background: var(--surface); font-family: inherit; color: var(--text-body); line-height: 1.4;
         }
-        .comment-reply-btn:hover { color: var(--primary); }
-        .comment-delete-btn:hover { color: #c0556a; }
-        .reply-form { margin-top: 10px; display: flex; flex-direction: column; gap: 6px; }
-        .reply-form textarea {
-            width: 100%; padding: 8px 10px;
-            border: 1px solid var(--border-light); border-radius: 6px;
-            font-family: inherit; font-size: 0.88rem; resize: vertical;
-            background: var(--surface); outline: none; color: var(--text-body);
+        .inline-form-row { display: flex; align-items: center; gap: 8px; }
+        .inline-form-row .inline-author-input { flex: 1; }
+        .inline-form-row .inline-reply-btn { flex-shrink: 0; margin-left: auto; }
+        .inline-author-input {
+            width: 140px; padding: 5px 8px; border: 1px solid var(--border-light); border-radius: 4px;
+            font-size: 0.82rem; outline: none; background: var(--surface); font-family: inherit; color: var(--text-body);
         }
-        .reply-submit-btn {
-            align-self: flex-end; padding: 5px 14px;
-            background: var(--primary); color: #fff; border: none;
-            border-radius: 14px; font-size: 0.82rem; cursor: pointer;
+        .inline-reply-btn {
+            background: var(--primary); color: #fff; border: none; padding: 4px 12px;
+            font-size: 0.82rem; font-weight: 600; border-radius: 4px; cursor: pointer; font-family: inherit;
         }
-        .reply-submit-btn:hover { background: var(--primary-dark); }
-        .replies-list { margin-top: 10px; padding-left: 14px; border-left: 2px solid var(--border-light); display: flex; flex-direction: column; gap: 10px; }
-        .reply-item { background: var(--accent-bg); border-radius: 6px; padding: 9px 10px; }
+        .inline-reply-btn:hover { background: var(--primary-dark); }
         .loading-text { text-align: center; padding: 20px; color: #aaa; font-size: 0.9rem; font-style: italic; }
         .empty-text { text-align: center; padding: 20px 0; color: #bbb; font-size: 0.88rem; }
         .sidebar-overlay {
@@ -581,6 +586,7 @@
         option[data-font="Crimson Pro"] { font-family: 'Crimson Pro', serif; }
         option[data-font="Lora"] { font-family: 'Lora', serif; }
         option[data-font="Domine"] { font-family: 'Domine', serif; }
+    
         /* ══ Auth navbar ══ */
         .nav-auth-btn {
             padding: 6px 16px; border-radius: 20px;
@@ -666,7 +672,7 @@
         .auth-divider a:hover { text-decoration: underline; }
 
     </style>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
 </head>
 <body>
 
@@ -1294,52 +1300,112 @@ function renderSidebarComments(rows, container, paraIndex) {
     });
 }
 
+function looksLikeAvatarToken(s) {
+    s = (s || '').trim();
+    if (!s) return false;
+    if (s.startsWith('http')) return true;
+    // emoji / ký hiệu thường nằm ngoài chữ và số thông thường
+    return !/[A-Za-zÀ-ỹ0-9]/.test(s);
+}
+
+function parseAuthor(raw) {
+    raw = (raw || '').trim();
+    var av = '🌿', name = 'Ẩn danh';
+    if (!raw) return { avatar: av, name: name };
+
+    if (raw.includes('|')) {
+        var pipe = raw.indexOf('|');
+        av = raw.substring(0, pipe).trim() || '🌿';
+        name = raw.substring(pipe + 1).trim() || 'Ẩn danh';
+    } else {
+        var parts = raw.split(/\s+/);
+        if (parts.length > 1 && looksLikeAvatarToken(parts[0])) {
+            av = parts[0] || '🌿';
+            name = parts.slice(1).join(' ').trim() || 'Ẩn danh';
+        } else {
+            av = '🌿';
+            name = raw || 'Ẩn danh';
+        }
+    }
+    return { avatar: av, name: name };
+}
+
+function avatarMarkup(av) {
+    av = (av || '🌿').replace(/\|$/, '').trim();
+    return av.startsWith('http')
+        ? '<img src="' + escHtml(av) + '" style="width:1.5rem;height:1.5rem;border-radius:50%;object-fit:cover;vertical-align:middle;">'
+        : escHtml(av || '🌿');
+}
+
+function authorPayload(context, name) {
+    var av = loggedInAvatarUrl || selectedAvatar[context] || selectedAvatar.main || '🌿';
+    return av.startsWith('http') ? (av + '|' + name) : (av + ' ' + name);
+}
+
+function getParaValue(paraIndex) {
+    return (paraIndex === null || paraIndex === undefined || paraIndex === 'null') ? null : parseInt(paraIndex, 10);
+}
+
+function escJs(s) {
+    return String(s || '').replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/\n/g, ' ');
+}
+
 function buildCommentEl(c, replyMap, isSidebar, paraIndex) {
     var el = document.createElement('div');
     el.className = 'comment-item';
     el.id = 'comment-' + c.id;
+    el.dataset.authorId = c.author_id || '';
 
     var childReplies = (replyMap && replyMap[c.id]) ? replyMap[c.id] : [];
-    var isOwner      = c.author_id === AUTHOR_ID;
+    var isOwner = c.author_id === AUTHOR_ID;
+    var cp = parseAuthor(c.author_name || '');
+    var context = isSidebar ? 'sidebar' : 'main';
+    var pi = (paraIndex===null?'null':paraIndex);
 
     var repliesHtml = '';
     if (childReplies.length) {
-        repliesHtml = '<div class="replies-list">' +
-            childReplies.map(function(r) {
-                var isReplyOwner = r.author_id === AUTHOR_ID;
-                return '<div class="reply-item" id="comment-' + r.id + '">' +
-                    '<div class="comment-item-header">' +
-                    '<span class="comment-author">' + renderAuthor(r.author_name) + '</span>' +
-                    '<span class="comment-time">' + fmtDate(r.created_at) + '</span></div>' +
-                    '<div class="comment-text">' + escHtml(r.content) + '</div>' +
-                    (isReplyOwner ? '<div class="comment-actions"><button class="comment-delete-btn" onclick="deleteComment(\'' + r.id + '\',\'' + (isSidebar ? 'sidebar' : 'main') + '\',' + (paraIndex||'null') + ')">🗑 Xoá</button></div>' : '') +
-                    '</div>';
-            }).join('') +
-        '</div>';
+        repliesHtml = '<div class="replies-list">' + childReplies.map(function(r) {
+            var rOwner = r.author_id === AUTHOR_ID;
+            var rp = parseAuthor(r.author_name || '');
+            return '<div class="reply-item" id="comment-' + r.id + '" data-author-id="' + escHtml(r.author_id||'') + '">' +
+                   '  <div class="comment-header">' +
+                   '    <div class="comment-meta">' +
+                   '      <span class="comment-avatar">' + avatarMarkup(rp.avatar) + '</span>' +
+                   '      <span class="comment-author">' + escHtml(rp.name) + '</span>' +
+                   '      <span class="comment-date">' + fmtDate(r.created_at) + '</span>' +
+                   '    </div>' +
+                   (rOwner ? '    <a class="comment-action-link delete-link" onclick="deleteComment(\'' + r.id + '\',\'' + context + '\',' + pi + ')">Xoá</a>' : '') +
+                   '  </div>' +
+                   '  <div class="comment-content">' + escHtml(r.content) + '</div>' +
+                   '  <div class="comment-footer-actions">' +
+                   '    <a class="comment-action-link" onclick="showInlineReplyForm(\'' + c.id + '\',\'' + context + '\',' + pi + ', \'' + escJs(rp.name) + '\', \'' + escJs(r.author_id || '') + '\')">Phản hồi</a>' +
+                   '  </div>' +
+                   '</div>';
+        }).join('') + '</div>';
     }
 
     el.innerHTML =
-        '<div class="comment-item-header">' +
-        '<span class="comment-author">' + renderAuthor(c.author_name) + '</span>' +
-        '<span class="comment-time">' + fmtDate(c.created_at) + '</span></div>' +
-        '<div class="comment-text">' + escHtml(c.content) + '</div>' +
-        '<div class="comment-actions">' +
-        '<button class="comment-reply-btn" onclick="toggleReplyForm(\'' + c.id + '\',\'' + (isSidebar ? 'sidebar' : 'main') + '\',' + (paraIndex||'null') + ')">↩ Trả lời</button>' +
-        (isOwner ? '<button class="comment-delete-btn" onclick="deleteComment(\'' + c.id + '\',\'' + (isSidebar ? 'sidebar' : 'main') + '\',' + (paraIndex||'null') + ')">🗑 Xoá</button>' : '') +
+        '<div class="comment-header">' +
+        '  <div class="comment-meta">' +
+        '    <span class="comment-avatar">' + avatarMarkup(cp.avatar) + '</span>' +
+        '    <span class="comment-author">' + escHtml(cp.name) + '</span>' +
+        '    <span class="comment-date">' + fmtDate(c.created_at) + '</span>' +
+        '  </div>' +
+        (isOwner ? '  <a class="comment-action-link delete-link" onclick="deleteComment(\'' + c.id + '\',\'' + context + '\',' + pi + ')">Xoá</a>' : '') +
         '</div>' +
-        '<div id="reply-form-' + c.id + '" class="reply-form" style="display:none;">' +
-        '<textarea placeholder="Trả lời ' + escHtml(c.author_name) + '…" rows="2" id="reply-text-' + c.id + '"></textarea>' +
-        '<button class="reply-submit-btn" onclick="submitReply(\'' + c.id + '\',\'' + (isSidebar ? 'sidebar' : 'main') + '\',' + (paraIndex||'null') + ')">Gửi</button>' +
+        '<div class="comment-content">' + escHtml(c.content) + '</div>' +
+        '<div class="comment-footer-actions">' +
+        '  <a class="comment-action-link" onclick="showInlineReplyForm(\'' + c.id + '\',\'' + context + '\',' + pi + ')">Phản hồi</a>' +
         '</div>' +
-        repliesHtml;
+        '<div id="reply-form-container-' + c.id + '"></div>' + repliesHtml;
 
     return el;
 }
 
 async function submitSidebarComment() {
-    var name    = document.getElementById('sidebar-author').value.trim();
+    var name = document.getElementById('sidebar-author').value.trim();
     var content = document.getElementById('sidebar-content').value.trim();
-    if (!name)    { alert('Vui lòng nhập tên của bạn.'); return; }
+    if (!name) { alert('Vui lòng nhập tên của bạn.'); return; }
     if (!content) { alert('Vui lòng nhập nội dung bình luận.'); return; }
     localStorage.setItem('comment-author-name', name);
 
@@ -1347,8 +1413,11 @@ async function submitSidebarComment() {
     btn.disabled = true; btn.textContent = 'Đang gửi…';
     try {
         await sbFetch('comments', 'POST', {
-            page_path: PAGE_PATH, para_index: currentParaIndex,
-            author_name: (loggedInAvatarUrl ? loggedInAvatarUrl + '|' : selectedAvatar['sidebar'] + ' ') + name, author_id: AUTHOR_ID, content: content
+            page_path: PAGE_PATH,
+            para_index: currentParaIndex,
+            author_name: authorPayload('sidebar', name),
+            author_id: AUTHOR_ID,
+            content: content
         });
         document.getElementById('sidebar-content').value = '';
         paraCommentCounts[currentParaIndex] = (paraCommentCounts[currentParaIndex] || 0) + 1;
@@ -1382,8 +1451,8 @@ function renderMainComments(rows, container) {
         container.innerHTML = '<div class="empty-text">Chưa có bình luận nào. Hãy để lại cảm nhận nhé! 🌸</div>';
         return;
     }
-    var roots   = rows.filter(function(r) { return !r.parent_id; });
-    var replies  = rows.filter(function(r) { return !!r.parent_id; });
+    var roots = rows.filter(function(r) { return !r.parent_id; });
+    var replies = rows.filter(function(r) { return !!r.parent_id; });
     var replyMap = {};
     replies.forEach(function(r) {
         if (!replyMap[r.parent_id]) replyMap[r.parent_id] = [];
@@ -1399,9 +1468,9 @@ function renderMainComments(rows, container) {
 }
 
 async function submitMainComment() {
-    var name    = document.getElementById('main-author').value.trim();
+    var name = document.getElementById('main-author').value.trim();
     var content = document.getElementById('main-content').value.trim();
-    if (!name)    { alert('Vui lòng nhập tên của bạn.'); return; }
+    if (!name) { alert('Vui lòng nhập tên của bạn.'); return; }
     if (!content) { alert('Vui lòng nhập nội dung bình luận.'); return; }
     localStorage.setItem('comment-author-name', name);
 
@@ -1409,49 +1478,107 @@ async function submitMainComment() {
     btn.disabled = true; btn.textContent = 'Đang gửi…';
     try {
         await sbFetch('comments', 'POST', {
-            page_path: PAGE_PATH, para_index: null,
-            author_name: (loggedInAvatarUrl ? loggedInAvatarUrl + '|' : selectedAvatar['main'] + ' ') + name, author_id: AUTHOR_ID, content: content
+            page_path: PAGE_PATH,
+            para_index: null,
+            author_name: authorPayload('main', name),
+            author_id: AUTHOR_ID,
+            content: content
         });
         document.getElementById('main-content').value = '';
         document.getElementById('main-char-count').textContent = '0';
-        loadMainComments();
+        await loadMainComments();
     } catch(e) { alert('Gửi thất bại, thử lại nhé!'); }
     btn.disabled = false; btn.textContent = 'Gửi bình luận';
 }
 
-// ── Reply ──
-function toggleReplyForm(commentId, context, paraIndex) {
-    var form = document.getElementById('reply-form-' + commentId);
-    form.style.display = form.style.display === 'none' ? 'flex' : 'none';
-    form.style.flexDirection = 'column';
+// ── Reply liên tục + thông báo ──
+function showInlineReplyForm(parentId, context, paraIndex, mentionName, recipientAuthorId) {
+    var container = document.getElementById('reply-form-container-' + parentId);
+    if (!container) return;
+    if (container.innerHTML !== '' && container.dataset.mention === (mentionName||'')) { container.innerHTML = ''; return; }
+    container.dataset.mention = mentionName || '';
+    container.dataset.recipientAuthorId = recipientAuthorId || '';
+
+    var mainAuthorEl = document.getElementById('main-author');
+    var loggedInName = mainAuthorEl && mainAuthorEl.readOnly ? mainAuthorEl.value.trim() : '';
+    var savedName = loggedInName || localStorage.getItem('comment-author-name') || '';
+    var curAvatar = loggedInAvatarUrl || selectedAvatar[context] || selectedAvatar.main || '🌿';
+    var avatarHtml = curAvatar.startsWith('http')
+        ? '<img src="' + escHtml(curAvatar.replace(/\|$/, '')) + '" style="width:1.8rem;height:1.8rem;border-radius:50%;object-fit:cover;flex-shrink:0;">'
+        : '<span style="font-size:1.2rem;flex-shrink:0;">' + escHtml(curAvatar) + '</span>';
+    var mention = mentionName ? '@' + mentionName + ' ' : '';
+
+    container.innerHTML =
+        '<div class="inline-reply-form">' +
+        '  <textarea id="reply-text-' + parentId + '" placeholder="Viết phản hồi…">' + escHtml(mention) + '</textarea>' +
+        '  <div class="inline-form-row">' + avatarHtml +
+        '    <input id="reply-author-' + parentId + '" class="inline-author-input" placeholder="Tên của bạn" value="' + escHtml(savedName) + '" ' + (loggedInName ? 'readonly' : '') + '>' +
+        '    <button class="inline-reply-btn" onclick="submitInlineReply(\'' + parentId + '\',\'' + context + '\',' + (paraIndex===null?'null':paraIndex) + ')">Gửi</button>' +
+        '  </div>' +
+        '</div>';
+    setTimeout(function(){
+        var ta = document.getElementById('reply-text-' + parentId);
+        if (ta) { ta.focus(); ta.selectionStart = ta.selectionEnd = ta.value.length; }
+    }, 0);
 }
 
-async function submitReply(parentId, context, paraIndex) {
-    var savedName = localStorage.getItem('comment-author-name');
-    var name = savedName ||
-        (context === 'sidebar' ? document.getElementById('sidebar-author').value.trim()
-                               : document.getElementById('main-author').value.trim());
-    var textarea = document.getElementById('reply-text-' + parentId);
-    var content  = textarea.value.trim();
-    if (!name)    { alert('Vui lòng nhập tên ở form bên trên trước.'); return; }
-    if (!content) return;
+async function sendReplyNotification(recipientAuthorId, senderName, commentContent, chapterTitle, chapterPath) {
+    if (!recipientAuthorId || recipientAuthorId === AUTHOR_ID) return;
+    try {
+        await sbFetch('notifications', 'POST', {
+            recipient_author_id: recipientAuthorId,
+            sender_name: senderName,
+            comment_content: commentContent.substring(0, 200),
+            chapter_title: chapterTitle,
+            chapter_path: chapterPath,
+            is_read: false
+        });
+    } catch(e) { console.warn('Không gửi được thông báo:', e); }
+}
 
+async function submitInlineReply(parentId, context, paraIndex) {
+    var txtEl = document.getElementById('reply-text-' + parentId);
+    var autEl = document.getElementById('reply-author-' + parentId);
+    var txt = txtEl ? txtEl.value.trim() : '';
+    var aut = autEl ? autEl.value.trim() : '';
+    if (!aut) { alert('Vui lòng nhập tên.'); return; }
+    if (!txt) { alert('Vui lòng nhập nội dung.'); return; }
+
+    localStorage.setItem('comment-author-name', aut);
     try {
         await sbFetch('comments', 'POST', {
             page_path: PAGE_PATH,
-            para_index: paraIndex !== null ? paraIndex : null,
-            author_name: name, author_id: AUTHOR_ID,
-            content: content, parent_id: parentId
+            para_index: getParaValue(paraIndex),
+            parent_id: parentId,
+            author_name: authorPayload(context, aut),
+            author_id: AUTHOR_ID,
+            content: txt
         });
-        textarea.value = '';
+
+        var formBox = document.getElementById('reply-form-container-' + parentId);
+        var recipientAuthorId = formBox ? (formBox.dataset.recipientAuthorId || '') : '';
+        if (!recipientAuthorId) {
+            var rootEl = document.getElementById('comment-' + parentId);
+            recipientAuthorId = rootEl ? (rootEl.dataset.authorId || '') : '';
+        }
+        var chapterTitle = (document.querySelector('.chapter-title') || {}).textContent || document.title;
+        if (recipientAuthorId && recipientAuthorId !== AUTHOR_ID) {
+            await sendReplyNotification(recipientAuthorId, aut, txt, chapterTitle, window.location.pathname);
+        }
+
         if (context === 'sidebar') {
-            loadSidebarComments(paraIndex);
+            loadSidebarComments(getParaValue(paraIndex));
         } else {
-            loadMainComments();
+            await loadMainComments();
         }
         loadStats();
-    } catch(e) { alert('Gửi thất bại!'); }
+        if (typeof loadParaCounts === 'function') loadParaCounts();
+    } catch(e) { alert('Phản hồi thất bại!'); }
 }
+
+// Giữ tên hàm cũ để không vỡ onclick nếu trình duyệt còn cache HTML cũ
+function toggleReplyForm(commentId, context, paraIndex) { showInlineReplyForm(commentId, context, paraIndex); }
+async function submitReply(parentId, context, paraIndex) { return submitInlineReply(parentId, context, paraIndex); }
 
 // ── Xoá ──
 async function deleteComment(id, context, paraIndex) {
@@ -1466,18 +1593,15 @@ async function deleteComment(id, context, paraIndex) {
             }
         });
         if (context === 'sidebar') {
-            loadSidebarComments(paraIndex);
+            loadSidebarComments(getParaValue(paraIndex));
         } else {
             loadMainComments();
         }
         loadStats();
-        loadParaCounts();
+        if (typeof loadParaCounts === 'function') loadParaCounts();
     } catch(e) { alert('Xoá thất bại!'); }
 }
 
-// ══════════════════════════════════════════════
-// THỐNG KÊ
-// ══════════════════════════════════════════════
 async function loadStats() {
     try {
         var all = await sbFetch(
@@ -1774,10 +1898,38 @@ async function renderNavAuth(user) {
             '</div></div>';
         if (btnMain)    btnMain.style.display    = 'none';
         if (btnSidebar) btnSidebar.style.display = 'none';
+        /* Cập nhật avatar cho form bình luận */
+        if (avatarUrl) {
+            loggedInAvatarUrl = avatarUrl;
+            selectedAvatar['main']    = avatarUrl + '|';
+            selectedAvatar['sidebar'] = avatarUrl + '|';
+            /* Cập nhật preview avatar */
+            var pv1 = document.getElementById('main-avatar-preview');
+            if (pv1) pv1.innerHTML = '<img src="' + avatarUrl + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%;display:block;">';
+            var pv2 = document.getElementById('sidebar-avatar-preview');
+            if (pv2) pv2.innerHTML = '<img src="' + avatarUrl + '" style="width:100%;height:100%;object-fit:cover;border-radius:50%;display:block;">';
+            /* Ẩn avatar picker */
+            var apw = document.getElementById('main-avatar-picker-wrap');
+            if (apw) apw.style.display = 'none';
+            var sapw = document.getElementById('sidebar-avatar-picker-wrap');
+            if (sapw) sapw.style.display = 'none';
+        }
+        /* Cập nhật tên vào form */
+        var ai = document.getElementById('main-author');
+        if (ai && !ai.readOnly) { ai.value = name; ai.readOnly = true; ai.style.background = '#eaf2ee'; ai.style.color = '#4a6b5d'; }
+        var si = document.getElementById('sidebar-author');
+        if (si && !si.readOnly) { si.value = name; si.readOnly = true; si.style.background = '#eaf2ee'; si.style.color = '#4a6b5d'; }
+        /* Cập nhật AUTHOR_ID theo tài khoản */
+        if (user.id) { AUTHOR_ID = user.id; localStorage.setItem('comment-author-id', user.id); }
     } else {
         if (authArea) authArea.innerHTML = '<button class="nav-auth-btn" onclick="openAuthModal(\'login\')">🌿 Đăng nhập</button>';
         if (btnMain)    btnMain.style.display    = '';
         if (btnSidebar) btnSidebar.style.display = '';
+        /* Reset khi đăng xuất */
+        loggedInAvatarUrl = '';
+        var savedAv = localStorage.getItem('comment-avatar') || '🌿';
+        selectedAvatar['main']    = savedAv;
+        selectedAvatar['sidebar'] = savedAv;
     }
 }
 
