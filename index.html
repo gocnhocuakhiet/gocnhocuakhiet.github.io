@@ -220,6 +220,7 @@
         }
         .open-btn:hover { background: var(--green-dark); transform: translateY(-2px); }
         .fade-out { opacity: 0 !important; visibility: hidden !important; }
+        .welcome-hidden-on-session { display: none !important; opacity: 0 !important; visibility: hidden !important; }
         @keyframes float {
             0%,100% { transform: translateY(0); }
             50%      { transform: translateY(-8px); }
@@ -1472,7 +1473,39 @@
 <!-- ══ TRANG CHÀO ══ -->
 <div id="welcome-screen">
     <div class="w-deco">🌿</div>
-    <h1>Góc nhỏ của Khiết</h1>
+    
+<script>
+/* Welcome screen: chỉ hiện 1 lần trong mỗi tab.
+   - Mở tab mới: hiện.
+   - F5/back/quay từ trang truyện về trang chủ trong cùng tab: không hiện.
+*/
+(function() {
+    const KEY = 'khiet_welcome_seen_this_tab';
+    const welcome = document.getElementById('welcome-screen');
+    if (!welcome) return;
+
+    let sameSiteReferrer = false;
+    try {
+        sameSiteReferrer = !!document.referrer && new URL(document.referrer).origin === location.origin;
+    } catch (_) {}
+
+    let navType = '';
+    try {
+        const nav = performance.getEntriesByType && performance.getEntriesByType('navigation')[0];
+        navType = nav && nav.type ? nav.type : '';
+    } catch (_) {}
+
+    const alreadySeen = sessionStorage.getItem(KEY) === '1';
+
+    if (alreadySeen || sameSiteReferrer || navType === 'reload' || navType === 'back_forward') {
+        welcome.classList.add('welcome-hidden-on-session');
+        sessionStorage.setItem(KEY, '1');
+    } else {
+        sessionStorage.setItem(KEY, '1');
+    }
+})();
+</script>
+<h1>Góc nhỏ của Khiết</h1>
     <p>Ý nghĩa của sinh mệnh không chỉ giới hạn ở sự sinh tồn</p>
     <button class="open-btn" onclick="closeWelcome()">Vào xem nào</button>
 </div>
@@ -2579,7 +2612,9 @@ function applyLineHeight(btn) {
         setTimeout(()=>{ document.querySelectorAll('.rp-seg-btn').forEach(b=>b.classList.toggle('active',b.dataset.lh===lh)); },80); }
 })();
 function closeWelcome() {
-    document.getElementById('welcome-screen').classList.add('fade-out');
+    try { sessionStorage.setItem('khiet_welcome_seen_this_tab', '1'); } catch(_) {}
+    const welcome = document.getElementById('welcome-screen');
+    if (welcome) welcome.classList.add('fade-out');
 }
 </script>
 
