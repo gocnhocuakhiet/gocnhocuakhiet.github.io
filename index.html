@@ -305,7 +305,15 @@
         .feed-top  { display: flex; justify-content: space-between; margin-bottom: 2px; flex-wrap: wrap; gap: 2px; }
         .feed-author { font-size: .8rem; font-weight: 500; color: var(--green); display: flex; align-items: center; gap: 5px; }
         .feed-avatar { width: 22px; height: 22px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
-        .feed-avatar--emoji { font-size: .9rem; line-height: 1; }
+.feed-avatar--emoji {
+            width: 22px; height: 22px;
+            border-radius: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--green-pale);
+            overflow: hidden;
+        }
         .feed-author-name { }
         .feed-time   { font-size: .7rem; color: var(--text-faint); }
         .feed-msg    { font-size: .79rem; color: var(--text-muted); line-height: 1.4;
@@ -1581,7 +1589,6 @@ function renderGrid() {
     } else {
         grid.innerHTML = slice.map(n => {
             const views   = viewCounts[n.id] || 0;
-            const isHot   = views >= HOT_THRESHOLD;
             const imgTag  = n.cover
                 ? `<img class="novel-cover" src="${n.cover}" alt="${n.title}" loading="lazy"
                         onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
@@ -1589,9 +1596,8 @@ function renderGrid() {
                 : `<div class="cover-placeholder" style="background:${n.color}">${n.emoji}</div>`;
             const stBadge = n.status === 'full' ? 'badge-full' : 'badge-ongoing';
             const stLabel = n.status === 'full' ? 'Full' : 'Đang ra';
-            const hotBadge = isHot ? `<span class="badge badge-hot">🔥 HOT</span>` : '';
             return `
-            <a href="${n.link}" class="novel-card${isHot ? ' is-hot' : ''}"
+            <a href="${n.link}" class="novel-card"
                id="card-${n.id}"
                onclick="incrementView('${n.id}')">
                 <div style="position:relative">
@@ -1599,10 +1605,9 @@ function renderGrid() {
                     <div class="badge-wrap">
                         <div class="badge-left">
                             <span class="badge ${genreClass[n.genre]}">${genreLabel[n.genre]}</span>
-                            <span class="badge ${stBadge}">${stLabel}</span>
                         </div>
                         <div class="badge-right">
-                            ${hotBadge}
+                            <span class="badge ${stBadge}">${stLabel}</span>
                         </div>
                     </div>
                 </div>
@@ -1715,6 +1720,59 @@ async function loadUpdates() {
 const SUPABASE_URL = 'https://ibxxdvbdpsmcyufilnoh.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImlieHhkdmJkcHNtY3l1Zmlsbm9oIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzk1MTMxNjcsImV4cCI6MjA5NTA4OTE2N30.oKB7vmQceVENuyUExLeND0M9YvnS-30nTGRbrv-xrUs';
 
+
+function escapeHtml(str) {
+    return String(str == null ? '' : str).replace(/[&<>"']/g, function(ch) {
+        return ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[ch];
+    });
+}
+
+function isImageAvatarValue(val) {
+    if (!val) return false;
+    const s = String(val).trim();
+    return /^(https?:\/\/|data:image\/|images\/|\.?\.\/images\/|\/images\/)/i.test(s);
+}
+
+function parseFeedAuthor(raw) {
+    let s = String(raw || '').trim();
+    let avatar = '🌿';
+    let type = 'emoji';
+    let name = s || 'Độc giả';
+
+    if (s.includes('|')) {
+        const parts = s.split('|');
+        const left = (parts.shift() || '').trim();
+        const right = parts.join('|').trim();
+        name = right || left || 'Độc giả';
+        if (isImageAvatarValue(left)) {
+            avatar = left;
+            type = 'image';
+        } else if (left) {
+            avatar = left;
+            type = 'emoji';
+        }
+        return { name, avatar, type };
+    }
+
+    const urlMatch = s.match(/(https?:\/\/\S+|data:image\/\S+|(?:\.?\.\/)?images\/\S+|\/images\/\S+)/i);
+    if (urlMatch) {
+        avatar = urlMatch[1].trim();
+        type = 'image';
+        name = s.replace(urlMatch[1], '').trim() || 'Độc giả';
+        return { name, avatar, type };
+    }
+
+    const emojiMatch = s.match(/^(\p{Extended_Pictographic}(?:\uFE0F|\u200D\p{Extended_Pictographic})*)\s+(.+)$/u);
+    if (emojiMatch) {
+        avatar = emojiMatch[1];
+        name = emojiMatch[2].trim() || 'Độc giả';
+        type = 'emoji';
+        return { name, avatar, type };
+    }
+
+    return { name, avatar, type };
+}
+
 async function loadComments() {
     const el = document.getElementById('comment-feed');
 
@@ -1757,18 +1815,13 @@ async function loadComments() {
 
             el.innerHTML = cmts.map(c => {
                 const rawAuthor = c[authorCol] || 'Độc giả';
-                // author_name có thể là "https://...png|Emily" hoặc "🌿 Emily"
-                let avatarUrl = '', author;
-                if (rawAuthor.includes('|')) {
-                    const pipeIdx = rawAuthor.indexOf('|');
-                    avatarUrl = rawAuthor.substring(0, pipeIdx).trim();
-                    author    = rawAuthor.substring(pipeIdx + 1).trim();
-                } else {
-                    author = rawAuthor.replace(/^https?:\/\/\S+\s*/, '').trim() || rawAuthor;
-                }
-                const avatarHtml = avatarUrl
-                    ? `<img src="${avatarUrl}" alt="${author}" class="feed-avatar">`
-                    : `<span class="feed-avatar feed-avatar--emoji">🌿</span>`;
+                const parsedAuthor = parseFeedAuthor(rawAuthor);
+                const author = parsedAuthor.name || 'Độc giả';
+                const safeAuthor = escapeHtml(author);
+                const safeAvatar = parsedAuthor.avatar ? escapeHtml(parsedAuthor.avatar) : '';
+                const avatarHtml = parsedAuthor.type === 'image'
+                    ? `<img src="${safeAvatar}" alt="${safeAuthor}" class="feed-avatar" onerror="this.outerHTML='<span class=&quot;feed-avatar feed-avatar--emoji&quot;>🌿</span>'">`
+                    : `<span class="feed-avatar feed-avatar--emoji">${safeAvatar || '🌿'}</span>`;
                 const body   = c[contentCol] || '';
                 const short  = body.length > 55 ? body.substring(0,55)+'…' : body;
                 const time   = c.created_at ? fmtAgo(c.created_at) : '';
@@ -1779,10 +1832,10 @@ async function loadComments() {
                 const badge  = isOwner ? `<span class="owner-badge">🌸 Chủ Gác</span>` : '';
                 return `<${tag} class="feed-item${path ? ' feed-item--link' : ''}">
                     <div class="feed-top">
-                        <span class="feed-author">${avatarHtml} <span class="feed-author-name">${author}${badge}</span></span>
+                        <span class="feed-author">${avatarHtml} <span class="feed-author-name">${safeAuthor}${badge}</span></span>
                         <span class="feed-time">${time}</span>
                     </div>
-                    <div class="feed-msg">"${short}"</div>
+                    <div class="feed-msg">"${escapeHtml(short)}"</div>
                     ${path ? '<div class="feed-goto">Đến trang →</div>' : ''}
                 </${close}>`;
             }).join('');
