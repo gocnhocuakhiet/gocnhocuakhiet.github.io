@@ -2393,225 +2393,37 @@ document.addEventListener('keydown',function(e){
     if(document.getElementById('panel-login').style.display!=='none') doLogin(); else doRegister();
 });
 </script>
-
-<script id="khiet-reactions-visible-v3">
-/* ===== Reaction chương: tự gắn vào bình luận + sidebar đoạn ===== */
+<script id="khiet-reactions-visible-v4">
 (function(){
-    if(window.__KH_REACTIONS_VISIBLE_V3__) return;
-    window.__KH_REACTIONS_VISIBLE_V3__ = true;
-
-    var CMT = [
-        {key:'like',emoji:'👍',label:'Thích'},
-        {key:'heart',emoji:'❤️',label:'Tim'},
-        {key:'flower',emoji:'🌸',label:'Dịu dàng'},
-        {key:'laugh',emoji:'😂',label:'Buồn cười'},
-        {key:'cry',emoji:'🥺',label:'Cảm động'},
-        {key:'wow',emoji:'😮',label:'Bất ngờ'}
-    ];
-    var PARA = [
-        {key:'heart',emoji:'💖',label:'Yêu thích'},
-        {key:'cry',emoji:'😭',label:'Cảm động'},
-        {key:'laugh',emoji:'😂',label:'Buồn cười'},
-        {key:'shy',emoji:'☺️',label:'Dịu dàng'},
-        {key:'wow',emoji:'😮',label:'Bất ngờ'},
-        {key:'angry',emoji:'😾',label:'Tức ghê'}
-    ];
-    var cmtCounts={}, myCmt={}, paraCounts={}, myPara={}, cachedUser=null;
-
-    function sb(){
-        if(typeof getSB==='function') return getSB();
-        if(typeof supabase!=='undefined' && typeof SUPABASE_URL!=='undefined' && typeof SUPABASE_KEY!=='undefined'){
-            if(!window.__khVisibleSB) window.__khVisibleSB=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);
-            return window.__khVisibleSB;
-        }
-        return null;
-    }
-    function path(){ return typeof PAGE_PATH!=='undefined' ? PAGE_PATH : window.location.pathname; }
-    async function uid(){
-        if(cachedUser) return cachedUser;
-        var s=sb(); if(!s) return null;
-        try{
-            var r=await s.auth.getUser();
-            var u=r&&r.data?r.data.user:null;
-            if(u) cachedUser=u.id;
-            return cachedUser;
-        }catch(e){return null;}
-    }
-    function idOf(el){
-        while(el && el!==document.body){
-            if(el.id && /^comment-/.test(el.id)) return el.id.replace(/^comment-/,'');
-            el=el.parentElement;
-        }
-        return '';
-    }
-    function escId(id){ return String(id).replace(/"/g,'&quot;'); }
-
-    function cmtCountsHtml(id){
-        var c=cmtCounts[String(id)]||{}, mine=myCmt[String(id)]||'', h='';
-        CMT.forEach(function(r){
-            var n=c[r.key]||0;
-            if(n>0) h+='<span class="kh-cmt-react-pill '+(mine===r.key?'mine':'')+'">'+r.emoji+' '+n+'</span>';
-        });
-        return h;
-    }
-    function cmtBtns(id){
-        var mine=myCmt[String(id)]||'';
-        return CMT.map(function(r){
-            return '<button type="button" class="kh-cmt-react-btn '+(mine===r.key?'active':'')+'" data-id="'+escId(id)+'" data-r="'+r.key+'" title="'+r.label+'">'+r.emoji+'</button>';
-        }).join('');
-    }
-    function cmtBlock(id){
-        return '<span class="kh-cmt-react" data-id="'+escId(id)+'">'+
-            '<button type="button" class="kh-cmt-react-toggle">🌸 Cảm xúc</button>'+
-            '<span class="kh-cmt-react-pop">'+cmtBtns(id)+'</span>'+
-            '<span class="kh-cmt-react-counts">'+cmtCountsHtml(id)+'</span>'+
-        '</span>';
-    }
-    function findCommentNodes(){
-        return Array.from(document.querySelectorAll('.comment-item[id^="comment-"], .reply-item[id^="comment-"], .main-comment-item [id^="comment-"], [id^="comment-"].comment-item, [id^="comment-"].reply-item'));
-    }
-    function attachCommentBlocks(){
-        findCommentNodes().forEach(function(node){
-            var id=idOf(node); if(!id) return;
-            var old=node.querySelector('.kh-cmt-react[data-id="'+CSS.escape(id)+'"]');
-            if(old){ old.outerHTML=cmtBlock(id); return; }
-            var footer=node.querySelector('.comment-footer-actions');
-            if(footer) footer.insertAdjacentHTML('beforeend', cmtBlock(id));
-            else{
-                var content=node.querySelector('.comment-content') || node.querySelector('p') || node;
-                content.insertAdjacentHTML('afterend','<div style="margin-top:6px">'+cmtBlock(id)+'</div>');
-            }
-        });
-    }
-    async function loadCmt(){
-        var s=sb(); if(!s) return;
-        var ids=findCommentNodes().map(idOf).filter(Boolean);
-        ids=Array.from(new Set(ids));
-        if(!ids.length) return;
-        try{
-            var r=await s.from('comment_reactions').select('comment_id,user_id,reaction').in('comment_id',ids.map(String));
-            if(r.error){console.warn('comment_reactions',r.error); return;}
-            var me=await uid(); cmtCounts={}; myCmt={};
-            (r.data||[]).forEach(function(x){
-                var id=String(x.comment_id);
-                cmtCounts[id]=cmtCounts[id]||{};
-                cmtCounts[id][x.reaction]=(cmtCounts[id][x.reaction]||0)+1;
-                if(me && x.user_id===me) myCmt[id]=x.reaction;
-            });
-        }catch(e){console.warn(e);}
-    }
-    async function saveCmt(id,rkey){
-        var s=sb(), me=await uid();
-        if(!s||!me){ if(typeof openAuthModal==='function') openAuthModal('login'); else alert('Bạn cần đăng nhập.'); return; }
-        var old=myCmt[String(id)], res;
-        if(old===rkey){
-            res=await s.from('comment_reactions').delete().eq('comment_id',String(id)).eq('user_id',me);
-        }else{
-            res=await s.from('comment_reactions').upsert({comment_id:String(id),user_id:me,reaction:rkey},{onConflict:'comment_id,user_id'});
-        }
-        if(res&&res.error){ alert('Chưa lưu được cảm xúc: '+(res.error.message||'Lỗi Supabase')); return; }
-        await refreshCmt();
-    }
-    async function refreshCmt(){ await loadCmt(); attachCommentBlocks(); }
-
-    function currentPara(){
-        if(typeof currentParaIndex!=='undefined' && currentParaIndex) return String(currentParaIndex);
-        var title=document.getElementById('sidebar-title');
-        if(title){
-            var m=(title.textContent||'').match(/(\d+)/);
-            if(m) return m[1];
-        }
-        return '';
-    }
-    function paraHtml(pid){
-        var mine=myPara[String(pid)]||'';
-        var btns=PARA.map(function(r){
-            return '<button type="button" class="kh-para-react-btn '+(mine===r.key?'active':'')+'" data-r="'+r.key+'" title="'+r.label+'">'+r.emoji+'</button>';
-        }).join('');
-        return '<div class="kh-para-react-box" data-para="'+pid+'">'+
-            '<div class="kh-para-react-label">Bày tỏ cảm xúc với đoạn này:</div>'+
-            '<div class="kh-para-react-actions">'+btns+'</div>'+
-            '<div class="kh-para-react-counts">'+paraCountsHtml(pid)+'</div>'+
-        '</div>';
-    }
-    function paraCountsHtml(pid){
-        var c=paraCounts[String(pid)]||{}, mine=myPara[String(pid)]||'', h='';
-        PARA.forEach(function(r){
-            var n=c[r.key]||0;
-            if(n>0) h+='<span class="kh-para-react-pill '+(mine===r.key?'mine':'')+'">'+r.emoji+' '+n+'</span>';
-        });
-        return h;
-    }
-    function attachParaBox(){
-        var pid=currentPara();
-        var quote=document.getElementById('sidebar-quote');
-        if(!pid||!quote) return;
-        var old=document.querySelector('.kh-para-react-box');
-        if(old && old.dataset.para===pid){ old.outerHTML=paraHtml(pid); return; }
-        if(old) old.remove();
-        quote.insertAdjacentHTML('afterend',paraHtml(pid));
-    }
-    function attachParaInlineSummaries(){
-        document.querySelectorAll('.kh-para-inline-summary').forEach(function(x){x.remove();});
-        document.querySelectorAll('.comment-row').forEach(function(row){
-            var badge=row.querySelector('.comment-badge[data-para]');
-            if(!badge) return;
-            var pid=badge.dataset.para, h=paraCountsHtml(pid);
-            if(!h) return;
-            var div=document.createElement('div');
-            div.className='kh-para-inline-summary';
-            div.innerHTML=h;
-            row.insertAdjacentElement('afterend',div);
-        });
-    }
-    async function loadPara(){
-        var s=sb(); if(!s) return;
-        try{
-            var r=await s.from('paragraph_reactions').select('para_index,user_id,reaction').eq('page_path',path());
-            if(r.error){console.warn('paragraph_reactions',r.error); return;}
-            var me=await uid(); paraCounts={}; myPara={};
-            (r.data||[]).forEach(function(x){
-                var id=String(x.para_index);
-                paraCounts[id]=paraCounts[id]||{};
-                paraCounts[id][x.reaction]=(paraCounts[id][x.reaction]||0)+1;
-                if(me && x.user_id===me) myPara[id]=x.reaction;
-            });
-        }catch(e){console.warn(e);}
-    }
-    async function savePara(pid,rkey){
-        var s=sb(), me=await uid();
-        if(!s||!me){ if(typeof openAuthModal==='function') openAuthModal('login'); else alert('Bạn cần đăng nhập.'); return; }
-        var old=myPara[String(pid)], res;
-        if(old===rkey){
-            res=await s.from('paragraph_reactions').delete().eq('page_path',path()).eq('para_index',Number(pid)).eq('user_id',me);
-        }else{
-            res=await s.from('paragraph_reactions').upsert({page_path:path(),para_index:Number(pid),user_id:me,reaction:rkey},{onConflict:'page_path,para_index,user_id'});
-        }
-        if(res&&res.error){ alert('Chưa lưu được cảm xúc đoạn: '+(res.error.message||'Lỗi Supabase')); return; }
-        await refreshPara();
-    }
-    async function refreshPara(){ await loadPara(); attachParaBox(); attachParaInlineSummaries(); }
-
-    document.addEventListener('click',function(e){
-        var t=e.target.closest('.kh-cmt-react-toggle');
-        if(t){ e.preventDefault(); var w=t.closest('.kh-cmt-react'); document.querySelectorAll('.kh-cmt-react.open').forEach(function(x){if(x!==w)x.classList.remove('open')}); if(w)w.classList.toggle('open'); return; }
-        var b=e.target.closest('.kh-cmt-react-btn');
-        if(b){ e.preventDefault(); saveCmt(b.dataset.id,b.dataset.r); return; }
-        var pb=e.target.closest('.kh-para-react-btn');
-        if(pb){ e.preventDefault(); var box=pb.closest('.kh-para-react-box'); if(box) savePara(box.dataset.para,pb.dataset.r); return; }
-        if(!e.target.closest('.kh-cmt-react')) document.querySelectorAll('.kh-cmt-react.open').forEach(function(x){x.classList.remove('open')});
-    });
-
-    function boot(){
-        refreshCmt(); refreshPara();
-        [300,700,1200,2000,3500].forEach(function(t){setTimeout(function(){refreshCmt();refreshPara();},t)});
-        var obs=new MutationObserver(function(){clearTimeout(window.__khVisTimer); window.__khVisTimer=setTimeout(function(){refreshCmt();refreshPara();},150)});
-        obs.observe(document.body,{childList:true,subtree:true});
-    }
-    if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',boot);
-    else boot();
+if(window.__KH_REACTIONS_VISIBLE_V4__)return;window.__KH_REACTIONS_VISIBLE_V4__=true;
+var CMT=[{key:'like',emoji:'👍',label:'Thích'},{key:'heart',emoji:'❤️',label:'Tim'},{key:'flower',emoji:'🌸',label:'Dịu dàng'},{key:'laugh',emoji:'😂',label:'Buồn cười'},{key:'sad',emoji:'😭',label:'Buồn'},{key:'touch',emoji:'🥹',label:'Cảm động'},{key:'wow',emoji:'😮',label:'Bất ngờ'}];
+var PARA=[{key:'heart',emoji:'💖',label:'Yêu thích'},{key:'sad',emoji:'😭',label:'Buồn'},{key:'laugh',emoji:'😂',label:'Buồn cười'},{key:'touch',emoji:'🥹',label:'Cảm động'},{key:'wow',emoji:'😮',label:'Bất ngờ'},{key:'angry',emoji:'😾',label:'Tức ghê'}];
+var cmtCounts={},myCmt={},paraCounts={},myPara={},cachedUser=null;
+function sb(){if(typeof getSB==='function')return getSB();if(typeof supabase!=='undefined'&&typeof SUPABASE_URL!=='undefined'&&typeof SUPABASE_KEY!=='undefined'){if(!window.__khVisibleSB4)window.__khVisibleSB4=supabase.createClient(SUPABASE_URL,SUPABASE_KEY);return window.__khVisibleSB4;}return null;}
+function path(){return typeof PAGE_PATH!=='undefined'?PAGE_PATH:window.location.pathname;}
+async function uid(){if(cachedUser)return cachedUser;var s=sb();if(!s)return null;try{var r=await s.auth.getUser();var u=r&&r.data?r.data.user:null;if(u)cachedUser=u.id;return cachedUser;}catch(e){return null;}}
+function idOf(el){while(el&&el!==document.body){if(el.id&&/^comment-/.test(el.id))return el.id.replace(/^comment-/,'');el=el.parentElement;}return '';}
+function escId(id){return String(id).replace(/"/g,'&quot;');}
+function cmtCountsHtml(id){var c=cmtCounts[String(id)]||{},m=myCmt[String(id)]||'',h='';CMT.forEach(function(r){var n=c[r.key]||0;if(n>0)h+='<span class="kh-cmt-react-pill '+(m===r.key?'mine':'')+'">'+r.emoji+' '+n+'</span>';});return h;}
+function cmtBtns(id){var m=myCmt[String(id)]||'';return CMT.map(function(r){return '<button type="button" class="kh-cmt-react-btn '+(m===r.key?'active':'')+'" data-id="'+escId(id)+'" data-r="'+r.key+'" title="'+r.label+'">'+r.emoji+'</button>';}).join('');}
+function cmtBlock(id){return '<span class="kh-cmt-react" data-id="'+escId(id)+'"><button type="button" class="kh-cmt-react-toggle">🌸 Cảm xúc</button><span class="kh-cmt-react-pop">'+cmtBtns(id)+'</span><span class="kh-cmt-react-counts">'+cmtCountsHtml(id)+'</span></span>';}
+function findCommentNodes(){var set=new Set();['.comment-item[id^="comment-"]','.reply-item[id^="comment-"]','.main-comment-item[id^="comment-"]','#main-comments-list [id^="comment-"]','#sidebar-comments-list [id^="comment-"]','[id^="comment-"].comment-item','[id^="comment-"].reply-item','[id^="comment-"].main-comment-item'].forEach(function(sel){document.querySelectorAll(sel).forEach(function(n){if(idOf(n))set.add(n);});});document.querySelectorAll('[id^="comment-"]').forEach(function(n){if(idOf(n)&&(n.querySelector('.comment-content')||n.querySelector('.comment-footer-actions')||n.querySelector('.comment-action-link')))set.add(n);});return Array.from(set);}
+function attachCommentBlocks(){findCommentNodes().forEach(function(node){var id=idOf(node);if(!id)return;var old=node.querySelector('.kh-cmt-react[data-id="'+id+'"]');if(old){old.outerHTML=cmtBlock(id);return;}var footer=node.querySelector('.comment-footer-actions');var reply=Array.from(node.querySelectorAll('a,button')).find(function(x){return(x.textContent||'').trim()==='Phản hồi';});if(footer)footer.insertAdjacentHTML('beforeend',cmtBlock(id));else if(reply)reply.insertAdjacentHTML('afterend',cmtBlock(id));else{var content=node.querySelector('.comment-content')||node.querySelector('p')||node;content.insertAdjacentHTML('afterend','<div style="margin-top:6px">'+cmtBlock(id)+'</div>');}});}
+async function loadCmt(){var s=sb();if(!s)return;var ids=Array.from(new Set(findCommentNodes().map(idOf).filter(Boolean)));if(!ids.length)return;try{var r=await s.from('comment_reactions').select('comment_id,user_id,reaction').in('comment_id',ids.map(String));if(r.error){console.warn('comment_reactions',r.error);return;}var me=await uid();cmtCounts={};myCmt={};(r.data||[]).forEach(function(x){var id=String(x.comment_id);cmtCounts[id]=cmtCounts[id]||{};cmtCounts[id][x.reaction]=(cmtCounts[id][x.reaction]||0)+1;if(me&&x.user_id===me)myCmt[id]=x.reaction;});}catch(e){console.warn(e);}}
+async function saveCmt(id,rkey){var s=sb(),me=await uid();if(!s||!me){if(typeof openAuthModal==='function')openAuthModal('login');else alert('Bạn cần đăng nhập.');return;}var old=myCmt[String(id)],res;if(old===rkey)res=await s.from('comment_reactions').delete().eq('comment_id',String(id)).eq('user_id',me);else res=await s.from('comment_reactions').upsert({comment_id:String(id),user_id:me,reaction:rkey},{onConflict:'comment_id,user_id'});if(res&&res.error){alert('Chưa lưu được cảm xúc: '+(res.error.message||'Lỗi Supabase'));return;}await refreshCmt();}
+async function refreshCmt(){await loadCmt();attachCommentBlocks();}
+function currentPara(){if(typeof currentParaIndex!=='undefined'&&currentParaIndex)return String(currentParaIndex);var title=document.getElementById('sidebar-title');if(title){var m=(title.textContent||'').match(/(\d+)/);if(m)return m[1];}return '';}
+function paraCountsHtml(pid){var c=paraCounts[String(pid)]||{},m=myPara[String(pid)]||'',h='';PARA.forEach(function(r){var n=c[r.key]||0;if(n>0)h+='<span class="kh-para-react-pill '+(m===r.key?'mine':'')+'">'+r.emoji+' '+n+'</span>';});return h;}
+function paraHtml(pid){var m=myPara[String(pid)]||'';var btns=PARA.map(function(r){return '<button type="button" class="kh-para-react-btn '+(m===r.key?'active':'')+'" data-r="'+r.key+'" title="'+r.label+'">'+r.emoji+'</button>';}).join('');return '<div class="kh-para-react-box" data-para="'+pid+'"><div class="kh-para-react-label">Bày tỏ cảm xúc với đoạn này:</div><div class="kh-para-react-actions">'+btns+'</div><div class="kh-para-react-counts">'+paraCountsHtml(pid)+'</div></div>';}
+function attachParaBox(){var pid=currentPara();var quote=document.getElementById('sidebar-quote');if(!pid||!quote)return;var old=document.querySelector('.kh-para-react-box');if(old&&old.dataset.para===pid){old.outerHTML=paraHtml(pid);return;}if(old)old.remove();quote.insertAdjacentHTML('afterend',paraHtml(pid));}
+function attachParaInlineSummaries(){document.querySelectorAll('.kh-para-inline-summary').forEach(function(x){x.remove();});document.querySelectorAll('.comment-row').forEach(function(row){var badge=row.querySelector('.comment-badge[data-para]');if(!badge)return;var pid=badge.dataset.para,h=paraCountsHtml(pid);if(!h)return;var div=document.createElement('div');div.className='kh-para-inline-summary';div.innerHTML=h;row.insertAdjacentElement('afterend',div);});}
+async function loadPara(){var s=sb();if(!s)return;try{var r=await s.from('paragraph_reactions').select('para_index,user_id,reaction').eq('page_path',path());if(r.error){console.warn('paragraph_reactions',r.error);return;}var me=await uid();paraCounts={};myPara={};(r.data||[]).forEach(function(x){var id=String(x.para_index);paraCounts[id]=paraCounts[id]||{};paraCounts[id][x.reaction]=(paraCounts[id][x.reaction]||0)+1;if(me&&x.user_id===me)myPara[id]=x.reaction;});}catch(e){console.warn(e);}}
+async function savePara(pid,rkey){var s=sb(),me=await uid();if(!s||!me){if(typeof openAuthModal==='function')openAuthModal('login');else alert('Bạn cần đăng nhập.');return;}var old=myPara[String(pid)],res;if(old===rkey)res=await s.from('paragraph_reactions').delete().eq('page_path',path()).eq('para_index',Number(pid)).eq('user_id',me);else res=await s.from('paragraph_reactions').upsert({page_path:path(),para_index:Number(pid),user_id:me,reaction:rkey},{onConflict:'page_path,para_index,user_id'});if(res&&res.error){alert('Chưa lưu được cảm xúc đoạn: '+(res.error.message||'Lỗi Supabase'));return;}await refreshPara();}
+async function refreshPara(){await loadPara();attachParaBox();attachParaInlineSummaries();}
+document.addEventListener('click',function(e){var t=e.target.closest('.kh-cmt-react-toggle');if(t){e.preventDefault();var w=t.closest('.kh-cmt-react');document.querySelectorAll('.kh-cmt-react.open').forEach(function(x){if(x!==w)x.classList.remove('open')});if(w)w.classList.toggle('open');return;}var b=e.target.closest('.kh-cmt-react-btn');if(b){e.preventDefault();saveCmt(b.dataset.id,b.dataset.r);return;}var pb=e.target.closest('.kh-para-react-btn');if(pb){e.preventDefault();var box=pb.closest('.kh-para-react-box');if(box)savePara(box.dataset.para,pb.dataset.r);return;}if(!e.target.closest('.kh-cmt-react'))document.querySelectorAll('.kh-cmt-react.open').forEach(function(x){x.classList.remove('open')});});
+function boot(){refreshCmt();refreshPara();[250,600,1000,1600,2500,4000,6500].forEach(function(t){setTimeout(function(){refreshCmt();refreshPara();},t)});var obs=new MutationObserver(function(){clearTimeout(window.__khVis4Timer);window.__khVis4Timer=setTimeout(function(){refreshCmt();refreshPara();},140)});obs.observe(document.body,{childList:true,subtree:true});}
+if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot);else boot();
 })();
 </script>
-
 </body>
 </html>
