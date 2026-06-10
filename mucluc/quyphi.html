@@ -2885,11 +2885,23 @@ body.dark-mode .khiet-reaction-btn{
 
     async function sbFetch(path, method, body) {
         method = method || 'GET';
+
+        var authToken = SUPABASE_KEY;
+        try {
+            var sb = (typeof getSB === 'function') ? getSB() : null;
+            if (sb) {
+                var sess = await sb.auth.getSession();
+                if (sess && sess.data && sess.data.session && sess.data.session.access_token) {
+                    authToken = sess.data.session.access_token;
+                }
+            }
+        } catch(e) {}
+
         var opts = {
             method: method,
             headers: {
                 'apikey': SUPABASE_KEY,
-                'Authorization': 'Bearer ' + SUPABASE_KEY,
+                'Authorization': 'Bearer ' + authToken,
                 'Content-Type': 'application/json',
                 'Prefer': method === 'POST' ? 'return=representation' : ''
             }
@@ -3108,9 +3120,6 @@ function buildCommentEl(c, replyMap, isSidebar, paraIndex) {
         var commentOwnerId = await requireLoginForComment();
         if (!commentOwnerId) return;
 
-        var commentOwnerId = await requireLoginForComment();
-        if (!commentOwnerId) return;
-
         localStorage.setItem('comment-author-name', name);
         var btn = document.querySelector('.main-submit-btn');
         btn.disabled = true;
@@ -3128,7 +3137,8 @@ function buildCommentEl(c, replyMap, isSidebar, paraIndex) {
             document.getElementById('main-char-count').textContent = '0';
             await loadMainComments();
         } catch(e) {
-            alert('Gửi thất bại, vui lòng thử lại.');
+            console.warn('submit comment failed:', e);
+            alert('Gửi thất bại: ' + (e.message || 'vui lòng thử lại.'));
         } finally {
             btn.disabled = false;
             btn.textContent = 'Gửi bình luận';
@@ -3188,6 +3198,9 @@ function buildCommentEl(c, replyMap, isSidebar, paraIndex) {
         if (!aut) { alert('Vui lòng nhập tên.'); return; }
         if (!txt) { alert('Vui lòng nhập nội dung.'); return; }
 
+        var replyOwnerId = await requireLoginForComment();
+        if (!replyOwnerId) return;
+
         localStorage.setItem('comment-author-name', aut);
         try {
             await sbFetch('comments', 'POST', {
@@ -3225,7 +3238,8 @@ function buildCommentEl(c, replyMap, isSidebar, paraIndex) {
                 await loadMainComments();
             }
         } catch(e) {
-            alert('Phản hồi thất bại!');
+            console.warn('submit reply failed:', e);
+            alert('Phản hồi thất bại: ' + (e.message || 'vui lòng thử lại.'));
         }
     }
 
