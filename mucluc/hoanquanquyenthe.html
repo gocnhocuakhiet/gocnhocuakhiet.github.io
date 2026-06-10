@@ -990,6 +990,82 @@
     margin-top:6px !important;
 }
 
+
+/* ===== Reaction cho bình luận - v4 chèn trực tiếp vào HTML bình luận ===== */
+.khiet-reaction-slot{
+    display:inline-flex !important;
+    align-items:center !important;
+    gap:7px !important;
+    flex-wrap:wrap !important;
+    margin-left:10px !important;
+    vertical-align:middle !important;
+}
+.khiet-react-toggle{
+    border:none !important;
+    background:transparent !important;
+    color:#7a9b89 !important;
+    font-size:.78rem !important;
+    font-weight:600 !important;
+    cursor:pointer !important;
+    padding:0 !important;
+    font-family:inherit !important;
+}
+.khiet-react-toggle:hover{ color:#4a6b5d !important; }
+.khiet-reaction-pop{
+    display:none !important;
+    align-items:center !important;
+    gap:6px !important;
+    padding:6px 8px !important;
+    border-radius:999px !important;
+    background:#fff !important;
+    border:1px solid #dae5e0 !important;
+    box-shadow:0 8px 22px rgba(74,107,93,.16) !important;
+}
+.khiet-reaction-slot.open .khiet-reaction-pop{ display:inline-flex !important; }
+.khiet-reaction-btn{
+    width:30px !important;
+    height:30px !important;
+    border:none !important;
+    border-radius:999px !important;
+    background:#fff !important;
+    font-size:1rem !important;
+    cursor:pointer !important;
+    transition:.15s ease !important;
+    box-shadow:0 2px 8px rgba(74,107,93,.08) !important;
+}
+.khiet-reaction-btn:hover{ transform:translateY(-3px) scale(1.13) !important; }
+.khiet-reaction-btn.active{
+    background:#fff0f6 !important;
+    box-shadow:0 0 0 2px #f4a6c2 inset !important;
+}
+.khiet-reaction-counts{
+    display:inline-flex !important;
+    align-items:center !important;
+    gap:5px !important;
+    flex-wrap:wrap !important;
+}
+.khiet-reaction-pill{
+    display:inline-flex !important;
+    align-items:center !important;
+    gap:3px !important;
+    padding:2px 7px !important;
+    border-radius:999px !important;
+    background:#eaf2ee !important;
+    color:#4a6b5d !important;
+    border:1px solid #dae5e0 !important;
+    font-size:.72rem !important;
+    line-height:1.35 !important;
+}
+.khiet-reaction-pill.mine{
+    background:#fff0f6 !important;
+    border-color:#f4a6c2 !important;
+    color:#b83b6d !important;
+}
+body.dark-mode .khiet-reaction-pop,
+body.dark-mode .khiet-reaction-btn{
+    background:#1b2420 !important;
+}
+
 </style>
 </head>
 <body>
@@ -1660,6 +1736,7 @@
                        '  <div class="comment-content">' + escHtml(r.content) + '</div>' +
                        '  <div class="comment-footer-actions">' +
                        '    <a class="comment-action-link" onclick="showInlineReplyForm(\'' + c.id + '\',\'' + (isSidebar?'sidebar':'main') + '\',' + (paraIndex||'null') + ', \'' + escHtml(rName) + '\')">Phản hồi</a>' +
+                       '    <span class="khiet-reaction-slot" data-comment-id="' + r.id + '"></span>' +
                        '  </div>' +
                        '</div>';
             }).join('') + '</div>';
@@ -1689,6 +1766,7 @@
             '<div class="comment-content">' + escHtml(c.content) + '</div>' +
             '<div class="comment-footer-actions">' +
             '  <a class="comment-action-link" onclick="showInlineReplyForm(\'' + c.id + '\',\'' + (isSidebar?'sidebar':'main') + '\',' + (paraIndex||'null') + ')">Phản hồi</a>' +
+            '  <span class="khiet-reaction-slot" data-comment-id="' + c.id + '"></span>' +
             '</div>' +
             '<div id="reply-form-container-' + c.id + '"></div>' + repliesHtml;
 
@@ -2358,11 +2436,11 @@ document.addEventListener('keydown', function(e) {
 });
 </script>
 
-<script id="khiet-comment-reactions-v3">
-/* ===== Reaction cho bình luận: v3 gắn trực tiếp cạnh nút Phản hồi ===== */
+<script id="khiet-comment-reactions-v4">
+/* ===== Reaction cho bình luận: v4 dùng slot có sẵn trong từng comment ===== */
 (function(){
-    if (window.__KH_COMMENT_REACTION_V3__) return;
-    window.__KH_COMMENT_REACTION_V3__ = true;
+    if (window.__KH_COMMENT_REACTION_V4__) return;
+    window.__KH_COMMENT_REACTION_V4__ = true;
 
     var REACTIONS = [
         {key:'like', emoji:'👍', label:'Thích'},
@@ -2380,8 +2458,8 @@ document.addEventListener('keydown', function(e) {
     function getSBForReaction(){
         if (typeof getSB === 'function') return getSB();
         if (typeof supabase !== 'undefined' && typeof SUPABASE_URL !== 'undefined' && typeof SUPABASE_KEY !== 'undefined') {
-            if (!window.__khReactionSB3) window.__khReactionSB3 = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-            return window.__khReactionSB3;
+            if (!window.__khReactionSB4) window.__khReactionSB4 = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+            return window.__khReactionSB4;
         }
         return null;
     }
@@ -2398,21 +2476,20 @@ document.addEventListener('keydown', function(e) {
         } catch(e){ return null; }
     }
 
-    function commentIdFromElement(el){
-        while (el && el !== document.body) {
-            if (el.id && /^comment-\d+$/.test(el.id)) return el.id.replace('comment-', '');
-            el = el.parentElement;
-        }
-        return '';
-    }
-
-    function findReplyLinks(){
-        return Array.from(document.querySelectorAll('a,button')).filter(function(el){
-            return (el.textContent || '').trim() === 'Phản hồi';
+    function getIds(){
+        var ids = [];
+        document.querySelectorAll('.khiet-reaction-slot[data-comment-id]').forEach(function(slot){
+            var id = slot.dataset.commentId;
+            if (id && ids.indexOf(id) === -1) ids.push(id);
         });
+        return ids;
     }
 
-    function countsHtml(id){
+    function toDbId(id){
+        return /^\d+$/.test(String(id)) ? Number(id) : id;
+    }
+
+    function countHtml(id){
         var c = counts[String(id)] || {};
         var my = mine[String(id)] || '';
         var html = '';
@@ -2432,58 +2509,27 @@ document.addEventListener('keydown', function(e) {
         }).join('');
     }
 
-    function blockHtml(id){
-        return '<span class="khiet-reaction-wrap" data-comment-id="'+id+'">' +
-            '<button type="button" class="khiet-react-toggle" data-comment-id="'+id+'">🌸 Cảm xúc</button>' +
-            '<span class="khiet-reaction-pop">'+buttonsHtml(id)+'</span>' +
-            '<span class="khiet-reaction-counts">'+countsHtml(id)+'</span>' +
-        '</span>';
-    }
-
-    window.khietRenderCommentReactionsV3 = function(){
-        findReplyLinks().forEach(function(reply){
-            var id = commentIdFromElement(reply);
-            if (!id) return;
-
-            var old = reply.parentElement ? reply.parentElement.querySelector('.khiet-reaction-wrap[data-comment-id="'+id+'"]') : null;
-            if (old) old.outerHTML = blockHtml(id);
-            else reply.insertAdjacentHTML('afterend', blockHtml(id));
-        });
-
-        /* Fallback: nếu không tìm được link Phản hồi nhưng có comment id thì thêm cuối comment */
-        document.querySelectorAll('[id^="comment-"]').forEach(function(cmt){
-            if (!/^comment-\d+$/.test(cmt.id)) return;
-            var id = cmt.id.replace('comment-', '');
-            if (cmt.querySelector('.khiet-reaction-wrap[data-comment-id="'+id+'"]')) return;
-            var content = cmt.querySelector('.comment-content') || cmt.querySelector('p');
-            if (content) {
-                content.insertAdjacentHTML('afterend', '<div class="khiet-reaction-row-fallback">'+blockHtml(id)+'</div>');
-            }
+    window.khietRenderCommentReactionsV4 = function(){
+        document.querySelectorAll('.khiet-reaction-slot[data-comment-id]').forEach(function(slot){
+            var id = slot.dataset.commentId;
+            slot.innerHTML =
+                '<button type="button" class="khiet-react-toggle" data-comment-id="'+id+'">🌸 Cảm xúc</button>' +
+                '<span class="khiet-reaction-pop">'+buttonsHtml(id)+'</span>' +
+                '<span class="khiet-reaction-counts">'+countHtml(id)+'</span>';
         });
     };
 
-    window.khietLoadCommentReactionsV3 = async function(){
+    window.khietLoadCommentReactionsV4 = async function(){
         var sb = getSBForReaction();
         if (!sb) return;
 
-        var ids = [];
-        findReplyLinks().forEach(function(reply){
-            var id = commentIdFromElement(reply);
-            if (id && ids.indexOf(id) === -1) ids.push(id);
-        });
-        document.querySelectorAll('[id^="comment-"]').forEach(function(cmt){
-            if (/^comment-\d+$/.test(cmt.id)) {
-                var id = cmt.id.replace('comment-', '');
-                if (ids.indexOf(id) === -1) ids.push(id);
-            }
-        });
-
+        var ids = getIds();
         if (!ids.length) return;
 
         try {
             var r = await sb.from('comment_reactions')
                 .select('comment_id,user_id,reaction')
-                .in('comment_id', ids.map(Number));
+                .in('comment_id', ids.map(toDbId));
 
             if (r.error) {
                 console.warn('comment_reactions load error:', r.error);
@@ -2503,8 +2549,8 @@ document.addEventListener('keydown', function(e) {
     };
 
     async function refresh(){
-        await window.khietLoadCommentReactionsV3();
-        window.khietRenderCommentReactionsV3();
+        await window.khietLoadCommentReactionsV4();
+        window.khietRenderCommentReactionsV4();
     }
 
     async function save(id, reaction){
@@ -2521,16 +2567,16 @@ document.addEventListener('keydown', function(e) {
         if (old === reaction) {
             res = await sb.from('comment_reactions')
                 .delete()
-                .eq('comment_id', Number(id))
+                .eq('comment_id', toDbId(id))
                 .eq('user_id', uid);
         } else {
             res = await sb.from('comment_reactions')
-                .upsert({ comment_id:Number(id), user_id:uid, reaction:reaction }, {onConflict:'comment_id,user_id'});
+                .upsert({ comment_id:toDbId(id), user_id:uid, reaction:reaction }, {onConflict:'comment_id,user_id'});
         }
 
         if (res && res.error) {
             console.warn('save reaction error:', res.error);
-            alert('Chưa lưu được cảm xúc. Kiểm tra bảng comment_reactions nhé.');
+            alert('Chưa lưu được cảm xúc. Nếu vẫn lỗi, cần kiểm tra kiểu dữ liệu comment_id trong bảng comment_reactions.');
             return;
         }
         await refresh();
@@ -2540,11 +2586,11 @@ document.addEventListener('keydown', function(e) {
         var toggle = e.target.closest('.khiet-react-toggle');
         if (toggle) {
             e.preventDefault();
-            var wrap = toggle.closest('.khiet-reaction-wrap');
-            document.querySelectorAll('.khiet-reaction-wrap.open').forEach(function(x){
-                if (x !== wrap) x.classList.remove('open');
+            var slot = toggle.closest('.khiet-reaction-slot');
+            document.querySelectorAll('.khiet-reaction-slot.open').forEach(function(x){
+                if (x !== slot) x.classList.remove('open');
             });
-            if (wrap) wrap.classList.toggle('open');
+            if (slot) slot.classList.toggle('open');
             return;
         }
 
@@ -2555,18 +2601,18 @@ document.addEventListener('keydown', function(e) {
             return;
         }
 
-        if (!e.target.closest('.khiet-reaction-wrap')) {
-            document.querySelectorAll('.khiet-reaction-wrap.open').forEach(function(x){ x.classList.remove('open'); });
+        if (!e.target.closest('.khiet-reaction-slot')) {
+            document.querySelectorAll('.khiet-reaction-slot.open').forEach(function(x){ x.classList.remove('open'); });
         }
     });
 
     function boot(){
         refresh();
-        [200,500,1000,1800,3000,5000].forEach(function(t){ setTimeout(refresh, t); });
+        [200,500,1000,1800,3000].forEach(function(t){ setTimeout(refresh, t); });
 
         var obs = new MutationObserver(function(){
-            clearTimeout(window.__khReactionV3Timer);
-            window.__khReactionV3Timer = setTimeout(refresh, 120);
+            clearTimeout(window.__khReactionV4Timer);
+            window.__khReactionV4Timer = setTimeout(refresh, 120);
         });
         obs.observe(document.body, {childList:true, subtree:true});
     }
