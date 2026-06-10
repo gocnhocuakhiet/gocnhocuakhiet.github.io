@@ -915,7 +915,92 @@
             color: #e07a30;
             font-weight: bold;
         }
-    </style>
+    
+/* ===== Reaction cho bình luận ===== */
+.comment-reaction-wrap{
+    display:flex;
+    align-items:center;
+    gap:6px;
+    flex-wrap:wrap;
+    margin-top:7px;
+}
+.comment-react-toggle{
+    border:1px solid var(--border);
+    background:var(--bg-card, #fff);
+    color:var(--text-muted);
+    border-radius:999px;
+    padding:3px 9px;
+    font-size:.72rem;
+    cursor:pointer;
+    transition:.15s ease;
+}
+.comment-react-toggle:hover{
+    background:var(--green-pale, #eaf2ee);
+    color:var(--green, #4a6b5d);
+}
+.comment-reaction-bar{
+    display:none;
+    align-items:center;
+    gap:5px;
+    padding:5px 7px;
+    border-radius:999px;
+    background:rgba(255,255,255,.95);
+    border:1px solid var(--border);
+    box-shadow:0 6px 18px rgba(74,107,93,.12);
+}
+.comment-reaction-wrap.open .comment-reaction-bar{
+    display:flex;
+}
+.comment-reaction-btn{
+    width:28px;
+    height:28px;
+    border:none;
+    border-radius:999px;
+    background:#fff;
+    font-size:1rem;
+    cursor:pointer;
+    transition:.14s ease;
+    box-shadow:0 2px 8px rgba(74,107,93,.08);
+}
+.comment-reaction-btn:hover{
+    transform:translateY(-3px) scale(1.12);
+}
+.comment-reaction-btn.active{
+    background:#fff0f6;
+    box-shadow:0 0 0 2px #f5b5ce inset;
+}
+.comment-reaction-counts{
+    display:flex;
+    align-items:center;
+    gap:5px;
+    flex-wrap:wrap;
+}
+.comment-reaction-pill{
+    display:inline-flex;
+    align-items:center;
+    gap:3px;
+    padding:2px 7px;
+    border-radius:999px;
+    background:var(--green-pale, #eaf2ee);
+    color:var(--green, #4a6b5d);
+    border:1px solid var(--border);
+    font-size:.7rem;
+    line-height:1.35;
+}
+.comment-reaction-pill.is-mine{
+    background:#fff0f6;
+    border-color:#f5b5ce;
+    color:#b83b6d;
+}
+body.dark-mode .comment-reaction-bar,
+body.dark-mode .comment-reaction-btn{
+    background:#1b2420;
+}
+body.dark-mode .comment-react-toggle{
+    background:#1b2420;
+}
+
+</style>
 </head>
 <body>
     <div class="reader-controls-wrapper">
@@ -1637,6 +1722,7 @@
                 'comments?page_path=eq.' + encodeURIComponent(PAGE_PATH) + '&para_index=is.null&order=created_at.asc'
             );
             renderMainComments(rows, list);
+            if (typeof loadCommentReactions === 'function') { await loadCommentReactions(); renderAllCommentReactionBlocks(); }
             loadStats();
         } catch(e) {
             list.innerHTML = '<div class="empty-text">Không thể tải bình luận.</div>';
@@ -2291,6 +2377,196 @@ document.addEventListener('keydown', function(e) {
     else doRegister();
 });
 </script>
+
+<script>
+/* ===== Reaction cho bình luận: dùng bảng comment_reactions ===== */
+(function(){
+    var COMMENT_REACTIONS = [
+        {key:'like', emoji:'👍', label:'Thích'},
+        {key:'heart', emoji:'❤️', label:'Tim'},
+        {key:'flower', emoji:'🌸', label:'Dịu dàng'},
+        {key:'laugh', emoji:'😂', label:'Buồn cười'},
+        {key:'cry', emoji:'🥺', label:'Cảm động'},
+        {key:'wow', emoji:'😮', label:'Bất ngờ'}
+    ];
+
+    var commentReactionCounts = {};
+    var myCommentReactions = {};
+    var reactionUserId = null;
+
+    function sbClientForReactions(){
+        if (typeof getSB === 'function') return getSB();
+        if (typeof supabase !== 'undefined' && typeof SUPABASE_URL !== 'undefined' && typeof SUPABASE_KEY !== 'undefined') {
+            return supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+        }
+        return null;
+    }
+
+    async function getReactionUser(){
+        if (reactionUserId) return reactionUserId;
+        var sb = sbClientForReactions();
+        if (!sb) return null;
+        try {
+            var r = await sb.auth.getUser();
+            var user = r && r.data ? r.data.user : null;
+            if (user) reactionUserId = user.id;
+            return reactionUserId;
+        } catch(e) {
+            return null;
+        }
+    }
+
+    function escReaction(s){
+        return String(s || '').replace(/[&<>"']/g, function(c){
+            return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+        });
+    }
+
+    function renderReactionCounts(commentId){
+        var counts = commentReactionCounts[String(commentId)] || {};
+        var mine = myCommentReactions[String(commentId)] || '';
+        var html = '';
+        COMMENT_REACTIONS.forEach(function(r){
+            var cnt = counts[r.key] || 0;
+            if (cnt > 0) {
+                html += '<span class="comment-reaction-pill '+(mine===r.key?'is-mine':'')+'">'+r.emoji+' '+cnt+'</span>';
+            }
+        });
+        return html;
+    }
+
+    window.toggleCommentReactionBar = function(commentId){
+        document.querySelectorAll('.comment-reaction-wrap.open').forEach(function(x){
+            if (x.dataset.commentId !== String(commentId)) x.classList.remove('open');
+        });
+        var wrap = document.querySelector('.comment-reaction-wrap[data-comment-id="'+commentId+'"]');
+        if (wrap) wrap.classList.toggle('open');
+    };
+
+    window.saveCommentReaction = async function(commentId, reaction){
+        var sb = sbClientForReactions();
+        var userId = await getReactionUser();
+        if (!sb || !userId) {
+            if (typeof openAuthModal === 'function') openAuthModal('login');
+            else alert('Bạn cần đăng nhập để bày tỏ cảm xúc nha.');
+            return;
+        }
+
+        var old = myCommentReactions[String(commentId)];
+        var res;
+        if (old === reaction) {
+            res = await sb.from('comment_reactions')
+                .delete()
+                .eq('comment_id', commentId)
+                .eq('user_id', userId);
+            delete myCommentReactions[String(commentId)];
+        } else {
+            res = await sb.from('comment_reactions')
+                .upsert({
+                    comment_id: Number(commentId),
+                    user_id: userId,
+                    reaction: reaction
+                }, {onConflict:'comment_id,user_id'});
+            myCommentReactions[String(commentId)] = reaction;
+        }
+
+        if (res && res.error) {
+            console.warn('comment reaction error:', res.error);
+            alert('Chưa lưu được cảm xúc. Kiểm tra bảng comment_reactions nhé.');
+            return;
+        }
+
+        await loadCommentReactions();
+        renderAllCommentReactionBlocks();
+    };
+
+    function buildReactionBlock(commentId){
+        var mine = myCommentReactions[String(commentId)] || '';
+        var buttons = COMMENT_REACTIONS.map(function(r){
+            return '<button class="comment-reaction-btn '+(mine===r.key?'active':'')+'" title="'+escReaction(r.label)+'" onclick="saveCommentReaction('+commentId+', \''+r.key+'\')">'+r.emoji+'</button>';
+        }).join('');
+
+        return '<div class="comment-reaction-wrap" data-comment-id="'+commentId+'">' +
+               '  <button class="comment-react-toggle" onclick="toggleCommentReactionBar('+commentId+')">🌸 Cảm xúc</button>' +
+               '  <div class="comment-reaction-bar">'+buttons+'</div>' +
+               '  <div class="comment-reaction-counts">'+renderReactionCounts(commentId)+'</div>' +
+               '</div>';
+    }
+
+    window.renderAllCommentReactionBlocks = function(){
+        document.querySelectorAll('[id^="comment-"]').forEach(function(el){
+            var id = (el.id || '').replace('comment-', '');
+            if (!/^\d+$/.test(id)) return;
+            var content = el.querySelector('.comment-content');
+            if (!content) return;
+
+            var existing = el.querySelector('.comment-reaction-wrap');
+            var html = buildReactionBlock(id);
+            if (existing) {
+                existing.outerHTML = html;
+            } else {
+                content.insertAdjacentHTML('afterend', html);
+            }
+        });
+    };
+
+    window.loadCommentReactions = async function(){
+        var sb = sbClientForReactions();
+        if (!sb) return;
+        try {
+            var ids = Array.from(document.querySelectorAll('[id^="comment-"]'))
+                .map(function(el){ return (el.id || '').replace('comment-', ''); })
+                .filter(function(id){ return /^\d+$/.test(id); });
+
+            if (!ids.length) return;
+
+            var r = await sb.from('comment_reactions')
+                .select('comment_id,user_id,reaction')
+                .in('comment_id', ids.map(Number));
+
+            if (r.error) {
+                console.warn('load comment_reactions:', r.error);
+                return;
+            }
+
+            var userId = await getReactionUser();
+            commentReactionCounts = {};
+            myCommentReactions = {};
+
+            (r.data || []).forEach(function(x){
+                var cid = String(x.comment_id);
+                commentReactionCounts[cid] = commentReactionCounts[cid] || {};
+                commentReactionCounts[cid][x.reaction] = (commentReactionCounts[cid][x.reaction] || 0) + 1;
+                if (userId && x.user_id === userId) myCommentReactions[cid] = x.reaction;
+            });
+        } catch(e) {
+            console.warn('loadCommentReactions failed:', e);
+        }
+    };
+
+    async function initCommentReactions(){
+        await loadCommentReactions();
+        renderAllCommentReactionBlocks();
+    }
+
+    document.addEventListener('click', function(e){
+        if (!e.target.closest('.comment-reaction-wrap')) {
+            document.querySelectorAll('.comment-reaction-wrap.open').forEach(function(x){ x.classList.remove('open'); });
+        }
+    });
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', function(){
+            setTimeout(initCommentReactions, 500);
+            setTimeout(initCommentReactions, 1200);
+        });
+    } else {
+        setTimeout(initCommentReactions, 500);
+        setTimeout(initCommentReactions, 1200);
+    }
+})();
+</script>
+
 </body>
 </html>
 </body>
