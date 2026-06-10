@@ -939,99 +939,14 @@
         }
 
     
-/* ===== Reaction cho bình luận ===== */
-.comment-reaction-wrap{
-    display:flex;
-    align-items:center;
-    gap:6px;
-    flex-wrap:wrap;
-    margin-top:7px;
-}
-.comment-react-toggle{
-    border:1px solid var(--border);
-    background:var(--bg-card, #fff);
-    color:var(--text-muted);
-    border-radius:999px;
-    padding:3px 9px;
-    font-size:.72rem;
-    cursor:pointer;
-    transition:.15s ease;
-}
-.comment-react-toggle:hover{
-    background:var(--green-pale, #eaf2ee);
-    color:var(--green, #4a6b5d);
-}
-.comment-reaction-bar{
-    display:none;
-    align-items:center;
-    gap:5px;
-    padding:5px 7px;
-    border-radius:999px;
-    background:rgba(255,255,255,.95);
-    border:1px solid var(--border);
-    box-shadow:0 6px 18px rgba(74,107,93,.12);
-}
-.comment-reaction-wrap.open .comment-reaction-bar{
-    display:flex;
-}
-.comment-reaction-btn{
-    width:28px;
-    height:28px;
-    border:none;
-    border-radius:999px;
-    background:#fff;
-    font-size:1rem;
-    cursor:pointer;
-    transition:.14s ease;
-    box-shadow:0 2px 8px rgba(74,107,93,.08);
-}
-.comment-reaction-btn:hover{
-    transform:translateY(-3px) scale(1.12);
-}
-.comment-reaction-btn.active{
-    background:#fff0f6;
-    box-shadow:0 0 0 2px #f5b5ce inset;
-}
-.comment-reaction-counts{
-    display:flex;
-    align-items:center;
-    gap:5px;
-    flex-wrap:wrap;
-}
-.comment-reaction-pill{
-    display:inline-flex;
-    align-items:center;
-    gap:3px;
-    padding:2px 7px;
-    border-radius:999px;
-    background:var(--green-pale, #eaf2ee);
-    color:var(--green, #4a6b5d);
-    border:1px solid var(--border);
-    font-size:.7rem;
-    line-height:1.35;
-}
-.comment-reaction-pill.is-mine{
-    background:#fff0f6;
-    border-color:#f5b5ce;
-    color:#b83b6d;
-}
-body.dark-mode .comment-reaction-bar,
-body.dark-mode .comment-reaction-btn{
-    background:#1b2420;
-}
-body.dark-mode .comment-react-toggle{
-    background:#1b2420;
-}
-
-
-/* ===== Reaction cho bình luận - bản chắc chắn ===== */
+/* ===== Reaction cho bình luận - v3 gắn sau nút Phản hồi ===== */
 .khiet-reaction-wrap{
-    display:flex !important;
+    display:inline-flex !important;
     align-items:center !important;
     gap:7px !important;
     flex-wrap:wrap !important;
-    margin-top:8px !important;
-    margin-bottom:4px !important;
+    margin-left:10px !important;
+    vertical-align:middle !important;
 }
 .khiet-react-toggle{
     border:none !important;
@@ -1043,9 +958,7 @@ body.dark-mode .comment-react-toggle{
     padding:0 !important;
     font-family:inherit !important;
 }
-.khiet-react-toggle:hover{
-    color:#4a6b5d !important;
-}
+.khiet-react-toggle:hover{ color:#4a6b5d !important; }
 .khiet-reaction-pop{
     display:none !important;
     align-items:center !important;
@@ -1056,9 +969,7 @@ body.dark-mode .comment-react-toggle{
     border:1px solid #dae5e0 !important;
     box-shadow:0 8px 22px rgba(74,107,93,.16) !important;
 }
-.khiet-reaction-wrap.open .khiet-reaction-pop{
-    display:flex !important;
-}
+.khiet-reaction-wrap.open .khiet-reaction-pop{ display:inline-flex !important; }
 .khiet-reaction-btn{
     width:30px !important;
     height:30px !important;
@@ -1070,9 +981,7 @@ body.dark-mode .comment-react-toggle{
     transition:.15s ease !important;
     box-shadow:0 2px 8px rgba(74,107,93,.08) !important;
 }
-.khiet-reaction-btn:hover{
-    transform:translateY(-3px) scale(1.13) !important;
-}
+.khiet-reaction-btn:hover{ transform:translateY(-3px) scale(1.13) !important; }
 .khiet-reaction-btn.active{
     background:#fff0f6 !important;
     box-shadow:0 0 0 2px #f4a6c2 inset !important;
@@ -1099,6 +1008,9 @@ body.dark-mode .comment-react-toggle{
     background:#fff0f6 !important;
     border-color:#f4a6c2 !important;
     color:#b83b6d !important;
+}
+.khiet-reaction-row-fallback{
+    margin-top:6px !important;
 }
 
 </style>
@@ -3052,7 +2964,6 @@ body.dark-mode .comment-react-toggle{
                 'comments?page_path=eq.' + encodeURIComponent(PAGE_PATH) + '&para_index=is.null&order=created_at.asc'
             );
             renderMainComments(rows, list);
-            if (typeof loadCommentReactions === 'function') { await loadCommentReactions(); renderAllCommentReactionBlocks(); }
             loadStats();
         } catch(e) {
             list.innerHTML = '<div class="empty-text">Không thể tải bình luận.</div>';
@@ -3708,11 +3619,11 @@ document.addEventListener('keydown', function(e) {
 });
 </script>
 
-<script id="khiet-comment-reactions-v2">
-/* ===== Reaction cho bình luận: bản tự quét comment chắc chắn ===== */
+<script id="khiet-comment-reactions-v3">
+/* ===== Reaction cho bình luận: v3 gắn trực tiếp cạnh nút Phản hồi ===== */
 (function(){
-    if (window.__KH_COMMENT_REACTION_V2__) return;
-    window.__KH_COMMENT_REACTION_V2__ = true;
+    if (window.__KH_COMMENT_REACTION_V3__) return;
+    window.__KH_COMMENT_REACTION_V3__ = true;
 
     var REACTIONS = [
         {key:'like', emoji:'👍', label:'Thích'},
@@ -3727,42 +3638,42 @@ document.addEventListener('keydown', function(e) {
     var mine = {};
     var currentUserId = null;
 
-    function getSupabaseClient(){
+    function getSBForReaction(){
         if (typeof getSB === 'function') return getSB();
         if (typeof supabase !== 'undefined' && typeof SUPABASE_URL !== 'undefined' && typeof SUPABASE_KEY !== 'undefined') {
-            if (!window.__khReactionSB) window.__khReactionSB = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-            return window.__khReactionSB;
+            if (!window.__khReactionSB3) window.__khReactionSB3 = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+            return window.__khReactionSB3;
         }
         return null;
     }
 
     async function getUserId(){
         if (currentUserId) return currentUserId;
-        var sb = getSupabaseClient();
+        var sb = getSBForReaction();
         if (!sb) return null;
         try {
             var r = await sb.auth.getUser();
             var user = r && r.data ? r.data.user : null;
             if (user) currentUserId = user.id;
             return currentUserId;
-        } catch(e){
-            return null;
+        } catch(e){ return null; }
+    }
+
+    function commentIdFromElement(el){
+        while (el && el !== document.body) {
+            if (el.id && /^comment-\d+$/.test(el.id)) return el.id.replace('comment-', '');
+            el = el.parentElement;
         }
+        return '';
     }
 
-    function getCommentId(el){
-        if (!el || !el.id) return '';
-        var m = el.id.match(/^comment-(\d+)$/);
-        return m ? m[1] : '';
-    }
-
-    function getCommentElements(){
-        return Array.from(document.querySelectorAll('[id^="comment-"]')).filter(function(el){
-            return getCommentId(el) && !el.classList.contains('khiet-reaction-ignore');
+    function findReplyLinks(){
+        return Array.from(document.querySelectorAll('a,button')).filter(function(el){
+            return (el.textContent || '').trim() === 'Phản hồi';
         });
     }
 
-    function countHtml(id){
+    function countsHtml(id){
         var c = counts[String(id)] || {};
         var my = mine[String(id)] || '';
         var html = '';
@@ -3778,49 +3689,63 @@ document.addEventListener('keydown', function(e) {
     function buttonsHtml(id){
         var my = mine[String(id)] || '';
         return REACTIONS.map(function(r){
-            return '<button type="button" class="khiet-reaction-btn '+(my===r.key?'active':'')+'" title="'+r.label+'" data-comment-id="'+id+'" data-reaction="'+r.key+'">'+r.emoji+'</button>';
+            return '<button type="button" class="khiet-reaction-btn '+(my===r.key?'active':'')+'" data-comment-id="'+id+'" data-reaction="'+r.key+'" title="'+r.label+'">'+r.emoji+'</button>';
         }).join('');
     }
 
     function blockHtml(id){
-        return '<div class="khiet-reaction-wrap" data-comment-id="'+id+'">' +
-               '<button type="button" class="khiet-react-toggle" data-comment-id="'+id+'">🌸 Cảm xúc</button>' +
-               '<div class="khiet-reaction-pop">'+buttonsHtml(id)+'</div>' +
-               '<div class="khiet-reaction-counts">'+countHtml(id)+'</div>' +
-               '</div>';
+        return '<span class="khiet-reaction-wrap" data-comment-id="'+id+'">' +
+            '<button type="button" class="khiet-react-toggle" data-comment-id="'+id+'">🌸 Cảm xúc</button>' +
+            '<span class="khiet-reaction-pop">'+buttonsHtml(id)+'</span>' +
+            '<span class="khiet-reaction-counts">'+countsHtml(id)+'</span>' +
+        '</span>';
     }
 
-    function findInsertTarget(commentEl){
-        return commentEl.querySelector('.comment-content') ||
-               commentEl.querySelector('.feed-msg') ||
-               commentEl.querySelector('p') ||
-               commentEl;
-    }
-
-    window.khietRenderCommentReactions = function(){
-        getCommentElements().forEach(function(el){
-            var id = getCommentId(el);
+    window.khietRenderCommentReactionsV3 = function(){
+        findReplyLinks().forEach(function(reply){
+            var id = commentIdFromElement(reply);
             if (!id) return;
-            var old = el.querySelector('.khiet-reaction-wrap');
+
+            var old = reply.parentElement ? reply.parentElement.querySelector('.khiet-reaction-wrap[data-comment-id="'+id+'"]') : null;
             if (old) old.outerHTML = blockHtml(id);
-            else {
-                var target = findInsertTarget(el);
-                if (target === el) el.insertAdjacentHTML('beforeend', blockHtml(id));
-                else target.insertAdjacentHTML('afterend', blockHtml(id));
+            else reply.insertAdjacentHTML('afterend', blockHtml(id));
+        });
+
+        /* Fallback: nếu không tìm được link Phản hồi nhưng có comment id thì thêm cuối comment */
+        document.querySelectorAll('[id^="comment-"]').forEach(function(cmt){
+            if (!/^comment-\d+$/.test(cmt.id)) return;
+            var id = cmt.id.replace('comment-', '');
+            if (cmt.querySelector('.khiet-reaction-wrap[data-comment-id="'+id+'"]')) return;
+            var content = cmt.querySelector('.comment-content') || cmt.querySelector('p');
+            if (content) {
+                content.insertAdjacentHTML('afterend', '<div class="khiet-reaction-row-fallback">'+blockHtml(id)+'</div>');
             }
         });
     };
 
-    window.khietLoadCommentReactions = async function(){
-        var sb = getSupabaseClient();
+    window.khietLoadCommentReactionsV3 = async function(){
+        var sb = getSBForReaction();
         if (!sb) return;
-        var ids = getCommentElements().map(getCommentId).filter(Boolean);
+
+        var ids = [];
+        findReplyLinks().forEach(function(reply){
+            var id = commentIdFromElement(reply);
+            if (id && ids.indexOf(id) === -1) ids.push(id);
+        });
+        document.querySelectorAll('[id^="comment-"]').forEach(function(cmt){
+            if (/^comment-\d+$/.test(cmt.id)) {
+                var id = cmt.id.replace('comment-', '');
+                if (ids.indexOf(id) === -1) ids.push(id);
+            }
+        });
+
         if (!ids.length) return;
 
         try {
             var r = await sb.from('comment_reactions')
                 .select('comment_id,user_id,reaction')
                 .in('comment_id', ids.map(Number));
+
             if (r.error) {
                 console.warn('comment_reactions load error:', r.error);
                 return;
@@ -3835,18 +3760,16 @@ document.addEventListener('keydown', function(e) {
                 counts[cid][x.reaction] = (counts[cid][x.reaction] || 0) + 1;
                 if (uid && x.user_id === uid) mine[cid] = x.reaction;
             });
-        } catch(e){
-            console.warn('comment_reactions load failed:', e);
-        }
+        } catch(e){ console.warn('load reactions failed:', e); }
     };
 
     async function refresh(){
-        await window.khietLoadCommentReactions();
-        window.khietRenderCommentReactions();
+        await window.khietLoadCommentReactionsV3();
+        window.khietRenderCommentReactionsV3();
     }
 
     async function save(id, reaction){
-        var sb = getSupabaseClient();
+        var sb = getSBForReaction();
         var uid = await getUserId();
         if (!sb || !uid) {
             if (typeof openAuthModal === 'function') openAuthModal('login');
@@ -3863,15 +3786,11 @@ document.addEventListener('keydown', function(e) {
                 .eq('user_id', uid);
         } else {
             res = await sb.from('comment_reactions')
-                .upsert({
-                    comment_id: Number(id),
-                    user_id: uid,
-                    reaction: reaction
-                }, {onConflict:'comment_id,user_id'});
+                .upsert({ comment_id:Number(id), user_id:uid, reaction:reaction }, {onConflict:'comment_id,user_id'});
         }
 
         if (res && res.error) {
-            console.warn('comment reaction save error:', res.error);
+            console.warn('save reaction error:', res.error);
             alert('Chưa lưu được cảm xúc. Kiểm tra bảng comment_reactions nhé.');
             return;
         }
@@ -3898,26 +3817,19 @@ document.addEventListener('keydown', function(e) {
         }
 
         if (!e.target.closest('.khiet-reaction-wrap')) {
-            document.querySelectorAll('.khiet-reaction-wrap.open').forEach(function(x){
-                x.classList.remove('open');
-            });
+            document.querySelectorAll('.khiet-reaction-wrap.open').forEach(function(x){ x.classList.remove('open'); });
         }
     });
 
     function boot(){
         refresh();
-        [300,700,1200,2000,3500].forEach(function(t){ setTimeout(refresh, t); });
+        [200,500,1000,1800,3000,5000].forEach(function(t){ setTimeout(refresh, t); });
 
-        var listTargets = ['main-comments-list','sidebar-comments-list'];
-        listTargets.forEach(function(id){
-            var node = document.getElementById(id);
-            if (!node) return;
-            var obs = new MutationObserver(function(){
-                clearTimeout(node.__khReactionTimer);
-                node.__khReactionTimer = setTimeout(refresh, 120);
-            });
-            obs.observe(node, {childList:true, subtree:true});
+        var obs = new MutationObserver(function(){
+            clearTimeout(window.__khReactionV3Timer);
+            window.__khReactionV3Timer = setTimeout(refresh, 120);
         });
+        obs.observe(document.body, {childList:true, subtree:true});
     }
 
     if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', boot);
