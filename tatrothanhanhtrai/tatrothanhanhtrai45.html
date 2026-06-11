@@ -1670,8 +1670,9 @@ if (!AUTHOR_ID) {
 
 // ── Helper gọi Supabase REST API ──
 async function sbFetch(path, method, body) {
+    method = method || 'GET';
     var opts = {
-        method: method || 'GET',
+        method: method,
         headers: {
             'apikey': SUPABASE_KEY,
             'Authorization': 'Bearer ' + SUPABASE_KEY,
@@ -1681,7 +1682,10 @@ async function sbFetch(path, method, body) {
     };
     if (body) opts.body = JSON.stringify(body);
     var res = await fetch(SUPABASE_URL + '/rest/v1/' + path, opts);
-    if (!res.ok) { var err = await res.text(); throw new Error(err); }
+    if (!res.ok) {
+        var err = await res.text();
+        throw new Error(err);
+    }
     var text = await res.text();
     return text ? JSON.parse(text) : [];
 }
@@ -1915,32 +1919,48 @@ function escJs(s) {
 }
 
 
-/* ===== Auth owner helper: bình luận của ai người đó xoá ===== */
-var CURRENT_USER_ID = null;
 
-async function ensureCurrentUserId() {
+
+
+/* ===== Sửa gửi/xoá bình luận theo tài khoản đăng nhập, giữ nguyên giao diện ===== */
+async function khietGetCommentUserId() {
     try {
         var sb = (typeof getSB === 'function') ? getSB() : null;
         if (!sb) return null;
         var sess = await sb.auth.getSession();
-        var user = sess && sess.data && sess.data.session ? sess.data.session.user : null;
-        CURRENT_USER_ID = user ? user.id : null;
-        CURRENT_USER_ID = user ? user.id : null;
-        return CURRENT_USER_ID;
+        return sess && sess.data && sess.data.session ? sess.data.session.user.id : null;
     } catch(e) {
-        CURRENT_USER_ID = null;
         return null;
     }
 }
 
-async function requireLoginForComment() {
-    var uid = await ensureCurrentUserId();
+async function khietRequireCommentLogin() {
+    var uid = await khietGetCommentUserId();
     if (!uid) {
         if (typeof openAuthModal === 'function') openAuthModal('login');
         else alert('Bạn cần đăng nhập để bình luận.');
         return null;
     }
     return uid;
+}
+
+async function khietInsertComment(row) {
+    var uid = await khietRequireCommentLogin();
+    if (!uid) throw new Error('Bạn cần đăng nhập để bình luận.');
+    row.author_id = uid;
+
+    var sb = (typeof getSB === 'function') ? getSB() : null;
+    if (!sb) throw new Error('Không tìm thấy Supabase Auth.');
+
+    var res = await sb.from('comments').insert(row).select();
+    if (res && res.error) throw res.error;
+    return res && res.data ? res.data : [];
+}
+
+var KHIET_COMMENT_UID = null;
+async function khietRefreshCommentUid() {
+    KHIET_COMMENT_UID = await khietGetCommentUserId();
+    return KHIET_COMMENT_UID;
 }
 
 function buildCommentEl(c, replyMap, isSidebar, paraIndex) {
@@ -1950,7 +1970,7 @@ function buildCommentEl(c, replyMap, isSidebar, paraIndex) {
     el.dataset.authorId = c.author_id || '';
 
     var childReplies = (replyMap && replyMap[c.id]) ? replyMap[c.id] : [];
-    var isOwner = CURRENT_USER_ID && c.author_id === CURRENT_USER_ID;
+    var isOwner = KHIET_COMMENT_UID && c.author_id === KHIET_COMMENT_UID;
     var cp = parseAuthor(c.author_name || '');
     var context = isSidebar ? 'sidebar' : 'main';
     var pi = (paraIndex===null?'null':paraIndex);
@@ -1958,7 +1978,7 @@ function buildCommentEl(c, replyMap, isSidebar, paraIndex) {
     var repliesHtml = '';
     if (childReplies.length) {
         repliesHtml = '<div class="replies-list">' + childReplies.map(function(r) {
-            var rOwner = CURRENT_USER_ID && r.author_id === CURRENT_USER_ID;
+            var rOwner = KHIET_COMMENT_UID && r.author_id === KHIET_COMMENT_UID;
             var rp = parseAuthor(r.author_name || '');
             return '<div class="reply-item" id="comment-' + r.id + '" data-author-id="' + escHtml(r.author_id||'') + '">' +
                    '  <div class="comment-header">' +
@@ -2000,22 +2020,15 @@ async function submitSidebarComment() {
     var content = document.getElementById('sidebar-content').value.trim();
     if (!name) { alert('Vui lòng nhập tên của bạn.'); return; }
     if (!content) { alert('Vui lòng nhập nội dung bình luận.'); return; }
-
-        var commentOwnerId = await requireLoginForComment();
-        if (!commentOwnerId) return;
-
-        var commentOwnerId = await requireLoginForComment();
-        if (!commentOwnerId) return;
-    localStorage.setItem('comment-author-name', name);
+localStorage.setItem('comment-author-name', name);
 
     var btn = document.querySelector('.sidebar-submit-btn');
     btn.disabled = true; btn.textContent = 'Đang gửi…';
     try {
-        await sbFetch('comments', 'POST', {
+        await khietInsertComment({
             page_path: PAGE_PATH,
             para_index: currentParaIndex,
             author_name: authorPayload('sidebar', name),
-            author_id: commentOwnerId || AUTHOR_ID,
             content: content
         });
         document.getElementById('sidebar-content').value = '';
@@ -2023,7 +2036,7 @@ async function submitSidebarComment() {
         updateBadge(currentParaIndex);
         loadSidebarComments(currentParaIndex);
         loadStats();
-    } catch(e) { alert('Gửi thất bại, thử lại nhé!'); }
+    } catch(e) { console.warn('submit comment failed:', e); alert('Gửi thất bại: ' + (e.message || 'thử lại nhé!')); }
     btn.disabled = false; btn.textContent = 'Gửi';
 }
 
@@ -2066,33 +2079,57 @@ function renderMainComments(rows, container) {
     });
 }
 
+
+/* ===== Sửa lỗi gửi bình luận: dùng đúng tài khoản đăng nhập khi insert comments ===== */
+async function khietCommentAuthUserId() {
+    try {
+        var sb = (typeof getSB === 'function') ? getSB() : null;
+        if (!sb) return null;
+        var sess = await sb.auth.getSession();
+        return sess && sess.data && sess.data.session ? sess.data.session.user.id : null;
+    } catch(e) {
+        return null;
+    }
+}
+
+async function khietCommentInsert(row) {
+    var uid = await khietCommentAuthUserId();
+    if (!uid) {
+        if (typeof openAuthModal === 'function') openAuthModal('login');
+        else alert('Bạn cần đăng nhập để bình luận.');
+        throw new Error('Bạn cần đăng nhập để bình luận.');
+    }
+
+    row.author_id = uid;
+
+    var sb = (typeof getSB === 'function') ? getSB() : null;
+    if (!sb) throw new Error('Không tìm thấy Supabase Auth.');
+
+    var res = await sb.from('comments').insert(row).select();
+    if (res && res.error) throw res.error;
+    return res && res.data ? res.data : [];
+}
+
 async function submitMainComment() {
     var name = document.getElementById('main-author').value.trim();
     var content = document.getElementById('main-content').value.trim();
     if (!name) { alert('Vui lòng nhập tên của bạn.'); return; }
     if (!content) { alert('Vui lòng nhập nội dung bình luận.'); return; }
-
-        var commentOwnerId = await requireLoginForComment();
-        if (!commentOwnerId) return;
-
-        var commentOwnerId = await requireLoginForComment();
-        if (!commentOwnerId) return;
-    localStorage.setItem('comment-author-name', name);
+localStorage.setItem('comment-author-name', name);
 
     var btn = document.querySelector('.main-submit-btn');
     btn.disabled = true; btn.textContent = 'Đang gửi…';
     try {
-        await sbFetch('comments', 'POST', {
+        await khietInsertComment({
             page_path: PAGE_PATH,
             para_index: null,
             author_name: authorPayload('main', name),
-            author_id: commentOwnerId || AUTHOR_ID,
             content: content
         });
         document.getElementById('main-content').value = '';
         document.getElementById('main-char-count').textContent = '0';
         await loadMainComments();
-    } catch(e) { alert('Gửi thất bại, thử lại nhé!'); }
+    } catch(e) { console.warn('submit comment failed:', e); alert('Gửi thất bại: ' + (e.message || 'thử lại nhé!')); }
     btn.disabled = false; btn.textContent = 'Gửi bình luận';
 }
 
@@ -2151,12 +2188,11 @@ async function submitInlineReply(parentId, context, paraIndex) {
 
     localStorage.setItem('comment-author-name', aut);
     try {
-        await sbFetch('comments', 'POST', {
+        await khietInsertComment({
             page_path: PAGE_PATH,
             para_index: getParaValue(paraIndex),
             parent_id: parentId,
             author_name: authorPayload(context, aut),
-            author_id: replyOwnerId || AUTHOR_ID,
             content: txt
         });
 
@@ -2169,7 +2205,7 @@ async function submitInlineReply(parentId, context, paraIndex) {
         var chapterOnly = ((document.querySelector('.chapter-title') || {}).textContent || document.title).trim();
         var novelOnly = ((document.querySelector('.novel-name') || {}).textContent || '').trim();
         var chapterTitle = novelOnly ? (novelOnly + ' — ' + chapterOnly) : chapterOnly;
-        if (recipientAuthorId && recipientAuthorId !== AUTHOR_ID) {
+        if (recipientAuthorId && recipientAuthorId !== KHIET_COMMENT_UID) {
             await sendReplyNotification(recipientAuthorId, aut, txt, chapterTitle, window.location.pathname);
         }
 
@@ -2180,7 +2216,7 @@ async function submitInlineReply(parentId, context, paraIndex) {
         }
         loadStats();
         if (typeof loadParaCounts === 'function') loadParaCounts();
-    } catch(e) { alert('Phản hồi thất bại!'); }
+    } catch(e) { console.warn('submit reply failed:', e); alert('Phản hồi thất bại: ' + (e.message || 'vui lòng thử lại.')); }
 }
 
 // Giữ tên hàm cũ để không vỡ onclick nếu trình duyệt còn cache HTML cũ
@@ -2189,30 +2225,27 @@ async function submitReply(parentId, context, paraIndex) { return submitInlineRe
 
 // ── Xoá ──
 async function deleteComment(id, context, paraIndex) {
-        var uid = await requireLoginForComment();
-        if (!uid) return;
-        if (!confirm('Xoá bình luận này nhé?')) return;
+    var uid = await khietRequireCommentLogin();
+    if (!uid) return;
+    if (!confirm('Xoá bình luận này nhé?')) return;
 
-        try {
-            var sb = (typeof getSB === 'function') ? getSB() : null;
-            if (sb) {
-                var res = await sb.from('comments').delete().eq('id', id).eq('author_id', uid);
-                if (res && res.error) throw res.error;
-            } else {
-                await sbFetch('comments?id=eq.' + encodeURIComponent(id) + '&author_id=eq.' + encodeURIComponent(uid), 'DELETE');
-            }
+    try {
+        var sb = (typeof getSB === 'function') ? getSB() : null;
+        if (!sb) throw new Error('Không tìm thấy Supabase Auth.');
+        var res = await sb.from('comments').delete().eq('id', id).eq('author_id', uid);
+        if (res && res.error) throw res.error;
 
-            if (context === 'sidebar' && typeof loadSidebarComments === 'function') {
-                await loadSidebarComments(paraIndex);
-            } else if (typeof loadMainComments === 'function') {
-                await loadMainComments();
-            }
-            if (typeof loadStats === 'function') loadStats();
-        } catch(e) {
-            console.warn('deleteComment failed:', e);
-            alert('Không xoá được bình luận. Hãy kiểm tra policy DELETE của bảng comments.');
+        if (context === 'sidebar' && typeof loadSidebarComments === 'function') {
+            await loadSidebarComments(paraIndex);
+        } else if (typeof loadMainComments === 'function') {
+            await loadMainComments();
         }
-    } catch(e) { alert('Xoá thất bại!'); }
+        if (typeof loadStats === 'function') loadStats();
+        if (typeof loadParaCounts === 'function') loadParaCounts();
+    } catch(e) {
+        console.warn('delete comment failed:', e);
+        alert('Không xoá được bình luận: ' + (e.message || 'vui lòng thử lại.'));
+    }
 }
 
 async function loadStats() {
@@ -2986,21 +3019,35 @@ document.addEventListener('keydown',function(e){
 </script>
 
 
-/* Cập nhật lại nút xoá khi trạng thái đăng nhập thay đổi */
+
+
+
+<script id="khiet-comment-owner-refresh">
 (function(){
+    if (window.__KH_COMMENT_OWNER_REFRESH__) return;
+    window.__KH_COMMENT_OWNER_REFRESH__ = true;
     try {
         var sb = (typeof getSB === 'function') ? getSB() : null;
-        if (!sb || window.__KH_OWNER_AUTH_LISTENER__) return;
-        window.__KH_OWNER_AUTH_LISTENER__ = true;
-        sb.auth.onAuthStateChange(async function(){
-            await ensureCurrentUserId();
+        if (!sb) return;
+
+        khietRefreshCommentUid().then(function(){
             if (typeof loadMainComments === 'function') loadMainComments();
             if (typeof currentParaIndex !== 'undefined' && currentParaIndex && typeof loadSidebarComments === 'function') {
                 loadSidebarComments(currentParaIndex);
             }
         });
+
+        sb.auth.onAuthStateChange(function(){
+            khietRefreshCommentUid().then(function(){
+                if (typeof loadMainComments === 'function') loadMainComments();
+                if (typeof currentParaIndex !== 'undefined' && currentParaIndex && typeof loadSidebarComments === 'function') {
+                    loadSidebarComments(currentParaIndex);
+                }
+            });
+        });
     } catch(e) {}
 })();
+</script>
 
 </body>
 </html>
