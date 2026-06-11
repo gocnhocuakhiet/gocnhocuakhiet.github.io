@@ -2059,9 +2059,7 @@ async function submitSidebarComment() {
     var content = document.getElementById('sidebar-content').value.trim();
     if (!name) { alert('Vui lòng nhập tên của bạn.'); return; }
     if (!content) { alert('Vui lòng nhập nội dung bình luận.'); return; }
-var commentOwnerId = await requireLoginForComment();
-        if (!commentOwnerId) return;
-    localStorage.setItem('comment-author-name', name);
+localStorage.setItem('comment-author-name', name);
 
     var btn = document.querySelector('.sidebar-submit-btn');
     btn.disabled = true; btn.textContent = 'Đang gửi…';
@@ -2120,14 +2118,43 @@ function renderMainComments(rows, container) {
     });
 }
 
+
+/* ===== Sửa lỗi gửi bình luận: dùng đúng tài khoản đăng nhập khi insert comments ===== */
+async function khietCommentAuthUserId() {
+    try {
+        var sb = (typeof getSB === 'function') ? getSB() : null;
+        if (!sb) return null;
+        var sess = await sb.auth.getSession();
+        return sess && sess.data && sess.data.session ? sess.data.session.user.id : null;
+    } catch(e) {
+        return null;
+    }
+}
+
+async function khietCommentInsert(row) {
+    var uid = await khietCommentAuthUserId();
+    if (!uid) {
+        if (typeof openAuthModal === 'function') openAuthModal('login');
+        else alert('Bạn cần đăng nhập để bình luận.');
+        throw new Error('Bạn cần đăng nhập để bình luận.');
+    }
+
+    row.author_id = uid;
+
+    var sb = (typeof getSB === 'function') ? getSB() : null;
+    if (!sb) throw new Error('Không tìm thấy Supabase Auth.');
+
+    var res = await sb.from('comments').insert(row).select();
+    if (res && res.error) throw res.error;
+    return res && res.data ? res.data : [];
+}
+
 async function submitMainComment() {
     var name = document.getElementById('main-author').value.trim();
     var content = document.getElementById('main-content').value.trim();
     if (!name) { alert('Vui lòng nhập tên của bạn.'); return; }
     if (!content) { alert('Vui lòng nhập nội dung bình luận.'); return; }
-var commentOwnerId = await requireLoginForComment();
-        if (!commentOwnerId) return;
-    localStorage.setItem('comment-author-name', name);
+localStorage.setItem('comment-author-name', name);
 
     var btn = document.querySelector('.main-submit-btn');
     btn.disabled = true; btn.textContent = 'Đang gửi…';
