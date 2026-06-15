@@ -10463,6 +10463,8 @@ async function sendReplyNotification(recipientAuthorId, senderName, commentConte
         var rightPressed = false, leftPressed = false, score = 0;
         var highScore = parseInt(localStorage.getItem('khInlineGameHighScore') || '0', 10);
         var timer = null;
+        var lastTime = 0;
+        var running = false;
 
         function roundRect(ctx,x,y,w,h,r){
             ctx.beginPath();
@@ -10485,8 +10487,9 @@ async function sendReplyNotification(recipientAuthorId, senderName, commentConte
             paddleWidth = 74;
             paddleX = (W - paddleWidth) / 2;
             score = 0;
-            clearInterval(timer);
-            timer = null;
+            running = false;
+            if (timer) { cancelAnimationFrame(timer); timer = null; }
+            lastTime = 0;
             drawScene();
         }
 
@@ -10524,8 +10527,8 @@ async function sendReplyNotification(recipientAuthorId, senderName, commentConte
         }
 
         function gameOver(){
-            clearInterval(timer);
-            timer = null;
+            running = false;
+            if (timer) { cancelAnimationFrame(timer); timer = null; }
             if (score > highScore) {
                 highScore = score;
                 localStorage.setItem('khInlineGameHighScore', highScore);
@@ -10541,28 +10544,42 @@ async function sendReplyNotification(recipientAuthorId, senderName, commentConte
             startScreen.style.pointerEvents = '';
         }
 
-        function draw(){
+        // Tốc độ chuẩn tại 60fps: mỗi frame di chuyển `dx` px
+        // Với delta time: di chuyển `dx * (dt / 16.67)` px để giữ tốc độ ổn định ở mọi fps
+        function draw(timestamp){
+            if (!running) return;
+            timer = requestAnimationFrame(draw);
+
+            var dt = lastTime ? Math.min(timestamp - lastTime, 50) : 16.67; // cap 50ms để tránh jump khi tab mất focus
+            lastTime = timestamp;
+            var scale = dt / 16.67;
+
             drawScene();
 
-            if (ballX + dx > W - ballRadius || ballX + dx < ballRadius) dx = -dx;
-            if (ballY + dy < ballRadius) dy = -dy;
-            else if (ballY + dy > H - ballRadius - 14) {
+            var nextX = ballX + dx * scale;
+            var nextY = ballY + dy * scale;
+
+            if (nextX > W - ballRadius || nextX < ballRadius) { dx = -dx; nextX = ballX + dx * scale; }
+            if (nextY < ballRadius) { dy = -dy; nextY = ballY + dy * scale; }
+            else if (nextY > H - ballRadius - 14) {
                 if (ballX > paddleX && ballX < paddleX + paddleWidth) {
                     score++;
                     var sp = baseSpeed * Math.pow(1.06, score);
                     dx = (dx > 0 ? 1 : -1) * sp;
                     dy = -sp;
+                    nextY = ballY + dy * scale;
                 } else {
                     gameOver();
                     return;
                 }
             }
 
-            if (rightPressed && paddleX < W - paddleWidth) paddleX += 6;
-            if (leftPressed && paddleX > 0) paddleX -= 6;
+            var paddleSpeed = 6 * scale;
+            if (rightPressed && paddleX < W - paddleWidth) paddleX = Math.min(paddleX + paddleSpeed, W - paddleWidth);
+            if (leftPressed && paddleX > 0) paddleX = Math.max(paddleX - paddleSpeed, 0);
 
-            ballX += dx;
-            ballY += dy;
+            ballX = nextX;
+            ballY = nextY;
         }
 
         function start(){
@@ -10570,8 +10587,10 @@ async function sendReplyNotification(recipientAuthorId, senderName, commentConte
             startScreen.style.display = 'none';
             startScreen.style.visibility = 'hidden';
             startScreen.style.pointerEvents = 'none';
-            clearInterval(timer);
-            timer = setInterval(draw, 1000/60);
+            running = true;
+            lastTime = 0;
+            if (timer) cancelAnimationFrame(timer);
+            timer = requestAnimationFrame(draw);
         }
 
         startBtn.addEventListener('click', start);
