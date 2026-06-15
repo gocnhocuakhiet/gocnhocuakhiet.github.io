@@ -9564,11 +9564,12 @@ async function sendReplyNotification(recipientAuthorId, senderName, commentConte
     if(feed){feedWrap.appendChild(feed)}else{feedWrap.innerHTML='<h3>💬 Hoạt động gần đây</h3><div class="muted-note">Đang tải hoạt động...</div>'}
     var chatWrap=document.createElement('div'); chatWrap.className='kh-chat-lower';
     if(chat){chatWrap.appendChild(chat)}else{chatWrap.innerHTML='<div class="chat-card"><div class="chat-card-header">🌿 Chat cùng mọi người</div><div id="chatroom-messages"><div class="chat-empty">Đang tải chat...</div></div></div>'}
-    var gameWrap=document.createElement('div'); gameWrap.className='kh-lower-card kh-game-lower';
-    gameWrap.innerHTML='<h3>🎮 Trò chơi nhỏ</h3><div class="kh-game-frame kh-inline-game-frame"><canvas id="khInlineGameCanvas" width="300" height="300"></canvas><div class="kh-inline-game-start" id="khInlineGameStart"><h4>🌿 Hứng bóng</h4><p>Dùng phím ← → để di chuyển thanh hứng. Trên điện thoại bấm hai nút bên dưới.</p><button type="button" id="khInlineGameStartBtn">Bắt đầu chơi</button></div></div><div class="kh-inline-game-controls"><button type="button" id="khInlineLeftBtn">←</button><button type="button" id="khInlineRightBtn">→</button></div><div class="kh-inline-game-tip">Điểm cao sẽ được lưu trong trình duyệt.</div>';
+    var gameWrap=document.createElement('section'); gameWrap.className='kh-game-lower'; gameWrap.id='kh-inline-game-card';
+    gameWrap.innerHTML='<h3>🎮 Trò chơi nhỏ</h3><div class="kh-inline-game-frame"><canvas id="khInlineGameCanvas" width="320" height="320"></canvas><div class="kh-inline-game-start" id="khInlineGameStart"><h4>🌿 Hứng bóng</h4><p>Dùng phím ← → để di chuyển thanh hứng. Trên điện thoại có thể bấm nút bên dưới.</p><button type="button" id="khInlineGameStartBtn">Bắt đầu chơi</button></div></div><div class="kh-inline-game-controls"><button type="button" id="khInlineLeftBtn">←</button><button type="button" id="khInlineRightBtn">→</button></div><div class="kh-inline-game-tip">Điểm cao sẽ được lưu trong trình duyệt.</div>';
     lower.appendChild(feedWrap); lower.appendChild(chatWrap); lower.appendChild(gameWrap); dash.after(lower);
     document.body.dataset.khDashboardDone='1';
     updateHomeClock(); updateGreeting();
+    setTimeout(function(){ if(typeof window._khInitGame==='function') window._khInitGame(); }, 200);
   }
   function updateHomeClock(){
     var now=new Date(), dateEl=document.getElementById('hero-date'), timeEl=document.getElementById('hero-clock');
@@ -10444,7 +10445,7 @@ async function sendReplyNotification(recipientAuthorId, senderName, commentConte
     }
 
     function initGame(){
-        ensureGameCard();
+        // Không gọi ensureGameCard() nữa vì layout() đã tạo card rồi
 
         var canvas = document.getElementById('khInlineGameCanvas');
         var startScreen = document.getElementById('khInlineGameStart');
@@ -10593,6 +10594,9 @@ async function sendReplyNotification(recipientAuthorId, senderName, commentConte
 
         reset();
     }
+
+    // Expose để layout() có thể gọi sau khi DOM sẵn sàng
+    window._khInitGame = initGame;
 
     function apply(){
         fixHeroDate();
