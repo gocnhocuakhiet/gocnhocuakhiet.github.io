@@ -7320,7 +7320,7 @@ body.dark-mode .announce-inner span { color: #8fae9f !important; }
     position: absolute !important;
     inset: 0 !important;
     z-index: 3 !important;
-    display: flex !important;
+    display: flex;
     flex-direction: column !important;
     align-items: center !important;
     justify-content: center !important;
@@ -10453,8 +10453,9 @@ async function sendReplyNotification(recipientAuthorId, senderName, commentConte
         var leftBtn = document.getElementById('khInlineLeftBtn');
         var rightBtn = document.getElementById('khInlineRightBtn');
 
-        if (!canvas || !startScreen || !startBtn || canvas.__khReady) return;
-        canvas.__khReady = true;
+        if (!canvas || !startScreen || !startBtn) return;
+        if (startBtn.dataset.khReady === '1') return;
+        startBtn.dataset.khReady = '1';
 
         var ctx = canvas.getContext('2d');
         var W = canvas.width, H = canvas.height;
@@ -10536,6 +10537,8 @@ async function sendReplyNotification(recipientAuthorId, senderName, commentConte
             }
             startBtn.textContent = 'Chơi lại';
             startScreen.style.display = 'flex';
+            startScreen.style.visibility = 'visible';
+            startScreen.style.pointerEvents = '';
         }
 
         function draw(){
@@ -10565,11 +10568,28 @@ async function sendReplyNotification(recipientAuthorId, senderName, commentConte
         function start(){
             reset();
             startScreen.style.display = 'none';
+            startScreen.style.visibility = 'hidden';
+            startScreen.style.pointerEvents = 'none';
             clearInterval(timer);
             timer = setInterval(draw, 1000/60);
         }
 
         startBtn.addEventListener('click', start);
+        window._khStartGame = start;
+        // Guard: nếu DOM bị tạo lại (layout() chạy sau), dùng delegation để vẫn bắt được click
+        if (!document._khGameDelegated) {
+            document._khGameDelegated = true;
+            document.addEventListener('click', function(e){
+                if (e.target && e.target.id === 'khInlineGameStartBtn') {
+                    var btn = e.target;
+                    if (btn.dataset.khReady !== '1') {
+                        // DOM bị recreate, cần init lại rồi start
+                        initGame();
+                        if (typeof window._khStartGame === 'function') window._khStartGame();
+                    }
+                }
+            });
+        }
 
         document.addEventListener('keydown', function(e){
             if (document.activeElement && ['INPUT','TEXTAREA'].includes(document.activeElement.tagName)) return;
