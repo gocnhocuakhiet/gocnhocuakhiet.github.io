@@ -5780,6 +5780,20 @@ width:34px!important;height:34px!important;font-size:16px!important;
 
 #kh-ranking-list .kh-rank-meta { display:block!important; margin:0!important; padding:0!important; }
 #kh-ranking-list .kh-rank-meta span { color:#d44475!important; font-weight:700!important; font-size:.74rem!important; }
+
+/* ===== FIX: dropdown "Thể loại" / "Liên hệ" không hiện trên mobile =====
+   Nguyên nhân: .navbar có backdrop-filter, tạo containing block mới,
+   khiến .nav-dd-menu (position:fixed) bị "giam" trong navbar và bị
+   .nav-left{overflow-x:auto} cắt mất. Bỏ backdrop-filter trên mobile
+   để menu fixed định vị đúng theo viewport như mong muốn. */
+@media (max-width: 900px) {
+    .navbar,
+    header.navbar.kh-navbar-left-final {
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+    }
+}
+
 </style>
 </head>
 <body>
@@ -5841,17 +5855,6 @@ width:34px!important;height:34px!important;font-size:16px!important;
                 <button data-genre="dm" onclick="setGenreFilter('dm');toggleNavDd('dd-theloai')"><span class="dd-label">✨ Đam mỹ</span> <span class="dd-cnt" id="cnt-dm">0</span></button>
                 <button data-genre="dn" onclick="setGenreFilter('dn');toggleNavDd('dd-theloai')"><span class="dd-label">🎭 Đồng nhân</span> <span class="dd-cnt" id="cnt-dn">0</span></button>
                 <button data-genre="other" onclick="setGenreFilter('other');toggleNavDd('dd-theloai')"><span class="dd-label">📚 Khác</span> <span class="dd-cnt" id="cnt-other">0</span></button>
-            </div>
-        </div>
-        <!-- Trạng thái dropdown -->
-        <div class="nav-dropdown" id="dd-trangthai">
-            <button class="nav-dd-btn" onclick="toggleNavDd('dd-trangthai')">
-                Trạng thái <svg viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
-            </button>
-            <div class="nav-dd-menu">
-                <button onclick="setStatusFilter('all');toggleNavDd('dd-trangthai')">Tất cả</button>
-                <button onclick="setStatusFilter('full');toggleNavDd('dd-trangthai')">✅ Hoàn thành</button>
-                <button onclick="setStatusFilter('ongoing');toggleNavDd('dd-trangthai')">🔄 Đang ra</button>
             </div>
         </div>
         <!-- Liên hệ dropdown -->
@@ -6274,7 +6277,6 @@ const PAGE_SIZE = 12;
 const viewCounts = {}; /* { novelId: number } */
 
 let filterGenre  = 'all';
-let filterStatus = 'all';
 let searchQuery  = '';
 let sortMode     = 'new';
 let currentPage  = 1;
@@ -6386,7 +6388,6 @@ function updateCounts() {
 function getFiltered() {
     let list = [...NOVELS];
     if (filterGenre  !== 'all') list = list.filter(n => n.genre  === filterGenre);
-    if (filterStatus !== 'all') list = list.filter(n => n.status === filterStatus);
     if (searchQuery) {
         const q = searchQuery.toLowerCase();
         list = list.filter(n => n.title.toLowerCase().includes(q));
@@ -6807,10 +6808,7 @@ function setGenreFilter(genre) {
     document.querySelectorAll('#mobile-genre-bar .filter-chip').forEach(x =>
         x.classList.toggle('active', x.dataset.genre === genre));
     renderGrid();
-}
-function setStatusFilter(status) {
-    filterStatus = status; currentPage = 1;
-    renderGrid();
+    if (typeof window.khRenderHomeDashboard === 'function') window.khRenderHomeDashboard();
 }
 
 /* ── Khởi động ── */
@@ -8010,8 +8008,12 @@ async function sendReplyNotification(recipientAuthorId, senderName, commentConte
         ongoing.innerHTML = '';
         done.innerHTML = '';
 
+        var genre = (typeof filterGenre !== 'undefined') ? filterGenre : 'all';
+        var source = NOVELS;
+        if (genre !== 'all') source = NOVELS.filter(function(n){ return n.genre === genre; });
+
         var oc = 0, dc = 0;
-        NOVELS.forEach(function(n){
+        source.forEach(function(n){
             var c = cloneCard(n);
             if (n.status === 'full' || n.status === 'completed') {
                 done.appendChild(c); dc++;
@@ -8020,12 +8022,15 @@ async function sendReplyNotification(recipientAuthorId, senderName, commentConte
             }
         });
 
+        if (!oc) ongoing.innerHTML = '<div class="kh-rank-empty">Không có truyện nào.</div>';
+        if (!dc) done.innerHTML = '<div class="kh-rank-empty">Không có truyện nào.</div>';
+
         var oce = document.getElementById('kh-ongoing-count');
         var dce = document.getElementById('kh-completed-count');
         if (oce) oce.textContent = oc;
         if (dce) dce.textContent = dc;
-        if (ongoing.closest('.kh-shelf')) ongoing.closest('.kh-shelf').style.display = oc ? '' : 'none';
-        if (done.closest('.kh-shelf')) done.closest('.kh-shelf').style.display = dc ? '' : 'none';
+        if (ongoing.closest('.kh-shelf')) ongoing.closest('.kh-shelf').style.display = (oc || genre !== 'all') ? '' : 'none';
+        if (done.closest('.kh-shelf')) done.closest('.kh-shelf').style.display = (dc || genre !== 'all') ? '' : 'none';
     }
     function renderRanking(){
         if (typeof NOVELS === 'undefined') return;
