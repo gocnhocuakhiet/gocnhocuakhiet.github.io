@@ -7247,6 +7247,7 @@ body.dark-mode .announce-inner span { color: #8fae9f !important; }
 
 
 <style id="kh-game-rewrite-css">
+/* === GAME CARD - LIGHT MODE === */
 .kh-stable-game-card{display:flex!important;flex-direction:column!important;border-radius:24px!important;background:radial-gradient(circle at 18% 16%,rgba(255,238,244,.36),transparent 34%),radial-gradient(circle at 88% 78%,rgba(232,249,238,.88),transparent 38%),linear-gradient(145deg,rgba(255,255,255,.96),rgba(248,253,250,.92))!important;border:1px solid rgba(199,226,211,.96)!important;box-shadow:0 12px 30px rgba(74,107,93,.07)!important;padding:18px!important;overflow:hidden!important;touch-action:manipulation!important}
 .kh-stable-game-card h3{font-family:'Lora',serif!important;color:#47735f!important;font-size:1rem!important;font-weight:800!important;padding:0 0 12px!important;border-bottom:1px dashed rgba(216,234,223,.95)!important;margin:0 0 14px!important}
 .kh-game-board-wrap{position:relative!important;width:300px!important;height:300px!important;margin:0 auto!important;border-radius:20px!important;overflow:hidden!important;border:2px solid rgba(143,174,159,.72)!important;background:#f6fbf8!important;box-shadow:0 10px 24px rgba(74,107,93,.10)!important}
@@ -7259,6 +7260,16 @@ body.dark-mode .announce-inner span { color: #8fae9f !important; }
 .kh-game-ctrl-btn{width:62px!important;height:44px!important;border-radius:999px!important;border:1px solid rgba(143,174,159,.72)!important;background:rgba(255,255,255,.94)!important;color:#4a6b5d!important;font-weight:900!important;font-size:1.1rem!important;box-shadow:0 6px 14px rgba(74,107,93,.08)!important;user-select:none!important;-webkit-user-select:none!important;touch-action:none!important;cursor:pointer!important}
 .kh-game-tip{margin-top:10px!important;color:#b0c0b8!important;font-size:.7rem!important;text-align:center!important}
 @media(max-width:760px){.kh-game-board-wrap{width:min(300px,calc(100vw - 58px))!important;height:min(300px,calc(100vw - 58px))!important}#khGameCanvas{width:100%!important;height:100%!important}}
+
+/* === GAME CARD - DARK MODE === */
+body.dark-mode .kh-stable-game-card{background:radial-gradient(circle at 18% 16%,rgba(74,107,93,.18),transparent 34%),radial-gradient(circle at 88% 78%,rgba(74,107,93,.22),transparent 38%),linear-gradient(145deg,rgba(27,36,32,.96),rgba(22,30,26,.92))!important;border-color:#2e3d36!important;box-shadow:0 12px 30px rgba(0,0,0,.25)!important}
+body.dark-mode .kh-stable-game-card h3{color:#8fae9f!important;border-bottom-color:rgba(46,61,54,.95)!important}
+body.dark-mode .kh-game-board-wrap{background:#111a16!important;border-color:rgba(74,107,93,.5)!important;box-shadow:0 10px 24px rgba(0,0,0,.3)!important}
+body.dark-mode .kh-game-start-panel{background:linear-gradient(145deg,rgba(22,32,27,.97),rgba(18,26,22,.97))!important}
+body.dark-mode .kh-game-start-panel h4{color:#8fae9f!important}
+body.dark-mode .kh-game-start-panel p{color:#8fae9f!important}
+body.dark-mode .kh-game-ctrl-btn{background:rgba(27,36,32,.94)!important;border-color:rgba(74,107,93,.5)!important;color:#8fae9f!important;box-shadow:0 6px 14px rgba(0,0,0,.2)!important}
+body.dark-mode .kh-game-tip{color:#4a6b5d!important}
 </style>
 </head>
 <body>
@@ -10294,21 +10305,29 @@ function initGame(){
     draw();
   }
   function rr(x,y,w,h,r){ctx.beginPath();ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath();}
-  var _bg=null,_bgW=0,_bgH=0,_dotPath=null,_dotW=0,_dotH=0;
+  var _bg=null,_bgW=0,_bgH=0,_bgKey='',_dotPath=null,_dotW=0,_dotH=0;
   function draw(){
     ctx.clearRect(0,0,W,H);
-    // Cache gradient
-    if(!_bg||_bgW!==W||_bgH!==H){_bg=ctx.createLinearGradient(0,0,W,H);_bg.addColorStop(0,'#fff');_bg.addColorStop(1,'#eef8f2');_bgW=W;_bgH=H;}
+    // Dark mode detection
+    var isDark=document.body.classList.contains('dark-mode');
+    // Cache gradient (invalidate on theme change)
+    var bgKey=isDark?'d':'l';
+    if(!_bg||_bgW!==W||_bgH!==H||_bgKey!==bgKey){
+      _bg=ctx.createLinearGradient(0,0,W,H);
+      if(isDark){_bg.addColorStop(0,'#111a16');_bg.addColorStop(1,'#0d1510');}
+      else{_bg.addColorStop(0,'#fff');_bg.addColorStop(1,'#eef8f2');}
+      _bgW=W;_bgH=H;_bgKey=bgKey;
+    }
     ctx.fillStyle=_bg;ctx.fillRect(0,0,W,H);
     // Cache dot pattern as single Path2D
     if(!_dotPath||_dotW!==W||_dotH!==H){_dotPath=new Path2D();for(var px=10;px<W;px+=20)for(var py=10;py<H;py+=20){_dotPath.moveTo(px+1,py);_dotPath.arc(px,py,1,0,Math.PI*2);}_dotW=W;_dotH=H;}
-    ctx.fillStyle='rgba(143,174,159,.18)';ctx.fill(_dotPath);
+    ctx.fillStyle=isDark?'rgba(74,107,93,.25)':'rgba(143,174,159,.18)';ctx.fill(_dotPath);
     // Ball
     ctx.beginPath();ctx.arc(ballX,ballY,ballR,0,Math.PI*2);ctx.fillStyle='#ff8fab';ctx.fill();
     // Paddle
-    rr(paddleX,H-paddleH-14,paddleW,paddleH,8);ctx.fillStyle='#4a6b5d';ctx.fill();
+    rr(paddleX,H-paddleH-14,paddleW,paddleH,8);ctx.fillStyle=isDark?'#8fae9f':'#4a6b5d';ctx.fill();
     // Score
-    ctx.font='13px Arial';ctx.fillStyle='#4a6b5d';
+    ctx.font='13px Arial';ctx.fillStyle=isDark?'#8fae9f':'#4a6b5d';
     ctx.fillText('\u0110i\u1EC3m: '+score,12,22);ctx.fillText('K\u1EF7 l\u1EE5c: '+high,W-92,22);
   }
   function showPanel(title,msg,btn){
