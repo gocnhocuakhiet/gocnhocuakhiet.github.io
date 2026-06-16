@@ -7367,10 +7367,7 @@ body.dark-mode .announce-inner span { color: #8fae9f !important; }
 }
 
 .kh-inline-game-controls {
-    display: none;
-    gap: 10px;
-    justify-content: center;
-    margin-top: 12px;
+    display: none !important;
 }
 
 .kh-inline-game-controls button {
@@ -9628,7 +9625,7 @@ async function sendReplyNotification(recipientAuthorId, senderName, commentConte
     var chatWrap=document.createElement('div'); chatWrap.className='kh-chat-lower';
     if(chat){chatWrap.appendChild(chat)}else{chatWrap.innerHTML='<div class="chat-card"><div class="chat-card-header">🌿 Chat cùng mọi người</div><div id="chatroom-messages"><div class="chat-empty">Đang tải chat...</div></div></div>'}
     var gameWrap=document.createElement('section'); gameWrap.className='kh-game-lower'; gameWrap.id='kh-inline-game-card';
-    gameWrap.innerHTML='<h3>🎮 Trò chơi nhỏ</h3><div class="kh-inline-game-frame"><canvas id="khInlineGameCanvas" width="320" height="320"></canvas><div class="kh-inline-game-start" id="khInlineGameStart"><h4>🌿 Hứng bóng</h4><p>Dùng phím ← → để di chuyển thanh hứng. Trên điện thoại có thể bấm nút bên dưới.</p><button type="button" id="khInlineGameStartBtn">Bắt đầu chơi</button></div></div><div class="kh-inline-game-controls"><button type="button" id="khInlineLeftBtn">←</button><button type="button" id="khInlineRightBtn">→</button></div><div class="kh-inline-game-tip">Điểm cao sẽ được lưu trong trình duyệt.</div>';
+    gameWrap.innerHTML='<h3>🎮 Trò chơi nhỏ</h3><div class="kh-inline-game-frame"><canvas id="khInlineGameCanvas" width="320" height="320"></canvas><div class="kh-inline-game-start" id="khInlineGameStart"><h4>🌿 Hứng bóng</h4><p>Trên điện thoại: <b>kéo ngón tay</b> trên màn hình để di chuyển thanh. Trên máy tính: phím ← →.</p><button type="button" id="khInlineGameStartBtn">Bắt đầu chơi</button></div></div><div class="kh-inline-game-controls"><button type="button" id="khInlineLeftBtn">←</button><button type="button" id="khInlineRightBtn">→</button></div><div class="kh-inline-game-tip">Điểm cao sẽ được lưu trong trình duyệt.</div>';
     lower.appendChild(feedWrap); lower.appendChild(chatWrap); lower.appendChild(gameWrap); dash.after(lower);
     document.body.dataset.khDashboardDone='1';
     updateHomeClock(); updateGreeting();
@@ -10557,7 +10554,7 @@ async function sendReplyNotification(recipientAuthorId, senderName, commentConte
             dx = baseSpeed;
             dy = -baseSpeed;
             paddleHeight = 10;
-            paddleWidth = 74;
+            paddleWidth = 90;
             paddleX = (W - paddleWidth) / 2;
             score = 0;
             running = false;
@@ -10568,35 +10565,33 @@ async function sendReplyNotification(recipientAuthorId, senderName, commentConte
 
         function drawScene(){
             ctx.clearRect(0,0,W,H);
-            var g = ctx.createLinearGradient(0,0,W,H);
-            g.addColorStop(0,'#ffffff');
-            g.addColorStop(1,'#eef8f2');
-            ctx.fillStyle = g;
+            // Solid bg — không dùng gradient hay dot mỗi frame để giữ fps cao
+            ctx.fillStyle = '#f6fbf8';
             ctx.fillRect(0,0,W,H);
 
-            ctx.fillStyle = 'rgba(143,174,159,.18)';
-            for (var x=10;x<W;x+=20) {
-                for (var y=10;y<H;y+=20) {
-                    ctx.beginPath();
-                    ctx.arc(x,y,1,0,Math.PI*2);
-                    ctx.fill();
-                }
-            }
-
+            // Bóng
             ctx.beginPath();
             ctx.arc(ballX,ballY,ballRadius,0,Math.PI*2);
             ctx.fillStyle = '#ff8fab';
             ctx.fill();
             ctx.closePath();
 
-            roundRect(ctx,paddleX,H-paddleHeight-14,paddleWidth,paddleHeight,8);
-            ctx.fillStyle = '#4a6b5d';
+            // Thanh hứng — bo tròn, gradient đẹp
+            roundRect(ctx,paddleX,H-paddleHeight-10,paddleWidth,paddleHeight,paddleHeight/2);
+            var pg = ctx.createLinearGradient(paddleX,0,paddleX+paddleWidth,0);
+            pg.addColorStop(0,'#4a6b5d');
+            pg.addColorStop(1,'#8fae9f');
+            ctx.fillStyle = pg;
             ctx.fill();
 
-            ctx.font = '13px Arial';
+            // Điểm
+            ctx.font = 'bold 13px Arial';
             ctx.fillStyle = '#4a6b5d';
             ctx.fillText('Điểm: ' + score, 12, 22);
-            ctx.fillText('Kỷ lục: ' + highScore, W - 92, 22);
+            ctx.textAlign = 'right';
+            ctx.fillText('Kỷ lục: ' + highScore, W - 10, 22);
+            ctx.textAlign = 'left';
+            drawHint();
         }
 
         function gameOver(){
@@ -10623,7 +10618,7 @@ async function sendReplyNotification(recipientAuthorId, senderName, commentConte
             if (!running) return;
             timer = requestAnimationFrame(draw);
 
-            var dt = lastTime ? Math.min(timestamp - lastTime, 50) : 16.67; // cap 50ms để tránh jump khi tab mất focus
+            var dt = lastTime ? Math.min(timestamp - lastTime, 33) : 16.67; // cap 33ms (~2 frames) tránh jump lớn
             lastTime = timestamp;
             var scale = dt / 16.67;
 
@@ -10655,6 +10650,28 @@ async function sendReplyNotification(recipientAuthorId, senderName, commentConte
             ballY = nextY;
         }
 
+        var hintAlpha = 0;
+        var hintTimer = null;
+        function showTouchHint(){
+            // Hiện hint "kéo để di chuyển" mờ dần trong 2.5 giây
+            hintAlpha = 0.75;
+            if (hintTimer) clearTimeout(hintTimer);
+            hintTimer = setTimeout(function(){ hintAlpha = 0; }, 2500);
+        }
+        function drawHint(){
+            if (hintAlpha <= 0) return;
+            ctx.save();
+            ctx.globalAlpha = hintAlpha * 0.6;
+            ctx.fillStyle = '#4a6b5d';
+            ctx.font = '12px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('← kéo ngón tay →', W/2, H/2);
+            ctx.textAlign = 'left';
+            ctx.restore();
+            // Fade out dần
+            hintAlpha = Math.max(0, hintAlpha - 0.008);
+        }
+
         function start(){
             reset();
             startScreen.style.display = 'none';
@@ -10664,6 +10681,7 @@ async function sendReplyNotification(recipientAuthorId, senderName, commentConte
             lastTime = 0;
             if (timer) cancelAnimationFrame(timer);
             timer = requestAnimationFrame(draw);
+            if ('ontouchstart' in window) showTouchHint();
         }
 
         startBtn.addEventListener('click', start);
