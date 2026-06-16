@@ -7421,6 +7421,111 @@ body.dark-mode .announce-inner span { color: #8fae9f !important; }
 }
 </style>
 
+
+<style id="kh-game-mobile-opt-css">
+/* ===== MOBILE GAME OPTIMIZE: canvas không scale lỗi, cảm ứng mượt hơn ===== */
+.kh-game-final-card,
+.kh-sure-game-card,
+.kh-game-lower {
+    touch-action: manipulation !important;
+}
+
+.kh-game-final-board,
+.kh-sure-game-board,
+.kh-inline-game-frame {
+    width: 300px !important;
+    height: 300px !important;
+    min-height: 300px !important;
+    max-width: 100% !important;
+    margin-left: auto !important;
+    margin-right: auto !important;
+    touch-action: none !important;
+    contain: layout paint !important;
+}
+
+#khGameFinalCanvas,
+#khSureGameCanvas,
+#khInlineGameCanvas {
+    width: 300px !important;
+    height: 300px !important;
+    max-width: 100% !important;
+    display: block !important;
+    image-rendering: auto !important;
+    touch-action: none !important;
+}
+
+.kh-game-final-controls,
+.kh-sure-game-controls,
+.kh-inline-game-controls {
+    display: flex !important;
+    gap: 14px !important;
+    justify-content: center !important;
+    margin-top: 12px !important;
+}
+
+.kh-game-final-controls button,
+.kh-sure-game-controls button,
+.kh-inline-game-controls button {
+    width: 58px !important;
+    height: 42px !important;
+    border-radius: 999px !important;
+    border: 1px solid rgba(143,174,159,.72) !important;
+    background: rgba(255,255,255,.92) !important;
+    color: #4a6b5d !important;
+    font-weight: 900 !important;
+    font-size: 1.05rem !important;
+    box-shadow: 0 6px 14px rgba(74,107,93,.08) !important;
+    user-select: none !important;
+    -webkit-user-select: none !important;
+    -webkit-tap-highlight-color: transparent !important;
+    touch-action: none !important;
+}
+
+.kh-game-final-controls button:active,
+.kh-sure-game-controls button:active,
+.kh-inline-game-controls button:active {
+    transform: scale(.96) !important;
+    background: #eef8f2 !important;
+}
+
+.kh-game-final-start,
+.kh-sure-game-start,
+.kh-inline-game-start {
+    touch-action: manipulation !important;
+}
+
+.kh-game-final-start button,
+.kh-sure-game-start button,
+.kh-inline-game-start button {
+    -webkit-tap-highlight-color: transparent !important;
+    touch-action: manipulation !important;
+}
+
+@media (max-width: 760px) {
+    .kh-game-final-card,
+    .kh-sure-game-card,
+    .kh-game-lower {
+        min-height: 0 !important;
+        padding: 16px !important;
+    }
+
+    .kh-game-final-board,
+    .kh-sure-game-board,
+    .kh-inline-game-frame {
+        width: min(300px, calc(100vw - 58px)) !important;
+        height: min(300px, calc(100vw - 58px)) !important;
+        min-height: min(300px, calc(100vw - 58px)) !important;
+    }
+
+    #khGameFinalCanvas,
+    #khSureGameCanvas,
+    #khInlineGameCanvas {
+        width: 100% !important;
+        height: 100% !important;
+    }
+}
+</style>
+
 </head>
 <body>
 <div class="petal-layer" id="petal-layer" aria-hidden="true"></div>
@@ -10765,3 +10870,349 @@ async function sendReplyNotification(recipientAuthorId, senderName, commentConte
 })();
 </script>
 </html>
+
+<script id="kh-game-mobile-opt-js">
+(function(){
+    'use strict';
+
+    function findGameParts(){
+        var canvas =
+            document.getElementById('khGameFinalCanvas') ||
+            document.getElementById('khSureGameCanvas') ||
+            document.getElementById('khInlineGameCanvas');
+
+        if (!canvas) return null;
+
+        var startPanel =
+            document.getElementById('khGameFinalStart') ||
+            document.getElementById('khSureGameStart') ||
+            document.getElementById('khInlineGameStart');
+
+        var startBtn =
+            document.getElementById('khGameFinalStartBtn') ||
+            document.getElementById('khSureGameStartBtn') ||
+            document.getElementById('khInlineGameStartBtn');
+
+        var leftBtn =
+            document.getElementById('khGameFinalLeft') ||
+            document.getElementById('khSureLeftBtn') ||
+            document.getElementById('khInlineLeftBtn');
+
+        var rightBtn =
+            document.getElementById('khGameFinalRight') ||
+            document.getElementById('khSureRightBtn') ||
+            document.getElementById('khInlineRightBtn');
+
+        return { canvas: canvas, startPanel: startPanel, startBtn: startBtn, leftBtn: leftBtn, rightBtn: rightBtn };
+    }
+
+    function setupOptimizedGame(){
+        var parts = findGameParts();
+        if (!parts || !parts.canvas || !parts.startPanel || !parts.startBtn) return false;
+
+        var canvas = parts.canvas;
+        if (canvas.__khMobileOptimized) return true;
+        canvas.__khMobileOptimized = true;
+
+        var board = canvas.parentElement;
+        var ctx = canvas.getContext('2d');
+
+        var isMobile = window.matchMedia('(max-width: 760px)').matches || ('ontouchstart' in window);
+        var logicalSize = isMobile ? 300 : 320;
+        var dpr = Math.min(window.devicePixelRatio || 1, 2);
+
+        var W = logicalSize;
+        var H = logicalSize;
+
+        function resizeCanvas(){
+            var size = isMobile ? Math.min(300, Math.max(260, window.innerWidth - 58)) : 320;
+            logicalSize = Math.round(size);
+            W = logicalSize;
+            H = logicalSize;
+            dpr = Math.min(window.devicePixelRatio || 1, 2);
+
+            canvas.style.width = logicalSize + 'px';
+            canvas.style.height = logicalSize + 'px';
+            canvas.width = Math.round(logicalSize * dpr);
+            canvas.height = Math.round(logicalSize * dpr);
+
+            if (board) {
+                board.style.width = logicalSize + 'px';
+                board.style.height = logicalSize + 'px';
+                board.style.minHeight = logicalSize + 'px';
+            }
+
+            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        }
+
+        var game = {
+            running: false,
+            raf: 0,
+            last: 0,
+            left: false,
+            right: false,
+            score: 0,
+            high: parseInt(localStorage.getItem('khGameOptimizedHighScore') || '0', 10),
+            ballX: 0,
+            ballY: 0,
+            ballR: 8,
+            vx: 0,
+            vy: 0,
+            paddleX: 0,
+            paddleW: 76,
+            paddleH: 10
+        };
+
+        function reset(){
+            resizeCanvas();
+
+            game.score = 0;
+            game.running = false;
+            game.left = false;
+            game.right = false;
+
+            game.ballR = isMobile ? 8.5 : 9;
+            game.ballX = W / 2;
+            game.ballY = H - 54;
+
+            // Tốc độ theo px/giây. Mobile nhanh hơn để không bị ì.
+            var base = isMobile ? 255 : 220;
+            game.vx = base * 0.72;
+            game.vy = -base;
+
+            game.paddleW = isMobile ? 82 : 76;
+            game.paddleH = 10;
+            game.paddleX = (W - game.paddleW) / 2;
+
+            if (game.raf) cancelAnimationFrame(game.raf);
+            game.raf = 0;
+            game.last = 0;
+
+            draw();
+        }
+
+        function roundRect(x, y, w, h, r){
+            ctx.beginPath();
+            ctx.moveTo(x+r, y);
+            ctx.arcTo(x+w, y, x+w, y+h, r);
+            ctx.arcTo(x+w, y+h, x, y+h, r);
+            ctx.arcTo(x, y+h, x, y, r);
+            ctx.arcTo(x, y, x+w, y, r);
+            ctx.closePath();
+        }
+
+        function draw(){
+            ctx.clearRect(0, 0, W, H);
+
+            var grd = ctx.createLinearGradient(0, 0, W, H);
+            grd.addColorStop(0, '#ffffff');
+            grd.addColorStop(1, '#eef8f2');
+            ctx.fillStyle = grd;
+            ctx.fillRect(0, 0, W, H);
+
+            ctx.fillStyle = 'rgba(143,174,159,.18)';
+            for (var x=10; x<W; x+=20) {
+                for (var y=10; y<H; y+=20) {
+                    ctx.beginPath();
+                    ctx.arc(x, y, 1, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+
+            ctx.beginPath();
+            ctx.arc(game.ballX, game.ballY, game.ballR, 0, Math.PI * 2);
+            ctx.fillStyle = '#ff8fab';
+            ctx.fill();
+            ctx.closePath();
+
+            roundRect(game.paddleX, H - game.paddleH - 14, game.paddleW, game.paddleH, 8);
+            ctx.fillStyle = '#4a6b5d';
+            ctx.fill();
+
+            ctx.font = '13px Arial';
+            ctx.fillStyle = '#4a6b5d';
+            ctx.fillText('Điểm: ' + game.score, 12, 22);
+            ctx.fillText('Kỷ lục: ' + game.high, W - 92, 22);
+        }
+
+        function showPanel(title, message, buttonText){
+            if (title) parts.startPanel.querySelector('h4').textContent = title;
+            if (message) parts.startPanel.querySelector('p').textContent = message;
+            parts.startBtn.textContent = buttonText || 'Chơi lại';
+
+            parts.startPanel.classList.remove('hidden', 'is-hidden');
+            parts.startPanel.style.display = 'flex';
+        }
+
+        function hidePanel(){
+            parts.startPanel.classList.add('hidden', 'is-hidden');
+            parts.startPanel.style.display = 'none';
+        }
+
+        function gameOver(){
+            game.running = false;
+            if (game.raf) cancelAnimationFrame(game.raf);
+            game.raf = 0;
+
+            if (game.score > game.high) {
+                game.high = game.score;
+                localStorage.setItem('khGameOptimizedHighScore', game.high);
+                showPanel('🏆 Kỷ lục mới!', 'Bạn đạt ' + game.score + ' điểm. Chơi lại thử xem cao hơn nữa không nhé.', 'Chơi lại');
+            } else {
+                showPanel('🌿 Game over', 'Điểm của bạn: ' + game.score + '. Kỷ lục hiện tại: ' + game.high + '.', 'Chơi lại');
+            }
+        }
+
+        function tick(ts){
+            if (!game.running) return;
+
+            if (!game.last) game.last = ts;
+            var dt = (ts - game.last) / 1000;
+            game.last = ts;
+
+            // Chặn dt quá lớn khi tab bị lag/tạm dừng.
+            if (dt > 0.035) dt = 0.035;
+
+            var paddleSpeed = isMobile ? 390 : 340;
+            if (game.right) game.paddleX += paddleSpeed * dt;
+            if (game.left) game.paddleX -= paddleSpeed * dt;
+            if (game.paddleX < 0) game.paddleX = 0;
+            if (game.paddleX > W - game.paddleW) game.paddleX = W - game.paddleW;
+
+            game.ballX += game.vx * dt;
+            game.ballY += game.vy * dt;
+
+            if (game.ballX > W - game.ballR) {
+                game.ballX = W - game.ballR;
+                game.vx = -Math.abs(game.vx);
+            } else if (game.ballX < game.ballR) {
+                game.ballX = game.ballR;
+                game.vx = Math.abs(game.vx);
+            }
+
+            if (game.ballY < game.ballR) {
+                game.ballY = game.ballR;
+                game.vy = Math.abs(game.vy);
+            }
+
+            var paddleTop = H - game.paddleH - 14;
+            if (game.ballY + game.ballR >= paddleTop) {
+                if (game.ballX >= game.paddleX && game.ballX <= game.paddleX + game.paddleW && game.vy > 0) {
+                    game.score++;
+
+                    var center = game.paddleX + game.paddleW / 2;
+                    var hit = (game.ballX - center) / (game.paddleW / 2);
+                    var speed = (isMobile ? 255 : 220) * Math.pow(1.045, game.score);
+
+                    game.vx = speed * hit * 0.9;
+                    if (Math.abs(game.vx) < speed * 0.32) game.vx = (game.vx < 0 ? -1 : 1) * speed * 0.32;
+                    game.vy = -speed;
+
+                    game.ballY = paddleTop - game.ballR - 0.5;
+                } else if (game.ballY > H - game.ballR - 8) {
+                    gameOver();
+                    return;
+                }
+            }
+
+            draw();
+            game.raf = requestAnimationFrame(tick);
+        }
+
+        function startGame(){
+            reset();
+            hidePanel();
+            game.running = true;
+            game.last = 0;
+            game.raf = requestAnimationFrame(tick);
+        }
+
+        // Vô hiệu hóa các onclick/event cũ bằng cách clone nút rồi gắn lại.
+        var newStart = parts.startBtn.cloneNode(true);
+        parts.startBtn.parentNode.replaceChild(newStart, parts.startBtn);
+        parts.startBtn = newStart;
+
+        parts.startBtn.addEventListener('click', function(e){
+            e.preventDefault();
+            e.stopPropagation();
+            startGame();
+        }, true);
+
+        function hold(btn, side){
+            if (!btn) return;
+            var down = function(e){
+                if (e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                }
+                game[side] = true;
+            };
+            var up = function(e){
+                if (e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                }
+                game[side] = false;
+            };
+            btn.addEventListener('pointerdown', down, true);
+            btn.addEventListener('pointerup', up, true);
+            btn.addEventListener('pointercancel', up, true);
+            btn.addEventListener('pointerleave', up, true);
+            btn.addEventListener('touchstart', down, {passive:false, capture:true});
+            btn.addEventListener('touchend', up, {passive:false, capture:true});
+        }
+
+        hold(parts.leftBtn, 'left');
+        hold(parts.rightBtn, 'right');
+
+        document.addEventListener('keydown', function(e){
+            if (document.activeElement && ['INPUT','TEXTAREA'].includes(document.activeElement.tagName)) return;
+            if (e.key === 'ArrowLeft' || e.key === 'Left') game.left = true;
+            if (e.key === 'ArrowRight' || e.key === 'Right') game.right = true;
+        }, true);
+
+        document.addEventListener('keyup', function(e){
+            if (e.key === 'ArrowLeft' || e.key === 'Left') game.left = false;
+            if (e.key === 'ArrowRight' || e.key === 'Right') game.right = false;
+        }, true);
+
+        // Vuốt trên canvas cũng điều khiển được thanh hứng
+        canvas.addEventListener('pointermove', function(e){
+            if (!isMobile || !game.running) return;
+            var rect = canvas.getBoundingClientRect();
+            var x = e.clientX - rect.left;
+            game.paddleX = x - game.paddleW / 2;
+            if (game.paddleX < 0) game.paddleX = 0;
+            if (game.paddleX > W - game.paddleW) game.paddleX = W - game.paddleW;
+        }, {passive:true});
+
+        window.addEventListener('resize', function(){
+            var wasRunning = game.running;
+            reset();
+            if (wasRunning) {
+                hidePanel();
+                game.running = true;
+                game.raf = requestAnimationFrame(tick);
+            }
+        });
+
+        reset();
+        return true;
+    }
+
+    function init(){
+        setupOptimizedGame();
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+    } else {
+        init();
+    }
+
+    // Nếu khung game được script khác tạo trễ thì đợi rồi patch.
+    [300, 900, 1800, 3000].forEach(function(t){
+        setTimeout(init, t);
+    });
+})();
+</script>
