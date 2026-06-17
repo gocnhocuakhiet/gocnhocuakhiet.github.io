@@ -8627,7 +8627,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const input = document.getElementById('chatroom-input');
     if (input) input.addEventListener('keydown', e => { if (e.key === 'Enter') sendChatMessage(); });
     loadChatMessages();
-    setInterval(loadChatMessages, 5000); /* Tự refresh mỗi 5 giây */
+    setInterval(loadChatMessages, 15000); /* Tự refresh mỗi 15 giây */
     initEmojiPicker();
 });
 
@@ -9369,7 +9369,7 @@ async function sendReplyNotification(recipientAuthorId, senderName, commentConte
             var cx = w/2, cy = h/2 + 1;
             var scale = Math.min(w,h) / 48;
 
-            for (var i=0; i<150; i++){
+            for (var i=0; i<70; i++){
                 var t = Math.random() * Math.PI * 2;
                 var p = heart(t, scale, cx, cy);
                 var inward = Math.random() * .24;
@@ -9383,7 +9383,7 @@ async function sendReplyNotification(recipientAuthorId, senderName, commentConte
                 });
             }
 
-            for (var j=0; j<24; j++){
+            for (var j=0; j<12; j++){
                 var tt = Math.random() * Math.PI * 2;
                 var hp = heart(tt, scale*1.18, cx, cy);
                 points.push({
@@ -9427,11 +9427,17 @@ async function sendReplyNotification(recipientAuthorId, senderName, commentConte
             ctx.fillText('♡', w/2, h/2 + 1);
             ctx.globalAlpha = 1;
 
-            requestAnimationFrame(draw);
+            if (!document.hidden) requestAnimationFrame(draw);
+            else rafId = 0;
         }
 
+        var rafId = 0;
+        document.addEventListener('visibilitychange', function(){
+            if (!document.hidden && rafId === 0) { rafId = requestAnimationFrame(draw); }
+        });
+
         resize();
-        draw();
+        rafId = requestAnimationFrame(draw);
         window.addEventListener('resize', resize);
     }
 
@@ -9551,7 +9557,7 @@ async function sendReplyNotification(recipientAuthorId, senderName, commentConte
     else if(h>=12&&h<18){icon.textContent='☀️';txt.textContent='Chào buổi chiều, ghé lại đọc vài chương để thư giãn nhé!'}
     else{icon.textContent='🌙';txt.textContent='Chúc bạn một buổi tối thư giãn bên những câu chuyện yêu thích.'}
   }
-  function makeHeart(id){var c=document.getElementById(id);if(!c||c.dataset.on)return;c.dataset.on=1;var x=c.getContext('2d'),d=window.devicePixelRatio||1,pts=[],f=0;function h(t,s,cx,cy){var X=16*Math.pow(Math.sin(t),3),Y=-(15*Math.cos(t)-5*Math.cos(2*t)-2*Math.cos(3*t)-Math.cos(4*t));return{x:cx+X*s,y:cy+Y*s}}function build(){var r=c.getBoundingClientRect(),w=r.width,hh=r.height;c.width=w*d;c.height=hh*d;x.setTransform(d,0,0,d,0,0);pts=[];for(var i=0;i<150;i++){var p=h(Math.random()*Math.PI*2,Math.min(w,hh)/48,w/2,hh/2);pts.push({x:p.x,y:p.y,cx:w/2,cy:hh/2,s:Math.random()*.9+.35,a:Math.random()*.45+.2})}}function draw(){var w=c.clientWidth,hh=c.clientHeight;x.clearRect(0,0,w,hh);f+=.08;var b=1+Math.pow((Math.sin(f)+1)/2,3)*.14;pts.forEach(function(p){x.globalAlpha=p.a;x.fillStyle='#f68aa6';x.beginPath();x.arc(p.cx+(p.x-p.cx)*b,p.cy+(p.y-p.cy)*b,p.s*b,0,Math.PI*2);x.fill()});requestAnimationFrame(draw)}build();draw();window.addEventListener('resize',build)}
+  function makeHeart(id){var c=document.getElementById(id);if(!c||c.dataset.on)return;c.dataset.on=1;var x=c.getContext('2d'),d=window.devicePixelRatio||1,pts=[],f=0,mhRaf=0;function h(t,s,cx,cy){var X=16*Math.pow(Math.sin(t),3),Y=-(15*Math.cos(t)-5*Math.cos(2*t)-2*Math.cos(3*t)-Math.cos(4*t));return{x:cx+X*s,y:cy+Y*s}}function build(){var r=c.getBoundingClientRect(),w=r.width,hh=r.height;c.width=w*d;c.height=hh*d;x.setTransform(d,0,0,d,0,0);pts=[];for(var i=0;i<70;i++){var p=h(Math.random()*Math.PI*2,Math.min(w,hh)/48,w/2,hh/2);pts.push({x:p.x,y:p.y,cx:w/2,cy:hh/2,s:Math.random()*.9+.35,a:Math.random()*.45+.2})}}function draw(){var w=c.clientWidth,hh=c.clientHeight;x.clearRect(0,0,w,hh);f+=.08;var b=1+Math.pow((Math.sin(f)+1)/2,3)*.14;pts.forEach(function(p){x.globalAlpha=p.a;x.fillStyle='#f68aa6';x.beginPath();x.arc(p.cx+(p.x-p.cx)*b,p.cy+(p.y-p.cy)*b,p.s*b,0,Math.PI*2);x.fill()});if(!document.hidden)mhRaf=requestAnimationFrame(draw);else mhRaf=0;}document.addEventListener('visibilitychange',function(){if(!document.hidden&&mhRaf===0)mhRaf=requestAnimationFrame(draw);});build();mhRaf=requestAnimationFrame(draw);window.addEventListener('resize',build)}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',function(){layout();makeHeart('hero-heart-tl');makeHeart('hero-heart-br')}); else {layout();makeHeart('hero-heart-tl');makeHeart('hero-heart-br')}
   setInterval(updateHomeClock,1000); setInterval(updateGreeting,60000);
 })();
@@ -10350,6 +10356,7 @@ function initGame(){
     var wrap=canvas.parentElement;
     if(wrap){wrap.style.width=W+'px';wrap.style.height=H+'px';}
     ctx.setTransform(dpr,0,0,dpr,0,0);
+    _dotPatternLight=null;_dotPatternDark=null;
   }
   function baseSpeed(){return isMobile()?560:500;}
   function resetState(){
@@ -10362,17 +10369,27 @@ function initGame(){
     draw();
   }
   function rr(x,y,w,h,r){ctx.beginPath();ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath();}
+  var _dotPatternLight=null,_dotPatternDark=null;
+  function getDotPattern(isDark){
+    var cached=isDark?_dotPatternDark:_dotPatternLight;
+    if(cached)return cached;
+    var off=document.createElement('canvas');off.width=20;off.height=20;
+    var ox=off.getContext('2d');
+    var col=isDark?'rgba(143,174,159,.12)':'rgba(143,174,159,.18)';
+    ox.fillStyle=col;ox.beginPath();ox.arc(10,10,1,0,Math.PI*2);ox.fill();
+    var pat=ctx.createPattern(off,'repeat');
+    if(isDark)_dotPatternDark=pat;else _dotPatternLight=pat;
+    return pat;
+  }
   function draw(){
     ctx.clearRect(0,0,W,H);
     var isDark=document.body.classList.contains('dark-mode');
     var bgFrom=isDark?'#1b2420':'#fff';
     var bgTo=isDark?'#25332c':'#eef8f2';
-    var dotColor=isDark?'rgba(143,174,159,.12)':'rgba(143,174,159,.18)';
     var bg=ctx.createLinearGradient(0,0,W,H);
     bg.addColorStop(0,bgFrom);bg.addColorStop(1,bgTo);
     ctx.fillStyle=bg;ctx.fillRect(0,0,W,H);
-    ctx.fillStyle=dotColor;
-    for(var px=10;px<W;px+=20)for(var py=10;py<H;py+=20){ctx.beginPath();ctx.arc(px,py,1,0,Math.PI*2);ctx.fill();}
+    ctx.fillStyle=getDotPattern(isDark);ctx.fillRect(0,0,W,H);
     ctx.beginPath();ctx.arc(ballX,ballY,ballR,0,Math.PI*2);ctx.fillStyle='#ff8fab';ctx.fill();ctx.closePath();
     rr(paddleX,H-paddleH-14,paddleW,paddleH,8);ctx.fillStyle=isDark?'#8fae9f':'#4a6b5d';ctx.fill();
     ctx.font='13px Arial';ctx.fillStyle=isDark?'#8fae9f':'#4a6b5d';
