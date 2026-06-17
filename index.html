@@ -10287,15 +10287,22 @@ function initGame(){
   }
   function rr(x,y,w,h,r){ctx.beginPath();ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath();}
   function draw(){
+    var isDark=document.body.classList.contains('dark-mode');
+    var st=getComputedStyle(document.body);
+    var colBg1=isDark?'#131a17':'#fff';
+    var colBg2=isDark?'#1b2420':'#eef8f2';
+    var colDot=isDark?'rgba(74,107,93,.25)':'rgba(143,174,159,.18)';
+    var colPaddle=st.getPropertyValue('--green').trim()||'#4a6b5d';
+    var colText=st.getPropertyValue('--text').trim()||'#2d3a34';
     ctx.clearRect(0,0,W,H);
     var bg=ctx.createLinearGradient(0,0,W,H);
-    bg.addColorStop(0,'#fff');bg.addColorStop(1,'#eef8f2');
+    bg.addColorStop(0,colBg1);bg.addColorStop(1,colBg2);
     ctx.fillStyle=bg;ctx.fillRect(0,0,W,H);
-    ctx.fillStyle='rgba(143,174,159,.18)';
+    ctx.fillStyle=colDot;
     for(var px=10;px<W;px+=20)for(var py=10;py<H;py+=20){ctx.beginPath();ctx.arc(px,py,1,0,Math.PI*2);ctx.fill();}
     ctx.beginPath();ctx.arc(ballX,ballY,ballR,0,Math.PI*2);ctx.fillStyle='#ff8fab';ctx.fill();ctx.closePath();
-    rr(paddleX,H-paddleH-14,paddleW,paddleH,8);ctx.fillStyle='#4a6b5d';ctx.fill();
-    ctx.font='13px Arial';ctx.fillStyle='#4a6b5d';
+    rr(paddleX,H-paddleH-14,paddleW,paddleH,8);ctx.fillStyle=colPaddle;ctx.fill();
+    ctx.font='13px Arial';ctx.fillStyle=colText;
     ctx.fillText('\u0110i\u1EC3m: '+score,12,22);ctx.fillText('K\u1EF7 l\u1EE5c: '+high,W-92,22);
   }
   function showPanel(title,msg,btn){
@@ -10372,6 +10379,11 @@ function initGame(){
   canvas.addEventListener('pointercancel',function(){dragActive=false;},true);
 
   window.addEventListener('resize',function(){var was=running;resetState();if(was){hidePanel();running=true;last=0;raf=requestAnimationFrame(tick);}});
+
+  // Redraw canvas khi toggle dark mode (lúc đang dừng)
+  var _dmObs=new MutationObserver(function(muts){muts.forEach(function(m){if(m.attributeName==='class'&&!running)draw();});});
+  _dmObs.observe(document.body,{attributes:true});
+
   resetState();
 }
 
