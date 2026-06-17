@@ -7259,6 +7259,15 @@ body.dark-mode .announce-inner span { color: #8fae9f !important; }
 .kh-game-ctrl-btn{width:62px!important;height:44px!important;border-radius:999px!important;border:1px solid rgba(143,174,159,.72)!important;background:rgba(255,255,255,.94)!important;color:#4a6b5d!important;font-weight:900!important;font-size:1.1rem!important;box-shadow:0 6px 14px rgba(74,107,93,.08)!important;user-select:none!important;-webkit-user-select:none!important;touch-action:none!important;cursor:pointer!important}
 .kh-game-tip{margin-top:10px!important;color:#b0c0b8!important;font-size:.7rem!important;text-align:center!important}
 @media(max-width:760px){.kh-game-board-wrap{width:min(300px,calc(100vw - 58px))!important;height:min(300px,calc(100vw - 58px))!important}#khGameCanvas{width:100%!important;height:100%!important}}
+/* ── Dark mode overrides cho game ── */
+body.dark-mode .kh-stable-game-card{background:radial-gradient(circle at 18% 16%,rgba(74,107,93,.18),transparent 34%),radial-gradient(circle at 88% 78%,rgba(27,36,32,.9),transparent 38%),linear-gradient(145deg,#1b2420,#1e2a24)!important;border-color:#2e3d36!important}
+body.dark-mode .kh-stable-game-card h3{color:#8fae9f!important;border-bottom-color:rgba(46,61,54,.9)!important}
+body.dark-mode .kh-game-board-wrap{background:#131a17!important;border-color:rgba(74,107,93,.5)!important}
+body.dark-mode .kh-game-start-panel{background:linear-gradient(145deg,rgba(27,36,32,.97),rgba(19,26,23,.97))!important}
+body.dark-mode .kh-game-start-panel h4{color:#8fae9f!important}
+body.dark-mode .kh-game-start-panel p{color:#8fae9f!important}
+body.dark-mode .kh-game-ctrl-btn{background:rgba(27,36,32,.94)!important;color:#8fae9f!important;border-color:rgba(74,107,93,.5)!important}
+body.dark-mode .kh-game-tip{color:#4a6b5d!important}
 </style>
 </head>
 <body>
@@ -8475,6 +8484,8 @@ function applyLineHeight(btn) {
     if (localStorage.getItem('night-mode') === 'on') {
         document.body.classList.add('dark-mode');
         setTimeout(() => { const t = document.getElementById('dark-toggle'); if(t) t.checked=true; }, 80);
+        // Redraw canvas sau khi dark mode được restore
+        setTimeout(() => { const c = document.getElementById('khGameCanvas'); if(c) { const ctx2=c.getContext('2d'); if(ctx2 && window._khGameDraw) window._khGameDraw(); } }, 200);
     }
     const sz = localStorage.getItem('font-size');
     if (sz) { currentFontSize=parseInt(sz); document.body.style.fontSize=currentFontSize+'px';
@@ -10383,6 +10394,9 @@ function initGame(){
   // Redraw canvas khi toggle dark mode (lúc đang dừng)
   var _dmObs=new MutationObserver(function(muts){muts.forEach(function(m){if(m.attributeName==='class'&&!running)draw();});});
   _dmObs.observe(document.body,{attributes:true});
+
+  // Expose draw để dark-mode restore có thể gọi
+  window._khGameDraw=draw;
 
   resetState();
 }
