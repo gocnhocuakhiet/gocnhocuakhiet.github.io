@@ -7268,13 +7268,6 @@ body.dark-mode .kh-game-start-panel h4{color:#8fae9f!important}
 body.dark-mode .kh-game-start-panel p{color:#8fae9f!important}
 body.dark-mode .kh-game-ctrl-btn{background:rgba(27,36,32,.94)!important;color:#8fae9f!important;border-color:rgba(74,107,93,.5)!important}
 body.dark-mode .kh-game-tip{color:#4a6b5d!important}
-/* ── GAME SELECTOR TABS ── */
-.kh-game-selector{display:flex!important;gap:6px!important;justify-content:center!important;margin-bottom:12px!important;flex-wrap:wrap!important}
-.kh-game-tab{border:1.5px solid rgba(143,174,159,.6)!important;border-radius:999px!important;padding:5px 14px!important;font-size:.75rem!important;font-family:'Be Vietnam Pro',sans-serif!important;font-weight:600!important;color:#4a6b5d!important;background:rgba(255,255,255,.8)!important;cursor:pointer!important;transition:.15s!important;white-space:nowrap!important;touch-action:manipulation!important}
-.kh-game-tab:hover{background:#eaf2ee!important;border-color:#4a6b5d!important}
-.kh-game-tab.active{background:linear-gradient(135deg,#4a6b5d,#8fae9f)!important;color:#fff!important;border-color:transparent!important;box-shadow:0 4px 10px rgba(74,107,93,.2)!important}
-body.dark-mode .kh-game-tab{background:rgba(27,36,32,.8)!important;color:#8fae9f!important;border-color:rgba(74,107,93,.5)!important}
-body.dark-mode .kh-game-tab.active{background:linear-gradient(135deg,#3d594d,#6a9080)!important;color:#fff!important}
 </style>
 </head>
 <body>
@@ -7771,6 +7764,10 @@ const NOVELS = [
       author:'Khiết',
       genre:'dn', status:'ongoing', chapters:30,
       cover:'images/duonglennui.png',        link:'mucluc/duonglennui.html',      emoji:'🏔️', color:'#f0fdf4' },
+    { id:'xuyennhanh',        title:'Xuyên Nhanh: Anh Chàng Nóng Tính Từ Chối Làm Kẻ Lụy Tình',
+      author:'Nữ Đế Hầu',
+      genre:'dm', status:'ongoing', chapters:105,
+      cover:'images/xuyennhanh.png',         link:'mucluc/xuyennhanh.html',       emoji:'🔥', color:'#fdf2f8' },
 ];
 window.NOVELS = NOVELS;
 </script>
@@ -10243,86 +10240,50 @@ async function sendReplyNotification(recipientAuthorId, senderName, commentConte
 (function(){
 'use strict';
 
-// ─── SHARED STATE ───────────────────────────────────────────────────────────
-var currentGame='bounce'; // 'bounce' | 'snake' | '2048'
-var raf=0;
+var running=false, raf=0, last=0;
+var leftDown=false, rightDown=false, dragActive=false;
+var canvas, ctx, W, H, dpr;
+var ballX, ballY, ballR, vx, vy;
+var paddleX, paddleW, paddleH;
+var score=0;
+var high=parseInt(localStorage.getItem('khGameHigh')||'0',10);
+var panel, startBtn;
 
 function isMobile(){return window.matchMedia('(max-width:760px)').matches||('ontouchstart'in window);}
-function isDark(){return document.body.classList.contains('dark-mode');}
 
-// ─── BUILD CARD HTML ─────────────────────────────────────────────────────────
 function buildCard(card){
-  card.innerHTML=
-    '<h3>\uD83C\uDFAE Tr\xf2 ch\u01A1i nh\u1ECF</h3>'
-    +'<div class="kh-game-selector">'
-      +'<button class="kh-game-tab active" data-game="bounce" type="button">\uD83C\uDF3F H\u1EE9ng b\xF3ng</button>'
-      +'<button class="kh-game-tab" data-game="snake" type="button">\uD83D\uDC0D R\u1EAFn s\u0103n m\u1ED3i</button>'
-      +'<button class="kh-game-tab" data-game="2048" type="button">\uD83C\uDFB2 2048</button>'
-    +'</div>'
-    +'<div id="khGameArea"></div>'
-    +'<div class="kh-game-tip" id="khGameTip">\u0110i\u1EC3m cao s\u1EBD \u0111\u01B0\u1EE3c l\u01B0u trong tr\xECnh duy\u1EC7t.</div>';
-}
-
-// ─── GAME AREA SWITCHER ──────────────────────────────────────────────────────
-function switchGame(name){
-  stopAll();
-  currentGame=name;
-  document.querySelectorAll('.kh-game-tab').forEach(function(t){
-    t.classList.toggle('active',t.dataset.game===name);
-  });
-  // Get area AFTER stopAll (stopAll replaces the node)
-  var area=document.getElementById('khGameArea');
-  if(!area)return;
-  if(name==='bounce') initBounce(area);
-  else if(name==='snake') initSnake(area);
-  else if(name==='2048') init2048(area);
-}
-
-function stopAll(){
-  if(raf){cancelAnimationFrame(raf);raf=0;}
-  // Snake interval
-  if(window._khSnakeInterval){clearInterval(window._khSnakeInterval);window._khSnakeInterval=0;}
-  // Remove all listeners by rebuilding area
-  var area=document.getElementById('khGameArea');
-  if(area){var n=area.cloneNode(false);area.parentNode.replaceChild(n,area);}
-}
-
-// ══════════════════════════════════════════════════════════════════════════════
-// GAME 1: BOUNCE (Hứng bóng)
-// ══════════════════════════════════════════════════════════════════════════════
-function initBounce(area){
-  var high=parseInt(localStorage.getItem('khGameHigh')||'0',10);
-  var running=false,last=0;
-  var canvas,ctx,W,H,dpr;
-  var ballX,ballY,ballR,vx,vy;
-  var paddleX,paddleW,paddleH;
-  var score=0;
-  var leftDown=false,rightDown=false,dragActive=false;
-
-  area.innerHTML=
-    '<div class="kh-game-board-wrap" id="khBounceWrap">'
+  card.innerHTML='<h3>\uD83C\uDFAE Tr\xf2 ch\u01A1i nh\u1ECF</h3>'
+    +'<div class="kh-game-board-wrap">'
       +'<canvas id="khGameCanvas"></canvas>'
       +'<div class="kh-game-start-panel" id="khGamePanel">'
         +'<h4>\uD83C\uDF3F H\u1EE9ng b\xF3ng</h4>'
-        +'<p>\u0110i\u1EC7n tho\u1EA1i: k\xE9o ng\xF3n tay.<br>M\xE1y t\xEDnh: \u2190 \u2192 ho\u1EB7c chu\u1ED9t.</p>'
+        +'<p>\u0110i\u1EC7n tho\u1EA1i: k\xE9o ng\xF3n tay tr\xEAn khung game.<br>M\xE1y t\xEDnh: d\xF9ng ph\xEDm \u2190 \u2192.</p>'
         +'<button class="kh-game-start-btn" id="khGameStartBtn" type="button">B\u1EAFt \u0111\u1EA7u ch\u01A1i</button>'
       +'</div>'
     +'</div>'
     +'<div class="kh-game-controls">'
       +'<button class="kh-game-ctrl-btn" id="khGameLeft" type="button">\u2190</button>'
       +'<button class="kh-game-ctrl-btn" id="khGameRight" type="button">\u2192</button>'
-    +'</div>';
+    +'</div>'
+    +'<div class="kh-game-tip">\u0110i\u1EC3m cao s\u1EBD \u0111\u01B0\u1EE3c l\u01B0u trong tr\xECnh duy\u1EC7t.</div>';
+}
 
+function initGame(){
+  var card=document.getElementById('khStableGameCard');
+  if(!card)return;
+  buildCard(card);
   canvas=document.getElementById('khGameCanvas');
-  var panel=document.getElementById('khGamePanel');
-  var startBtn=document.getElementById('khGameStartBtn');
+  panel=document.getElementById('khGamePanel');
+  startBtn=document.getElementById('khGameStartBtn');
   var leftBtn=document.getElementById('khGameLeft');
   var rightBtn=document.getElementById('khGameRight');
+  if(!canvas||!panel||!startBtn)return;
   ctx=canvas.getContext('2d',{alpha:false});
 
   function resize(){
     var size=isMobile()?Math.min(300,Math.max(260,window.innerWidth-58)):300;
-    W=Math.round(size);H=W;dpr=Math.min(window.devicePixelRatio||1,2);
+    W=Math.round(size);H=W;
+    dpr=Math.min(window.devicePixelRatio||1,2);
     canvas.style.width=W+'px';canvas.style.height=H+'px';
     canvas.width=Math.round(W*dpr);canvas.height=Math.round(H*dpr);
     var wrap=canvas.parentElement;
@@ -10330,12 +10291,22 @@ function initBounce(area){
     ctx.setTransform(dpr,0,0,dpr,0,0);
   }
   function baseSpeed(){return isMobile()?560:500;}
+  function resetState(){
+    resize();score=0;
+    ballR=isMobile()?8.5:9;ballX=W/2;ballY=H-54;
+    var s=baseSpeed()*0.5;vx=s*.58;vy=-s;
+    paddleW=isMobile()?90:82;paddleH=10;paddleX=(W-paddleW)/2;
+    leftDown=false;rightDown=false;dragActive=false;last=0;
+    if(raf){cancelAnimationFrame(raf);raf=0;}
+    draw();
+  }
   function rr(x,y,w,h,r){ctx.beginPath();ctx.moveTo(x+r,y);ctx.arcTo(x+w,y,x+w,y+h,r);ctx.arcTo(x+w,y+h,x,y+h,r);ctx.arcTo(x,y+h,x,y,r);ctx.arcTo(x,y,x+w,y,r);ctx.closePath();}
   function draw(){
-    var dark=isDark();
+    var isDark=document.body.classList.contains('dark-mode');
     var st=getComputedStyle(document.body);
-    var colBg1=dark?'#131a17':'#fff',colBg2=dark?'#1b2420':'#eef8f2';
-    var colDot=dark?'rgba(74,107,93,.25)':'rgba(143,174,159,.18)';
+    var colBg1=isDark?'#131a17':'#fff';
+    var colBg2=isDark?'#1b2420':'#eef8f2';
+    var colDot=isDark?'rgba(74,107,93,.25)':'rgba(143,174,159,.18)';
     var colPaddle=st.getPropertyValue('--green').trim()||'#4a6b5d';
     var colText=st.getPropertyValue('--text').trim()||'#2d3a34';
     ctx.clearRect(0,0,W,H);
@@ -10349,15 +10320,6 @@ function initBounce(area){
     ctx.font='13px Arial';ctx.fillStyle=colText;
     ctx.fillText('\u0110i\u1EC3m: '+score,12,22);ctx.fillText('K\u1EF7 l\u1EE5c: '+high,W-92,22);
   }
-  function resetState(){
-    resize();score=0;
-    ballR=isMobile()?8.5:9;ballX=W/2;ballY=H-54;
-    var s=baseSpeed()*0.5;vx=s*.58;vy=-s;
-    paddleW=isMobile()?90:82;paddleH=10;paddleX=(W-paddleW)/2;
-    leftDown=false;rightDown=false;dragActive=false;last=0;
-    if(raf){cancelAnimationFrame(raf);raf=0;}
-    draw();
-  }
   function showPanel(title,msg,btn){
     panel.querySelector('h4').textContent=title;
     panel.querySelector('p').innerHTML=msg;
@@ -10366,7 +10328,8 @@ function initBounce(area){
   }
   function hidePanel(){panel.classList.add('hidden');}
   function gameOver(){
-    running=false;if(raf){cancelAnimationFrame(raf);raf=0;}
+    running=false;
+    if(raf){cancelAnimationFrame(raf);raf=0;}
     if(score>high){high=score;localStorage.setItem('khGameHigh',high);showPanel('\uD83C\uDFC6 K\u1EF7 l\u1EE5c m\u1EDBi!','B\u1EA1n \u0111\u1EA1t '+score+' \u0111i\u1EC3m!','Ch\u01A1i l\u1EA1i');}
     else showPanel('\uD83C\uDF3F Game over','\u0110i\u1EC3m: '+score+'. K\u1EF7 l\u1EE5c: '+high+'.','Ch\u01A1i l\u1EA1i');
   }
@@ -10396,9 +10359,11 @@ function initBounce(area){
   }
   function startGame(){resetState();hidePanel();running=true;last=0;raf=requestAnimationFrame(tick);}
 
+  // Start button
   startBtn.addEventListener('click',function(e){e.preventDefault();e.stopPropagation();startGame();},false);
   startBtn.addEventListener('touchend',function(e){e.preventDefault();e.stopPropagation();startGame();},{passive:false});
 
+  // Control buttons
   function bindCtrl(btn,isLeft){
     if(!btn)return;
     function dn(e){e.preventDefault();if(isLeft)leftDown=true;else rightDown=true;}
@@ -10410,475 +10375,65 @@ function initBounce(area){
   }
   bindCtrl(leftBtn,true);bindCtrl(rightBtn,false);
 
-  var _kbDown=function(e){
+  // Keyboard
+  document.addEventListener('keydown',function(e){
     if(!running)return;
     if(document.activeElement&&['INPUT','TEXTAREA'].includes(document.activeElement.tagName))return;
     if(e.key==='ArrowLeft'||e.key==='Left')leftDown=true;
     if(e.key==='ArrowRight'||e.key==='Right')rightDown=true;
-  };
-  var _kbUp=function(e){
+  },true);
+  document.addEventListener('keyup',function(e){
     if(e.key==='ArrowLeft'||e.key==='Left')leftDown=false;
     if(e.key==='ArrowRight'||e.key==='Right')rightDown=false;
-  };
-  document.addEventListener('keydown',_kbDown,true);
-  document.addEventListener('keyup',_kbUp,true);
-  // cleanup on area removal
-  var _obs=new MutationObserver(function(){
-    if(!document.getElementById('khGameCanvas')){
-      document.removeEventListener('keydown',_kbDown,true);
-      document.removeEventListener('keyup',_kbUp,true);
-      _obs.disconnect();
-    }
-  });
-  _obs.observe(document.body,{childList:true,subtree:true});
+  },true);
 
+  // Drag on canvas
   function dragTo(cx){var r=canvas.getBoundingClientRect();paddleX=cx-r.left-paddleW/2;paddleX=Math.max(0,Math.min(W-paddleW,paddleX));}
   canvas.addEventListener('pointerdown',function(e){if(!running)return;dragActive=true;try{canvas.setPointerCapture(e.pointerId);}catch(_){}dragTo(e.clientX);e.preventDefault();},true);
   canvas.addEventListener('pointermove',function(e){if(!running||!dragActive)return;dragTo(e.clientX);e.preventDefault();},true);
   canvas.addEventListener('pointerup',function(e){dragActive=false;try{canvas.releasePointerCapture(e.pointerId);}catch(_){}},true);
   canvas.addEventListener('pointercancel',function(){dragActive=false;},true);
 
-  new MutationObserver(function(muts){muts.forEach(function(m){if(m.attributeName==='class'&&!running)draw();});}).observe(document.body,{attributes:true});
+  window.addEventListener('resize',function(){var was=running;resetState();if(was){hidePanel();running=true;last=0;raf=requestAnimationFrame(tick);}});
+
+  // Redraw canvas khi toggle dark mode (lúc đang dừng)
+  var _dmObs=new MutationObserver(function(muts){muts.forEach(function(m){if(m.attributeName==='class'&&!running)draw();});});
+  _dmObs.observe(document.body,{attributes:true});
+
+  // Expose draw để dark-mode restore có thể gọi
+  window._khGameDraw=draw;
 
   resetState();
 }
 
-// ══════════════════════════════════════════════════════════════════════════════
-// GAME 2: SNAKE (Rắn săn mồi)
-// ══════════════════════════════════════════════════════════════════════════════
-function initSnake(area){
-  var COLS=20,ROWS=20;
-  var high=parseInt(localStorage.getItem('khSnakeHigh')||'0',10);
-  var snake,dir,nextDir,food,score,running,interval;
-
-  // Color helpers
-  var COLORS={
-    snakeHead:['#4a6b5d','#3d594d'],
-    snakeBody:['#8fae9f','#6a9080'],
-    food:'#ff8fab',
-    empty:['rgba(143,174,159,.08)','rgba(74,107,93,.06)'],
-    emptyDark:['rgba(74,107,93,.12)','rgba(27,36,32,.2)'],
-    bg:['#f6fbf8','#eef8f2'],
-    bgDark:['#131a17','#1b2420'],
-    text:['#2d3a34','#dae5e0'],
-    grid:'rgba(143,174,159,.18)',
-    gridDark:'rgba(74,107,93,.2)'
-  };
-
-  area.innerHTML=
-    '<div class="kh-game-board-wrap" id="khSnakeWrap" style="position:relative">'
-      +'<canvas id="khSnakeCanvas"></canvas>'
-      +'<div class="kh-game-start-panel" id="khSnakePanel">'
-        +'<h4>\uD83D\uDC0D R\u1EAFn s\u0103n m\u1ED3i</h4>'
-        +'<p>M\xE1y t\xEDnh: ph\xEDm m\u0169i t\xEAn.<br>\u0110i\u1EC7n tho\u1EA1i: vu\u1ED1t tr\xEAn khung game.</p>'
-        +'<button class="kh-game-start-btn" id="khSnakeStartBtn" type="button">B\u1EAFt \u0111\u1EA7u ch\u01A1i</button>'
-      +'</div>'
-    +'</div>'
-    +'<div class="kh-game-controls" style="margin-top:10px">'
-      +'<button class="kh-game-ctrl-btn" id="khSnakeUp" type="button" style="width:44px;height:44px">\u2191</button>'
-      +'<div style="display:flex;gap:6px">'
-        +'<button class="kh-game-ctrl-btn" id="khSnakeLeft" type="button" style="width:44px;height:44px">\u2190</button>'
-        +'<button class="kh-game-ctrl-btn" id="khSnakeDown" type="button" style="width:44px;height:44px">\u2193</button>'
-        +'<button class="kh-game-ctrl-btn" id="khSnakeRight" type="button" style="width:44px;height:44px">\u2192</button>'
-      +'</div>'
-    +'</div>';
-
-  // Rewrite controls layout to be a d-pad
-  var ctrlDiv=area.querySelector('.kh-game-controls');
-  ctrlDiv.style.cssText='display:flex!important;flex-direction:column!important;align-items:center!important;gap:4px!important;margin-top:10px!important';
-
-  var canvas=document.getElementById('khSnakeCanvas');
-  var panel=document.getElementById('khSnakePanel');
-  var startBtn=document.getElementById('khSnakeStartBtn');
-  var ctx=canvas.getContext('2d');
-
-  var SIZE=isMobile()?Math.min(300,Math.max(260,window.innerWidth-58)):300;
-  var CELL=Math.floor(SIZE/COLS);
-  var CW=CELL*COLS,CH=CELL*ROWS;
-  canvas.style.width=CW+'px';canvas.style.height=CH+'px';
-  var dpr=Math.min(window.devicePixelRatio||1,2);
-  canvas.width=CW*dpr;canvas.height=CH*dpr;
-  ctx.setTransform(dpr,0,0,dpr,0,0);
-  var wrap=document.getElementById('khSnakeWrap');
-  if(wrap){wrap.style.width=CW+'px';wrap.style.height=CH+'px';}
-
-  function randFood(){
-    var occupied=new Set(snake.map(function(s){return s[0]+','+s[1];}));
-    var x,y;
-    do{x=Math.floor(Math.random()*COLS);y=Math.floor(Math.random()*ROWS);}
-    while(occupied.has(x+','+y));
-    return [x,y];
-  }
-  function resetState(){
-    snake=[[10,10],[9,10],[8,10]];
-    dir=[1,0];nextDir=[1,0];score=0;
-    food=randFood();running=false;
-    if(interval){clearInterval(interval);interval=0;window._khSnakeInterval=0;}
-  }
-  function drawBoard(){
-    var dark=isDark();
-    ctx.fillStyle=dark?COLORS.bgDark[0]:COLORS.bg[0];
-    ctx.fillRect(0,0,CW,CH);
-    // grid dots
-    ctx.fillStyle=dark?COLORS.gridDark:COLORS.grid;
-    for(var gx=0;gx<=COLS;gx++){ctx.fillRect(gx*CELL,0,1,CH);}
-    for(var gy=0;gy<=ROWS;gy++){ctx.fillRect(0,gy*CELL,CW,1);}
-    // food (pulsing circle)
-    ctx.beginPath();
-    ctx.arc(food[0]*CELL+CELL/2,food[1]*CELL+CELL/2,CELL/2-2,0,Math.PI*2);
-    ctx.fillStyle=COLORS.food;ctx.fill();
-    // snake
-    snake.forEach(function(seg,i){
-      var x=seg[0]*CELL+1,y=seg[1]*CELL+1,s=CELL-2;
-      var r=i===0?5:3;
-      ctx.beginPath();ctx.moveTo(x+r,y);
-      ctx.arcTo(x+s,y,x+s,y+s,r);ctx.arcTo(x+s,y+s,x,y+s,r);
-      ctx.arcTo(x,y+s,x,y,r);ctx.arcTo(x,y,x+s,y,r);ctx.closePath();
-      ctx.fillStyle=i===0?(dark?COLORS.snakeHead[1]:COLORS.snakeHead[0]):(dark?COLORS.snakeBody[1]:COLORS.snakeBody[0]);
-      ctx.fill();
-    });
-    // score
-    var colText=dark?COLORS.text[1]:COLORS.text[0];
-    ctx.font='bold 13px Arial';ctx.fillStyle=colText;
-    ctx.fillText('\u0110i\u1EC3m: '+score,8,18);
-    ctx.fillText('K\u1EF7 l\u1EE5c: '+high,CW-82,18);
-  }
-  function showPanel(title,msg){
-    panel.querySelector('h4').textContent=title;
-    panel.querySelector('p').innerHTML=msg;
-    startBtn.textContent='Ch\u01A1i l\u1EA1i';
-    panel.classList.remove('hidden');
-  }
-  function hidePanel(){panel.classList.add('hidden');}
-  function gameOver(){
-    running=false;clearInterval(interval);interval=0;window._khSnakeInterval=0;
-    if(score>high){high=score;localStorage.setItem('khSnakeHigh',high);showPanel('\uD83C\uDFC6 K\u1EF7 l\u1EE5c m\u1EDBi!','B\u1EA1n \u0111\u1EA1t '+score+' \u0111i\u1EC3m!');}
-    else showPanel('\uD83D\uDC80 Game over','\u0110i\u1EC3m: '+score+'. K\u1EF7 l\u1EE5c: '+high+'.');
-  }
-  function step(){
-    if(!running)return;
-    dir=nextDir.slice();
-    var head=[snake[0][0]+dir[0],snake[0][1]+dir[1]];
-    // wall collision
-    if(head[0]<0||head[0]>=COLS||head[1]<0||head[1]>=ROWS){gameOver();return;}
-    // self collision
-    for(var i=0;i<snake.length;i++){if(snake[i][0]===head[0]&&snake[i][1]===head[1]){gameOver();return;}}
-    snake.unshift(head);
-    if(head[0]===food[0]&&head[1]===food[1]){
-      score++;food=randFood();
-      // speed up slightly every 5 pts
-      if(score%5===0&&score<=40){
-        clearInterval(interval);
-        var spd=Math.max(80,200-score*2);
-        interval=setInterval(step,spd);window._khSnakeInterval=interval;
-      }
-    } else {snake.pop();}
-    drawBoard();
-  }
-  function startGame(){
-    resetState();hidePanel();running=true;
-    drawBoard();
-    var spd=200;
-    interval=setInterval(step,spd);window._khSnakeInterval=interval;
-  }
-
-  startBtn.addEventListener('click',function(e){e.preventDefault();startGame();});
-  startBtn.addEventListener('touchend',function(e){e.preventDefault();startGame();},{passive:false});
-
-  // D-pad buttons
-  var dmap={khSnakeUp:[0,-1],khSnakeDown:[0,1],khSnakeLeft:[-1,0],khSnakeRight:[1,0]};
-  Object.keys(dmap).forEach(function(id){
-    var btn=document.getElementById(id);
-    if(!btn)return;
-    var d=dmap[id];
-    function press(e){e.preventDefault();if(!running)return;if(dir[0]+d[0]===0&&dir[1]+d[1]===0)return;nextDir=d.slice();}
-    btn.addEventListener('pointerdown',press,true);
-    btn.addEventListener('touchstart',press,{capture:true,passive:false});
-  });
-
-  // Keyboard
-  var _kb=function(e){
-    if(!running)return;
-    if(document.activeElement&&['INPUT','TEXTAREA'].includes(document.activeElement.tagName))return;
-    var map={'ArrowUp':[0,-1],'ArrowDown':[0,1],'ArrowLeft':[-1,0],'ArrowRight':[1,0]};
-    if(map[e.key]){
-      var d=map[e.key];
-      if(dir[0]+d[0]===0&&dir[1]+d[1]===0)return;
-      nextDir=d.slice();e.preventDefault();
-    }
-  };
-  document.addEventListener('keydown',_kb,true);
-
-  // Swipe on canvas
-  var touchStart=null;
-  canvas.addEventListener('touchstart',function(e){touchStart={x:e.touches[0].clientX,y:e.touches[0].clientY};e.preventDefault();},{passive:false});
-  canvas.addEventListener('touchend',function(e){
-    if(!touchStart||!running)return;
-    var dx=e.changedTouches[0].clientX-touchStart.x;
-    var dy=e.changedTouches[0].clientY-touchStart.y;
-    var d;
-    if(Math.abs(dx)>Math.abs(dy)){d=dx>0?[1,0]:[-1,0];}
-    else{d=dy>0?[0,1]:[0,-1];}
-    if(dir[0]+d[0]===0&&dir[1]+d[1]===0)return;
-    nextDir=d;e.preventDefault();
-  },{passive:false});
-
-  // cleanup
-  var _obs=new MutationObserver(function(){
-    if(!document.getElementById('khSnakeCanvas')){
-      document.removeEventListener('keydown',_kb,true);
-      clearInterval(interval);_obs.disconnect();
-    }
-  });
-  _obs.observe(document.body,{childList:true,subtree:true});
-  new MutationObserver(function(muts){muts.forEach(function(m){if(m.attributeName==='class')drawBoard();});}).observe(document.body,{attributes:true});
-
-  resetState();drawBoard();
-}
-
-// ══════════════════════════════════════════════════════════════════════════════
-// GAME 3: 2048
-// ══════════════════════════════════════════════════════════════════════════════
-function init2048(area){
-  var high=parseInt(localStorage.getItem('kh2048High')||'0',10);
-  var grid,score,running;
-
-  // Tile colors (light mode) – pastel green palette
-  var TILE_COLORS={
-    0:  ['#edf6f0','#ccc'],
-    2:  ['#d4edde','#4a6b5d'],
-    4:  ['#b9e3c6','#4a6b5d'],
-    8:  ['#8fae9f','#fff'],
-    16: ['#6a9080','#fff'],
-    32: ['#5f9f7d','#fff'],
-    64: ['#4a7d63','#fff'],
-    128:['#3d6b53','#fff'],
-    256:['#ff8fab','#fff'],
-    512:['#ff6b8a','#fff'],
-    1024:['#e85d7a','#fff'],
-    2048:['#d4445e','#fff'],
-  };
-  var TILE_COLORS_DARK={
-    0:  ['#1e2a24','#4a6b5d'],
-    2:  ['#253830','#8fae9f'],
-    4:  ['#2e4538','#8fae9f'],
-    8:  ['#3d594d','#fff'],
-    16: ['#4a6b5d','#fff'],
-    32: ['#5a7d6a','#fff'],
-    64: ['#6a9080','#fff'],
-    128:['#7da898','#fff'],
-    256:['#d4597a','#fff'],
-    512:['#c04060','#fff'],
-    1024:['#a82a48','#fff'],
-    2048:['#901535','#fff'],
-  };
-
-  area.innerHTML=
-    '<div id="kh2048Wrap" style="display:flex;flex-direction:column;align-items:center;width:100%">'
-      +'<div style="display:flex;justify-content:space-between;align-items:center;width:min(300px,100%);margin-bottom:8px;padding:0 2px">'
-        +'<div style="font-size:.78rem;color:var(--text-muted)">\u0110i\u1EC3m: <b id="kh2048Score">0</b> &nbsp;&nbsp; K\u1EF7 l\u1EE5c: <b id="kh2048High">'+high+'</b></div>'
-        +'<button class="kh-game-start-btn" id="kh2048NewBtn" type="button" style="padding:5px 14px!important;font-size:.76rem!important">M\u1EDBi</button>'
-      +'</div>'
-      +'<div id="kh2048Board" style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;padding:8px;background:rgba(143,174,159,.28);border-radius:12px;width:min(300px,100%);box-sizing:border-box;touch-action:none"></div>'
-      +'<div style="margin-top:8px;font-size:.72rem;color:var(--text-faint);text-align:center">M\xE1y t\xEDnh: ph\xEDm m\u0169i t\xEAn. \u0110i\u1EC7n tho\u1EA1i: vu\u1ED1t.</div>'
-      +'<div id="kh2048Panel" style="display:none;position:absolute;inset:0;z-index:10;border-radius:12px;background:linear-gradient(145deg,rgba(255,255,255,.97),rgba(238,248,242,.97));flex-direction:column;align-items:center;justify-content:center;padding:22px;text-align:center">'
-        +'<h4 id="kh2048PanelTitle" style="font-family:Lora,serif;color:#47735f;margin:0 0 8px;font-size:1.08rem"></h4>'
-        +'<p id="kh2048PanelMsg" style="color:#7a8f85;font-size:.78rem;line-height:1.55;margin:0 0 14px"></p>'
-        +'<button class="kh-game-start-btn" id="kh2048PanelBtn" type="button">Ch\u01A1i l\u1EA1i</button>'
-      +'</div>'
-    +'</div>';
-
-  // make wrap relative for overlay panel
-  var wrap2=document.getElementById('kh2048Wrap');
-  wrap2.style.position='relative';
-
-  var boardEl=document.getElementById('kh2048Board');
-  var scoreEl=document.getElementById('kh2048Score');
-  var highEl=document.getElementById('kh2048High');
-  var newBtn=document.getElementById('kh2048NewBtn');
-  var panel=document.getElementById('kh2048Panel');
-  var panelTitle=document.getElementById('kh2048PanelTitle');
-  var panelMsg=document.getElementById('kh2048PanelMsg');
-  var panelBtn=document.getElementById('kh2048PanelBtn');
-
-  function newGrid(){return [[0,0,0,0],[0,0,0,0],[0,0,0,0],[0,0,0,0]];}
-  function addRandom(g){
-    var empty=[];
-    for(var r=0;r<4;r++)for(var c=0;c<4;c++)if(g[r][c]===0)empty.push([r,c]);
-    if(!empty.length)return;
-    var pos=empty[Math.floor(Math.random()*empty.length)];
-    g[pos[0]][pos[1]]=Math.random()<0.9?2:4;
-  }
-  function renderBoard(){
-    scoreEl.textContent=score;
-    highEl.textContent=high;
-    var dark=isDark();
-    var pal=dark?TILE_COLORS_DARK:TILE_COLORS;
-    // cell size — fixed 300px board, 4 cols, gap 6px, padding 8px each side
-    var boardSize=isMobile()?Math.min(300,Math.max(260,window.innerWidth-58)):300;
-    var cellSize=Math.floor((boardSize-16-18)/4);
-    boardEl.style.width=boardSize+'px';
-    boardEl.innerHTML='';
-    for(var r=0;r<4;r++)for(var c=0;c<4;c++){
-      var v=grid[r][c];
-      var col=pal[v]||pal[2048];
-      var el=document.createElement('div');
-      var fs=v>=1024?'0.85rem':v>=128?'1rem':'1.2rem';
-      el.style.cssText='border-radius:6px;display:flex;align-items:center;justify-content:center;font-family:"Be Vietnam Pro",sans-serif;font-weight:900;font-size:'+fs+';width:'+cellSize+'px;height:'+cellSize+'px;background:'+col[0]+';color:'+col[1]+';';
-      el.textContent=v||'';
-      boardEl.appendChild(el);
-    }
-  }
-  function slideRow(row){
-    var arr=row.filter(function(v){return v!==0;});
-    for(var i=0;i<arr.length-1;i++){if(arr[i]===arr[i+1]){arr[i]*=2;score+=arr[i];arr.splice(i+1,1);}}
-    while(arr.length<4)arr.push(0);
-    return arr;
-  }
-  function moveLeft(){
-    var moved=false;
-    for(var r=0;r<4;r++){var nr=slideRow(grid[r].slice());if(nr.join()!==grid[r].join()){grid[r]=nr;moved=true;}}
-    return moved;
-  }
-  function moveRight(){
-    var moved=false;
-    for(var r=0;r<4;r++){var nr=slideRow(grid[r].slice().reverse()).reverse();if(nr.join()!==grid[r].join()){grid[r]=nr;moved=true;}}
-    return moved;
-  }
-  function moveUp(){
-    var moved=false;
-    for(var c=0;c<4;c++){
-      var col=[grid[0][c],grid[1][c],grid[2][c],grid[3][c]];
-      var nc=slideRow(col);
-      for(var row=0;row<4;row++){if(grid[row][c]!==nc[row]){grid[row][c]=nc[row];moved=true;}}
-    }
-    return moved;
-  }
-  function moveDown(){
-    var moved=false;
-    for(var c=0;c<4;c++){
-      var col=[grid[3][c],grid[2][c],grid[1][c],grid[0][c]];
-      var nc=slideRow(col);
-      for(var row=0;row<4;row++){if(grid[3-row][c]!==nc[row]){grid[3-row][c]=nc[row];moved=true;}}
-    }
-    return moved;
-  }
-  function hasWon(){for(var r=0;r<4;r++)for(var c=0;c<4;c++)if(grid[r][c]===2048)return true;return false;}
-  function canMove(){
-    for(var r=0;r<4;r++)for(var c=0;c<4;c++){
-      if(grid[r][c]===0)return true;
-      if(c<3&&grid[r][c]===grid[r][c+1])return true;
-      if(r<3&&grid[r][c]===grid[r+1][c])return true;
-    }return false;
-  }
-  function showOverlay(title,msg){
-    panelTitle.textContent=title;panelMsg.textContent=msg;
-    panel.style.background=isDark()?'linear-gradient(145deg,rgba(27,36,32,.97),rgba(19,26,23,.97))':'linear-gradient(145deg,rgba(255,255,255,.97),rgba(238,248,242,.97))';
-    panelTitle.style.color=isDark()?'#8fae9f':'#47735f';
-    panel.style.display='flex';
-  }
-  function hideOverlay(){panel.style.display='none';}
-  function afterMove(moved){
-    if(!moved)return;
-    addRandom(grid);
-    if(score>high){high=score;localStorage.setItem('kh2048High',high);}
-    renderBoard();
-    if(hasWon()){running=false;showOverlay('\uD83C\uDF89 Ch\u00FAc m\u1EEBng!','B\u1EA1n \u0111\u00E3 \u0111\u1EA1t 2048! \u0110i\u1EC3m: '+score);}
-    else if(!canMove()){running=false;showOverlay('\uD83D\uDE14 H\u1EBFt n\u01B0\u1EDBc!','\u0110i\u1EC3m: '+score+'. K\u1EF7 l\u1EE5c: '+high);}
-  }
-  function startGame(){
-    grid=newGrid();score=0;running=true;
-    addRandom(grid);addRandom(grid);
-    hideOverlay();renderBoard();
-  }
-
-  newBtn.addEventListener('click',function(e){e.preventDefault();startGame();});
-  panelBtn.addEventListener('click',function(e){e.preventDefault();startGame();});
-
-  // keyboard
-  var _kb=function(e){
-    if(!running)return;
-    if(document.activeElement&&['INPUT','TEXTAREA'].includes(document.activeElement.tagName))return;
-    var moved=false;
-    if(e.key==='ArrowLeft'){moved=moveLeft();e.preventDefault();e.stopPropagation();}
-    else if(e.key==='ArrowRight'){moved=moveRight();e.preventDefault();e.stopPropagation();}
-    else if(e.key==='ArrowUp'){moved=moveUp();e.preventDefault();e.stopPropagation();}
-    else if(e.key==='ArrowDown'){moved=moveDown();e.preventDefault();e.stopPropagation();}
-    afterMove(moved);
-  };
-  document.addEventListener('keydown',_kb,true);
-
-  // swipe
-  var ts=null;
-  boardEl.addEventListener('touchstart',function(e){ts={x:e.touches[0].clientX,y:e.touches[0].clientY};e.preventDefault();},{passive:false});
-  boardEl.addEventListener('touchend',function(e){
-    if(!ts||!running)return;
-    var dx=e.changedTouches[0].clientX-ts.x,dy=e.changedTouches[0].clientY-ts.y;
-    var moved=false;
-    if(Math.abs(dx)>Math.abs(dy)){moved=dx>0?moveRight():moveLeft();}
-    else{moved=dy>0?moveDown():moveUp();}
-    afterMove(moved);ts=null;e.preventDefault();
-  },{passive:false});
-
-  // cleanup
-  var _obs=new MutationObserver(function(){
-    if(!document.getElementById('kh2048Board')){document.removeEventListener('keydown',_kb,true);_obs.disconnect();}
-  });
-  _obs.observe(document.body,{childList:true,subtree:true});
-  new MutationObserver(function(muts){muts.forEach(function(m){if(m.attributeName==='class')renderBoard();});}).observe(document.body,{attributes:true});
-
-  startGame();
-}
-
-// ─── MAIN INIT ───────────────────────────────────────────────────────────────
-function initGame(){
-  var card=document.getElementById('khStableGameCard');
-  if(!card)return;
-  buildCard(card);
-
-  // Tab click handlers
-  document.querySelectorAll('.kh-game-tab').forEach(function(t){
-    t.addEventListener('click',function(e){
-      e.preventDefault();e.stopPropagation();
-      switchGame(t.dataset.game);
-    });
-    t.addEventListener('touchend',function(e){
-      e.preventDefault();e.stopPropagation();
-      switchGame(t.dataset.game);
-    },{passive:false});
-  });
-
-  // Launch default game
-  switchGame('bounce');
-}
-
-// ─── BOOTSTRAP ───────────────────────────────────────────────────────────────
+// Public entry point called by layout script
 window._khInitGame=function(){
   var card=document.getElementById('khStableGameCard');
-  if(card)card.dataset.gameReady='1';
-  if(raf){cancelAnimationFrame(raf);raf=0;}
-  if(window._khSnakeInterval){clearInterval(window._khSnakeInterval);window._khSnakeInterval=0;}
+  if(!card)return;
+  running=false;if(raf){cancelAnimationFrame(raf);raf=0;}
   initGame();
 };
 
+// Also poll until card exists (in case layout script runs later)
 var pollCount=0;
 var poller=setInterval(function(){
   pollCount++;
   if(document.getElementById('khStableGameCard')){
     clearInterval(poller);
+    // Only init if not yet inited (layout script hasn't called _khInitGame yet)
     var card=document.getElementById('khStableGameCard');
     if(!card.dataset.gameReady){card.dataset.gameReady='1';initGame();}
   }
   if(pollCount>60)clearInterval(poller);
 },100);
 
+// Override _khInitGame to set flag
 var origInit=window._khInitGame;
 window._khInitGame=function(){
   var card=document.getElementById('khStableGameCard');
   if(card)card.dataset.gameReady='1';
   clearInterval(poller);
-  if(raf){cancelAnimationFrame(raf);raf=0;}
-  if(window._khSnakeInterval){clearInterval(window._khSnakeInterval);window._khSnakeInterval=0;}
+  running=false;if(raf){cancelAnimationFrame(raf);raf=0;}
   initGame();
 };
 
